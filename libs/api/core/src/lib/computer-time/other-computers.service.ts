@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { LocalDate } from '@pd/contracts';
-import { ProjectRef } from '../links/links.service';
+import {Injectable, Logger} from '@nestjs/common';
+import {LocalDate} from '@pd/contracts';
+import {ProjectRef} from '../links/links.service';
 
 /** Time at a computer on a day, as a service other than the desktop app knows it. */
 export interface OtherComputerDay {
@@ -48,7 +48,11 @@ export interface OtherComputerSource {
   /** `wakatime`: names the service where the time is shown. */
   id: string;
   module: string;
-  days(userId: string, from: LocalDate, to: LocalDate): Promise<OtherComputerDay[]>;
+  days(
+    userId: string,
+    from: LocalDate,
+    to: LocalDate,
+  ): Promise<OtherComputerDay[]>;
   /**
    * The same time as stretches with their beginning and end, where the service knows them
    * (WakaTime: its durations, for the days copied since they are kept). With them the time is
@@ -57,7 +61,12 @@ export interface OtherComputerSource {
    */
   spans?(userId: string, from: Date, to: Date): Promise<OtherComputerSpan[]>;
   /** When the service saw work on the project: what the time around it is judged by. */
-  projectSpans?(userId: string, project: ProjectRef, from: Date, to: Date): Promise<ProjectSpan[]>;
+  projectSpans?(
+    userId: string,
+    project: ProjectRef,
+    from: Date,
+    to: Date,
+  ): Promise<ProjectSpan[]>;
 }
 
 /**
@@ -78,14 +87,16 @@ export class OtherComputersService {
     userId: string,
     from: LocalDate,
     to: LocalDate,
-  ): Promise<(OtherComputerDay & { source: string })[]> {
-    const days: (OtherComputerDay & { source: string })[] = [];
+  ): Promise<(OtherComputerDay & {source: string})[]> {
+    const days: (OtherComputerDay & {source: string})[] = [];
     for (const source of this.sources) {
       try {
         const found = await source.days(userId, from, to);
-        days.push(...found.map((day) => ({ ...day, source: source.id })));
+        days.push(...found.map(day => ({...day, source: source.id})));
       } catch (error) {
-        this.logger.warn(`Computer time of ${source.id} was not read: ${String(error)}`);
+        this.logger.warn(
+          `Computer time of ${source.id} was not read: ${String(error)}`,
+        );
       }
     }
     return days;
@@ -96,14 +107,16 @@ export class OtherComputersService {
     userId: string,
     from: Date,
     to: Date,
-  ): Promise<(OtherComputerSpan & { source: string })[]> {
-    const spans: (OtherComputerSpan & { source: string })[] = [];
+  ): Promise<(OtherComputerSpan & {source: string})[]> {
+    const spans: (OtherComputerSpan & {source: string})[] = [];
     for (const source of this.sources) {
       try {
         const found = (await source.spans?.(userId, from, to)) ?? [];
-        spans.push(...found.map((span) => ({ ...span, source: source.id })));
+        spans.push(...found.map(span => ({...span, source: source.id})));
       } catch (error) {
-        this.logger.warn(`Computer spans of ${source.id} were not read: ${String(error)}`);
+        this.logger.warn(
+          `Computer spans of ${source.id} were not read: ${String(error)}`,
+        );
       }
     }
     return spans;
@@ -119,9 +132,13 @@ export class OtherComputersService {
     const spans: ProjectSpan[] = [];
     for (const source of this.sources) {
       try {
-        spans.push(...((await source.projectSpans?.(userId, project, from, to)) ?? []));
+        spans.push(
+          ...((await source.projectSpans?.(userId, project, from, to)) ?? []),
+        );
       } catch (error) {
-        this.logger.warn(`Project spans of ${source.id} were not read: ${String(error)}`);
+        this.logger.warn(
+          `Project spans of ${source.id} were not read: ${String(error)}`,
+        );
       }
     }
     return spans;

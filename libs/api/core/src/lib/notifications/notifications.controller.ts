@@ -15,14 +15,14 @@ import {
   telegramBotInputSchema,
   TelegramLinkResponse,
 } from '@pd/contracts';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { ServerKeysService } from '../server-keys/server-keys.service';
-import { UsersService } from '../users/users.service';
-import { ZodValidationPipe } from '../validation/zod-validation.pipe';
-import { coreMessages } from '../i18n/core.messages';
-import { NotificationOutbox } from './notification-outbox';
-import { NotificationsService } from './notifications.service';
-import { TelegramBotService } from './telegram/telegram-bot.service';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {ServerKeysService} from '../server-keys/server-keys.service';
+import {UsersService} from '../users/users.service';
+import {ZodValidationPipe} from '../validation/zod-validation.pipe';
+import {coreMessages} from '../i18n/core.messages';
+import {NotificationOutbox} from './notification-outbox';
+import {NotificationsService} from './notifications.service';
+import {TelegramBotService} from './telegram/telegram-bot.service';
 
 @Controller('notifications')
 export class NotificationsController {
@@ -57,7 +57,8 @@ export class NotificationsController {
   @HttpCode(204)
   async setBot(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(telegramBotInputSchema)) input: TelegramBotInput,
+    @Body(new ZodValidationPipe(telegramBotInputSchema))
+    input: TelegramBotInput,
   ): Promise<void> {
     await this.keys.assertOwner(user.id);
     await TelegramBotService.check(input.token).catch(() => {
@@ -84,7 +85,9 @@ export class NotificationsController {
   @Post('telegram/link')
   linkTelegram(@CurrentUser() user: AuthUser): TelegramLinkResponse {
     if (!this.telegram.isAvailable) {
-      throw new BadRequestException('Telegram bot is not configured on the server');
+      throw new BadRequestException(
+        'Telegram bot is not configured on the server',
+      );
     }
     return this.telegram.createLink(user.id);
   }
@@ -100,7 +103,8 @@ export class NotificationsController {
   async test(@CurrentUser() user: AuthUser) {
     return this.notifications.send(user.id, {
       title: 'Personal Dashboard',
-      body: coreMessages((await this.users.findById(user.id))?.locale).testNotification,
+      body: coreMessages((await this.users.findById(user.id))?.locale)
+        .testNotification,
       source: 'core',
       now: true,
     });

@@ -1,5 +1,5 @@
-import { strToU8, zipSync } from 'fflate';
-import { SummaryBlock } from './summary-blocks';
+import {strToU8, zipSync} from 'fflate';
+import {SummaryBlock} from './summary-blocks';
 
 /**
  * A summary as a Word document: a ZIP of XML written by hand (as Psychology's export does),
@@ -38,11 +38,11 @@ export function summaryDocx(blocks: SummaryBlock[]): Buffer {
 function block(item: SummaryBlock): string {
   switch (item.kind) {
     case 'title':
-      return paragraph(item.text, { bold: true, size: 32 });
+      return paragraph(item.text, {bold: true, size: 32});
     case 'heading':
-      return paragraph(item.text, { bold: true, size: 26, before: 240 });
+      return paragraph(item.text, {bold: true, size: 26, before: 240});
     case 'paragraph':
-      return paragraph(item.text, { color: item.muted ? '5D5B66' : undefined });
+      return paragraph(item.text, {color: item.muted ? '5D5B66' : undefined});
     case 'table':
       return table(item.head, item.rows, item.marked ?? []);
   }
@@ -57,35 +57,40 @@ interface Look {
 
 /** A line break of the text is a line break of the paragraph. */
 function paragraph(text: string, look: Look = {}): string {
-  const spacing = look.before ? `<w:pPr><w:spacing w:before="${look.before}"/></w:pPr>` : '';
+  const spacing = look.before
+    ? `<w:pPr><w:spacing w:before="${look.before}"/></w:pPr>`
+    : '';
   return `<w:p>${spacing}${run(text, look)}</w:p>`;
 }
 
-function run(text: string, { bold, size = 20, color }: Look): string {
+function run(text: string, {bold, size = 20, color}: Look): string {
   const props =
     (bold ? '<w:b/>' : '') +
     (color ? `<w:color w:val="${color}"/>` : '') +
     `<w:sz w:val="${size}"/>`;
   const lines = text
     .split(/\r?\n/)
-    .map((line) => `<w:t xml:space="preserve">${xmlText(line)}</w:t>`);
+    .map(line => `<w:t xml:space="preserve">${xmlText(line)}</w:t>`);
   return `<w:r><w:rPr>${props}</w:rPr>${lines.join('<w:br/>')}</w:r>`;
 }
 
 function table(head: string[], rows: string[][], marked: boolean[]): string {
   const border = (side: string) =>
     `<w:${side} w:val="single" w:sz="4" w:space="0" w:color="C8C6D0"/>`;
-  const cell = (text: string, look: Look) => `<w:tc>${paragraph(text, look)}</w:tc>`;
+  const cell = (text: string, look: Look) =>
+    `<w:tc>${paragraph(text, look)}</w:tc>`;
   return (
     '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>' +
     ['top', 'bottom', 'insideH'].map(border).join('') +
     '</w:tblBorders></w:tblPr>' +
-    `<w:tr>${head.map((text) => cell(text, { bold: true, size: 18, color: '5D5B66' })).join('')}</w:tr>` +
+    `<w:tr>${head.map(text => cell(text, {bold: true, size: 18, color: '5D5B66'})).join('')}</w:tr>` +
     rows
       .map(
         (row, index) =>
           `<w:tr>${row
-            .map((text, column) => cell(text, { size: 18, bold: marked[index] && column === 1 }))
+            .map((text, column) =>
+              cell(text, {size: 18, bold: marked[index] && column === 1}),
+            )
             .join('')}</w:tr>`,
       )
       .join('') +

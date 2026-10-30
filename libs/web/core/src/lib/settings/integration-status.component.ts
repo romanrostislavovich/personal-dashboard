@@ -1,14 +1,14 @@
-import { DatePipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { CORE_READS } from '@pd/client-core';
-import { IntegrationState, IntegrationStatus } from '@pd/contracts';
+import {DatePipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {ChangeDetectionStrategy, Component, computed} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {CORE_READS} from '@pd/client-core';
+import {IntegrationState, IntegrationStatus} from '@pd/contracts';
 
 const ICONS: Record<IntegrationState, string> = {
   ok: 'check_circle',
@@ -40,10 +40,14 @@ const ICONS: Record<IntegrationState, string> = {
       <mat-card appearance="outlined">
         <mat-card-header>
           <mat-icon mat-card-avatar>hub</mat-icon>
-          <mat-card-title>{{ 'core.integrations.title' | transloco }}</mat-card-title>
+          <mat-card-title>{{
+            'core.integrations.title' | transloco
+          }}</mat-card-title>
           <mat-card-subtitle>
             @if (troubled()) {
-              {{ 'core.integrations.troubled' | transloco: { count: troubled() } }}
+              {{
+                'core.integrations.troubled' | transloco: {count: troubled()}
+              }}
             } @else {
               {{ 'core.integrations.allFine' | transloco }}
             }
@@ -52,7 +56,11 @@ const ICONS: Record<IntegrationState, string> = {
         <mat-card-content>
           @for (status of statuses.value(); track status.id) {
             <div class="row" [class]="status.state">
-              <mat-icon [matTooltip]="'core.integrations.states.' + status.state | transloco">
+              <mat-icon
+                [matTooltip]="
+                  'core.integrations.states.' + status.state | transloco
+                "
+              >
                 {{ icons[status.state] }}
               </mat-icon>
               <span class="what">
@@ -74,14 +82,19 @@ const ICONS: Record<IntegrationState, string> = {
                   <span class="hint">
                     {{
                       'core.integrations.expires'
-                        | transloco: { date: (status.expiresAt | date: 'd MMM y') }
+                        | transloco
+                          : {date: (status.expiresAt | date: 'd MMM y')}
                     }}
                   </span>
                 }
               </span>
               @if (status.settingsTab) {
                 <!-- Set up on another tab (Telegram, push): the way there from its line. -->
-                <a matButton routerLink="/settings" [queryParams]="{ tab: status.settingsTab }">
+                <a
+                  matButton
+                  routerLink="/settings"
+                  [queryParams]="{tab: status.settingsTab}"
+                >
                   {{ 'core.integrations.setUp' | transloco }}
                 </a>
               }
@@ -95,7 +108,8 @@ const ICONS: Record<IntegrationState, string> = {
         </mat-card-content>
         <mat-card-actions align="end">
           <button matButton (click)="statuses.reload()">
-            <mat-icon>refresh</mat-icon> {{ 'core.integrations.refresh' | transloco }}
+            <mat-icon>refresh</mat-icon>
+            {{ 'core.integrations.refresh' | transloco }}
           </button>
         </mat-card-actions>
       </mat-card>
@@ -153,12 +167,17 @@ const ICONS: Record<IntegrationState, string> = {
 })
 export class IntegrationStatusComponent {
   protected readonly icons = ICONS;
-  protected readonly statuses = httpResource<IntegrationStatus[]>(() => CORE_READS.integrations(), {
-    defaultValue: [],
-  });
+  protected readonly statuses = httpResource<IntegrationStatus[]>(
+    () => CORE_READS.integrations(),
+    {
+      defaultValue: [],
+    },
+  );
   protected readonly troubled = computed(
     () =>
-      this.statuses.value().filter((status) => status.state !== 'ok' && status.state !== 'off')
+      this.statuses
+        .value()
+        .filter(status => status.state !== 'ok' && status.state !== 'off')
         .length,
   );
 }

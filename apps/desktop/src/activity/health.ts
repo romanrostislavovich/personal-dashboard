@@ -1,6 +1,6 @@
-import { existsSync, statfsSync } from 'node:fs';
-import { cpus, freemem, totalmem, uptime } from 'node:os';
-import { SystemInfo, SystemInfoReader } from './system-info';
+import {existsSync, statfsSync} from 'node:fs';
+import {cpus, freemem, totalmem, uptime} from 'node:os';
+import {SystemInfo, SystemInfoReader} from './system-info';
 
 /** The computer's state, as the server takes it (activityHealthSchema in contracts). */
 export interface HealthSnapshot {
@@ -9,11 +9,11 @@ export interface HealthSnapshot {
   memoryUsed: number;
   memoryTotal: number;
   uptimeSeconds: number;
-  disks: { mount: string; total: number; free: number }[];
+  disks: {mount: string; total: number; free: number}[];
   system?: SystemInfo;
 }
 
-type CpuTimes = { idle: number; total: number };
+type CpuTimes = {idle: number; total: number};
 
 /**
  * Takes the computer's state: processor load since the previous reading, memory, the time
@@ -32,7 +32,7 @@ export class HealthCollector {
     if (system) {
       this.lastSystem = this.systemReader.remember(this.lastSystem, system);
     }
-    return system ? { ...basics, system } : basics;
+    return system ? {...basics, system} : basics;
   }
 
   private basics(): HealthSnapshot {
@@ -55,9 +55,9 @@ function cpuTimes(): CpuTimes {
   return cpus().reduce(
     (sum, cpu) => {
       const times = Object.values(cpu.times).reduce((a, b) => a + b, 0);
-      return { idle: sum.idle + cpu.times.idle, total: sum.total + times };
+      return {idle: sum.idle + cpu.times.idle, total: sum.total + times};
     },
-    { idle: 0, total: 0 },
+    {idle: 0, total: 0},
   );
 }
 
@@ -67,14 +67,18 @@ function drives(): HealthSnapshot['disks'] {
     process.platform === 'win32'
       ? 'CDEFGHIJKLMNOPQRSTUVWXYZ'
           .split('')
-          .map((letter) => `${letter}:`)
-          .filter((mount) => existsSync(`${mount}\\`))
+          .map(letter => `${letter}:`)
+          .filter(mount => existsSync(`${mount}\\`))
       : ['/'];
-  return mounts.flatMap((mount) => {
+  return mounts.flatMap(mount => {
     try {
-      const stats = statfsSync(process.platform === 'win32' ? `${mount}\\` : mount);
+      const stats = statfsSync(
+        process.platform === 'win32' ? `${mount}\\` : mount,
+      );
       const total = stats.blocks * stats.bsize;
-      return total > 0 ? [{ mount, total, free: stats.bavail * stats.bsize }] : [];
+      return total > 0
+        ? [{mount, total, free: stats.bavail * stats.bsize}]
+        : [];
     } catch {
       return []; // An empty card reader, a disconnected network drive.
     }

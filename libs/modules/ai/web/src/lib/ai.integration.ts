@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { AiApi } from './ai.api';
-import { AiSettingsComponent } from './ai-settings.component';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {AiApi} from './ai.api';
+import {AiSettingsComponent} from './ai-settings.component';
 
 /**
  * AI connections (DeepSeek, OpenAI, Ollama…), what the AI may see and its action log, in

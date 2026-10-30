@@ -1,5 +1,5 @@
-import { LocalDate, todayIn, toLocalDate } from '@pd/contracts';
-import { ActivityEvent } from './account-source';
+import {LocalDate, todayIn, toLocalDate} from '@pd/contracts';
+import {ActivityEvent} from './account-source';
 
 /** A day of the calendar with what it was made of. */
 export interface ActivityDay {
@@ -12,7 +12,10 @@ export interface ActivityDay {
 }
 
 /** Events put into the days of the given time zone, oldest day first. */
-export function activityDays(events: ActivityEvent[], timeZone: string): ActivityDay[] {
+export function activityDays(
+  events: ActivityEvent[],
+  timeZone: string,
+): ActivityDay[] {
   const days = new Map<LocalDate, ActivityDay>();
   for (const event of events) {
     const day = toLocalDate(todayIn(timeZone, event.at));

@@ -1,14 +1,21 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Bar, BarChartComponent, SparklineComponent } from '@pd/web-core';
-import { HealthApi } from '../health.api';
-import { addDays, clock, levelOf, today } from './band-format';
-import { BandNightComponent } from './band-night.component';
-import { BandReactionsComponent } from './band-reactions.component';
+import {DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {Bar, BarChartComponent, SparklineComponent} from '@pd/web-core';
+import {HealthApi} from '../health.api';
+import {addDays, clock, levelOf, today} from './band-format';
+import {BandNightComponent} from './band-night.component';
+import {BandReactionsComponent} from './band-reactions.component';
 
 /** The pulse is drawn by 5-minute averages: a day of minutes is too many points to read. */
 const PULSE_STEP_MS = 5 * 60_000;
@@ -60,32 +67,44 @@ const PULSE_STEP_MS = 5 * 60_000;
       <div class="tiles">
         @if (s.stressScore !== null) {
           <div class="tile" [attr.data-level]="level(s.stressScore)">
-            <span class="label">{{ 'health.band.fields.stressScore' | transloco }}</span>
+            <span class="label">{{
+              'health.band.fields.stressScore' | transloco
+            }}</span>
             <span class="value">{{ s.stressScore }}</span>
-            <span class="note">{{ 'health.band.levels.' + level(s.stressScore) | transloco }}</span>
+            <span class="note">{{
+              'health.band.levels.' + level(s.stressScore) | transloco
+            }}</span>
           </div>
         }
         @if (s.sleepScore !== null) {
           <div class="tile">
-            <span class="label">{{ 'health.band.fields.sleepScore' | transloco }}</span>
+            <span class="label">{{
+              'health.band.fields.sleepScore' | transloco
+            }}</span>
             <span class="value">{{ s.sleepScore }}</span>
           </div>
         }
         @if (s.resilience !== null) {
           <div class="tile">
-            <span class="label">{{ 'health.band.fields.resilience' | transloco }}</span>
+            <span class="label">{{
+              'health.band.fields.resilience' | transloco
+            }}</span>
             <span class="value">{{ s.resilience }}</span>
           </div>
         }
         @if (s.steps !== null) {
           <div class="tile">
-            <span class="label">{{ 'health.band.fields.steps' | transloco }}</span>
+            <span class="label">{{
+              'health.band.fields.steps' | transloco
+            }}</span>
             <span class="value">{{ s.steps | number }}</span>
           </div>
         }
         @if (s.heartRateAvg !== null) {
           <div class="tile">
-            <span class="label">{{ 'health.band.fields.heartRateAvg' | transloco }}</span>
+            <span class="label">{{
+              'health.band.fields.heartRateAvg' | transloco
+            }}</span>
             <span class="value">{{ s.heartRateAvg }} bpm</span>
           </div>
         }
@@ -99,7 +118,9 @@ const PULSE_STEP_MS = 5 * 60_000;
         @if (pulse().length) {
           <mat-card appearance="outlined">
             <mat-card-header>
-              <mat-card-title>{{ 'health.band.day.pulse' | transloco }}</mat-card-title>
+              <mat-card-title>{{
+                'health.band.day.pulse' | transloco
+              }}</mat-card-title>
             </mat-card-header>
             <mat-card-content>
               <pd-sparkline
@@ -115,21 +136,33 @@ const PULSE_STEP_MS = 5 * 60_000;
         @if (stressBars().length) {
           <mat-card appearance="outlined">
             <mat-card-header>
-              <mat-card-title>{{ 'health.band.day.stress' | transloco }}</mat-card-title>
-              <mat-card-subtitle>{{ 'health.band.day.stressHint' | transloco }}</mat-card-subtitle>
+              <mat-card-title>{{
+                'health.band.day.stress' | transloco
+              }}</mat-card-title>
+              <mat-card-subtitle>{{
+                'health.band.day.stressHint' | transloco
+              }}</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
-              <pd-bar-chart [bars]="stressBars()" [label]="'health.band.day.stress' | transloco" />
+              <pd-bar-chart
+                [bars]="stressBars()"
+                [label]="'health.band.day.stress' | transloco"
+              />
             </mat-card-content>
           </mat-card>
         }
         @if (stepBars().length) {
           <mat-card appearance="outlined">
             <mat-card-header>
-              <mat-card-title>{{ 'health.band.day.steps' | transloco }}</mat-card-title>
+              <mat-card-title>{{
+                'health.band.day.steps' | transloco
+              }}</mat-card-title>
             </mat-card-header>
             <mat-card-content>
-              <pd-bar-chart [bars]="stepBars()" [label]="'health.band.day.steps' | transloco" />
+              <pd-bar-chart
+                [bars]="stepBars()"
+                [label]="'health.band.day.steps' | transloco"
+              />
             </mat-card-content>
           </mat-card>
         }
@@ -138,24 +171,35 @@ const PULSE_STEP_MS = 5 * 60_000;
 
         <mat-card appearance="outlined">
           <mat-card-header>
-            <mat-card-title>{{ 'health.band.reactions.title' | transloco }}</mat-card-title>
-            <mat-card-subtitle>{{ 'health.band.reactions.hint' | transloco }}</mat-card-subtitle>
+            <mat-card-title>{{
+              'health.band.reactions.title' | transloco
+            }}</mat-card-title>
+            <mat-card-subtitle>{{
+              'health.band.reactions.hint' | transloco
+            }}</mat-card-subtitle>
           </mat-card-header>
           <mat-card-content>
-            <pd-band-reactions [reactions]="d.reactions" (changed)="detail.reload()" />
+            <pd-band-reactions
+              [reactions]="d.reactions"
+              (changed)="detail.reload()"
+            />
           </mat-card-content>
         </mat-card>
 
         @if (d.exercises.length) {
           <mat-card appearance="outlined">
             <mat-card-header>
-              <mat-card-title>{{ 'health.band.day.exercises' | transloco }}</mat-card-title>
+              <mat-card-title>{{
+                'health.band.day.exercises' | transloco
+              }}</mat-card-title>
             </mat-card-header>
             <mat-card-content>
               @for (exercise of d.exercises; track exercise.id) {
                 <p>
                   {{ clock(exercise.startAt) }}–{{ clock(exercise.endAt) }} ·
-                  {{ exercise.title ?? ('health.band.day.exercise' | transloco) }}
+                  {{
+                    exercise.title ?? ('health.band.day.exercise' | transloco)
+                  }}
                 </p>
               }
             </mat-card-content>
@@ -222,9 +266,11 @@ export class BandDayComponent {
   protected readonly clock = clock;
   protected readonly level = levelOf;
 
-  protected readonly detail = this.api.bandDay(computed(() => ({ day: this.day() })));
+  protected readonly detail = this.api.bandDay(
+    computed(() => ({day: this.day()})),
+  );
   private readonly days = this.api.wearableDays(
-    computed(() => ({ from: this.day(), to: this.day() })),
+    computed(() => ({from: this.day(), to: this.day()})),
   );
   /** The day's numbers: the Google Health API's first, then the phone's, and what is counted. */
   protected readonly summary = computed(() => this.days.value()[0] ?? null);
@@ -237,7 +283,8 @@ export class BandDayComponent {
     const buckets = new Map<number, number[]>();
     for (const minute of this.detail.value()?.minutes ?? []) {
       if (minute.bpm !== null) {
-        const at = Math.floor(Date.parse(minute.at) / PULSE_STEP_MS) * PULSE_STEP_MS;
+        const at =
+          Math.floor(Date.parse(minute.at) / PULSE_STEP_MS) * PULSE_STEP_MS;
         buckets.set(at, [...(buckets.get(at) ?? []), minute.bpm]);
       }
     }
@@ -249,8 +296,8 @@ export class BandDayComponent {
 
   protected readonly stressBars = computed((): Bar[] =>
     (this.detail.value()?.hours ?? [])
-      .filter((hour) => hour.stress !== null)
-      .map((hour) => ({
+      .filter(hour => hour.stress !== null)
+      .map(hour => ({
         label: clock(hour.at).slice(0, 2),
         value: hour.stress as number,
         title: `${clock(hour.at)} — ${hour.stress}`,
@@ -259,8 +306,8 @@ export class BandDayComponent {
 
   protected readonly stepBars = computed((): Bar[] =>
     (this.detail.value()?.hours ?? [])
-      .filter((hour) => hour.steps !== null)
-      .map((hour) => ({
+      .filter(hour => hour.steps !== null)
+      .map(hour => ({
         label: clock(hour.at).slice(0, 2),
         value: hour.steps as number,
         title: `${clock(hour.at)} — ${hour.steps}`,

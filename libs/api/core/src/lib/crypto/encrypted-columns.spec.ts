@@ -1,4 +1,4 @@
-import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import {pgTable, text, uuid} from 'drizzle-orm/pg-core';
 import {
   configureFieldEncryption,
   decryptBytes,
@@ -22,7 +22,9 @@ const notes = pgTable('test_notes', {
 });
 
 describe('encrypted columns', () => {
-  beforeAll(() => configureFieldEncryption('a-test-key-that-is-long-enough-0123456789'));
+  beforeAll(() =>
+    configureFieldEncryption('a-test-key-that-is-long-enough-0123456789'),
+  );
 
   it('reads back what it wrote, never the same ciphertext twice', () => {
     const first = encryptText('F41.1 Generalised anxiety');
@@ -46,7 +48,10 @@ describe('encrypted columns', () => {
   });
 
   it('refuses a value changed in the database', () => {
-    const sealed = Buffer.from(encryptText('x').slice('enc:v1:'.length), 'base64');
+    const sealed = Buffer.from(
+      encryptText('x').slice('enc:v1:'.length),
+      'base64',
+    );
     sealed[sealed.length - 1] ^= 1;
     expect(() => decryptText(`enc:v1:${sealed.toString('base64')}`)).toThrow();
   });
@@ -67,7 +72,7 @@ describe('encrypted columns', () => {
 
   it('decrypts a row for the export and seals it again for the import', () => {
     registerEncryptedTables(notes);
-    const row = { id: '1', title: 'open', private_note: 'secret' };
+    const row = {id: '1', title: 'open', private_note: 'secret'};
     const sealed = encryptedRow('test_notes', row);
     expect(sealed['title']).toBe('open');
     expect(isEncryptedText(String(sealed['private_note']))).toBe(true);

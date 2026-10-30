@@ -1,12 +1,12 @@
-import { Editor, Extensions, Mark, mergeAttributes } from '@tiptap/core';
-import { HardBreak } from '@tiptap/extension-hard-break';
-import { TaskItem, TaskList } from '@tiptap/extension-list';
-import { TableKit } from '@tiptap/extension-table';
-import { Placeholder } from '@tiptap/extensions';
-import { Markdown } from '@tiptap/markdown';
-import { StarterKit } from '@tiptap/starter-kit';
-import { splitMarkEmoji } from '@pd/contracts';
-import { DiaryImage, DiaryImageOptions } from './diary-images';
+import {Editor, Extensions, Mark, mergeAttributes} from '@tiptap/core';
+import {HardBreak} from '@tiptap/extension-hard-break';
+import {TaskItem, TaskList} from '@tiptap/extension-list';
+import {TableKit} from '@tiptap/extension-table';
+import {Placeholder} from '@tiptap/extensions';
+import {Markdown} from '@tiptap/markdown';
+import {StarterKit} from '@tiptap/starter-kit';
+import {splitMarkEmoji} from '@pd/contracts';
+import {DiaryImage, DiaryImageOptions} from './diary-images';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -36,32 +36,32 @@ const DiaryMark = Mark.create({
     return {
       emoji: {
         default: null,
-        parseHTML: (element) => element.getAttribute('data-emoji'),
-        renderHTML: (attributes) =>
-          attributes['emoji'] ? { 'data-emoji': attributes['emoji'] } : {},
+        parseHTML: element => element.getAttribute('data-emoji'),
+        renderHTML: attributes =>
+          attributes['emoji'] ? {'data-emoji': attributes['emoji']} : {},
       },
     };
   },
 
   parseHTML() {
-    return [{ tag: 'mark' }];
+    return [{tag: 'mark'}];
   },
 
-  renderHTML({ HTMLAttributes }) {
-    return ['mark', mergeAttributes({ class: 'diary-mark' }, HTMLAttributes), 0];
+  renderHTML({HTMLAttributes}) {
+    return ['mark', mergeAttributes({class: 'diary-mark'}, HTMLAttributes), 0];
   },
 
   markdownTokenName: 'diaryMark',
   markdownTokenizer: {
     name: 'diaryMark',
     level: 'inline',
-    start: (src) => src.indexOf('=='),
+    start: src => src.indexOf('=='),
     tokenize(src, _tokens, lexer) {
       const match = MARK_SOURCE.exec(src);
       if (!match) {
         return undefined;
       }
-      const { emoji, text } = splitMarkEmoji(match[1]);
+      const {emoji, text} = splitMarkEmoji(match[1]);
       return {
         type: 'diaryMark',
         raw: match[0],
@@ -82,21 +82,21 @@ const DiaryMark = Mark.create({
   addCommands() {
     return {
       setDiaryMark:
-        (emoji) =>
-        ({ state, chain }) => {
-          const { empty, $from } = state.selection;
+        emoji =>
+        ({state, chain}) => {
+          const {empty, $from} = state.selection;
           const range = empty
-            ? { from: $from.start(), to: $from.end() }
-            : { from: state.selection.from, to: state.selection.to };
+            ? {from: $from.start(), to: $from.end()}
+            : {from: state.selection.from, to: state.selection.to};
           return chain()
             .setTextSelection(range)
             .unsetMark(this.name)
-            .setMark(this.name, { emoji })
+            .setMark(this.name, {emoji})
             .run();
         },
       unsetDiaryMark:
         () =>
-        ({ chain }) =>
+        ({chain}) =>
           chain().extendMarkRange(this.name).unsetMark(this.name).run(),
     };
   },
@@ -119,24 +119,24 @@ export interface DiaryEditorOptions {
 /** Everything the diary editor understands; the same list parses and saves Markdown. */
 export function diaryEditorExtensions({
   placeholder = () => '',
-  loadImage = async (src) => src,
+  loadImage = async src => src,
 }: DiaryEditorOptions = {}): Extensions {
   return [
     StarterKit.configure({
       hardBreak: false,
       // Markdown has no underline: Tiptap saves it as `++text++`, which nothing else renders.
       underline: false,
-      link: { openOnClick: false, autolink: true },
+      link: {openOnClick: false, autolink: true},
     }),
     LineBreak,
     DiaryMark,
-    DiaryImage.configure({ loadSrc: loadImage }),
+    DiaryImage.configure({loadSrc: loadImage}),
     TaskList,
-    TaskItem.configure({ nested: true }),
+    TaskItem.configure({nested: true}),
     // Saved as GFM tables; column widths are not part of Markdown, so no resizing.
-    TableKit.configure({ table: { resizable: false } }),
-    Placeholder.configure({ placeholder: () => placeholder() }),
-    Markdown.configure({ markedOptions: { gfm: true, breaks: true } }),
+    TableKit.configure({table: {resizable: false}}),
+    Placeholder.configure({placeholder: () => placeholder()}),
+    Markdown.configure({markedOptions: {gfm: true, breaks: true}}),
   ];
 }
 

@@ -6,11 +6,11 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthApi } from '../health.api';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatDialogModule, MatDialogRef} from '@angular/material/dialog';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {HealthApi} from '../health.api';
 
 /** In and out, this many seconds each: about six breaths a minute, the calming pace. */
 const HALF_BREATH_S = 5;
@@ -23,25 +23,40 @@ const LENGTHS = [1, 3, 5, 10] as const;
 @Component({
   selector: 'pd-breathing-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatButtonToggleModule, MatDialogModule, TranslocoPipe],
+  imports: [
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatDialogModule,
+    TranslocoPipe,
+  ],
   template: `
     <h2 mat-dialog-title>{{ 'health.band.breathing.title' | transloco }}</h2>
     <mat-dialog-content>
       @if (startedAt() === null) {
         <p>{{ 'health.band.breathing.intro' | transloco }}</p>
-        <mat-button-toggle-group [value]="minutes()" (change)="minutes.set($event.value)">
+        <mat-button-toggle-group
+          [value]="minutes()"
+          (change)="minutes.set($event.value)"
+        >
           @for (n of lengths; track n) {
             <mat-button-toggle [value]="n">{{
-              'health.band.breathing.minutes' | transloco: { count: n }
+              'health.band.breathing.minutes' | transloco: {count: n}
             }}</mat-button-toggle>
           }
         </mat-button-toggle-group>
       } @else {
         <div class="stage">
-          <div class="circle" [class.in]="breathingIn()" [style.transition-duration.s]="half"></div>
+          <div
+            class="circle"
+            [class.in]="breathingIn()"
+            [style.transition-duration.s]="half"
+          ></div>
           <p class="cue">
             {{
-              (breathingIn() ? 'health.band.breathing.in' : 'health.band.breathing.out') | transloco
+              (breathingIn()
+                ? 'health.band.breathing.in'
+                : 'health.band.breathing.out'
+              ) | transloco
             }}
           </p>
           <p class="left">{{ left() }}</p>
@@ -50,12 +65,16 @@ const LENGTHS = [1, 3, 5, 10] as const;
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       @if (startedAt() === null) {
-        <button matButton mat-dialog-close>{{ 'health.band.breathing.cancel' | transloco }}</button>
+        <button matButton mat-dialog-close>
+          {{ 'health.band.breathing.cancel' | transloco }}
+        </button>
         <button matButton="filled" (click)="start()">
           {{ 'health.band.breathing.start' | transloco }}
         </button>
       } @else {
-        <button matButton (click)="finish()">{{ 'health.band.breathing.stop' | transloco }}</button>
+        <button matButton (click)="finish()">
+          {{ 'health.band.breathing.stop' | transloco }}
+        </button>
       }
     </mat-dialog-actions>
   `,
@@ -107,13 +126,17 @@ export class BreathingDialog {
   protected readonly breathingIn = computed(() => {
     const started = this.startedAt();
     return (
-      started !== null && Math.floor((this.now() - started) / (HALF_BREATH_S * 1000)) % 2 === 0
+      started !== null &&
+      Math.floor((this.now() - started) / (HALF_BREATH_S * 1000)) % 2 === 0
     );
   });
 
   protected readonly left = computed(() => {
     const started = this.startedAt() ?? this.now();
-    const seconds = Math.max(0, Math.ceil(this.minutes() * 60 - (this.now() - started) / 1000));
+    const seconds = Math.max(
+      0,
+      Math.ceil(this.minutes() * 60 - (this.now() - started) / 1000),
+    );
     return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
   });
 
@@ -136,7 +159,8 @@ export class BreathingDialog {
   protected async finish(): Promise<void> {
     clearInterval(this.timer);
     const started = this.startedAt();
-    const done = started === null ? 0 : Math.floor((Date.now() - started) / 60_000);
+    const done =
+      started === null ? 0 : Math.floor((Date.now() - started) / 60_000);
     if (started !== null && done >= 1) {
       try {
         await this.api.client.addMindfulness({

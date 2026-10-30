@@ -1,6 +1,6 @@
-import { sql } from 'drizzle-orm';
-import { Database } from '../database/database.module';
-import { APPLYING_SETTING } from '../sync/sync-triggers';
+import {sql} from 'drizzle-orm';
+import {Database} from '../database/database.module';
+import {APPLYING_SETTING} from '../sync/sync-triggers';
 
 /** Set for work that deletes rows without the user asking (restoring the trash itself). */
 const TRASH_OFF_SETTING = 'pd.trash_off';
@@ -11,8 +11,11 @@ const TRIGGER_NAME = 'trash_keep';
  * Deletes that are housekeeping (old measurements cleaned up on schedule) and keep nothing in
  * the trash: it is for what a person deleted, and a daily cleanup would bury that.
  */
-export function withoutTrash<T>(db: Database, work: (tx: Database) => Promise<T>): Promise<T> {
-  return db.transaction(async (tx) => {
+export function withoutTrash<T>(
+  db: Database,
+  work: (tx: Database) => Promise<T>,
+): Promise<T> {
+  return db.transaction(async tx => {
     await tx.execute(sql`SELECT set_config(${TRASH_OFF_SETTING}, 'on', true)`);
     return work(tx as unknown as Database);
   });
@@ -71,18 +74,22 @@ END $$;
  */
 export async function installTrashTriggers(db: Database): Promise<string[]> {
   const installed: string[] = [];
-  await db.transaction(async (tx) => {
+  await db.transaction(async tx => {
     // Two instances starting against one database must not install twice.
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('pd.trash.install'))`);
+    await tx.execute(
+      sql`SELECT pg_advisory_xact_lock(hashtext('pd.trash.install'))`,
+    );
     await tx.execute(KEEP_FUNCTION);
-    const { rows } = await tx.execute<{ name: string; tracked: boolean }>(sql`
+    const {rows} = await tx.execute<{name: string; tracked: boolean}>(sql`
       SELECT c.relname AS name,
         EXISTS (SELECT 1 FROM pg_trigger t WHERE t.tgrelid = c.oid AND t.tgname = ${TRIGGER_NAME})
           AS tracked
       FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
       WHERE n.nspname = 'public' AND c.relkind = 'r'
     `);
-    for (const { name } of rows.filter((row) => !row.tracked && !NOT_TRASHED.has(row.name))) {
+    for (const {name} of rows.filter(
+      row => !row.tracked && !NOT_TRASHED.has(row.name),
+    )) {
       await tx.execute(sql`
         CREATE TRIGGER ${sql.identifier(TRIGGER_NAME)} AFTER DELETE ON ${sql.identifier(name)}
         FOR EACH ROW EXECUTE FUNCTION trash.keep_deleted()

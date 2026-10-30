@@ -1,5 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
 
 const ICONS = 'https://www.opendota.com/assets/images/dota2/rank_icons';
 
@@ -25,7 +30,8 @@ const ICONS = 'https://www.opendota.com/assets/images/dota2/rank_icons';
         </span>
         @if (leaderboardRank()) {
           <span class="lb"
-            >#{{ leaderboardRank() }} {{ 'games.dota.leaderboard' | transloco }}</span
+            >#{{ leaderboardRank() }}
+            {{ 'games.dota.leaderboard' | transloco }}</span
           >
         }
       </div>
@@ -66,8 +72,14 @@ export class DotaRankComponent {
   readonly rankTier = input.required<number | null>();
   readonly leaderboardRank = input<number | null>(null);
 
-  protected readonly medal = computed(() => Math.floor((this.rankTier() ?? 0) / 10));
+  protected readonly medal = computed(() =>
+    Math.floor((this.rankTier() ?? 0) / 10),
+  );
   protected readonly stars = computed(() => (this.rankTier() ?? 0) % 10);
-  protected readonly icon = computed(() => `${ICONS}/rank_icon_${this.medal()}.png`);
-  protected readonly starsIcon = computed(() => `${ICONS}/rank_star_${this.stars()}.png`);
+  protected readonly icon = computed(
+    () => `${ICONS}/rank_icon_${this.medal()}.png`,
+  );
+  protected readonly starsIcon = computed(
+    () => `${ICONS}/rank_star_${this.stars()}.png`,
+  );
 }

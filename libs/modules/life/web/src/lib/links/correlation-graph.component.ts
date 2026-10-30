@@ -1,7 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Correlation, CorrelationMetric } from '@pd/contracts';
-import { moduleColor, SelectedPair } from './links-format';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {Correlation, CorrelationMetric} from '@pd/contracts';
+import {moduleColor, SelectedPair} from './links-format';
 
 const SIZE = 520;
 const CENTER = SIZE / 2;
@@ -81,7 +88,9 @@ interface Edge {
                 : 'url(#pd-arrow-minus)'
               : null
           "
-          (click)="pick.emit({ a: edge.pair.a, b: edge.pair.b, lag: edge.pair.lag })"
+          (click)="
+            pick.emit({a: edge.pair.a, b: edge.pair.b, lag: edge.pair.lag})
+          "
         >
           <title>{{ edge.pair.rho }}</title>
         </path>
@@ -104,7 +113,11 @@ interface Edge {
             [attr.r]="5 + node.links"
             [attr.fill]="node.color"
           />
-          <text [attr.x]="node.labelX" [attr.y]="node.labelY" [attr.text-anchor]="node.anchor">
+          <text
+            [attr.x]="node.labelX"
+            [attr.y]="node.labelY"
+            [attr.text-anchor]="node.anchor"
+          >
             {{ short(node.metric.label ?? (node.metric.labelKey | transloco)) }}
           </text>
         </g>
@@ -188,8 +201,11 @@ export class CorrelationGraphComponent {
     }
     // Only the numbers that have a link: the rest would only crowd the circle.
     const shown = this.metrics()
-      .filter((metric) => linked.has(metric.key))
-      .sort((a, b) => a.module.localeCompare(b.module) || a.key.localeCompare(b.key));
+      .filter(metric => linked.has(metric.key))
+      .sort(
+        (a, b) =>
+          a.module.localeCompare(b.module) || a.key.localeCompare(b.key),
+      );
     return shown.map((metric, index) => {
       const angle = (index / shown.length) * 2 * Math.PI - Math.PI / 2;
       const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
@@ -207,8 +223,8 @@ export class CorrelationGraphComponent {
   });
 
   protected readonly edges = computed<Edge[]>(() => {
-    const at = new Map(this.nodes().map((node) => [node.metric.key, node]));
-    return this.links().flatMap((pair) => {
+    const at = new Map(this.nodes().map(node => [node.metric.key, node]));
+    return this.links().flatMap(pair => {
       const [from, to] = [at.get(pair.a), at.get(pair.b)];
       if (!from || !to) {
         return [];
@@ -218,7 +234,7 @@ export class CorrelationGraphComponent {
       const cx = CENTER + ((from.x + to.x) / 2 - CENTER) * bend;
       const cy = CENTER + ((from.y + to.y) / 2 - CENTER) * bend;
       // The arrow stops at the edge of the node it points to.
-      const end = toward(to, { x: cx, y: cy }, pair.lag ? 6 + to.links : 0);
+      const end = toward(to, {x: cx, y: cy}, pair.lag ? 6 + to.links : 0);
       return [
         {
           pair,
@@ -234,7 +250,9 @@ export class CorrelationGraphComponent {
     return (
       key === hovered ||
       this.links().some(
-        (pair) => (pair.a === hovered && pair.b === key) || (pair.b === hovered && pair.a === key),
+        pair =>
+          (pair.a === hovered && pair.b === key) ||
+          (pair.b === hovered && pair.a === key),
       )
     );
   }
@@ -250,11 +268,11 @@ export class CorrelationGraphComponent {
 }
 
 function toward(
-  point: { x: number; y: number },
-  from: { x: number; y: number },
+  point: {x: number; y: number},
+  from: {x: number; y: number},
   by: number,
-): { x: number; y: number } {
+): {x: number; y: number} {
   const [dx, dy] = [from.x - point.x, from.y - point.y];
   const length = Math.hypot(dx, dy) || 1;
-  return { x: point.x + (dx / length) * by, y: point.y + (dy / length) * by };
+  return {x: point.x + (dx / length) * by, y: point.y + (dy / length) * by};
 }

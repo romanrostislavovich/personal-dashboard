@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import {DatePipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -9,19 +9,19 @@ import {
   LOCALE_ID,
   signal,
 } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { Router } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { searchApi } from '@pd/client-core';
-import { SearchHit } from '@pd/contracts';
-import { AuthService } from '../auth/auth.service';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { DASHBOARD_MODULES, DashboardCommand } from '../dashboard-module';
-import { LayoutService } from '../layout/layout.service';
-import { ThemeService } from '../theme/theme.service';
-import { ToastService } from '../toast/toast.service';
+import {MatDialogRef} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {Router} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {searchApi} from '@pd/client-core';
+import {SearchHit} from '@pd/contracts';
+import {AuthService} from '../auth/auth.service';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {DASHBOARD_MODULES, DashboardCommand} from '../dashboard-module';
+import {LayoutService} from '../layout/layout.service';
+import {ThemeService} from '../theme/theme.service';
+import {ToastService} from '../toast/toast.service';
 
 /** One line of the palette. */
 interface PaletteItem {
@@ -123,7 +123,9 @@ const HIT_ICONS: Record<string, string> = {
           </button>
         </li>
       } @empty {
-        <li class="empty" role="presentation">{{ 'core.palette.nothing' | transloco }}</li>
+        <li class="empty" role="presentation">
+          {{ 'core.palette.nothing' | transloco }}
+        </li>
       }
     </ul>
   `,
@@ -154,22 +156,26 @@ export class CommandPaletteComponent {
     const text = this.query().trim();
     const words = text.toLowerCase();
     const matching = this.fixed.filter(
-      (item) => !words || `${item.label} ${item.hint ?? ''}`.toLowerCase().includes(words),
+      item =>
+        !words ||
+        `${item.label} ${item.hint ?? ''}`.toLowerCase().includes(words),
     );
     // What exists comes first, so Enter opens it; making something new out of the text is last.
     return [
-      ...matching.filter((item) => item.group === 'pages'),
+      ...matching.filter(item => item.group === 'pages'),
       ...this.hits().map((hit, index) => this.hitItem(hit, index)),
-      ...matching.filter((item) => item.group === 'actions'),
+      ...matching.filter(item => item.group === 'actions'),
       ...(text.length >= MIN_QUERY ? this.textActions(text) : []),
     ];
   });
 
-  protected readonly activeItem = computed(() => this.items()[this.active()] ?? null);
+  protected readonly activeItem = computed(
+    () => this.items()[this.active()] ?? null,
+  );
 
   constructor() {
     // The search waits for a pause in typing; an answer to an older text is dropped.
-    effect((onCleanup) => {
+    effect(onCleanup => {
       const text = this.query().trim();
       this.active.set(0);
       if (text.length < MIN_QUERY) {
@@ -199,12 +205,12 @@ export class CommandPaletteComponent {
       event.preventDefault();
       if (count > 0) {
         const step = event.key === 'ArrowDown' ? 1 : -1;
-        this.active.update((index) => (index + step + count) % count);
+        this.active.update(index => (index + step + count) % count);
         // The active line may be below the fold of the list.
         queueMicrotask(() =>
           document
             .getElementById(this.activeItem()?.id ?? '')
-            ?.scrollIntoView({ block: 'nearest' }),
+            ?.scrollIntoView({block: 'nearest'}),
         );
       }
     } else if (event.key === 'Enter') {
@@ -230,14 +236,32 @@ export class CommandPaletteComponent {
   }
 
   private go(url: string, queryParams?: Record<string, string>): () => void {
-    return () => void this.router.navigate([url], { queryParams });
+    return () => void this.router.navigate([url], {queryParams});
   }
 
   private fixedItems(): PaletteItem[] {
     const t = (key: string) => this.transloco.translate(key);
-    const page = (id: string, icon: string, label: string, run: () => void, hint: string | null) =>
-      ({ id: `pd-palette-${id}`, group: 'pages', icon, label, hint, run }) satisfies PaletteItem;
-    const action = (id: string, icon: string, label: string, run: () => void | Promise<void>) =>
+    const page = (
+      id: string,
+      icon: string,
+      label: string,
+      run: () => void,
+      hint: string | null,
+    ) =>
+      ({
+        id: `pd-palette-${id}`,
+        group: 'pages',
+        icon,
+        label,
+        hint,
+        run,
+      }) satisfies PaletteItem;
+    const action = (
+      id: string,
+      icon: string,
+      label: string,
+      run: () => void | Promise<void>,
+    ) =>
       ({
         id: `pd-palette-${id}`,
         group: 'actions',
@@ -248,14 +272,22 @@ export class CommandPaletteComponent {
       }) satisfies PaletteItem;
 
     const settings = t('core.nav.settings');
-    const modules = this.modules.filter((module) => !this.layout.isHidden(module.id));
+    const modules = this.modules.filter(
+      module => !this.layout.isHidden(module.id),
+    );
     return [
       page('home', 'dashboard', t('core.nav.dashboard'), this.go('/'), null),
-      ...modules.flatMap((module) => [
-        page(module.id, module.nav.icon, t(module.nav.labelKey), this.go(`/${module.id}`), null),
+      ...modules.flatMap(module => [
+        page(
+          module.id,
+          module.nav.icon,
+          t(module.nav.labelKey),
+          this.go(`/${module.id}`),
+          null,
+        ),
         ...(module.commands ?? [])
-          .filter((command) => command.url)
-          .map((command) =>
+          .filter(command => command.url)
+          .map(command =>
             page(
               command.id,
               command.icon,
@@ -265,35 +297,46 @@ export class CommandPaletteComponent {
             ),
           ),
       ]),
-      page('projects', 'rocket_launch', t('core.nav.projects'), this.go('/projects'), null),
+      page(
+        'projects',
+        'rocket_launch',
+        t('core.nav.projects'),
+        this.go('/projects'),
+        null,
+      ),
       page('settings', 'settings', settings, this.go('/settings'), null),
-      ...(['appearance', 'integrations', 'data', 'system'] as const).map((tab) =>
+      ...(['appearance', 'integrations', 'data', 'system'] as const).map(tab =>
         page(
           `settings-${tab}`,
           'settings',
           t(`core.settings.tabs.${tab}`),
-          this.go('/settings', { tab }),
+          this.go('/settings', {tab}),
           settings,
         ),
       ),
-      ...(['light', 'dark', 'system'] as const).map((mode) =>
+      ...(['light', 'dark', 'system'] as const).map(mode =>
         action(`mode-${mode}`, 'contrast', t(`core.palette.mode.${mode}`), () =>
-          this.theme.update({ mode }),
+          this.theme.update({mode}),
         ),
       ),
-      action('logout', 'logout', t('core.nav.logout'), () => this.auth.logout()),
+      action('logout', 'logout', t('core.nav.logout'), () =>
+        this.auth.logout(),
+      ),
     ];
   }
 
   /** What the modules can do with the typed text itself: "Add a task: buy milk". */
   private textActions(text: string): PaletteItem[] {
     return this.modules
-      .filter((module) => !this.layout.isHidden(module.id))
-      .flatMap((module) => module.commands ?? [])
-      .filter((command): command is DashboardCommand & { loadAction: NonNullable<unknown> } =>
-        Boolean(command.loadAction),
+      .filter(module => !this.layout.isHidden(module.id))
+      .flatMap(module => module.commands ?? [])
+      .filter(
+        (
+          command,
+        ): command is DashboardCommand & {loadAction: NonNullable<unknown>} =>
+          Boolean(command.loadAction),
       )
-      .map((command) => ({
+      .map(command => ({
         id: `pd-palette-${command.id}`,
         group: 'actions' as const,
         icon: command.icon,
@@ -312,7 +355,7 @@ export class CommandPaletteComponent {
   }
 
   private hitItem(hit: SearchHit, index: number): PaletteItem {
-    const module = this.modules.find((m) => m.id === hit.module);
+    const module = this.modules.find(m => m.id === hit.module);
     const section = module
       ? this.transloco.translate(module.nav.labelKey)
       : this.transloco.translate('core.nav.projects');

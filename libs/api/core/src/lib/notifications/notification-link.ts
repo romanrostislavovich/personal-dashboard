@@ -1,4 +1,4 @@
-import { Notification } from './notification-channel';
+import {Notification} from './notification-channel';
 
 /** Sources that are a service inside a section: they are hidden with it, and lead to it. */
 export const SOURCE_SECTIONS: Record<string, string> = {
@@ -58,10 +58,14 @@ export function inboxLinkOf(id: string): string {
   return `/notifications/${id}`;
 }
 
-export function linkOf(notification: Pick<Notification, 'source' | 'link'>): string {
+export function linkOf(
+  notification: Pick<Notification, 'source' | 'link'>,
+): string {
   if (notification.link) {
     return notification.link;
   }
   const section = sectionOfSource(notification.source);
-  return CORE_PAGES[section] ?? (SECTION_PAGES.has(section) ? `/${section}` : '/');
+  return (
+    CORE_PAGES[section] ?? (SECTION_PAGES.has(section) ? `/${section}` : '/')
+  );
 }

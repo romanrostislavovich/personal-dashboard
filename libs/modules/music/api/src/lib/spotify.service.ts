@@ -1,9 +1,13 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, SecretsService, ServerKeysService } from '@pd/api-core';
-import { NowPlaying } from '@pd/contracts';
-import { randomBytes } from 'node:crypto';
-import { SpotifyAuthError, SpotifyClient, SpotifyTokens } from './clients/spotify.client';
+import {BadRequestException, Inject, Injectable} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, SecretsService, ServerKeysService} from '@pd/api-core';
+import {NowPlaying} from '@pd/contracts';
+import {randomBytes} from 'node:crypto';
+import {
+  SpotifyAuthError,
+  SpotifyClient,
+  SpotifyTokens,
+} from './clients/spotify.client';
 
 const REFRESH_TOKEN_SECRET = 'music.spotify.refresh-token';
 const STATE_TTL_MS = 10 * 60 * 1000;
@@ -20,10 +24,13 @@ const TOKEN_EXPIRY_MARGIN_MS = 60 * 1000;
 @Injectable()
 export class SpotifyService {
   /** Made from the app's keys the owner set (Settings → Integrations), again when they change. */
-  private app: { keys: string; client: SpotifyClient } | null = null;
+  private app: {keys: string; client: SpotifyClient} | null = null;
   private readonly publicUrl: string;
   // One-time states and access tokens live in memory — enough for a single API instance.
-  private readonly pendingStates = new Map<string, { userId: string; expiresAt: number }>();
+  private readonly pendingStates = new Map<
+    string,
+    {userId: string; expiresAt: number}
+  >();
   private readonly accessTokens = new Map<string, SpotifyTokens>();
   /** The app's own token, for the search of the catalogue. */
   private appToken: SpotifyTokens | null = null;
@@ -33,7 +40,9 @@ export class SpotifyService {
     private readonly secrets: SecretsService,
     private readonly keys: ServerKeysService,
   ) {
-    this.publicUrl = config.get('PUBLIC_URL', { infer: true }).replace(/\/+$/, '');
+    this.publicUrl = config
+      .get('PUBLIC_URL', {infer: true})
+      .replace(/\/+$/, '');
   }
 
   /** Where Spotify sends the user back: the Redirect URI of the app at developer.spotify.com. */
@@ -52,9 +61,13 @@ export class SpotifyService {
 
   /** The owner sets the app's keys: Spotify must give the app its token with them first. */
   async setApp(clientId: string, clientSecret: string): Promise<void> {
-    await new SpotifyClient(clientId, clientSecret, this.redirectUri).appToken().catch(() => {
-      throw new BadRequestException('Spotify does not accept this Client ID and Client Secret');
-    });
+    await new SpotifyClient(clientId, clientSecret, this.redirectUri)
+      .appToken()
+      .catch(() => {
+        throw new BadRequestException(
+          'Spotify does not accept this Client ID and Client Secret',
+        );
+      });
     await this.keys.set('music.spotify-client-id', clientId);
     await this.keys.set('music.spotify-client-secret', clientSecret);
   }
@@ -74,7 +87,10 @@ export class SpotifyService {
     }
     const keys = `${clientId}:${clientSecret}`;
     if (this.app?.keys !== keys) {
-      this.app = { keys, client: new SpotifyClient(clientId, clientSecret, this.redirectUri) };
+      this.app = {
+        keys,
+        client: new SpotifyClient(clientId, clientSecret, this.redirectUri),
+      };
       this.appToken = null;
       this.accessTokens.clear();
     }
@@ -85,12 +101,18 @@ export class SpotifyService {
    * The link of a song in Spotify, found with the app's own token (no user needed); `null` —
    * Spotify is not set up on the server, or the song is not there.
    */
-  async findTrack(track: string, artist: string | null): Promise<string | null> {
+  async findTrack(
+    track: string,
+    artist: string | null,
+  ): Promise<string | null> {
     const client = await this.client();
     if (!client) {
       return null;
     }
-    if (!this.appToken || this.appToken.expiresAt.getTime() < Date.now() + 60_000) {
+    if (
+      !this.appToken ||
+      this.appToken.expiresAt.getTime() < Date.now() + 60_000
+    ) {
       this.appToken = await client.appToken();
     }
     return client.findTrack(this.appToken.accessToken, track, artist);
@@ -106,12 +128,18 @@ export class SpotifyService {
       throw new BadRequestException('Spotify is not configured on the server');
     }
     const state = randomBytes(16).toString('hex');
-    this.pendingStates.set(state, { userId, expiresAt: Date.now() + STATE_TTL_MS });
+    this.pendingStates.set(state, {
+      userId,
+      expiresAt: Date.now() + STATE_TTL_MS,
+    });
     return client.authorizeUrl(state);
   }
 
   /** Returns the URL to redirect the browser to after Spotify sign-in. */
-  async handleCallback(code: string | undefined, state: string | undefined): Promise<string> {
+  async handleCallback(
+    code: string | undefined,
+    state: string | undefined,
+  ): Promise<string> {
     const pending = state ? this.pendingStates.get(state) : undefined;
     if (state) {
       this.pendingStates.delete(state);
@@ -151,9 +179,15 @@ export class SpotifyService {
     }
   }
 
-  private async accessToken(userId: string, client: SpotifyClient): Promise<string | null> {
+  private async accessToken(
+    userId: string,
+    client: SpotifyClient,
+  ): Promise<string | null> {
     const cached = this.accessTokens.get(userId);
-    if (cached && cached.expiresAt.getTime() - TOKEN_EXPIRY_MARGIN_MS > Date.now()) {
+    if (
+      cached &&
+      cached.expiresAt.getTime() - TOKEN_EXPIRY_MARGIN_MS > Date.now()
+    ) {
       return cached.accessToken;
     }
     const refreshToken = await this.secrets.get(userId, REFRESH_TOKEN_SECRET);
@@ -174,7 +208,10 @@ export class SpotifyService {
     }
   }
 
-  private async saveTokens(userId: string, tokens: SpotifyTokens): Promise<void> {
+  private async saveTokens(
+    userId: string,
+    tokens: SpotifyTokens,
+  ): Promise<void> {
     this.accessTokens.set(userId, tokens);
     if (tokens.refreshToken) {
       await this.secrets.set(userId, REFRESH_TOKEN_SECRET, tokens.refreshToken);

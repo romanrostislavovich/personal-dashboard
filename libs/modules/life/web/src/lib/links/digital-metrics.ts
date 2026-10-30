@@ -12,8 +12,8 @@ const METRICS = [
   'backspacePercent',
 ] as const;
 
-export const DIGITAL_METRIC_KEYS = SOURCES.flatMap((source) =>
-  METRICS.map((metric) => `activity.telemetry.${source}.${metric}`),
+export const DIGITAL_METRIC_KEYS = SOURCES.flatMap(source =>
+  METRICS.map(metric => `activity.telemetry.${source}.${metric}`),
 );
 
 export function isDigitalMetric(key: string): boolean {

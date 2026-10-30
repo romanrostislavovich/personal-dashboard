@@ -1,5 +1,5 @@
-import { strFromU8, unzipSync } from 'fflate';
-import { toDocx, toXlsx, xmlText } from './events-export';
+import {strFromU8, unzipSync} from 'fflate';
+import {toDocx, toXlsx, xmlText} from './events-export';
 
 const table = {
   title: 'Events',
@@ -18,7 +18,10 @@ const table = {
 };
 const files = (archive: Buffer) =>
   Object.fromEntries(
-    Object.entries(unzipSync(archive)).map(([name, data]) => [name, strFromU8(data)]),
+    Object.entries(unzipSync(archive)).map(([name, data]) => [
+      name,
+      strFromU8(data),
+    ]),
   );
 
 describe('events export', () => {

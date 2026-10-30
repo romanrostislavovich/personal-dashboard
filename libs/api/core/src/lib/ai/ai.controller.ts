@@ -14,7 +14,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {FileInterceptor} from '@nestjs/platform-express';
 import {
   AI_ATTACHMENT_MAX_BYTES,
   AiAction,
@@ -34,17 +34,17 @@ import {
   aiPreferencesSchema,
   AiSettings,
 } from '@pd/contracts';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { ZodValidationPipe } from '../validation/zod-validation.pipe';
-import { AiConnectionsService } from './ai-connections.service';
-import { AiActionsService } from './ai-actions.service';
-import { AiConversationsService } from './ai-conversations.service';
-import { AiService } from './ai.service';
-import { AiMemoryService } from './ai-memory.service';
-import { RecallService } from '../recall/recall.service';
-import { AttachmentError, attachmentText } from './attachment-text';
-import { MorningDigestService } from './morning-digest.service';
-import { RateLimit } from '../system/rate-limit';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {ZodValidationPipe} from '../validation/zod-validation.pipe';
+import {AiConnectionsService} from './ai-connections.service';
+import {AiActionsService} from './ai-actions.service';
+import {AiConversationsService} from './ai-conversations.service';
+import {AiService} from './ai.service';
+import {AiMemoryService} from './ai-memory.service';
+import {RecallService} from '../recall/recall.service';
+import {AttachmentError, attachmentText} from './attachment-text';
+import {MorningDigestService} from './morning-digest.service';
+import {RateLimit} from '../system/rate-limit';
 
 /** The part of a multer upload we use (multer's own types are not installed). */
 interface UploadedDocument {
@@ -87,26 +87,32 @@ export class AiController {
     if (!text) {
       throw new BadRequestException('Expected a question in `q`');
     }
-    const hits = await this.recall_.search(user.id, text, { module });
+    const hits = await this.recall_.search(user.id, text, {module});
     if (!hits) {
-      throw new BadRequestException('No AI connection makes vectors: see Settings → AI');
+      throw new BadRequestException(
+        'No AI connection makes vectors: see Settings → AI',
+      );
     }
     return hits;
   }
 
   /** How many items the index of search by meaning holds; it is rebuilt with `POST`. */
   @Get('recall/status')
-  async recallStatus(@CurrentUser() user: AuthUser): Promise<{ indexed: number }> {
-    return { indexed: await this.recall_.indexed(user.id) };
+  async recallStatus(
+    @CurrentUser() user: AuthUser,
+  ): Promise<{indexed: number}> {
+    return {indexed: await this.recall_.indexed(user.id)};
   }
 
   @RateLimit(10, 3600)
   @Post('recall/index')
-  async recallIndex(@CurrentUser() user: AuthUser): Promise<{ indexed: number }> {
+  async recallIndex(@CurrentUser() user: AuthUser): Promise<{indexed: number}> {
     if ((await this.recall_.index(user.id)) === null) {
-      throw new BadRequestException('No AI connection makes vectors: see Settings → AI');
+      throw new BadRequestException(
+        'No AI connection makes vectors: see Settings → AI',
+      );
     }
-    return { indexed: await this.recall_.indexed(user.id) };
+    return {indexed: await this.recall_.indexed(user.id)};
   }
 
   /** What the assistant keeps between conversations. */
@@ -157,7 +163,8 @@ export class AiController {
   @Put('preferences')
   savePreferences(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(aiPreferencesSchema)) preferences: AiPreferences,
+    @Body(new ZodValidationPipe(aiPreferencesSchema))
+    preferences: AiPreferences,
   ): Promise<AiSettings> {
     return this.connections.savePreferences(user.id, preferences);
   }
@@ -167,7 +174,8 @@ export class AiController {
   @Post('connections')
   createConnection(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(aiConnectionInputSchema)) input: AiConnectionInput,
+    @Body(new ZodValidationPipe(aiConnectionInputSchema))
+    input: AiConnectionInput,
   ): Promise<AiSettings> {
     return this.connections.create(user.id, input);
   }
@@ -176,7 +184,8 @@ export class AiController {
   updateConnection(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(aiConnectionInputSchema)) input: AiConnectionInput,
+    @Body(new ZodValidationPipe(aiConnectionInputSchema))
+    input: AiConnectionInput,
   ): Promise<AiSettings> {
     return this.connections.update(user.id, id, input);
   }
@@ -209,7 +218,7 @@ export class AiController {
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(aiChatRequestSchema)) request: AiChatRequest,
   ): Promise<AiChatResponse> {
-    return this.conversations.ask(user.id, request, { allowWrites: true });
+    return this.conversations.ask(user.id, request, {allowWrites: true});
   }
 
   // --- Conversations: the current one is the one updated last ---
@@ -220,7 +229,9 @@ export class AiController {
   }
 
   @Get('conversations/current')
-  currentConversation(@CurrentUser() user: AuthUser): Promise<AiConversationDetail | null> {
+  currentConversation(
+    @CurrentUser() user: AuthUser,
+  ): Promise<AiConversationDetail | null> {
     return this.conversations.current(user.id);
   }
 
@@ -234,7 +245,9 @@ export class AiController {
 
   /** "New conversation": the next message, here or in Telegram, starts from scratch. */
   @Post('conversations')
-  startConversation(@CurrentUser() user: AuthUser): Promise<AiConversationDetail> {
+  startConversation(
+    @CurrentUser() user: AuthUser,
+  ): Promise<AiConversationDetail> {
     return this.conversations.start(user.id);
   }
 
@@ -255,7 +268,7 @@ export class AiController {
   @Post('attachments')
   @UseInterceptors(
     FileInterceptor('file', {
-      limits: { fileSize: AI_ATTACHMENT_MAX_BYTES },
+      limits: {fileSize: AI_ATTACHMENT_MAX_BYTES},
       // Browsers send file names in UTF-8 ("Выписка.pdf"); the default would be Latin-1.
       defParamCharset: 'utf8',
     }),
@@ -269,13 +282,18 @@ export class AiController {
     }
     try {
       return await attachmentText(
-        { name: file.originalname, data: file.buffer },
+        {name: file.originalname, data: file.buffer},
         (instruction, image) =>
-          this.ai.completeWithImage(user.id, instruction, image, undefined, { keepLanguage: true }),
+          this.ai.completeWithImage(user.id, instruction, image, undefined, {
+            keepLanguage: true,
+          }),
       );
     } catch (error) {
       if (error instanceof AttachmentError) {
-        throw new BadRequestException({ message: error.message, reason: error.reason });
+        throw new BadRequestException({
+          message: error.message,
+          reason: error.reason,
+        });
       }
       // The model that reads pictures failed or hit its limit: the user sees why.
       if (error instanceof HttpException) {

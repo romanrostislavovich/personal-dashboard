@@ -1,9 +1,9 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService } from '@pd/api-core';
-import { habitDayInputSchema } from '@pd/contracts';
-import { z } from 'zod';
-import { HabitsService } from './habits.service';
-import { habitDays } from './habits.schema';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AiService} from '@pd/api-core';
+import {habitDayInputSchema} from '@pd/contracts';
+import {z} from 'zod';
+import {HabitsService} from './habits.service';
+import {habitDays} from './habits.schema';
 
 const markArgs = habitDayInputSchema.extend({
   habitId: z.uuid(),
@@ -32,10 +32,13 @@ export class HabitsAiTools implements OnModuleInit {
         'is counted in, `startedOn`, and `stats`: `currentStreak` (clean days in a row up to ' +
         'today), `bestStreak`, `cleanDays`, `usedDays`, `usedThisWeek`, `weeksWithinLimit`. A ' +
         'day nobody marked is clean. Be kind about a slip: it is part of the way.',
-      parameters: { type: 'object', properties: {} },
-      handler: async (userId) =>
+      parameters: {type: 'object', properties: {}},
+      handler: async userId =>
         // Without the calendar of marks: the numbers tell the model what it needs.
-        (await this.habits.list(userId)).map((habit) => ({ ...habit, recent: undefined })),
+        (await this.habits.list(userId)).map(habit => ({
+          ...habit,
+          recent: undefined,
+        })),
     });
 
     this.ai.registerTool({
@@ -51,15 +54,21 @@ export class HabitsAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          habitId: { type: 'string' },
-          day: { type: 'string', description: 'YYYY-MM-DD, the user’s today by default' },
-          status: { type: 'string', enum: ['used', 'clean', 'done'] },
-          amount: { type: 'number', description: 'How much, in the habit’s unit; optional' },
+          habitId: {type: 'string'},
+          day: {
+            type: 'string',
+            description: 'YYYY-MM-DD, the user’s today by default',
+          },
+          status: {type: 'string', enum: ['used', 'clean', 'done']},
+          amount: {
+            type: 'number',
+            description: 'How much, in the habit’s unit; optional',
+          },
         },
         required: ['habitId', 'day', 'status'],
       },
       handler: (userId, args) => {
-        const { habitId, day, ...input } = markArgs.parse(args);
+        const {habitId, day, ...input} = markArgs.parse(args);
         return this.habits.mark(userId, habitId, day, input);
       },
     });

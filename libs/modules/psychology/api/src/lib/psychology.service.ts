@@ -1,5 +1,11 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DB, Database, LinksService, MOOD_METRIC, UsersService } from '@pd/api-core';
+import {Inject, Injectable, NotFoundException} from '@nestjs/common';
+import {
+  DB,
+  Database,
+  LinksService,
+  MOOD_METRIC,
+  UsersService,
+} from '@pd/api-core';
 import {
   compareEvents,
   EventExportFormat,
@@ -17,11 +23,11 @@ import {
   questionnaireBand,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, desc, eq } from 'drizzle-orm';
-import { z } from 'zod';
-import { ExportTable, toDocx, toXlsx } from './events-export';
-import { moodDuring, moodPatterns } from './patterns';
-import { feelingText, psychologyMessages } from './psychology.messages';
+import {and, desc, eq} from 'drizzle-orm';
+import {z} from 'zod';
+import {ExportTable, toDocx, toXlsx} from './events-export';
+import {moodDuring, moodPatterns} from './patterns';
+import {feelingText, psychologyMessages} from './psychology.messages';
 import {
   PsychologyAssessmentRow,
   psychologyAssessments,
@@ -54,7 +60,7 @@ export class PsychologyService {
   /** The events that touch the period (all of them without one), the latest first. */
   async events(
     userId: string,
-    period: { from?: LocalDate; to?: LocalDate } = {},
+    period: {from?: LocalDate; to?: LocalDate} = {},
   ): Promise<PsychologyEvent[]> {
     const rows = await this.db
       .select()
@@ -65,7 +71,7 @@ export class PsychologyService {
     const birthYear = await this.birthYear(userId);
     return rows
       .map(toEvent)
-      .filter((event) => eventTouches(event, birthYear, period))
+      .filter(event => eventTouches(event, birthYear, period))
       .sort(compareEvents(birthYear));
   }
 
@@ -80,7 +86,8 @@ export class PsychologyService {
       .where(eq(psychologySettings.userId, userId));
     return {
       birthYear: row?.birthYear ?? null,
-      reminderTest: (row?.reminderTest as PsychologySettings['reminderTest']) ?? null,
+      reminderTest:
+        (row?.reminderTest as PsychologySettings['reminderTest']) ?? null,
       reminderEveryDays: row?.reminderEveryDays ?? 30,
       reminderAt: row?.reminderAt ?? '20:00',
       closeName: row?.closeName ?? null,
@@ -89,29 +96,41 @@ export class PsychologyService {
   }
 
   /** Only what is given is changed. */
-  async saveSettings(userId: string, settings: PsychologySettingsInput): Promise<void> {
+  async saveSettings(
+    userId: string,
+    settings: PsychologySettingsInput,
+  ): Promise<void> {
     if (!Object.keys(settings).length) {
       return;
     }
     await this.db
       .insert(psychologySettings)
-      .values({ userId, ...settings })
-      .onConflictDoUpdate({ target: psychologySettings.userId, set: settings });
+      .values({userId, ...settings})
+      .onConflictDoUpdate({target: psychologySettings.userId, set: settings});
   }
 
-  async addEvent(userId: string, input: ValidEventInput): Promise<PsychologyEvent> {
+  async addEvent(
+    userId: string,
+    input: ValidEventInput,
+  ): Promise<PsychologyEvent> {
     const [row] = await this.db
       .insert(psychologyEvents)
-      .values({ userId, ...stored(input) })
+      .values({userId, ...stored(input)})
       .returning();
     return toEvent(row);
   }
 
-  async updateEvent(userId: string, id: string, input: ValidEventInput): Promise<PsychologyEvent> {
+  async updateEvent(
+    userId: string,
+    id: string,
+    input: ValidEventInput,
+  ): Promise<PsychologyEvent> {
     const [row] = await this.db
       .update(psychologyEvents)
       .set(stored(input))
-      .where(and(eq(psychologyEvents.id, id), eq(psychologyEvents.userId, userId)))
+      .where(
+        and(eq(psychologyEvents.id, id), eq(psychologyEvents.userId, userId)),
+      )
       .returning();
     if (!row) {
       throw new NotFoundException();
@@ -122,15 +141,17 @@ export class PsychologyService {
   async removeEvent(userId: string, id: string): Promise<void> {
     await this.db
       .delete(psychologyEvents)
-      .where(and(eq(psychologyEvents.id, id), eq(psychologyEvents.userId, userId)));
+      .where(
+        and(eq(psychologyEvents.id, id), eq(psychologyEvents.userId, userId)),
+      );
   }
 
   /** The events of a period as an Excel workbook or a Word document, in the user's language. */
   async exportEvents(
     userId: string,
     format: EventExportFormat,
-    period: { from?: LocalDate; to?: LocalDate },
-  ): Promise<{ file: Buffer; name: string; type: string }> {
+    period: {from?: LocalDate; to?: LocalDate},
+  ): Promise<{file: Buffer; name: string; type: string}> {
     const user = await this.users.findById(userId);
     const text = psychologyMessages(user?.locale);
     const events = (await this.events(userId, period)).reverse(); // The earliest first: a story.
@@ -141,7 +162,7 @@ export class PsychologyService {
           ? text.eventsPeriod(period.from ?? '…', period.to ?? '…')
           : text.eventsAll,
       headers: text.eventsHeaders,
-      rows: events.map((event) => [
+      rows: events.map(event => [
         event.startedOn ?? text.age(event.ageFrom ?? 0, event.ageTo),
         event.endedOn ?? text.ongoing,
         event.title,
@@ -167,7 +188,7 @@ export class PsychologyService {
       .from(a)
       .where(eq(a.userId, userId))
       .orderBy(desc(a.takenOn), desc(a.createdAt));
-    return rows.flatMap((row) => toAssessment(row) ?? []);
+    return rows.flatMap(row => toAssessment(row) ?? []);
   }
 
   async addAssessment(
@@ -176,7 +197,7 @@ export class PsychologyService {
   ): Promise<PsychologyAssessment> {
     const [row] = await this.db
       .insert(psychologyAssessments)
-      .values({ userId, ...psychologyAssessmentInputSchema.parse(input) })
+      .values({userId, ...psychologyAssessmentInputSchema.parse(input)})
       .returning();
     return toAssessment(row) as PsychologyAssessment;
   }
@@ -184,7 +205,12 @@ export class PsychologyService {
   async removeAssessment(userId: string, id: string): Promise<void> {
     await this.db
       .delete(psychologyAssessments)
-      .where(and(eq(psychologyAssessments.id, id), eq(psychologyAssessments.userId, userId)));
+      .where(
+        and(
+          eq(psychologyAssessments.id, id),
+          eq(psychologyAssessments.userId, userId),
+        ),
+      );
   }
 
   // --- Patterns ---
@@ -192,24 +218,24 @@ export class PsychologyService {
   /** The mood over a period: by weekday, by week, low runs, and during the events. */
   async patterns(
     userId: string,
-    period: { from: LocalDate; to: LocalDate },
+    period: {from: LocalDate; to: LocalDate},
   ): Promise<PsychologyPatterns> {
     // The mood is the diary's: the core tells it.
     const mood = await this.links.dailyMetric(userId, MOOD_METRIC, period);
     // Only the dated events: an age does not say which days.
-    const events = (await this.events(userId, period)).flatMap((event) =>
-      event.startedOn ? { ...event, startedOn: event.startedOn } : [],
+    const events = (await this.events(userId, period)).flatMap(event =>
+      event.startedOn ? {...event, startedOn: event.startedOn} : [],
     );
     const days = mood?.days ?? [];
     // The treatment Health tells, through the core: Psychology does not know Health.
     // Only the treatment of the mind: the rest of Health, and its own events, are not for here.
     const periods = (await this.links.periodsBetween(userId, period))
-      .filter((item) => item.mind)
-      .map((item) => ({
+      .filter(item => item.mind)
+      .map(item => ({
         ...item,
         mood: moodDuring(days, item.from, item.to, period),
       }));
-    return { ...moodPatterns(days, events, period), periods };
+    return {...moodPatterns(days, events, period), periods};
   }
 }
 
@@ -218,9 +244,15 @@ function stored(input: ValidEventInput) {
     title: input.title,
     description: input.description || null,
     startedOn: input.startedOn ?? null,
-    endedOn: input.endedOn && input.endedOn !== input.startedOn ? input.endedOn : null,
+    endedOn:
+      input.endedOn && input.endedOn !== input.startedOn ? input.endedOn : null,
     ageFrom: input.ageFrom ?? null,
-    ageTo: input.ageTo != null && input.ageTo !== input.ageFrom ? input.ageTo : null,
+    ageTo:
+      input.ageTo !== null &&
+      input.ageTo !== undefined &&
+      input.ageTo !== input.ageFrom
+        ? input.ageTo
+        : null,
     feeling: input.feeling,
   };
 }
@@ -240,8 +272,10 @@ function toEvent(row: PsychologyEventRow): PsychologyEvent {
 }
 
 /** `null` for a questionnaire that is not known any more. */
-function toAssessment(row: PsychologyAssessmentRow): PsychologyAssessment | null {
-  const questionnaire = QUESTIONNAIRES.find((item) => item.id === row.test);
+function toAssessment(
+  row: PsychologyAssessmentRow,
+): PsychologyAssessment | null {
+  const questionnaire = QUESTIONNAIRES.find(item => item.id === row.test);
   if (!questionnaire) {
     return null;
   }
@@ -254,6 +288,8 @@ function toAssessment(row: PsychologyAssessmentRow): PsychologyAssessment | null
     sum,
     score: sum * questionnaire.scale,
     band: questionnaireBand(questionnaire, sum),
-    care: questionnaire.careItem ? (row.answers[questionnaire.careItem - 1] ?? 0) > 0 : false,
+    care: questionnaire.careItem
+      ? (row.answers[questionnaire.careItem - 1] ?? 0) > 0
+      : false,
   };
 }

@@ -36,21 +36,23 @@ export function features(text: string, amount: number): string[] {
   const words = text
     .toLowerCase()
     .split(/[^\p{L}]+/u)
-    .filter((word) => word.length > 1);
-  const pieces = words.flatMap((word) => {
+    .filter(word => word.length > 1);
+  const pieces = words.flatMap(word => {
     const padded = `^${word}$`;
     return Array.from(
-      { length: Math.max(0, padded.length - 2) },
+      {length: Math.max(0, padded.length - 2)},
       (_, i) => `#${padded.slice(i, i + 3)}`,
     );
   });
   // 1, 2–3, 4–7 … money units: a coffee and a rent are told apart by size too.
   const size = `$${Math.floor(Math.log2(Math.abs(amount) + 1))}`;
-  return [...words.map((word) => `w:${word}`), ...pieces, size];
+  return [...words.map(word => `w:${word}`), ...pieces, size];
 }
 
 export function train(examples: Example[]): Model {
-  const categories = [...new Set(examples.map((example) => example.category))].sort();
+  const categories = [
+    ...new Set(examples.map(example => example.category)),
+  ].sort();
   const index = new Map(categories.map((category, i) => [category, i]));
   const counts = categories.map(() => new Map<string, number>());
   const totals = categories.map(() => 0);
@@ -67,7 +69,7 @@ export function train(examples: Example[]): Model {
   }
   return {
     categories,
-    priors: seen.map((count) => Math.log(count / examples.length)),
+    priors: seen.map(count => Math.log(count / examples.length)),
     counts,
     totals,
     vocabulary: vocabulary.size,
@@ -89,10 +91,10 @@ export function predict(model: Model, text: string, amount: number): Guess[] {
   });
   // Softmax, from the log scores, without overflow.
   const top = Math.max(...scores);
-  const weights = scores.map((score) => Math.exp(score - top));
+  const weights = scores.map(score => Math.exp(score - top));
   const sum = weights.reduce((total, weight) => total + weight, 0);
   return model.categories
-    .map((category, i) => ({ category, probability: weights[i] / sum }))
+    .map((category, i) => ({category, probability: weights[i] / sum}))
     .sort((a, b) => b.probability - a.probability);
 }
 
@@ -113,18 +115,22 @@ export interface Quality {
  * group is guessed by a model trained on the others.
  */
 export function evaluate(
-  examples: (Example & { counterparty: string })[],
+  examples: (Example & {counterparty: string})[],
   sure: number,
   folds = 5,
 ): Quality {
-  const groups = [...new Set(examples.map((example) => example.counterparty))];
-  const foldOf = new Map(groups.map((group) => [group, hash(group) % folds]));
+  const groups = [...new Set(examples.map(example => example.counterparty))];
+  const foldOf = new Map(groups.map(group => [group, hash(group) % folds]));
   let right = 0;
   let sureCount = 0;
   let sureRight = 0;
   for (let fold = 0; fold < folds; fold++) {
-    const test = examples.filter((example) => foldOf.get(example.counterparty) === fold);
-    const learn = examples.filter((example) => foldOf.get(example.counterparty) !== fold);
+    const test = examples.filter(
+      example => foldOf.get(example.counterparty) === fold,
+    );
+    const learn = examples.filter(
+      example => foldOf.get(example.counterparty) !== fold,
+    );
     if (!test.length || !learn.length) {
       continue;
     }
@@ -142,7 +148,7 @@ export function evaluate(
   const round = (value: number) => Math.round(value * 1000) / 1000;
   return {
     examples: examples.length,
-    categories: new Set(examples.map((example) => example.category)).size,
+    categories: new Set(examples.map(example => example.category)).size,
     accuracy: round(right / Math.max(1, examples.length)),
     sureShare: round(sureCount / Math.max(1, examples.length)),
     sureAccuracy: round(sureRight / Math.max(1, sureCount)),

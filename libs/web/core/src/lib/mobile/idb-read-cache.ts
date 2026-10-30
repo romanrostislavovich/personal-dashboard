@@ -1,4 +1,4 @@
-import { CachedRead, ReadCache } from '@pd/client-core';
+import {CachedRead, ReadCache} from '@pd/client-core';
 
 const DB_NAME = 'pd-read-cache';
 const STORE = 'reads';
@@ -33,13 +33,17 @@ export function indexedDbReadCache(): ReadCache {
   const db = () =>
     (opened ??= new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, 2);
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = event => {
         // Version 1 had the reads only; version 2 added the files.
         if (event.oldVersion < 1) {
-          request.result.createObjectStore(STORE, { keyPath: 'url' }).createIndex('at', 'at');
+          request.result
+            .createObjectStore(STORE, {keyPath: 'url'})
+            .createIndex('at', 'at');
         }
         if (event.oldVersion < 2) {
-          request.result.createObjectStore(FILES, { keyPath: 'url' }).createIndex('at', 'at');
+          request.result
+            .createObjectStore(FILES, {keyPath: 'url'})
+            .createIndex('at', 'at');
         }
       };
       request.onsuccess = () => resolve(request.result);
@@ -54,7 +58,8 @@ export function indexedDbReadCache(): ReadCache {
     const transaction = (await db()).transaction(storeName, mode);
     const request = work(transaction.objectStore(storeName));
     return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => resolve(request ? request.result : undefined);
+      transaction.oncomplete = () =>
+        resolve(request ? request.result : undefined);
       transaction.onerror = () => reject(transaction.error);
     });
   };
@@ -63,15 +68,17 @@ export function indexedDbReadCache(): ReadCache {
   const trim = (storeName = STORE, max = MAX_READS) =>
     run(
       'readwrite',
-      (store) => {
+      store => {
         const count = store.count();
         count.onsuccess = () => {
           let extra = count.result - max;
           if (extra <= 0) {
             return;
           }
-          store.index('at').openCursor().onsuccess = (event) => {
-            const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
+          store.index('at').openCursor().onsuccess = event => {
+            const cursor = (
+              event.target as IDBRequest<IDBCursorWithValue | null>
+            ).result;
             if (cursor && extra-- > 0) {
               cursor.delete();
               cursor.continue();
@@ -86,16 +93,18 @@ export function indexedDbReadCache(): ReadCache {
   return {
     async get(url) {
       try {
-        const row = await run<Row | undefined>('readonly', (store) => store.get(url));
-        return row ? { body: row.body, at: row.at } : null;
+        const row = await run<Row | undefined>('readonly', store =>
+          store.get(url),
+        );
+        return row ? {body: row.body, at: row.at} : null;
       } catch {
         return null;
       }
     },
     async put(url, body) {
       try {
-        const row: Row = { url, body, at: new Date().toISOString() };
-        await run('readwrite', (store) => {
+        const row: Row = {url, body, at: new Date().toISOString()};
+        await run('readwrite', store => {
           store.put(row);
         });
         if (++writes % TRIM_EVERY === 0) {
@@ -107,12 +116,12 @@ export function indexedDbReadCache(): ReadCache {
     },
     async clear() {
       try {
-        await run('readwrite', (store) => {
+        await run('readwrite', store => {
           store.clear();
         });
         await run(
           'readwrite',
-          (store) => {
+          store => {
             store.clear();
           },
           FILES,
@@ -123,7 +132,11 @@ export function indexedDbReadCache(): ReadCache {
     },
     async getFile(url) {
       try {
-        const row = await run<FileRow | undefined>('readonly', (store) => store.get(url), FILES);
+        const row = await run<FileRow | undefined>(
+          'readonly',
+          store => store.get(url),
+          FILES,
+        );
         return row?.file ?? null;
       } catch {
         return null;
@@ -131,10 +144,10 @@ export function indexedDbReadCache(): ReadCache {
     },
     async putFile(url, file) {
       try {
-        const row: FileRow = { url, file, at: new Date().toISOString() };
+        const row: FileRow = {url, file, at: new Date().toISOString()};
         await run(
           'readwrite',
-          (store) => {
+          store => {
             store.put(row);
           },
           FILES,

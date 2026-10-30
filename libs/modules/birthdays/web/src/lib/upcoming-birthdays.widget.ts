@@ -1,13 +1,18 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatListModule } from '@angular/material/list';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { upcomingDates } from '@pd/contracts';
-import { BirthdayWhenComponent } from './birthday-when.component';
-import { BirthdaysApi } from './birthdays.api';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatListModule} from '@angular/material/list';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {upcomingDates} from '@pd/contracts';
+import {BirthdayWhenComponent} from './birthday-when.component';
+import {BirthdaysApi} from './birthdays.api';
 
 const WIDGET_DAYS_AHEAD = 30;
 const WIDGET_MAX_ITEMS = 5;
@@ -28,7 +33,9 @@ const WIDGET_MAX_ITEMS = 5;
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>📅 {{ 'birthdays.widget.title' | transloco }}</mat-card-title>
+        <mat-card-title
+          >📅 {{ 'birthdays.widget.title' | transloco }}</mat-card-title
+        >
       </mat-card-header>
       <mat-card-content>
         <mat-list>
@@ -55,7 +62,9 @@ const WIDGET_MAX_ITEMS = 5;
         </mat-list>
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/birthdays">{{ 'birthdays.widget.all' | transloco }}</a>
+        <a matButton routerLink="/birthdays">{{
+          'birthdays.widget.all' | transloco
+        }}</a>
       </mat-card-actions>
     </mat-card>
   `,
@@ -70,7 +79,7 @@ export class UpcomingBirthdaysWidget {
 
   protected readonly upcoming = computed(() =>
     upcomingDates(this.birthdays.value())
-      .filter((date) => date.daysUntil <= WIDGET_DAYS_AHEAD)
+      .filter(date => date.daysUntil <= WIDGET_DAYS_AHEAD)
       .slice(0, WIDGET_MAX_ITEMS),
   );
 }

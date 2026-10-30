@@ -1,12 +1,13 @@
-import { BrowserWindow, ipcMain, screen } from 'electron';
-import { join } from 'node:path';
-import { FieldEvent, FieldWatch, ScreenBox } from './field-watch';
+import {BrowserWindow, ipcMain, screen} from 'electron';
+import {join} from 'node:path';
+import {FieldEvent, FieldWatch, ScreenBox} from './field-watch';
 
 /** A mistake as the dashboard tells it (WritingIssue of the contracts). */
 export interface Issue {
   offset: number;
   length: number;
-  kind: 'spelling' | 'grammar' | 'punctuation' | 'style' | 'typography' | 'other';
+  kind:
+    'spelling' | 'grammar' | 'punctuation' | 'style' | 'typography' | 'other';
   message: string;
   replacements: string[];
   ruleId: string;
@@ -15,7 +16,7 @@ export interface Issue {
 /** What the dashboard's page does for the app: it holds the session (see WritingBridge). */
 export interface WritingServer {
   check(text: string): Promise<Issue[] | null>;
-  ignore(what: { word?: string; ruleId?: string }): Promise<void>;
+  ignore(what: {word?: string; ruleId?: string}): Promise<void>;
   /** A suggested fix was taken: counted for the achievements (not the text). */
   accepted(count: number): Promise<void>;
 }
@@ -62,9 +63,9 @@ const CARD_WIDTH = 340;
  * typed into the field. Programs that give no positions of their words get no marks.
  */
 export class DesktopWriting {
-  private readonly watch = new FieldWatch((event) => this.onEvent(event));
-  private config: WritingConfig = { enabled: false, ignoredApps: [] };
-  private field: { app: string; text: string } | null = null;
+  private readonly watch = new FieldWatch(event => this.onEvent(event));
+  private config: WritingConfig = {enabled: false, ignoredApps: []};
+  private field: {app: string; text: string} | null = null;
   private issues: Issue[] = [];
   private rects: ScreenBox[][] = [];
   private timer: NodeJS.Timeout | null = null;
@@ -75,13 +76,18 @@ export class DesktopWriting {
   private cardIssue: Issue | null = null;
 
   constructor(private readonly server: WritingServer) {
-    ipcMain.handle('writing-card:choose', (_event, choice: { action: string; value?: string }) =>
-      this.onChoice(choice),
+    ipcMain.handle(
+      'writing-card:choose',
+      (_event, choice: {action: string; value?: string}) =>
+        this.onChoice(choice),
     );
     ipcMain.handle('writing-card:height', (_event, height: number) => {
       if (this.card && Number.isFinite(height)) {
         const bounds = this.card.getBounds();
-        this.card.setBounds({ ...bounds, height: Math.min(400, Math.max(80, Math.round(height))) });
+        this.card.setBounds({
+          ...bounds,
+          height: Math.min(400, Math.max(80, Math.round(height))),
+        });
       }
     });
   }
@@ -113,13 +119,16 @@ export class DesktopWriting {
       void this.openAtCaret(event.at);
       return;
     }
-    if (LEFT_TO_OTHERS.has(event.app) || this.config.ignoredApps.includes(event.app)) {
+    if (
+      LEFT_TO_OTHERS.has(event.app) ||
+      this.config.ignoredApps.includes(event.app)
+    ) {
       this.field = null;
       this.clear();
       return;
     }
     const changed = event.text !== this.field?.text;
-    this.field = { app: event.app, text: event.text };
+    this.field = {app: event.app, text: event.text};
     if (changed) {
       // The marks are stale the moment the text changes: gone until the next answer.
       this.issues = [];
@@ -155,7 +164,7 @@ export class DesktopWriting {
     } else {
       const text = this.field?.text;
       const rects = await this.watch.rects(
-        this.issues.map((issue) => [issue.offset, issue.length]),
+        this.issues.map(issue => [issue.offset, issue.length]),
       );
       if (this.field?.text !== text) {
         return;
@@ -169,7 +178,9 @@ export class DesktopWriting {
     if (this.follow) {
       clearInterval(this.follow);
     }
-    this.follow = this.issues.length ? setInterval(() => void this.locate(), FOLLOW_MS) : null;
+    this.follow = this.issues.length
+      ? setInterval(() => void this.locate(), FOLLOW_MS)
+      : null;
   }
 
   private clear(): void {
@@ -186,7 +197,7 @@ export class DesktopWriting {
   /** The marks, in the overlay of the display the field is on. */
   private draw(): void {
     const boxes = this.rects.flatMap((rects, index) =>
-      rects.map((rect) => ({ rect, issue: this.issues[index] })),
+      rects.map(rect => ({rect, issue: this.issues[index]})),
     );
     if (!boxes.length) {
       if (this.overlay?.isVisible()) {
@@ -199,9 +210,9 @@ export class DesktopWriting {
     const display = screen.getDisplayMatching(first);
     const overlay = this.ensureOverlay(display.bounds);
     const marks = boxes
-      .map(({ rect, issue }) => ({ box: this.dip(rect), issue }))
-      .filter(({ box }) => box.width > 1)
-      .map(({ box, issue }) => ({
+      .map(({rect, issue}) => ({box: this.dip(rect), issue}))
+      .filter(({box}) => box.width > 1)
+      .map(({box, issue}) => ({
         x: box.x - display.bounds.x,
         y: box.y + box.height - 2 - display.bounds.y,
         width: box.width,
@@ -234,7 +245,9 @@ export class DesktopWriting {
       });
       this.overlay.setAlwaysOnTop(true, 'screen-saver');
       this.overlay.setIgnoreMouseEvents(true);
-      void this.overlay.loadFile(join(__dirname, 'assets', 'writing-overlay.html'));
+      void this.overlay.loadFile(
+        join(__dirname, 'assets', 'writing-overlay.html'),
+      );
     } else {
       this.overlay.setBounds(bounds);
     }
@@ -244,7 +257,7 @@ export class DesktopWriting {
   /** The caret is in a marked word: its card beside it. */
   private async openAtCaret(at: number): Promise<void> {
     const index = this.issues.findIndex(
-      (issue) => at >= issue.offset && at <= issue.offset + issue.length,
+      issue => at >= issue.offset && at <= issue.offset + issue.length,
     );
     if (index < 0) {
       this.hideCard();
@@ -264,12 +277,18 @@ export class DesktopWriting {
     const area = screen.getDisplayMatching(box).workArea;
     card.setBounds({
       x: Math.max(area.x, Math.min(box.x, area.x + area.width - CARD_WIDTH)),
-      y: box.y + box.height + 220 < area.y + area.height ? box.y + box.height + 4 : box.y - 224,
+      y:
+        box.y + box.height + 220 < area.y + area.height
+          ? box.y + box.height + 4
+          : box.y - 224,
       width: CARD_WIDTH,
       height: 200,
     });
-    const word = this.field.text.slice(issue.offset, issue.offset + issue.length);
-    card.webContents.send('writing-card:show', { issue, word });
+    const word = this.field.text.slice(
+      issue.offset,
+      issue.offset + issue.length,
+    );
+    card.webContents.send('writing-card:show', {issue, word});
     card.showInactive();
   }
 
@@ -303,7 +322,13 @@ export class DesktopWriting {
     this.card?.hide();
   }
 
-  private async onChoice({ action, value }: { action: string; value?: string }): Promise<void> {
+  private async onChoice({
+    action,
+    value,
+  }: {
+    action: string;
+    value?: string;
+  }): Promise<void> {
     const issue = this.cardIssue;
     const field = this.field;
     this.hideCard();
@@ -315,16 +340,16 @@ export class DesktopWriting {
       await this.watch.replace(issue.offset, issue.length, value, word);
       void this.server.accepted(1);
     } else if (action === 'word' && value) {
-      await this.server.ignore({ word: value });
+      await this.server.ignore({word: value});
       void this.check();
     } else if (action === 'rule') {
-      await this.server.ignore({ ruleId: issue.ruleId });
+      await this.server.ignore({ruleId: issue.ruleId});
       void this.check();
     }
   }
 
   /** Physical pixels of UI Automation to the points Electron places windows in. */
   private dip([x, y, width, height]: ScreenBox): Electron.Rectangle {
-    return screen.screenToDipRect(null, { x, y, width, height });
+    return screen.screenToDipRect(null, {x, y, width, height});
   }
 }

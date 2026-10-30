@@ -21,7 +21,9 @@ const SYMBOLS = '!@#$%^&*()-_=+[]{};:,.?';
  * A random password from the device's cryptographic random source, with at least one character
  * of every chosen kind, every pick unbiased (no `% length` of a random byte).
  */
-export function generatePassword(options: PasswordOptions = DEFAULT_PASSWORD_OPTIONS): string {
+export function generatePassword(
+  options: PasswordOptions = DEFAULT_PASSWORD_OPTIONS,
+): string {
   const sets = [
     LOWER,
     UPPER,
@@ -32,8 +34,11 @@ export function generatePassword(options: PasswordOptions = DEFAULT_PASSWORD_OPT
   const all = sets.join('');
   // One of each kind first, then the rest from all of them; then shuffled.
   const chars = [
-    ...sets.map((set) => set[randomBelow(set.length)]),
-    ...Array.from({ length: length - sets.length }, () => all[randomBelow(all.length)]),
+    ...sets.map(set => set[randomBelow(set.length)]),
+    ...Array.from(
+      {length: length - sets.length},
+      () => all[randomBelow(all.length)],
+    ),
   ];
   for (let i = chars.length - 1; i > 0; i--) {
     const j = randomBelow(i + 1);

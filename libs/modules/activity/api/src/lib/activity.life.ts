@@ -1,10 +1,13 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { LifeService } from '@pd/api-core';
-import { LifeCard, LifeEvent } from '@pd/contracts';
-import { ActivityService } from './activity.service';
-import { WellbeingService } from './wellbeing.service';
-import { TelemetrySummaryService } from './telemetry-summary.service';
-import { telemetryLifeCards, telemetryLifeEvents } from './telemetry-summary.views';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {LifeService} from '@pd/api-core';
+import {LifeCard, LifeEvent} from '@pd/contracts';
+import {ActivityService} from './activity.service';
+import {WellbeingService} from './wellbeing.service';
+import {TelemetrySummaryService} from './telemetry-summary.service';
+import {
+  telemetryLifeCards,
+  telemetryLifeEvents,
+} from './telemetry-summary.views';
 
 const HOUR = 3600;
 
@@ -22,23 +25,30 @@ export class ActivityLife implements OnModuleInit {
     this.life.register({
       module: 'activity',
       day: async (userId, day) =>
-        telemetryLifeEvents(await this.telemetry.summarize(userId, { from: day, to: day })),
+        telemetryLifeEvents(
+          await this.telemetry.summarize(userId, {from: day, to: day}),
+        ),
       period: async (userId, period) =>
         telemetryLifeCards(await this.telemetry.summarize(userId, period)),
     });
     this.life.register({
       module: 'activity',
       day: async (userId, day): Promise<LifeEvent[]> => {
-        const stats = await this.activity.stats(userId, { from: day, to: day });
+        const stats = await this.activity.stats(userId, {from: day, to: day});
         if (stats.totalSeconds < 10 * 60) {
           return [];
         }
-        const focus = await this.wellbeing.focusStats(userId, { from: day, to: day });
+        const focus = await this.wellbeing.focusStats(userId, {
+          from: day,
+          to: day,
+        });
         return [
           {
             module: 'activity',
             icon: 'timelapse',
-            key: focus.completed ? 'activity.life.dayFocus' : 'activity.life.day',
+            key: focus.completed
+              ? 'activity.life.dayFocus'
+              : 'activity.life.day',
             params: {
               hours: hours(stats.totalSeconds),
               app: stats.apps[0]?.name ?? '',
@@ -63,7 +73,10 @@ export class ActivityLife implements OnModuleInit {
             value: stats.totalSeconds / HOUR,
             format: 'hours',
             ...(stats.apps[0]
-              ? { detailKey: 'activity.life.topApp', detailParams: { app: stats.apps[0].name } }
+              ? {
+                  detailKey: 'activity.life.topApp',
+                  detailParams: {app: stats.apps[0].name},
+                }
               : {}),
           },
           ...(focus.completed
@@ -75,7 +88,7 @@ export class ActivityLife implements OnModuleInit {
                   value: focus.focusSeconds / HOUR,
                   format: 'hours' as const,
                   detailKey: 'activity.life.focusSessions',
-                  detailParams: { count: focus.completed },
+                  detailParams: {count: focus.completed},
                 },
               ]
             : []),

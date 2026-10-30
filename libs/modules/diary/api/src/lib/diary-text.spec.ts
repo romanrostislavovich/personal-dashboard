@@ -9,21 +9,23 @@ import {
 
 describe('extractTags', () => {
   it('finds hashtags in Cyrillic and Latin, lowercased and unique', () => {
-    expect(extractTags('Утром #Спорт, потом #work и снова #спорт. #side_project')).toEqual([
-      'спорт',
-      'work',
-      'side_project',
-    ]);
+    expect(
+      extractTags('Утром #Спорт, потом #work и снова #спорт. #side_project'),
+    ).toEqual(['спорт', 'work', 'side_project']);
   });
 
   it('ignores markdown headings and anchors inside words', () => {
-    expect(extractTags('# Заголовок\n## Ещё\nemail@host#frag и c#')).toEqual([]);
+    expect(extractTags('# Заголовок\n## Ещё\nemail@host#frag и c#')).toEqual(
+      [],
+    );
   });
 });
 
 describe('appendNote', () => {
   it('starts an empty entry with the note', () => {
-    expect(appendNote('', ' Первая мысль ', '09:15')).toBe('**09:15** Первая мысль');
+    expect(appendNote('', ' Первая мысль ', '09:15')).toBe(
+      '**09:15** Первая мысль',
+    );
   });
 
   it('appends to existing text with a blank line', () => {
@@ -49,7 +51,9 @@ describe('searchSnippet', () => {
 
 describe('appendNote without time', () => {
   it('adds a plain paragraph for past days', () => {
-    expect(appendNote('Morning.', 'Evening walk', null)).toBe('Morning.\n\nEvening walk');
+    expect(appendNote('Morning.', 'Evening walk', null)).toBe(
+      'Morning.\n\nEvening walk',
+    );
   });
 });
 
@@ -87,24 +91,37 @@ describe('an entry written over a version that changed since', () => {
   });
 
   it('counts an entry that did not exist when writing began as changed', () => {
-    expect(mergeOverChanged(stored, { content: 'New', mood: null, basedOn: null })?.content).toBe(
-      'Written on the computer.\n\n---\n\nNew',
-    );
+    expect(
+      mergeOverChanged(stored, {content: 'New', mood: null, basedOn: null})
+        ?.content,
+    ).toBe('Written on the computer.\n\n---\n\nNew');
   });
 
   it('replaces as usual when nothing changed, nothing is stored or no check is asked', () => {
-    const input = { content: 'Edited', mood: 3, basedOn: '2026-10-24T10:00:00.000Z' };
+    const input = {
+      content: 'Edited',
+      mood: 3,
+      basedOn: '2026-10-24T10:00:00.000Z',
+    };
     expect(mergeOverChanged(stored, input)).toBeNull();
     expect(mergeOverChanged(null, input)).toBeNull();
-    expect(mergeOverChanged(stored, { content: 'Edited', mood: 3 })).toBeNull();
+    expect(mergeOverChanged(stored, {content: 'Edited', mood: 3})).toBeNull();
     expect(
-      mergeOverChanged(stored, { ...input, content: stored.content, basedOn: null }),
+      mergeOverChanged(stored, {
+        ...input,
+        content: stored.content,
+        basedOn: null,
+      }),
     ).toBeNull();
   });
 
   it('never deletes the stored text with an empty one', () => {
     expect(
-      mergeOverChanged(stored, { content: ' ', mood: null, basedOn: '2026-10-24T08:00:00.000Z' }),
-    ).toEqual({ content: stored.content, mood: 4 });
+      mergeOverChanged(stored, {
+        content: ' ',
+        mood: null,
+        basedOn: '2026-10-24T08:00:00.000Z',
+      }),
+    ).toEqual({content: stored.content, mood: 4});
   });
 });

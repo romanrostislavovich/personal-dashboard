@@ -1,7 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { InputDynamics, InputFieldContext, SafeInputKind } from './input-dynamics';
-import { ContextSwitches } from './context-switch';
-import { TerminalCompletion, TerminalFriction } from './terminal-friction';
+import {describe, expect, it} from 'vitest';
+import {
+  InputDynamics,
+  InputFieldContext,
+  SafeInputKind,
+} from './input-dynamics';
+import {ContextSwitches} from './context-switch';
+import {TerminalCompletion, TerminalFriction} from './terminal-friction';
 
 describe('input dynamics', () => {
   it('counts input, population pause variance and consecutive backspace bursts without raw events', () => {
@@ -25,20 +29,29 @@ describe('input dynamics', () => {
     expect(JSON.stringify(input)).not.toContain('public-editable');
   });
 
-  it.each(['password', 'private', 'unknown', undefined])('fails closed for %s fields', (field) => {
-    const input = new InputDynamics();
-    expect(input.observe('input', 0, field as InputFieldContext)).toBe(false);
-    expect(input.metrics()).toEqual({});
-  });
+  it.each(['password', 'private', 'unknown', undefined])(
+    'fails closed for %s fields',
+    field => {
+      const input = new InputDynamics();
+      expect(input.observe('input', 0, field as InputFieldContext)).toBe(false);
+      expect(input.metrics()).toEqual({});
+    },
+  );
 
   it('refuses raw keys and invalid timestamps and does not bridge denied input', () => {
     const input = new InputDynamics();
-    expect(input.observe('secret' as SafeInputKind, 0, 'public-editable')).toBe(false);
+    expect(input.observe('secret' as SafeInputKind, 0, 'public-editable')).toBe(
+      false,
+    );
     expect(input.observe('input', NaN, 'public-editable')).toBe(false);
     input.observe('backspace', 0, 'public-editable');
     input.observe('input', 100, 'password');
     input.observe('backspace', 200, 'public-editable');
-    expect(input.metrics()).toEqual({ inputCount: 0, backspaceCount: 2, backspaceBursts: 0 });
+    expect(input.metrics()).toEqual({
+      inputCount: 0,
+      backspaceCount: 2,
+      backspaceBursts: 0,
+    });
     expect(JSON.stringify(input)).not.toContain('secret');
   });
 });
@@ -77,7 +90,7 @@ describe('explicit terminal reports', () => {
   it('only aggregates statuses and build durations', () => {
     const terminal = new TerminalFriction();
     terminal.report(report);
-    terminal.report({ ...report, exitCode: 1, kind: 'command' });
+    terminal.report({...report, exitCode: 1, kind: 'command'});
     expect(terminal.metrics()).toEqual({
       terminalCommands: 2,
       terminalFailures: 1,
@@ -86,15 +99,15 @@ describe('explicit terminal reports', () => {
   });
 
   it.each([
-    { ...report, command: 'secret' },
-    { ...report, stdout: 'secret' },
-    { ...report, durationMs: NaN },
-    { ...report, durationMs: -1 },
-    { ...report, durationMs: Infinity },
-    { ...report, exitCode: 0.5 },
-    { ...report, context: 'unknown' },
-    { ...report, kind: 'secret' },
-  ])('rejects unsafe or malformed reports before aggregation: %j', (value) => {
+    {...report, command: 'secret'},
+    {...report, stdout: 'secret'},
+    {...report, durationMs: NaN},
+    {...report, durationMs: -1},
+    {...report, durationMs: Infinity},
+    {...report, exitCode: 0.5},
+    {...report, context: 'unknown'},
+    {...report, kind: 'secret'},
+  ])('rejects unsafe or malformed reports before aggregation: %j', value => {
     const terminal = new TerminalFriction();
     expect(terminal.report(value as TerminalCompletion)).toBe(false);
     expect(terminal.metrics()).toEqual({});

@@ -1,15 +1,20 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {DB, Database} from '@pd/api-core';
 import {
   nextFreeName,
   Screenshot,
   SCREENSHOT_MAX_BYTES,
   screenshotNameSchema,
 } from '@pd/contracts';
-import { and, desc, eq } from 'drizzle-orm';
-import { createHash } from 'node:crypto';
+import {and, desc, eq} from 'drizzle-orm';
+import {createHash} from 'node:crypto';
 import sharp from 'sharp';
-import { ScreenshotRow, screenshots } from './screenshots.schema';
+import {ScreenshotRow, screenshots} from './screenshots.schema';
 
 /** The pictures a folder may hold. */
 const TYPES = ['image/png', 'image/jpeg', 'image/webp'];
@@ -49,30 +54,42 @@ export class ScreenshotsService {
   }
 
   /** A new one; a name taken already gets a free one (`name (2).png`), told in the answer. */
-  async add(userId: string, name: string, file: ScreenshotFile): Promise<Screenshot> {
+  async add(
+    userId: string,
+    name: string,
+    file: ScreenshotFile,
+  ): Promise<Screenshot> {
     const wanted = checkedName(name);
     const facts = await describe(file);
     const taken = new Set(
       (
         await this.db
-          .select({ name: screenshots.name })
+          .select({name: screenshots.name})
           .from(screenshots)
           .where(eq(screenshots.userId, userId))
-      ).map((row) => row.name),
+      ).map(row => row.name),
     );
     const [row] = await this.db
       .insert(screenshots)
-      .values({ userId, name: nextFreeName(wanted, (one) => taken.has(one)), ...facts })
+      .values({
+        userId,
+        name: nextFreeName(wanted, one => taken.has(one)),
+        ...facts,
+      })
       .returning(info);
     return toScreenshot(row);
   }
 
   /** The file changed in a folder (drawn on again): the same screenshot, a new picture. */
-  async replace(userId: string, id: string, file: ScreenshotFile): Promise<Screenshot> {
+  async replace(
+    userId: string,
+    id: string,
+    file: ScreenshotFile,
+  ): Promise<Screenshot> {
     const facts = await describe(file);
     const [row] = await this.db
       .update(screenshots)
-      .set({ ...facts, updatedAt: new Date() })
+      .set({...facts, updatedAt: new Date()})
       .where(and(eq(screenshots.id, id), eq(screenshots.userId, userId)))
       .returning(info);
     if (!row) {
@@ -81,7 +98,11 @@ export class ScreenshotsService {
     return toScreenshot(row);
   }
 
-  async file(userId: string, id: string, thumbnail = false): Promise<ScreenshotFile> {
+  async file(
+    userId: string,
+    id: string,
+    thumbnail = false,
+  ): Promise<ScreenshotFile> {
     const [row] = await this.db
       .select({
         data: screenshots.data,
@@ -94,8 +115,8 @@ export class ScreenshotsService {
       throw new NotFoundException();
     }
     return thumbnail && row.thumbnail
-      ? { data: row.thumbnail, mimeType: 'image/webp' }
-      : { data: row.data, mimeType: row.mimeType };
+      ? {data: row.thumbnail, mimeType: 'image/webp'}
+      : {data: row.data, mimeType: row.mimeType};
   }
 
   async remove(userId: string, id: string): Promise<void> {
@@ -108,7 +129,9 @@ export class ScreenshotsService {
 function checkedName(name: string): string {
   const parsed = screenshotNameSchema.safeParse(name);
   if (!parsed.success) {
-    throw new BadRequestException(parsed.error.issues[0]?.message ?? 'A bad name');
+    throw new BadRequestException(
+      parsed.error.issues[0]?.message ?? 'A bad name',
+    );
   }
   return parsed.data;
 }
@@ -121,14 +144,14 @@ async function describe(file: ScreenshotFile) {
   if (file.data.length > SCREENSHOT_MAX_BYTES) {
     throw new BadRequestException('The image is too large');
   }
-  const image = sharp(file.data, { failOn: 'error' });
+  const image = sharp(file.data, {failOn: 'error'});
   const metadata = await image.metadata().catch(() => {
     throw new BadRequestException('Not a picture');
   });
   const thumbnail = await image
     .clone()
-    .resize({ width: THUMBNAIL_WIDTH, withoutEnlargement: true })
-    .webp({ quality: 75 })
+    .resize({width: THUMBNAIL_WIDTH, withoutEnlargement: true})
+    .webp({quality: 75})
     .toBuffer()
     .catch(() => null);
   return {
@@ -142,7 +165,9 @@ async function describe(file: ScreenshotFile) {
   };
 }
 
-function toScreenshot(row: Omit<ScreenshotRow, 'userId' | 'data' | 'thumbnail'>): Screenshot {
+function toScreenshot(
+  row: Omit<ScreenshotRow, 'userId' | 'data' | 'thumbnail'>,
+): Screenshot {
   return {
     ...row,
     createdAt: row.createdAt.toISOString(),

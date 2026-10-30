@@ -1,5 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DB, Database, OtherComputersService, ProjectRef, ProjectsService } from '@pd/api-core';
+import {Inject, Injectable} from '@nestjs/common';
+import {
+  DB,
+  Database,
+  OtherComputersService,
+  ProjectRef,
+  ProjectsService,
+} from '@pd/api-core';
 import {
   ACTIVITY_DISTRACTING_CATEGORIES,
   ActivityPeriod,
@@ -8,11 +14,11 @@ import {
   LocalDate,
   toLocalDate,
 } from '@pd/contracts';
-import { and, eq, gt, gte, lt, min } from 'drizzle-orm';
-import { categoryOf, matchProject } from './activity-stats';
-import { activitySiteVisits, activitySpans } from './activity.schema';
-import { ActivityService } from './activity.service';
-import { ProjectTime, projectTime, WorkPiece } from './project-context';
+import {and, eq, gt, gte, lt, min} from 'drizzle-orm';
+import {categoryOf, matchProject} from './activity-stats';
+import {activitySiteVisits, activitySpans} from './activity.schema';
+import {ActivityService} from './activity.service';
+import {ProjectTime, projectTime, WorkPiece} from './project-context';
 import {
   dayBounds,
   mergeSpans,
@@ -21,12 +27,12 @@ import {
   spanSeconds,
   TimeSpan,
 } from './time-spans';
-import { MAX_VISIT_SECONDS } from './visit-length';
+import {MAX_VISIT_SECONDS} from './visit-length';
 
 /** The time of a project in a period, in the numbers the overview of a project shows. */
 export interface ProjectTimeFact {
   seconds: number;
-  days: { day: LocalDate; seconds: number }[];
+  days: {day: LocalDate; seconds: number}[];
   /** Of it: what only what is around work on it gives (see projectTime). */
   fromContext: number;
   /** Of it: what only the IDE of WakaTime gives. */
@@ -61,13 +67,18 @@ export class ProjectTimeService {
     }
     const bounds = dayBounds(period, await this.activity.timeZone(userId));
     const spans = await this.byProject(userId, bounds);
-    const projects = (await this.projects.list(userId)).flatMap((project) => {
+    const projects = (await this.projects.list(userId)).flatMap(project => {
       const time = spans.get(project.id) ?? [];
       const seconds = spanSeconds(time);
-      const days = [...secondsByDay(time, bounds)].map(([day, value]) => ({ day, seconds: value }));
-      return seconds ? [{ projectId: project.id, name: project.name, seconds, days }] : [];
+      const days = [...secondsByDay(time, bounds)].map(([day, value]) => ({
+        day,
+        seconds: value,
+      }));
+      return seconds
+        ? [{projectId: project.id, name: project.name, seconds, days}]
+        : [];
     });
-    return { ...stats, projects: projects.sort((a, b) => b.seconds - a.seconds) };
+    return {...stats, projects: projects.sort((a, b) => b.seconds - a.seconds)};
   }
 
   /**
@@ -82,8 +93,14 @@ export class ProjectTimeService {
     const timeZone = await this.activity.timeZone(userId);
     const today = await this.activity.today(userId);
     let total = 0;
-    for (const { from, to } of monthsBetween(toLocalDate(dateParts(first, timeZone)), today)) {
-      const spans = await this.byProject(userId, dayBounds({ from, to }, timeZone));
+    for (const {from, to} of monthsBetween(
+      toLocalDate(dateParts(first, timeZone)),
+      today,
+    )) {
+      const spans = await this.byProject(
+        userId,
+        dayBounds({from, to}, timeZone),
+      );
       total += spanSeconds([...spans.values()].flat());
     }
     return total;
@@ -92,7 +109,7 @@ export class ProjectTimeService {
   /** The time of each project between the beginning of the first day and the end of the last. */
   private async byProject(
     userId: string,
-    bounds: { start: number; end: number }[],
+    bounds: {start: number; end: number}[],
   ): Promise<Map<string, TimeSpan[]>> {
     const from = new Date(bounds[0].start);
     const to = new Date(bounds[bounds.length - 1].end);
@@ -103,7 +120,7 @@ export class ProjectTimeService {
       const time = projectTime(
         pieces,
         project.id,
-        coding.map(({ startedAt, endedAt }) => ({
+        coding.map(({startedAt, endedAt}) => ({
           start: startedAt.getTime(),
           end: endedAt.getTime(),
         })),
@@ -118,28 +135,33 @@ export class ProjectTimeService {
   /** When the tracker or the browser recorded anything first. */
   private async firstMoment(userId: string): Promise<Date | null> {
     const [spans] = await this.db
-      .select({ at: min(activitySpans.startedAt) })
+      .select({at: min(activitySpans.startedAt)})
       .from(activitySpans)
       .where(eq(activitySpans.userId, userId));
     const [visits] = await this.db
-      .select({ at: min(activitySiteVisits.startedAt) })
+      .select({at: min(activitySiteVisits.startedAt)})
       .from(activitySiteVisits)
       .where(eq(activitySiteVisits.userId, userId));
     const moments = [spans?.at, visits?.at].filter((at): at is Date => !!at);
-    return moments.length ? new Date(Math.min(...moments.map((at) => at.getTime()))) : null;
+    return moments.length
+      ? new Date(Math.min(...moments.map(at => at.getTime())))
+      : null;
   }
 
   async fact(
     userId: string,
     project: ProjectRef,
-    period: { from: LocalDate; to: LocalDate },
+    period: {from: LocalDate; to: LocalDate},
   ): Promise<ProjectTimeFact> {
     const timeZone = await this.activity.timeZone(userId);
     const bounds = dayBounds(period, timeZone);
     const time = await this.time(userId, project, bounds);
     return {
       seconds: spanSeconds(time.spans),
-      days: [...secondsByDay(time.spans, bounds)].map(([day, seconds]) => ({ day, seconds })),
+      days: [...secondsByDay(time.spans, bounds)].map(([day, seconds]) => ({
+        day,
+        seconds,
+      })),
       fromContext: spanSeconds(time.fromContext),
       fromCoding: spanSeconds(time.fromCoding),
     };
@@ -149,7 +171,7 @@ export class ProjectTimeService {
   async time(
     userId: string,
     project: ProjectRef,
-    bounds: { start: number; end: number }[],
+    bounds: {start: number; end: number}[],
   ): Promise<ProjectTime> {
     const from = new Date(bounds[0].start);
     const to = new Date(bounds[bounds.length - 1].end);
@@ -160,7 +182,7 @@ export class ProjectTimeService {
     return projectTime(
       pieces,
       project.id,
-      coding.map(({ startedAt, endedAt }) => ({
+      coding.map(({startedAt, endedAt}) => ({
         start: startedAt.getTime(),
         end: endedAt.getTime(),
       })),
@@ -173,11 +195,22 @@ export class ProjectTimeService {
     const v = activitySiteVisits;
     const [windows, visits, projects, chosen, settings] = await Promise.all([
       this.db
-        .select({ startedAt: s.startedAt, endedAt: s.endedAt, app: s.app, title: s.title })
+        .select({
+          startedAt: s.startedAt,
+          endedAt: s.endedAt,
+          app: s.app,
+          title: s.title,
+        })
         .from(s)
-        .where(and(eq(s.userId, userId), gte(s.startedAt, from), lt(s.startedAt, to))),
+        .where(
+          and(
+            eq(s.userId, userId),
+            gte(s.startedAt, from),
+            lt(s.startedAt, to),
+          ),
+        ),
       this.db
-        .select({ startedAt: v.startedAt, endedAt: v.endedAt, site: v.site })
+        .select({startedAt: v.startedAt, endedAt: v.endedAt, site: v.site})
         .from(v)
         .where(
           and(
@@ -185,7 +218,10 @@ export class ProjectTimeService {
             lt(v.startedAt, to),
             gt(v.endedAt, from),
             // A visit is never longer than this: the index on its start is used from here.
-            gte(v.startedAt, new Date(from.getTime() - MAX_VISIT_SECONDS * 1000)),
+            gte(
+              v.startedAt,
+              new Date(from.getTime() - MAX_VISIT_SECONDS * 1000),
+            ),
           ),
         ),
       this.activity.projectPatterns(userId),
@@ -200,7 +236,9 @@ export class ProjectTimeService {
         app: row.app,
         label: row.title,
         projectId: matchProject(row.title, projects),
-        leisure: ACTIVITY_DISTRACTING_CATEGORIES.includes(categoryOf(row.app, chosen, row.title)),
+        leisure: ACTIVITY_DISTRACTING_CATEGORIES.includes(
+          categoryOf(row.app, chosen, row.title),
+        ),
       })),
       ...visits.map((row): WorkPiece => ({
         start: row.startedAt.getTime(),
@@ -209,7 +247,9 @@ export class ProjectTimeService {
         app: null,
         label: row.site,
         projectId: matchProject(row.site, projects),
-        leisure: settings.distractingSites.some((site) => isSiteOf(row.site, site)),
+        leisure: settings.distractingSites.some(site =>
+          isSiteOf(row.site, site),
+        ),
       })),
     ];
   }
@@ -217,9 +257,9 @@ export class ProjectTimeService {
 
 /** The date of a moment on the user's clock. */
 function dateParts(at: Date, timeZone: string) {
-  const [year, month, day] = new Intl.DateTimeFormat('en-CA', { timeZone })
+  const [year, month, day] = new Intl.DateTimeFormat('en-CA', {timeZone})
     .format(at)
     .split('-')
     .map(Number);
-  return { year, month, day };
+  return {year, month, day};
 }

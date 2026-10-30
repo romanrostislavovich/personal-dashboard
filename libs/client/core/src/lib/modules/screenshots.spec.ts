@@ -1,4 +1,4 @@
-import { nextFreeName, Screenshot } from '@pd/contracts';
+import {nextFreeName, Screenshot} from '@pd/contracts';
 import {
   ScreenshotFolder,
   ScreenshotIndex,
@@ -13,9 +13,12 @@ const bytes = (value: string) => new TextEncoder().encode(value);
 
 /** The server, in memory. */
 function fakeServer() {
-  const shots = new Map<string, Screenshot & { data: string }>();
+  const shots = new Map<string, Screenshot & {data: string}>();
   let next = 0;
-  const meta = ({ data: _data, ...shot }: Screenshot & { data: string }): Screenshot => shot;
+  const meta = ({
+    data: _data,
+    ...shot
+  }: Screenshot & {data: string}): Screenshot => shot;
   const store = (id: string, name: string, data: string) => {
     const shot = {
       id,
@@ -35,10 +38,10 @@ function fakeServer() {
   const api = {
     list: async () => [...shots.values()].map(meta),
     add: async (name: string, file: Blob) => {
-      const taken = new Set([...shots.values()].map((shot) => shot.name));
+      const taken = new Set([...shots.values()].map(shot => shot.name));
       return store(
         `s${++next}`,
-        nextFreeName(name, (one) => taken.has(one)),
+        nextFreeName(name, one => taken.has(one)),
         await file.text(),
       );
     },
@@ -47,7 +50,7 @@ function fakeServer() {
     file: async (id: string) => new Blob([shots.get(id)?.data ?? '']),
     remove: async (id: string) => void shots.delete(id),
   };
-  return { shots, api: api as unknown as ScreenshotsClient };
+  return {shots, api: api as unknown as ScreenshotsClient};
 }
 
 /** A computer: its folder in memory and its record of the last sync. */
@@ -55,10 +58,10 @@ function computer(api: ScreenshotsClient) {
   const files = new Map<string, string>();
   let index: ScreenshotIndex = {};
   const folder: ScreenshotFolder = {
-    list: async () => [...files].map(([name, data]) => ({ name, hash: data })),
-    read: async (name) => bytes(files.get(name) ?? ''),
+    list: async () => [...files].map(([name, data]) => ({name, hash: data})),
+    read: async name => bytes(files.get(name) ?? ''),
     write: async (name, data) => void files.set(name, text(data)),
-    remove: async (name) => void files.delete(name),
+    remove: async name => void files.delete(name),
     rename: async (from, to) => {
       files.set(to, files.get(from) ?? '');
       files.delete(from);
@@ -66,13 +69,13 @@ function computer(api: ScreenshotsClient) {
   };
   return {
     files,
-    sync: () => syncScreenshots(folder, api, index, (saved) => (index = saved)),
+    sync: () => syncScreenshots(folder, api, index, saved => (index = saved)),
   };
 }
 
 describe('the sync of screenshots', () => {
   it('brings a new file to the other computer, then a change, then a deletion', async () => {
-    const { api, shots } = fakeServer();
+    const {api, shots} = fakeServer();
     const home = computer(api);
     const work = computer(api);
 
@@ -97,7 +100,7 @@ describe('the sync of screenshots', () => {
   });
 
   it('keeps both versions of a file changed on two computers', async () => {
-    const { api } = fakeServer();
+    const {api} = fakeServer();
     const home = computer(api);
     const work = computer(api);
     home.files.set('a.png', 'v1');
@@ -120,7 +123,7 @@ describe('the sync of screenshots', () => {
   });
 
   it('never empties the server because a folder is gone', async () => {
-    const { api, shots } = fakeServer();
+    const {api, shots} = fakeServer();
     const home = computer(api);
     for (let number = 0; number < 12; number++) {
       home.files.set(`${number}.png`, `shot ${number}`);
@@ -132,7 +135,7 @@ describe('the sync of screenshots', () => {
   });
 
   it('moves a file aside when the same name means another one on the server', async () => {
-    const { api } = fakeServer();
+    const {api} = fakeServer();
     const home = computer(api);
     const work = computer(api);
     home.files.set('a.png', 'home');

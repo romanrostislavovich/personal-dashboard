@@ -1,4 +1,10 @@
-import { addDays, parseLocalDate, toLocalDate, zonedDateTime, zonedToUtc } from '@pd/contracts';
+import {
+  addDays,
+  parseLocalDate,
+  toLocalDate,
+  zonedDateTime,
+  zonedToUtc,
+} from '@pd/contracts';
 
 /** The time of a reminder when only the day was said: "tomorrow". */
 export const DEFAULT_TIME = '09:00';
@@ -23,7 +29,9 @@ const UNITS: [RegExp, number][] = [
 function clock(hours: string, minutes: string | undefined): string | null {
   const h = Number(hours);
   const m = Number(minutes ?? 0);
-  return h <= 23 && m <= 59 ? `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}` : null;
+  return h <= 23 && m <= 59
+    ? `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+    : null;
 }
 
 const TIME = String.raw`(?:(?:в|at)\s+)?(\d{1,2})(?:[:.](\d{2}))?`;
@@ -31,7 +39,7 @@ const TIME = String.raw`(?:(?:в|at)\s+)?(\d{1,2})(?:[:.](\d{2}))?`;
 /** What every way of saying a time needs: the moment, the user's day and clock. */
 interface Context {
   now: Date;
-  today: { date: string; time: string };
+  today: {date: string; time: string};
   /** A day and a time on the user's clock, as a moment. */
   at(date: string, time: string): Date;
   /** The day `days` after today. */
@@ -42,10 +50,13 @@ interface Context {
  * One way of saying when. `undefined` — the text does not start this way, the next is tried;
  * `null` — it does, but the time is impossible (`25:00`), so the text has no time at all.
  */
-type Reader = (lower: string, context: Context) => { at: Date; length: number } | null | undefined;
+type Reader = (
+  lower: string,
+  context: Context,
+) => {at: Date; length: number} | null | undefined;
 
 /** `через 2 часа`, `in 15 min` */
-const relative: Reader = (lower, { now }) => {
+const relative: Reader = (lower, {now}) => {
   const match = /^(?:через|in)\s+(\d{1,4})\s*([a-zа-яё]+)/i.exec(lower);
   if (!match) {
     return undefined;
@@ -72,25 +83,31 @@ const NAMED_DAYS: Record<string, number> = {
 };
 
 /** `завтра …`, `tomorrow 18:30 …`, `послезавтра в 9 …`, `сегодня 21:00 …` */
-const namedDay: Reader = (lower, { at, dayFromToday }) => {
+const namedDay: Reader = (lower, {at, dayFromToday}) => {
   const match = NAMED_DAY.exec(lower);
   if (!match) {
     return undefined;
   }
   const time = match[2] ? clock(match[2], match[3]) : DEFAULT_TIME;
   return time
-    ? { at: at(dayFromToday(NAMED_DAYS[match[1]]), time), length: match[0].length }
+    ? {
+        at: at(dayFromToday(NAMED_DAYS[match[1]]), time),
+        length: match[0].length,
+      }
     : null;
 };
 
-const ISO_DATE = new RegExp(String.raw`^(\d{4})-(\d{2})-(\d{2})(?:[ t]+${TIME})?`, 'i');
+const ISO_DATE = new RegExp(
+  String.raw`^(\d{4})-(\d{2})-(\d{2})(?:[ t]+${TIME})?`,
+  'i',
+);
 const DOTTED_DATE = new RegExp(
   String.raw`^(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?(?:\s+${TIME})?(?![\d.])`,
   'i',
 );
 
 /** `2026-10-05 09:00 …`, `05.10 …`, `05.10.2026 9:00 …` */
-const date: Reader = (lower, { today, at }) => {
+const date: Reader = (lower, {today, at}) => {
   const iso = ISO_DATE.exec(lower);
   const match = iso ?? DOTTED_DATE.exec(lower);
   if (!match) {
@@ -98,28 +115,35 @@ const date: Reader = (lower, { today, at }) => {
   }
   const [year, month, day] = iso
     ? [Number(match[1]), Number(match[2]), Number(match[3])]
-    : [Number(match[3] ?? today.date.slice(0, 4)), Number(match[2]), Number(match[1])];
+    : [
+        Number(match[3] ?? today.date.slice(0, 4)),
+        Number(match[2]),
+        Number(match[1]),
+      ];
   const time = match[4] ? clock(match[4], match[5]) : DEFAULT_TIME;
   if (!time || month < 1 || month > 12 || day < 1 || day > 31) {
     return null;
   }
-  let local = toLocalDate({ year, month, day });
+  let local = toLocalDate({year, month, day});
   // "05.10" said in November means the next 5 October.
   if (!iso && !match[3] && local < today.date) {
-    local = toLocalDate({ year: year + 1, month, day });
+    local = toLocalDate({year: year + 1, month, day});
   }
-  return { at: at(local, time), length: match[0].length };
+  return {at: at(local, time), length: match[0].length};
 };
 
 /** `18:30 …` — today, or tomorrow if that time has passed. */
-const timeOnly: Reader = (lower, { today, at, dayFromToday }) => {
+const timeOnly: Reader = (lower, {today, at, dayFromToday}) => {
   const match = /^(?:(?:в|at)\s+)?(\d{1,2})[:.](\d{2})(?!\d)/i.exec(lower);
   if (!match) {
     return undefined;
   }
   const time = clock(match[1], match[2]);
   return time
-    ? { at: at(dayFromToday(time > today.time ? 0 : 1), time), length: match[0].length }
+    ? {
+        at: at(dayFromToday(time > today.time ? 0 : 1), time),
+        length: match[0].length,
+      }
     : null;
 };
 
@@ -137,20 +161,25 @@ const READERS: Reader[] = [relative, namedDay, date, timeOnly];
  *
  * A day without a time means 09:00. `null` — the text does not start with a time.
  */
-export function parseWhen(text: string, now: Date, timeZone: string): ParsedWhen | null {
+export function parseWhen(
+  text: string,
+  now: Date,
+  timeZone: string,
+): ParsedWhen | null {
   const input = text.trim();
   const lower = input.toLowerCase();
   const today = zonedDateTime(now, timeZone);
   const context: Context = {
     now,
     today,
-    at: (day, time) => zonedToUtc({ date: day, time }, timeZone),
-    dayFromToday: (days) => toLocalDate(addDays(parseLocalDate(today.date), days)),
+    at: (day, time) => zonedToUtc({date: day, time}, timeZone),
+    dayFromToday: days =>
+      toLocalDate(addDays(parseLocalDate(today.date), days)),
   };
   for (const read of READERS) {
     const found = read(lower, context);
     if (found !== undefined) {
-      return found && { at: found.at, rest: input.slice(found.length).trim() };
+      return found && {at: found.at, rest: input.slice(found.length).trim()};
     }
   }
   return null;

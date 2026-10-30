@@ -1,29 +1,41 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { SoundcloudTrack } from '@pd/contracts';
-import { errorBody, INTEGRATIONS_LINK, SparklineComponent } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { MusicApi } from '../music.api';
+import {DatePipe, DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {SoundcloudTrack} from '@pd/contracts';
+import {errorBody, INTEGRATIONS_LINK, SparklineComponent} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {MusicApi} from '../music.api';
 
 type SortColumn =
-  'title' | 'plays' | 'playsWeek' | 'likes' | 'reposts' | 'comments' | 'publishedAt';
+  | 'title'
+  | 'plays'
+  | 'playsWeek'
+  | 'likes'
+  | 'reposts'
+  | 'comments'
+  | 'publishedAt';
 
 /** Sortable columns after the title; all of them are numbers except the date. */
-const COLUMNS: { column: SortColumn; labelKey: string }[] = [
-  { column: 'plays', labelKey: 'music.soundcloud.plays' },
-  { column: 'playsWeek', labelKey: 'music.soundcloud.week' },
-  { column: 'likes', labelKey: 'music.soundcloud.likes' },
-  { column: 'reposts', labelKey: 'music.soundcloud.reposts' },
-  { column: 'comments', labelKey: 'music.soundcloud.comments' },
-  { column: 'publishedAt', labelKey: 'music.soundcloud.published' },
+const COLUMNS: {column: SortColumn; labelKey: string}[] = [
+  {column: 'plays', labelKey: 'music.soundcloud.plays'},
+  {column: 'playsWeek', labelKey: 'music.soundcloud.week'},
+  {column: 'likes', labelKey: 'music.soundcloud.likes'},
+  {column: 'reposts', labelKey: 'music.soundcloud.reposts'},
+  {column: 'comments', labelKey: 'music.soundcloud.comments'},
+  {column: 'publishedAt', labelKey: 'music.soundcloud.published'},
 ];
 
 /**
@@ -58,43 +70,55 @@ export class SoundcloudPage {
   /** SoundCloud is connected in Settings → Integrations (soundcloud.integration.ts). */
   protected readonly integrations = INTEGRATIONS_LINK;
   protected readonly columns = COLUMNS;
-  protected readonly sort = signal<{ column: SortColumn; descending: boolean }>({
+  protected readonly sort = signal<{column: SortColumn; descending: boolean}>({
     column: 'plays',
     descending: true,
   });
 
   protected readonly rows = computed(() => {
-    const { column, descending } = this.sort();
+    const {column, descending} = this.sort();
     const value = (track: SoundcloudTrack): string | number =>
       column === 'playsWeek' ? track.playsDelta.week : track[column];
     return [...(this.stats.value()?.tracks ?? [])].sort((a, b) => {
       const [left, right] = [value(a), value(b)];
       const order =
-        typeof left === 'string' ? left.localeCompare(String(right)) : left - Number(right);
+        typeof left === 'string'
+          ? left.localeCompare(String(right))
+          : left - Number(right);
       return descending ? -order : order;
     });
   });
 
   /** Plays of all tracks per day; a chart needs two days of history. */
   protected readonly playsPoints = computed(() =>
-    (this.stats.value()?.history ?? []).map(({ day, plays }) => ({ at: day, value: plays })),
+    (this.stats.value()?.history ?? []).map(({day, plays}) => ({
+      at: day,
+      value: plays,
+    })),
   );
 
   /** A second click on the same column turns the order around; text starts A→Z, numbers high→low. */
   protected sortBy(column: SortColumn): void {
-    this.sort.update((sort) => ({
+    this.sort.update(sort => ({
       column,
-      descending: sort.column === column ? !sort.descending : column !== 'title',
+      descending:
+        sort.column === column ? !sort.descending : column !== 'title',
     }));
   }
 
   protected ariaSort(column: SortColumn): 'ascending' | 'descending' | 'none' {
     const sort = this.sort();
-    return sort.column !== column ? 'none' : sort.descending ? 'descending' : 'ascending';
+    return sort.column !== column
+      ? 'none'
+      : sort.descending
+        ? 'descending'
+        : 'ascending';
   }
 
   protected async toggleNotify(track: SoundcloudTrack): Promise<void> {
-    await firstValueFrom(this.api.updateSoundcloudTrack(track.id, { notify: !track.notify }));
+    await firstValueFrom(
+      this.api.updateSoundcloudTrack(track.id, {notify: !track.notify}),
+    );
     this.stats.reload();
   }
 
@@ -104,10 +128,14 @@ export class SoundcloudPage {
       await firstValueFrom(this.api.syncSoundcloud());
     } catch (error) {
       // SoundCloud explains itself (an expired token) — show its words.
-      const message = (errorBody(error) as { message?: string } | null)?.message;
-      this.snackBar.open(message ?? this.transloco.translate('music.connect.error'), 'OK', {
-        duration: 8000,
-      });
+      const message = (errorBody(error) as {message?: string} | null)?.message;
+      this.snackBar.open(
+        message ?? this.transloco.translate('music.connect.error'),
+        'OK',
+        {
+          duration: 8000,
+        },
+      );
     } finally {
       this.stats.reload();
       this.busy.set(false);

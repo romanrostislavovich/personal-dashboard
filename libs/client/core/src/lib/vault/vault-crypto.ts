@@ -1,4 +1,4 @@
-import { VAULT_KDF_ITERATIONS, VaultItem, VaultKeys } from '@pd/contracts';
+import {VAULT_KDF_ITERATIONS, VaultItem, VaultKeys} from '@pd/contracts';
 
 /*
  * The cryptography of the password vault, on the device only (WebCrypto: the browser, the
@@ -56,11 +56,22 @@ export async function createVault(
     ),
     wrappedByRecovery: toBase64(await seal(await importAes(recovery), raw)),
   };
-  return { keys, recoveryKey: formatRecoveryKey(recovery), vaultKey: await openKey(raw) };
+  return {
+    keys,
+    recoveryKey: formatRecoveryKey(recovery),
+    vaultKey: await openKey(raw),
+  };
 }
 
-export async function unlockVault(keys: VaultKeys, masterPassword: string): Promise<VaultKey> {
-  const key = await passwordKey(masterPassword, fromBase64(keys.salt), keys.iterations);
+export async function unlockVault(
+  keys: VaultKeys,
+  masterPassword: string,
+): Promise<VaultKey> {
+  const key = await passwordKey(
+    masterPassword,
+    fromBase64(keys.salt),
+    keys.iterations,
+  );
   return openKey(await unseal(key, fromBase64(keys.wrappedByPassword)));
 }
 
@@ -72,7 +83,9 @@ export async function unlockWithRecoveryKey(
   if (!recovery) {
     throw new WrongVaultPasswordError();
   }
-  return openKey(await unseal(await importAes(recovery), fromBase64(keys.wrappedByRecovery)));
+  return openKey(
+    await unseal(await importAes(recovery), fromBase64(keys.wrappedByRecovery)),
+  );
 }
 
 /** A new master password for an open vault: a new salt, the same vault and recovery keys. */
@@ -88,7 +101,10 @@ export async function rewrapVault(
     iterations,
     salt: toBase64(salt),
     wrappedByPassword: toBase64(
-      await seal(await passwordKey(masterPassword, salt, iterations), vaultKey.raw),
+      await seal(
+        await passwordKey(masterPassword, salt, iterations),
+        vaultKey.raw,
+      ),
     ),
   };
 }
@@ -102,12 +118,18 @@ export function restoreVaultKey(raw: Uint8Array): Promise<VaultKey> {
   return openKey(raw);
 }
 
-export async function encryptItem(vaultKey: VaultKey, item: VaultItem): Promise<string> {
+export async function encryptItem(
+  vaultKey: VaultKey,
+  item: VaultItem,
+): Promise<string> {
   const plain = new TextEncoder().encode(JSON.stringify(item));
   return toBase64(await seal(vaultKey.key, plain));
 }
 
-export async function decryptItem(vaultKey: VaultKey, data: string): Promise<VaultItem> {
+export async function decryptItem(
+  vaultKey: VaultKey,
+  data: string,
+): Promise<VaultItem> {
   const plain = await unseal(vaultKey.key, fromBase64(data));
   return JSON.parse(new TextDecoder().decode(plain)) as VaultItem;
 }
@@ -134,11 +156,13 @@ export function parseRecoveryKey(text: string): Uint8Array | null {
   const clean = text.toUpperCase().replace(/^PDRK/, '').replace(/[\s-]/g, '');
   if (
     clean.length !== Math.ceil((KEY_BYTES * 8) / 5) ||
-    [...clean].some((c) => !BASE32.includes(c))
+    [...clean].some(c => !BASE32.includes(c))
   ) {
     return null;
   }
-  const bits = [...clean].map((c) => BASE32.indexOf(c).toString(2).padStart(5, '0')).join('');
+  const bits = [...clean]
+    .map(c => BASE32.indexOf(c).toString(2).padStart(5, '0'))
+    .join('');
   const bytes = new Uint8Array(KEY_BYTES);
   for (let i = 0; i < KEY_BYTES; i++) {
     bytes[i] = parseInt(bits.slice(i * 8, i * 8 + 8), 2);
@@ -161,27 +185,30 @@ async function passwordKey(
     ['deriveKey'],
   );
   return subtle().deriveKey(
-    { name: 'PBKDF2', hash: 'SHA-256', salt: buffer(salt), iterations },
+    {name: 'PBKDF2', hash: 'SHA-256', salt: buffer(salt), iterations},
     material,
-    { name: AES, length: 256 },
+    {name: AES, length: 256},
     false,
     ['encrypt', 'decrypt'],
   );
 }
 
 function importAes(raw: Uint8Array): Promise<CryptoKey> {
-  return subtle().importKey('raw', buffer(raw), { name: AES }, false, ['encrypt', 'decrypt']);
+  return subtle().importKey('raw', buffer(raw), {name: AES}, false, [
+    'encrypt',
+    'decrypt',
+  ]);
 }
 
 async function openKey(raw: Uint8Array): Promise<VaultKey> {
-  return { key: await importAes(raw), raw };
+  return {key: await importAes(raw), raw};
 }
 
 /** iv · ciphertext with its tag */
 async function seal(key: CryptoKey, plain: Uint8Array): Promise<Uint8Array> {
   const iv = randomBytes(IV_BYTES);
   const sealed = new Uint8Array(
-    await subtle().encrypt({ name: AES, iv: buffer(iv) }, key, buffer(plain)),
+    await subtle().encrypt({name: AES, iv: buffer(iv)}, key, buffer(plain)),
   );
   const out = new Uint8Array(IV_BYTES + sealed.length);
   out.set(iv);
@@ -193,7 +220,7 @@ async function unseal(key: CryptoKey, sealed: Uint8Array): Promise<Uint8Array> {
   try {
     return new Uint8Array(
       await subtle().decrypt(
-        { name: AES, iv: buffer(sealed.subarray(0, IV_BYTES)) },
+        {name: AES, iv: buffer(sealed.subarray(0, IV_BYTES))},
         key,
         buffer(sealed.subarray(IV_BYTES)),
       ),
@@ -222,5 +249,5 @@ export function toBase64(bytes: Uint8Array): string {
 }
 
 export function fromBase64(text: string): Uint8Array {
-  return Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
+  return Uint8Array.from(atob(text), c => c.charCodeAt(0));
 }

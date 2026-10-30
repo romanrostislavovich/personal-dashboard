@@ -1,6 +1,6 @@
-import { httpResource } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { DIARY_READS, diaryApi } from '@pd/client-core';
+import {httpResource} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {DIARY_READS, diaryApi} from '@pd/client-core';
 import {
   DiaryCalendarDay,
   DiaryEntry,
@@ -15,18 +15,20 @@ import {
   DiaryStats,
   LocalDate,
 } from '@pd/contracts';
-import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
+import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /**
  * The diary requests of the client core (`@pd/client-core`) for Angular: reads as reactive
  * `httpResource`s (re-fetched when their signals change), the rest as Observables.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class DiaryApi {
   private readonly diary = diaryApi(inject(DASHBOARD_CLIENT).api);
 
   entries(query: () => DiaryQuery) {
-    return httpResource<DiaryEntry[]>(() => DIARY_READS.entries(query()), { defaultValue: [] });
+    return httpResource<DiaryEntry[]>(() => DIARY_READS.entries(query()), {
+      defaultValue: [],
+    });
   }
 
   /** The selected day's entry; `null` if it does not exist yet. */
@@ -41,7 +43,7 @@ export class DiaryApi {
         const q = query().trim();
         return q.length >= 2 ? DIARY_READS.search(q) : undefined;
       },
-      { defaultValue: [] },
+      {defaultValue: []},
     );
   }
 
@@ -52,18 +54,23 @@ export class DiaryApi {
         const value = emoji();
         return value ? DIARY_READS.marks(value) : undefined;
       },
-      { defaultValue: [] },
+      {defaultValue: []},
     );
   }
 
   calendar(year: () => number) {
-    return httpResource<DiaryCalendarDay[]>(() => DIARY_READS.calendar(year()), {
-      defaultValue: [],
-    });
+    return httpResource<DiaryCalendarDay[]>(
+      () => DIARY_READS.calendar(year()),
+      {
+        defaultValue: [],
+      },
+    );
   }
 
   memories(day: () => LocalDate) {
-    return httpResource<DiaryMemory[]>(() => DIARY_READS.memories(day()), { defaultValue: [] });
+    return httpResource<DiaryMemory[]>(() => DIARY_READS.memories(day()), {
+      defaultValue: [],
+    });
   }
 
   insights() {
@@ -79,7 +86,9 @@ export class DiaryApi {
   }
 
   photos(day: () => LocalDate) {
-    return httpResource<DiaryPhoto[]>(() => DIARY_READS.photos(day()), { defaultValue: [] });
+    return httpResource<DiaryPhoto[]>(() => DIARY_READS.photos(day()), {
+      defaultValue: [],
+    });
   }
 
   /** The image as a blob: `<img src>` cannot send the auth header, an object URL can be shown. */
@@ -113,7 +122,7 @@ export class DiaryApi {
     return fromCore(() => this.diary.removeAll());
   }
 
-  summarize(period: { from: LocalDate; to: LocalDate }) {
+  summarize(period: {from: LocalDate; to: LocalDate}) {
     return fromCore(() => this.diary.summarize(period));
   }
 

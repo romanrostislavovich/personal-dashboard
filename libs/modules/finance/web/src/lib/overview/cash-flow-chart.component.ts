@@ -1,8 +1,15 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { CHART_TICKS, Month, monthAsDate, niceCeil } from '@pd/web-core';
-import { CashFlowMonth } from './finance-stats';
+import {CurrencyPipe, DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {CHART_TICKS, Month, monthAsDate, niceCeil} from '@pd/web-core';
+import {CashFlowMonth} from './finance-stats';
 
 /**
  * Income next to expenses for the last months. Bars are HTML, not SVG: they stretch with the
@@ -14,8 +21,14 @@ import { CashFlowMonth } from './finance-stats';
   imports: [CurrencyPipe, DatePipe, TranslocoPipe],
   template: `
     <div class="pd-chart-legend legend">
-      <span><i class="pd-chart-swatch income"></i>{{ 'finance.kpi.income' | transloco }}</span>
-      <span><i class="pd-chart-swatch expense"></i>{{ 'finance.kpi.expense' | transloco }}</span>
+      <span
+        ><i class="pd-chart-swatch income"></i
+        >{{ 'finance.kpi.income' | transloco }}</span
+      >
+      <span
+        ><i class="pd-chart-swatch expense"></i
+        >{{ 'finance.kpi.expense' | transloco }}</span
+      >
     </div>
 
     <div class="plot" (pointerleave)="hovered.set(null)">
@@ -43,7 +56,10 @@ import { CashFlowMonth } from './finance-stats';
           >
             <span class="bars">
               <span class="bar income" [style.height.%]="m.incomeHeight"></span>
-              <span class="bar expense" [style.height.%]="m.expenseHeight"></span>
+              <span
+                class="bar expense"
+                [style.height.%]="m.expenseHeight"
+              ></span>
             </span>
             <span class="month">{{ m.date | date: 'LLL' }}</span>
           </button>
@@ -57,8 +73,14 @@ import { CashFlowMonth } from './finance-stats';
           [class.right]="m.center > 60"
         >
           <b>{{ m.date | date: 'LLLL yyyy' }}</b>
-          <span><i class="pd-chart-swatch income"></i>{{ m.income | currency: currency() }}</span>
-          <span><i class="pd-chart-swatch expense"></i>{{ m.expense | currency: currency() }}</span>
+          <span
+            ><i class="pd-chart-swatch income"></i
+            >{{ m.income | currency: currency() }}</span
+          >
+          <span
+            ><i class="pd-chart-swatch expense"></i
+            >{{ m.expense | currency: currency() }}</span
+          >
           <span class="net"
             >{{ 'finance.kpi.left' | transloco }}:
             {{ m.income - m.expense | currency: currency() }}</span
@@ -207,7 +229,9 @@ export class CashFlowChartComponent {
 
   /** A round number above the largest bar, so the top gridline has a readable label. */
   protected readonly scaleMax = computed(() =>
-    niceCeil(Math.max(...this.months().map((m) => Math.max(m.income, m.expense)), 0)),
+    niceCeil(
+      Math.max(...this.months().map(m => Math.max(m.income, m.expense)), 0),
+    ),
   );
 
   protected readonly bars = computed(() => {
@@ -220,7 +244,8 @@ export class CashFlowChartComponent {
       date: monthAsDate(m.month),
       incomeHeight: (m.income / max) * 100,
       expenseHeight: (m.expense / max) * 100,
-      isSelected: m.month.year === selected.year && m.month.month === selected.month,
+      isSelected:
+        m.month.year === selected.year && m.month.month === selected.month,
       center: ((i + 0.5) / count) * 100,
       label: `${m.month.month}/${m.month.year}: +${m.income} −${m.expense}`,
     }));

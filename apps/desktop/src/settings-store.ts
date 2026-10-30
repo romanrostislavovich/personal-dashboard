@@ -1,7 +1,7 @@
-import { app } from 'electron';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
-import { join } from 'node:path';
+import {app} from 'electron';
+import {existsSync, readFileSync, writeFileSync} from 'node:fs';
+import {randomUUID} from 'node:crypto';
+import {join} from 'node:path';
 
 export interface DesktopSettings {
   /** Dashboard address: a server (https://dashboard.example.com) or local (http://localhost:3300). */
@@ -22,9 +22,9 @@ export interface DesktopSettings {
   /** Where the screenshots go (screenshots/screenshot-folder.ts); `null` — the default one. */
   screenshotsFolder: string | null;
   /** Explicit telemetry opt-in for exactly this server/device, independent of activity tracking. */
-  telemetryConsent: { serverUrl: string; deviceId: string } | null;
+  telemetryConsent: {serverUrl: string; deviceId: string} | null;
   /** Optional local break suggestions; never implied by telemetry consent. */
-  smartBreakConsent: { serverUrl: string; deviceId: string } | null;
+  smartBreakConsent: {serverUrl: string; deviceId: string} | null;
   /** Native picker only, scoped to the current device/server. Never supplied by a restore plan. */
   workstateContext: {
     serverUrl: string;
@@ -75,12 +75,18 @@ export function hasTelemetryConsent(
 
 /** Documents\Personal Dashboard\Backups: where a person looks for their files. */
 export function backupFolder(settings: DesktopSettings): string {
-  return settings.backupFolder ?? join(app.getPath('documents'), 'Personal Dashboard', 'Backups');
+  return (
+    settings.backupFolder ??
+    join(app.getPath('documents'), 'Personal Dashboard', 'Backups')
+  );
 }
 
 /** Pictures\Personal Dashboard: where the screenshots of the app go and are synced. */
 export function screenshotsFolder(settings: DesktopSettings): string {
-  return settings.screenshotsFolder ?? join(app.getPath('pictures'), 'Personal Dashboard');
+  return (
+    settings.screenshotsFolder ??
+    join(app.getPath('pictures'), 'Personal Dashboard')
+  );
 }
 
 /** Settings are stored as JSON in the user folder (%APPDATA%/Personal Dashboard). */
@@ -94,7 +100,7 @@ export function loadSettings(): DesktopSettings {
     return DEFAULTS;
   }
   try {
-    return { ...DEFAULTS, ...JSON.parse(readFileSync(path, 'utf8')) };
+    return {...DEFAULTS, ...JSON.parse(readFileSync(path, 'utf8'))};
   } catch {
     return DEFAULTS;
   }
@@ -107,7 +113,7 @@ export function installId(): string {
     return settings.installId;
   }
   const id = randomUUID();
-  saveSettings({ ...settings, installId: id });
+  saveSettings({...settings, installId: id});
   return id;
 }
 

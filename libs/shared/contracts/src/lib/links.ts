@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 /**
  * What the sections tell each other through the core (libs/api/core/src/lib/links): a module
@@ -26,7 +26,7 @@ export interface ProjectFact {
   /** A line under the number: what it is made of. */
   note?: string;
   /** A time day by day (the days with any), for the core to compare two sections' times. */
-  days?: { day: LocalDate; seconds: number }[];
+  days?: {day: LocalDate; seconds: number}[];
   /**
    * Of the time at the computer: the seconds of IDE time the tracker did not tie to the project
    * (a terminal, a browser, a computer without the tracker).
@@ -81,10 +81,13 @@ export interface ProjectOverview {
   /** The latest changes of the period, newest first. */
   changes: ProjectChange[];
   /** Money for an hour at the project, when both are known. */
-  perHour: { income: number; expense: number; currency: string } | null;
+  perHour: {income: number; expense: number; currency: string} | null;
 }
 
-export const projectOverviewQuerySchema = z.object({ from: z.iso.date(), to: z.iso.date() });
+export const projectOverviewQuerySchema = z.object({
+  from: z.iso.date(),
+  to: z.iso.date(),
+});
 export type ProjectOverviewQuery = z.infer<typeof projectOverviewQuerySchema>;
 
 // --- How much something paid for is used ---
@@ -123,7 +126,7 @@ export interface DailyMetric {
    * two go together by themselves, so they are never compared.
    */
   partOf?: string;
-  days: { day: LocalDate; value: number }[];
+  days: {day: LocalDate; value: number}[];
 }
 
 /** How a number differs between the days of a good mood and of a bad one. */
@@ -164,7 +167,12 @@ export interface MoodForecast {
   baselineError: number | null;
   trusted: boolean;
   /** What weighs most: mood points for a typical day's difference of the number. */
-  drivers: { key: string; labelKey: string; label: string | null; effect: number }[];
+  drivers: {
+    key: string;
+    labelKey: string;
+    label: string | null;
+    effect: number;
+  }[];
 }
 
 export interface MoodInsights {
@@ -180,7 +188,10 @@ export interface MoodInsights {
   insights: MoodInsight[];
 }
 
-export const moodInsightsQuerySchema = z.object({ from: z.iso.date(), to: z.iso.date() });
+export const moodInsightsQuerySchema = z.object({
+  from: z.iso.date(),
+  to: z.iso.date(),
+});
 export type MoodInsightsQuery = z.infer<typeof moodInsightsQuerySchema>;
 
 // --- Links between the daily numbers (Life → Links) ---
@@ -196,7 +207,7 @@ export interface CorrelationMetric {
   /** Days that have a value (a quantity's zero days inside its own range count). */
   days: number;
   /** The value of every day it has one: for the scatter of a pair. */
-  values: { day: LocalDate; value: number }[];
+  values: {day: LocalDate; value: number}[];
 }
 
 /**
@@ -314,7 +325,7 @@ export interface BeforeAfterChange {
   /** Changed beyond what ordinary weeks do. */
   changed: boolean;
   /** The values of the windows, for the chart around the date. */
-  values: { day: LocalDate; value: number }[];
+  values: {day: LocalDate; value: number}[];
 }
 
 export interface BeforeAfterResult {
@@ -336,7 +347,7 @@ export const beforeAfterQuerySchema = z.object({
   weeks: z.coerce
     .number()
     .int()
-    .refine((value) => (BEFORE_AFTER_WEEKS as readonly number[]).includes(value))
+    .refine(value => (BEFORE_AFTER_WEEKS as readonly number[]).includes(value))
     .default(4),
 });
 export type BeforeAfterQuery = z.infer<typeof beforeAfterQuerySchema>;

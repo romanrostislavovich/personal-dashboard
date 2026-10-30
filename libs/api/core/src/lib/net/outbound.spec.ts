@@ -29,7 +29,12 @@ describe('isPrivateAddress', () => {
   });
 
   it('lets the public ones through', () => {
-    for (const address of ['1.1.1.1', '172.32.0.1', '192.167.1.1', '2606:4700:4700::1111']) {
+    for (const address of [
+      '1.1.1.1',
+      '172.32.0.1',
+      '192.167.1.1',
+      '2606:4700:4700::1111',
+    ]) {
       expect([address, isPrivateAddress(address)]).toEqual([address, false]);
     }
   });
@@ -43,8 +48,12 @@ describe('addresses users give', () => {
 
   it('refuses a private address when they are not allowed, and only then', async () => {
     setPrivateAddressesAllowed(false);
-    await expect(assertPublicHost('127.0.0.1')).rejects.toBeInstanceOf(OutboundBlockedError);
-    await expect(assertPublicHost('localhost')).rejects.toBeInstanceOf(OutboundBlockedError);
+    await expect(assertPublicHost('127.0.0.1')).rejects.toBeInstanceOf(
+      OutboundBlockedError,
+    );
+    await expect(assertPublicHost('localhost')).rejects.toBeInstanceOf(
+      OutboundBlockedError,
+    );
     await expect(assertPublicHost('1.1.1.1')).resolves.toBeUndefined();
     setPrivateAddressesAllowed(true);
     await expect(assertPublicHost('127.0.0.1')).resolves.toBeUndefined();
@@ -52,13 +61,16 @@ describe('addresses users give', () => {
 
   it('checks every redirect: a public page must not lead into the private network', async () => {
     setPrivateAddressesAllowed(false);
-    const fetch = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(null, { status: 302, headers: { location: 'http://169.254.169.254/latest' } }),
-      );
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(null, {
+        status: 302,
+        headers: {location: 'http://169.254.169.254/latest'},
+      }),
+    );
     vi.stubGlobal('fetch', fetch);
-    await expect(safeFetch('http://1.1.1.1/start')).rejects.toBeInstanceOf(OutboundBlockedError);
+    await expect(safeFetch('http://1.1.1.1/start')).rejects.toBeInstanceOf(
+      OutboundBlockedError,
+    );
     // The first address was asked; the private one it pointed to never was.
     expect(fetch).toHaveBeenCalledTimes(1);
   });
@@ -67,7 +79,9 @@ describe('addresses users give', () => {
     setPrivateAddressesAllowed(false);
     const fetch = vi
       .fn()
-      .mockResolvedValueOnce(new Response(null, { status: 301, headers: { location: '/next' } }))
+      .mockResolvedValueOnce(
+        new Response(null, {status: 301, headers: {location: '/next'}}),
+      )
       .mockResolvedValueOnce(new Response('ok'));
     vi.stubGlobal('fetch', fetch);
     const response = await safeFetch('http://1.1.1.1/start');
@@ -79,22 +93,33 @@ describe('addresses users give', () => {
     setPrivateAddressesAllowed(false);
     const fetch = vi
       .fn()
-      .mockResolvedValueOnce(new Response(null, { status: 302, headers: { location: '/same' } }))
       .mockResolvedValueOnce(
-        new Response(null, { status: 302, headers: { location: 'http://8.8.8.8/other' } }),
+        new Response(null, {status: 302, headers: {location: '/same'}}),
+      )
+      .mockResolvedValueOnce(
+        new Response(null, {
+          status: 302,
+          headers: {location: 'http://8.8.8.8/other'},
+        }),
       )
       .mockResolvedValueOnce(new Response('ok'));
     vi.stubGlobal('fetch', fetch);
     await safeFetch('http://1.1.1.1/start', {
-      headers: { Authorization: 'Bearer secret', 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: 'Bearer secret',
+        'Content-Type': 'application/json',
+      },
     });
-    const headers = (call: number) => new Headers(fetch.mock.calls[call][1].headers);
+    const headers = (call: number) =>
+      new Headers(fetch.mock.calls[call][1].headers);
     expect(headers(1).get('authorization')).toBe('Bearer secret');
     expect(headers(2).get('authorization')).toBeNull();
     expect(headers(2).get('content-type')).toBe('application/json');
   });
 
   it('refuses what is not http', async () => {
-    await expect(safeFetch('file:///etc/passwd')).rejects.toBeInstanceOf(OutboundBlockedError);
+    await expect(safeFetch('file:///etc/passwd')).rejects.toBeInstanceOf(
+      OutboundBlockedError,
+    );
   });
 });

@@ -46,23 +46,28 @@
     </div>
     <div class="who">
       @if (single(); as a) {
-        <a class="name" [href]="a.profileUrl" target="_blank" rel="noopener">{{ a.personaName }}</a>
+        <a class="name" [href]="a.profileUrl" target="_blank" rel="noopener">{{
+          a.personaName
+        }}</a>
       } @else {
         <span class="name">{{ 'games.allAccounts' | transloco }}</span>
       }
       <span class="muted">
         @if (o.totals.firstMatchAt) {
           {{
-            'games.dota.totals.since' | transloco: { date: (o.totals.firstMatchAt | date: 'MMM y') }
+            'games.dota.totals.since'
+              | transloco: {date: (o.totals.firstMatchAt | date: 'MMM y')}
           }}
           ·
         }
-        {{ 'games.dota.lastMatch' | transloco }} {{ o.totals.lastMatchAt | timeAgo: lang() }}
+        {{ 'games.dota.lastMatch' | transloco }}
+        {{ o.totals.lastMatchAt | timeAgo: lang() }}
       </span>
       @if (single(); as a) {
         <span class="muted small">
           @if (a.lastSyncedAt) {
-            {{ 'games.synced' | transloco }} {{ a.lastSyncedAt | timeAgo: lang() }}
+            {{ 'games.synced' | transloco }}
+            {{ a.lastSyncedAt | timeAgo: lang() }}
           }
           <button
             matIconButton
@@ -86,22 +91,32 @@
         }
       }
     </div>
-    <pd-dota-rank [rankTier]="bestRank()" [leaderboardRank]="single()?.leaderboardRank ?? null" />
+    <pd-dota-rank
+      [rankTier]="bestRank()"
+      [leaderboardRank]="single()?.leaderboardRank ?? null"
+    />
     <div class="record">
       <span class="label">{{ 'games.dota.recordLabel' | transloco }}</span>
       <span class="value">
         <span class="win">{{ o.totals.wins | number }}</span>
         <span class="dash">–</span>
-        <span class="loss">{{ o.totals.decided - o.totals.wins | number }}</span>
+        <span class="loss">{{
+          o.totals.decided - o.totals.wins | number
+        }}</span>
       </span>
-      <span class="muted">{{ winrate() === null ? '—' : (winrate() | percent: '1.2-2') }}</span>
+      <span class="muted">{{
+        winrate() === null ? '—' : (winrate() | percent: '1.2-2')
+      }}</span>
     </div>
   </section>
 
   <!-- Steam lists a match first and tells how it went later: say so instead of counting it lost. -->
   @if (o.totals.matches > o.totals.decided) {
     <p class="muted pending">
-      {{ 'games.dota.pendingResults' | transloco: { count: o.totals.matches - o.totals.decided } }}
+      {{
+        'games.dota.pendingResults'
+          | transloco: {count: o.totals.matches - o.totals.decided}
+      }}
     </p>
   }
 
@@ -125,7 +140,8 @@
       'games.dota.views.overview' | transloco
     }}</mat-button-toggle>
     <mat-button-toggle value="heroes"
-      >{{ 'games.dota.views.heroes' | transloco }} · {{ o.heroes.length }}</mat-button-toggle
+      >{{ 'games.dota.views.heroes' | transloco }} ·
+      {{ o.heroes.length }}</mat-button-toggle
     >
     <mat-button-toggle value="matches"
       >{{ 'games.dota.views.matches' | transloco }} ·
@@ -137,23 +153,33 @@
     @case ('overview') {
       <div class="tiles">
         <div class="tile">
-          <span class="label">{{ 'games.dota.totals.matches' | transloco }}</span>
+          <span class="label">{{
+            'games.dota.totals.matches' | transloco
+          }}</span>
           <span class="value">{{ o.totals.matches | number }}</span>
         </div>
         <div class="tile">
-          <span class="label">{{ 'games.dota.totals.winrate' | transloco }}</span>
-          <span class="value">{{ winrate() === null ? '—' : (winrate() | percent: '1.1-1') }}</span>
+          <span class="label">{{
+            'games.dota.totals.winrate' | transloco
+          }}</span>
+          <span class="value">{{
+            winrate() === null ? '—' : (winrate() | percent: '1.1-1')
+          }}</span>
         </div>
         <div class="tile">
           <span class="label">KDA</span>
-          <span class="value">{{ kda() === null ? '—' : (kda() | number: '1.2-2') }}</span>
+          <span class="value">{{
+            kda() === null ? '—' : (kda() | number: '1.2-2')
+          }}</span>
         </div>
         <div class="tile">
           <span class="label">{{ 'games.dota.totals.hours' | transloco }}</span>
           <span class="value">{{ o.totals.hoursPlayed | number }}</span>
         </div>
         <div class="tile">
-          <span class="label">{{ 'games.dota.totals.heroes' | transloco }}</span>
+          <span class="label">{{
+            'games.dota.totals.heroes' | transloco
+          }}</span>
           <span class="value">{{ o.totals.heroesPlayed }}</span>
         </div>
         <div class="tile">
@@ -174,7 +200,11 @@
               {{ 'games.dota.seeAll' | transloco }}
             </button>
           </header>
-          <pd-dota-heroes-table [heroes]="o.heroes" [limit]="8" [lang]="lang()" />
+          <pd-dota-heroes-table
+            [heroes]="o.heroes"
+            [limit]="8"
+            [lang]="lang()"
+          />
         </section>
         <section class="panel">
           <header class="panel-head">
@@ -219,7 +249,9 @@
                 }}</span>
                 <span
                   >{{ a.matches | number }} ·
-                  {{ a.decided ? (a.wins / a.decided | percent: '1.0-1') : '—' }}</span
+                  {{
+                    a.decided ? (a.wins / a.decided | percent: '1.0-1') : '—'
+                  }}</span
                 >
                 <span class="muted">{{ a.lastMatchAt | timeAgo: lang() }}</span>
                 <span class="actions">

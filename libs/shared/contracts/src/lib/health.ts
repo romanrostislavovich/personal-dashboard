@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { CanonicalValue, LabFlag } from './health-labs';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {CanonicalValue, LabFlag} from './health-labs';
+import {LocalDate} from './local-date';
 
 /**
  * Health: one medical history of one's own across countries and clinics — visits, diagnoses by
@@ -16,7 +16,7 @@ const country = z
   .string()
   .trim()
   .regex(/^[A-Za-z]{2}$/, 'Expected a two-letter country code')
-  .transform((code) => code.toUpperCase());
+  .transform(code => code.toUpperCase());
 
 /** Countries offered first; any other code may be typed. */
 export const HEALTH_COUNTRIES = ['UA', 'BY', 'PL'] as const;
@@ -152,7 +152,7 @@ export const healthDiagnosisInputSchema = z.object({
     .trim()
     .max(20)
     .transform(normalizeIcdCode)
-    .refine((code) => /^[A-Z0-9][A-Z0-9.\-+/]*$/.test(code), 'Not a code')
+    .refine(code => /^[A-Z0-9][A-Z0-9.\-+/]*$/.test(code), 'Not a code')
     .nullish(),
   /** The diagnosis as the document words it. */
   title: z.string().trim().min(1).max(500),
@@ -202,7 +202,7 @@ export const healthMedicationInputSchema = z
       .max(8)
       .default([]),
   })
-  .refine((m) => !m.stoppedOn || !m.startedOn || m.stoppedOn >= m.startedOn, {
+  .refine(m => !m.stoppedOn || !m.startedOn || m.stoppedOn >= m.startedOn, {
     message: 'The end is before the start',
     path: ['stoppedOn'],
   });
@@ -294,10 +294,15 @@ const healthLabValueInputSchema = z
     /** A range that is not two numbers: `negative`, `<5.2`. */
     refText: optionalText(200),
   })
-  .refine((line) => line.value != null || Boolean(line.textValue), {
-    message: 'A value or a text result is needed',
-    path: ['value'],
-  });
+  .refine(
+    line =>
+      (line.value !== null && line.value !== undefined) ||
+      Boolean(line.textValue),
+    {
+      message: 'A value or a text result is needed',
+      path: ['value'],
+    },
+  );
 
 export const healthLabPanelInputSchema = z.object({
   takenOn: day,
@@ -377,7 +382,16 @@ export interface HealthStudy {
 
 // --- The profile: what a doctor asks first ---
 
-export const BLOOD_TYPES = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'] as const;
+export const BLOOD_TYPES = [
+  'O+',
+  'O-',
+  'A+',
+  'A-',
+  'B+',
+  'B-',
+  'AB+',
+  'AB-',
+] as const;
 export type BloodType = (typeof BLOOD_TYPES)[number];
 
 /** Whom to call in an emergency (the ICE card). */
@@ -428,7 +442,9 @@ export const healthVaccinationInputSchema = z.object({
   nextDueOn: day.nullish(),
   notes: optionalText(2000),
 });
-export type HealthVaccinationInput = z.input<typeof healthVaccinationInputSchema>;
+export type HealthVaccinationInput = z.input<
+  typeof healthVaccinationInputSchema
+>;
 
 export interface HealthVaccination {
   id: string;
@@ -491,10 +507,10 @@ export type HealthIntakeAnswer = z.input<typeof healthIntakeAnswerSchema>;
 export function parseReminderTimes(text: string): string[] {
   const times = text
     .split(/[,;\s]+/)
-    .map((part) => /^(\d{1,2})[:.](\d{2})$/.exec(part.trim()))
+    .map(part => /^(\d{1,2})[:.](\d{2})$/.exec(part.trim()))
     .filter((match): match is RegExpExecArray => match !== null)
     .map(([, hours, minutes]) => `${hours.padStart(2, '0')}:${minutes}`)
-    .filter((time) => /^([01]\d|2[0-3]):[0-5]\d$/.test(time));
+    .filter(time => /^([01]\d|2[0-3]):[0-5]\d$/.test(time));
   return [...new Set(times)].sort();
 }
 
@@ -585,7 +601,9 @@ export interface HealthCondition {
  * The diagnoses grouped by their code (a diagnosis without one by its wording), the condition
  * diagnosed last first. A condition still confirmed or suspected leads its period.
  */
-export function healthConditions(diagnoses: readonly HealthDiagnosis[]): HealthCondition[] {
+export function healthConditions(
+  diagnoses: readonly HealthDiagnosis[],
+): HealthCondition[] {
   const groups = new Map<string, HealthDiagnosis[]>();
   for (const diagnosis of diagnoses) {
     const key = diagnosis.code
@@ -595,7 +613,9 @@ export function healthConditions(diagnoses: readonly HealthDiagnosis[]): HealthC
   }
   return [...groups.entries()]
     .map(([key, items]) => {
-      const sorted = [...items].sort((a, b) => b.diagnosedOn.localeCompare(a.diagnosedOn));
+      const sorted = [...items].sort((a, b) =>
+        b.diagnosedOn.localeCompare(a.diagnosedOn),
+      );
       const latest = sorted[0];
       return {
         key,
@@ -610,11 +630,13 @@ export function healthConditions(diagnoses: readonly HealthDiagnosis[]): HealthC
     })
     .sort(
       (a, b) =>
-        Number(isActive(b.status)) - Number(isActive(a.status)) || b.lastOn.localeCompare(a.lastOn),
+        Number(isActive(b.status)) - Number(isActive(a.status)) ||
+        b.lastOn.localeCompare(a.lastOn),
     );
 }
 
-const isActive = (status: DiagnosisStatus) => status === 'confirmed' || status === 'suspected';
+const isActive = (status: DiagnosisStatus) =>
+  status === 'confirmed' || status === 'suspected';
 
 // --- Lab series: one analyte over the years, for a chart ---
 
@@ -680,7 +702,8 @@ export function labSeries(panels: readonly HealthLabPanel[]): LabSeries[] {
       series.set(key, entry);
     }
   }
-  const flagged = (s: LabSeries) => Number(s.points[s.points.length - 1].flag !== null);
+  const flagged = (s: LabSeries) =>
+    Number(s.points[s.points.length - 1].flag !== null);
   return [...series.values()].sort(
     (a, b) => flagged(b) - flagged(a) || a.name.localeCompare(b.name),
   );
@@ -692,7 +715,8 @@ export function labSeries(panels: readonly HealthLabPanel[]): LabSeries[] {
 export const HEALTH_DRAFT_KINDS = ['visit', 'labs', 'study', 'other'] as const;
 export type HealthDraftKind = (typeof HEALTH_DRAFT_KINDS)[number];
 
-const draftText = (max: number) => z.string().trim().max(max).nullish().catch(null);
+const draftText = (max: number) =>
+  z.string().trim().max(max).nullish().catch(null);
 const draftDay = z.iso.date().nullish().catch(null);
 
 /**
@@ -709,7 +733,7 @@ export const healthDocumentDraftSchema = z.object({
     .string()
     .trim()
     .regex(/^[A-Za-z]{2}$/)
-    .transform((code) => code.toUpperCase())
+    .transform(code => code.toUpperCase())
     .nullish()
     .catch(null),
   clinic: draftText(200),
@@ -749,7 +773,7 @@ export const healthDocumentDraftSchema = z.object({
         /** As printed: `5,6`, `отрицательно`. */
         result: z
           .union([z.string(), z.number()])
-          .transform((value) => String(value).trim().slice(0, 200))
+          .transform(value => String(value).trim().slice(0, 200))
           .catch(''),
         unit: draftText(30),
         /** As printed: `3,9–5,5`, `<5.2`. */
@@ -774,15 +798,21 @@ export const healthDraftApplySchema = z.object({
   clinicId: z.uuid().nullish(),
   newClinic: healthClinicInputSchema.nullish(),
   doctorId: z.uuid().nullish(),
-  newDoctor: healthDoctorInputSchema.omit({ clinicId: true }).nullish(),
-  visit: healthVisitInputSchema.omit({ clinicId: true, doctorId: true }).nullish(),
+  newDoctor: healthDoctorInputSchema.omit({clinicId: true}).nullish(),
+  visit: healthVisitInputSchema
+    .omit({clinicId: true, doctorId: true})
+    .nullish(),
   diagnoses: z
-    .array(healthDiagnosisInputSchema.omit({ visitId: true }))
+    .array(healthDiagnosisInputSchema.omit({visitId: true}))
     .max(30)
     .default([]),
   medications: z.array(healthMedicationInputSchema).max(30).default([]),
-  labPanel: healthLabPanelInputSchema.omit({ visitId: true, documentId: true }).nullish(),
-  study: healthStudyInputSchema.omit({ visitId: true, documentId: true }).nullish(),
+  labPanel: healthLabPanelInputSchema
+    .omit({visitId: true, documentId: true})
+    .nullish(),
+  study: healthStudyInputSchema
+    .omit({visitId: true, documentId: true})
+    .nullish(),
 });
 export type HealthDraftApplyInput = z.input<typeof healthDraftApplySchema>;
 

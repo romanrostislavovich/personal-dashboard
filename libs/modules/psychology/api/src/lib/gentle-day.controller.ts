@@ -10,7 +10,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
 import {
   gentleDayInputSchema,
   gentleDayQuerySchema,
@@ -18,8 +18,8 @@ import {
   gentleStepInputSchema,
   LocalDate,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { GentleDayService } from './gentle-day.service';
+import {z} from 'zod';
+import {GentleDayService} from './gentle-day.service';
 
 /** A gentle day: the library of small steps and the plan of a day. */
 @Controller('psychology/gentle')
@@ -50,7 +50,10 @@ export class GentleDayController {
 
   @Delete('steps/:id')
   @HttpCode(204)
-  removeStep(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeStep(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.gentle.removeStep(user.id, id);
   }
 
@@ -58,7 +61,8 @@ export class GentleDayController {
   @Get('day')
   day(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(gentleDayQuerySchema)) query: { date: LocalDate },
+    @Query(new ZodValidationPipe(gentleDayQuerySchema))
+    query: {date: LocalDate},
   ) {
     return this.gentle.day(user.id, query.date);
   }
@@ -76,7 +80,8 @@ export class GentleDayController {
   @HttpCode(204)
   leaveDay(
     @CurrentUser() user: AuthUser,
-    @Param(new ZodValidationPipe(gentleDayQuerySchema)) params: { date: LocalDate },
+    @Param(new ZodValidationPipe(gentleDayQuerySchema))
+    params: {date: LocalDate},
   ) {
     return this.gentle.leaveDay(user.id, params.date);
   }

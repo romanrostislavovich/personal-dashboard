@@ -1,9 +1,14 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LinksService, Period } from '@pd/api-core';
-import { DailyMetric, HealthRecord, healthConditions, TimelinePeriod } from '@pd/contracts';
-import { and, eq, gte, lte, sql } from 'drizzle-orm';
-import { healthIntakes } from './health.schema';
-import { HealthService } from './health.service';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, LinksService, Period} from '@pd/api-core';
+import {
+  DailyMetric,
+  HealthRecord,
+  healthConditions,
+  TimelinePeriod,
+} from '@pd/contracts';
+import {and, eq, gte, lte, sql} from 'drizzle-orm';
+import {healthIntakes} from './health.schema';
+import {HealthService} from './health.service';
 
 /** The specialities whose treatment is of the mind: Psychology lays it over the mood. */
 const MIND = new Set(['psychiatrist', 'psychotherapist']);
@@ -29,7 +34,8 @@ export class HealthLinks implements OnModuleInit {
   onModuleInit(): void {
     this.links.registerPeriods({
       module: 'health',
-      periods: async (userId, range) => healthPeriods(await this.health.record(userId), range),
+      periods: async (userId, range) =>
+        healthPeriods(await this.health.record(userId), range),
     });
     this.links.registerDailyMetrics({
       module: 'health',
@@ -39,20 +45,42 @@ export class HealthLinks implements OnModuleInit {
           await this.intakes(userId, period),
           visitsMetric(record, period),
           ...labMetrics(record, period),
-        ].filter((metric): metric is DailyMetric => !!metric && metric.days.length > 0);
+        ].filter(
+          (metric): metric is DailyMetric => !!metric && metric.days.length > 0,
+        );
       },
     });
     this.links.registerPages([
-      { module: 'health', path: '/health/history', description: 'medical visits, documents' },
-      { module: 'health', path: '/health/conditions', description: 'diagnoses over the years' },
-      { module: 'health', path: '/health/results', description: 'lab results and studies' },
+      {
+        module: 'health',
+        path: '/health/history',
+        description: 'medical visits, documents',
+      },
+      {
+        module: 'health',
+        path: '/health/conditions',
+        description: 'diagnoses over the years',
+      },
+      {
+        module: 'health',
+        path: '/health/results',
+        description: 'lab results and studies',
+      },
       {
         module: 'health',
         path: '/health/band',
         description: 'the band: sleep, heart rate, HRV, steps',
       },
-      { module: 'health', path: '/health/medications', description: 'medications' },
-      { module: 'health', path: '/health/summary', description: 'a summary for a new doctor' },
+      {
+        module: 'health',
+        path: '/health/medications',
+        description: 'medications',
+      },
+      {
+        module: 'health',
+        path: '/health/summary',
+        description: 'a summary for a new doctor',
+      },
     ]);
   }
 
@@ -66,7 +94,13 @@ export class HealthLinks implements OnModuleInit {
         answered: sql<number>`count(*) filter (where ${i.status} <> 'pending')::int`,
       })
       .from(i)
-      .where(and(eq(i.userId, userId), gte(i.day, period.from), lte(i.day, period.to)))
+      .where(
+        and(
+          eq(i.userId, userId),
+          gte(i.day, period.from),
+          lte(i.day, period.to),
+        ),
+      )
       .groupBy(i.day);
     return {
       key: 'health.intakes',
@@ -74,8 +108,11 @@ export class HealthLinks implements OnModuleInit {
       labelKey: 'health.links.intakes',
       unit: 'percent',
       days: rows
-        .filter((row) => row.answered > 0)
-        .map((row) => ({ day: row.day, value: Math.round((row.taken / row.answered) * 100) })),
+        .filter(row => row.answered > 0)
+        .map(row => ({
+          day: row.day,
+          value: Math.round((row.taken / row.answered) * 100),
+        })),
     };
   }
 }
@@ -86,11 +123,13 @@ export function healthPeriods(
   range: Period,
 ): Omit<TimelinePeriod, 'module'>[] {
   const mindVisits = new Set(
-    record.visits.filter((v) => v.speciality && MIND.has(v.speciality)).map((v) => v.id),
+    record.visits
+      .filter(v => v.speciality && MIND.has(v.speciality))
+      .map(v => v.id),
   );
   const medications = record.medications
-    .filter((m) => m.startedOn)
-    .map((m) => ({
+    .filter(m => m.startedOn)
+    .map(m => ({
       kind: 'medication',
       title: m.name,
       subtitle: [m.dose, m.schedule].filter(Boolean).join(', ') || null,
@@ -99,8 +138,8 @@ export function healthPeriods(
       mind: !!m.visitId && mindVisits.has(m.visitId),
     }));
   const conditions = healthConditions(record.diagnoses)
-    .filter((c) => c.status !== 'ruledOut')
-    .map((c) => ({
+    .filter(c => c.status !== 'ruledOut')
+    .map(c => ({
       kind: 'diagnosis',
       title: c.code ? `${c.code} ${c.title}` : c.title,
       subtitle: null,
@@ -110,7 +149,9 @@ export function healthPeriods(
       mind: isMind(c.system, c.code),
     }));
   return [...medications, ...conditions].filter(
-    (period) => period.from <= range.to && (period.to === null || period.to >= range.from),
+    period =>
+      period.from <= range.to &&
+      (period.to === null || period.to >= range.from),
   );
 }
 
@@ -127,7 +168,7 @@ export function visitsMetric(record: HealthRecord, range: Period): DailyMetric {
     module: 'health',
     labelKey: 'health.links.visits',
     unit: 'count',
-    days: [...days].map(([day, value]) => ({ day, value })),
+    days: [...days].map(([day, value]) => ({day, value})),
   };
 }
 
@@ -136,7 +177,10 @@ export function visitsMetric(record: HealthRecord, range: Period): DailyMetric {
  * when it has one (so results of two laboratories compare), as written otherwise.
  */
 export function labMetrics(record: HealthRecord, range: Period): DailyMetric[] {
-  const analytes = new Map<string, { label: string; days: Map<string, number> }>();
+  const analytes = new Map<
+    string,
+    {label: string; days: Map<string, number>}
+  >();
   for (const panel of record.labPanels) {
     if (panel.takenOn < range.from || panel.takenOn > range.to) {
       continue;
@@ -157,13 +201,13 @@ export function labMetrics(record: HealthRecord, range: Period): DailyMetric[] {
       analytes.set(key, found);
     }
   }
-  return [...analytes].map(([key, { label, days }]) => ({
+  return [...analytes].map(([key, {label, days}]) => ({
     key: `health.lab.${key}`,
     module: 'health',
     labelKey: 'health.links.lab',
     label,
     unit: 'score' as const,
-    days: [...days].map(([day, value]) => ({ day, value })),
+    days: [...days].map(([day, value]) => ({day, value})),
   }));
 }
 

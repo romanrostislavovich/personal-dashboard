@@ -1,6 +1,10 @@
-import { focusMusic, timeByName, timeByTitle } from './focus-music';
+import {focusMusic, timeByName, timeByTitle} from './focus-music';
 
-const session = (artists: string[], completed: boolean, distractedSeconds = 0) => ({
+const session = (
+  artists: string[],
+  completed: boolean,
+  distractedSeconds = 0,
+) => ({
   completed,
   focusSeconds: 1500,
   distractedSeconds,
@@ -28,38 +32,43 @@ describe('focusMusic', () => {
       distractedPercent: 25,
     });
     expect(result.artists).toEqual([
-      { artist: 'Muse', sessions: 2, plays: 3 },
-      { artist: 'Hans Zimmer', sessions: 1, plays: 1 },
+      {artist: 'Muse', sessions: 2, plays: 3},
+      {artist: 'Hans Zimmer', sessions: 1, plays: 1},
     ]);
   });
 
   it('tells what played while working on each project', () => {
     const result = focusMusic([
-      { ...session(['Muse', 'Muse'], true), project: 'Shop' },
-      { ...session(['Muse', 'Tool'], true), project: 'Shop' },
-      { ...session(['Bonobo'], true), project: null },
-      { ...session([], true), project: 'Blog' },
+      {...session(['Muse', 'Muse'], true), project: 'Shop'},
+      {...session(['Muse', 'Tool'], true), project: 'Shop'},
+      {...session(['Bonobo'], true), project: null},
+      {...session([], true), project: 'Blog'},
     ]);
     expect(result.byProject).toEqual([
-      { project: 'Shop', sessions: 2, artists: ['Muse', 'Tool'] },
-      { project: null, sessions: 1, artists: ['Bonobo'] },
+      {project: 'Shop', sessions: 2, artists: ['Muse', 'Tool']},
+      {project: null, sessions: 1, artists: ['Bonobo']},
     ]);
   });
 
   it('copes with no sessions', () => {
-    expect(focusMusic([]).withMusic).toMatchObject({ sessions: 0, completedPercent: 0 });
+    expect(focusMusic([]).withMusic).toMatchObject({
+      sessions: 0,
+      completedPercent: 0,
+    });
   });
 });
 
 describe('timeByTitle', () => {
   const titles = [
-    { title: 'fix-login — auth.ts — visual studio code', seconds: 1200 },
-    { title: 'pull request: fix-login · github', seconds: 300 },
-    { title: 'inbox', seconds: 900 },
+    {title: 'fix-login — auth.ts — visual studio code', seconds: 1200},
+    {title: 'pull request: fix-login · github', seconds: 300},
+    {title: 'inbox', seconds: 900},
   ];
 
   it('sums the windows whose title contains the name', () => {
-    expect(timeByTitle(titles, ['fix-login', 'deploy'])).toEqual(new Map([['fix-login', 1500]]));
+    expect(timeByTitle(titles, ['fix-login', 'deploy'])).toEqual(
+      new Map([['fix-login', 1500]]),
+    );
   });
 
   it('does not look for a name too short to be told from a word', () => {
@@ -69,15 +78,17 @@ describe('timeByTitle', () => {
 
 describe('timeByName', () => {
   const sessions = [
-    { note: 'Fix login', focusSeconds: 1500 },
-    { note: 'fix login: the token', focusSeconds: 900 },
-    { note: 'UI', focusSeconds: 600 },
-    { note: 'build the ui kit', focusSeconds: 300 },
-    { note: null, focusSeconds: 1000 },
+    {note: 'Fix login', focusSeconds: 1500},
+    {note: 'fix login: the token', focusSeconds: 900},
+    {note: 'UI', focusSeconds: 600},
+    {note: 'build the ui kit', focusSeconds: 300},
+    {note: null, focusSeconds: 1000},
   ];
 
   it('sums the sessions whose note is the name or contains it', () => {
-    expect(timeByName(sessions, ['fix login', 'other'])).toEqual(new Map([['fix login', 2400]]));
+    expect(timeByName(sessions, ['fix login', 'other'])).toEqual(
+      new Map([['fix login', 2400]]),
+    );
   });
 
   it('matches a short name only whole', () => {

@@ -31,7 +31,14 @@
       "run_at": "document_idle"
     }
   ],
-  "permissions": ["storage", "alarms", "idle", "webNavigation", "clipboardWrite", "sidePanel"],
+  "permissions": [
+    "storage",
+    "alarms",
+    "idle",
+    "webNavigation",
+    "clipboardWrite",
+    "sidePanel"
+  ],
   "host_permissions": ["http://*/*", "https://*/*"],
   "commands": {
     "_execute_action": {

@@ -1,12 +1,16 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database } from '@pd/api-core';
-import { todayIn, toLocalDate } from '@pd/contracts';
-import { eq, sql } from 'drizzle-orm';
-import { RepoIssue, RepoSnapshot, RepoSource } from './repo-source';
-import { fetchNpmPackageRepo, fetchNpmWeeklyDownloads } from './npm.client';
-import { repoDailyStats, TrackedRepoRow, trackedRepos } from './open-source.schema';
-import { crossedStarMilestone } from './star-stats';
+import {Inject, Injectable, Logger} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, DB, Database} from '@pd/api-core';
+import {todayIn, toLocalDate} from '@pd/contracts';
+import {eq, sql} from 'drizzle-orm';
+import {RepoIssue, RepoSnapshot, RepoSource} from './repo-source';
+import {fetchNpmPackageRepo, fetchNpmWeeklyDownloads} from './npm.client';
+import {
+  repoDailyStats,
+  TrackedRepoRow,
+  trackedRepos,
+} from './open-source.schema';
+import {crossedStarMilestone} from './star-stats';
 
 /** How long an answer of the npm registry about a package's repository is trusted. */
 const OWNERSHIP_TTL_MS = 24 * 60 * 60 * 1000;
@@ -16,7 +20,7 @@ export interface RepoSyncEvents {
   fullName: string;
   newIssues: RepoIssue[];
   newPulls: RepoIssue[];
-  newRelease: { tag: string; htmlUrl: string } | null;
+  newRelease: {tag: string; htmlUrl: string} | null;
   starMilestone: number | null;
 }
 
@@ -28,7 +32,10 @@ export interface RepoSyncEvents {
 export class RepoSyncService {
   private readonly logger = new Logger(RepoSyncService.name);
   /** `repository|package` → whether npm says the package is published from that repository. */
-  private readonly ownership = new Map<string, { owned: boolean; expiresAt: number }>();
+  private readonly ownership = new Map<
+    string,
+    {owned: boolean; expiresAt: number}
+  >();
 
   constructor(
     @Inject(DB) private readonly db: Database,
@@ -49,7 +56,9 @@ export class RepoSyncService {
       forks: snapshot.forks,
       openIssues: snapshot.openIssues,
       openPulls: snapshot.openPulls,
-      npmWeeklyDownloads: npmPackage ? await this.npmDownloads(npmPackage, repo) : null,
+      npmWeeklyDownloads: npmPackage
+        ? await this.npmDownloads(npmPackage, repo)
+        : null,
     };
     const release = snapshot.latestRelease;
 
@@ -74,10 +83,12 @@ export class RepoSyncService {
       })
       .where(eq(trackedRepos.id, repo.id));
 
-    const day = toLocalDate(todayIn(this.config.get('APP_TIMEZONE', { infer: true })));
+    const day = toLocalDate(
+      todayIn(this.config.get('APP_TIMEZONE', {infer: true})),
+    );
     await this.db
       .insert(repoDailyStats)
-      .values({ repoId: repo.id, day, ...stats })
+      .values({repoId: repo.id, day, ...stats})
       .onConflictDoUpdate({
         target: [repoDailyStats.repoId, repoDailyStats.day],
         set: stats,
@@ -91,12 +102,16 @@ export class RepoSyncService {
     if (!repo.notify || !repo.lastSyncedAt) {
       return null;
     }
-    const created = await source.listCreatedSince(snapshot.fullName, repo.lastSyncedAt);
+    const created = await source.listCreatedSince(
+      snapshot.fullName,
+      repo.lastSyncedAt,
+    );
     return {
       fullName: snapshot.fullName,
-      newIssues: created.filter((item) => !item.isPullRequest),
-      newPulls: created.filter((item) => item.isPullRequest),
-      newRelease: release && release.tag !== repo.latestReleaseTag ? release : null,
+      newIssues: created.filter(item => !item.isPullRequest),
+      newPulls: created.filter(item => item.isPullRequest),
+      newRelease:
+        release && release.tag !== repo.latestReleaseTag ? release : null,
       starMilestone: crossedStarMilestone(repo.stars, snapshot.stars),
     };
   }
@@ -104,7 +119,7 @@ export class RepoSyncService {
   async markFailed(repo: TrackedRepoRow, error: unknown): Promise<void> {
     await this.db
       .update(trackedRepos)
-      .set({ syncError: error instanceof Error ? error.message : String(error) })
+      .set({syncError: error instanceof Error ? error.message : String(error)})
       .where(eq(trackedRepos.id, repo.id));
   }
 
@@ -130,7 +145,10 @@ export class RepoSyncService {
     }
     try {
       const owned = (await fetchNpmPackageRepo(candidate)) === fullName;
-      this.ownership.set(key, { owned, expiresAt: Date.now() + OWNERSHIP_TTL_MS });
+      this.ownership.set(key, {
+        owned,
+        expiresAt: Date.now() + OWNERSHIP_TTL_MS,
+      });
       return owned ? candidate : null;
     } catch (error) {
       // npm being down changes nothing: what was accepted before stays.
@@ -140,7 +158,10 @@ export class RepoSyncService {
   }
 
   /** npm being down must not fail the repository: the last known figure stays. */
-  private async npmDownloads(npmPackage: string, repo: TrackedRepoRow): Promise<number | null> {
+  private async npmDownloads(
+    npmPackage: string,
+    repo: TrackedRepoRow,
+  ): Promise<number | null> {
     try {
       return await fetchNpmWeeklyDownloads(npmPackage);
     } catch (error) {

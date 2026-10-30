@@ -1,5 +1,5 @@
-import { pickMessages } from '@pd/api-core';
-import { SoundcloudNews } from './soundcloud.service';
+import {pickMessages} from '@pd/api-core';
+import {SoundcloudNews} from './soundcloud.service';
 
 interface Labels {
   plays: (n: number) => string;
@@ -9,14 +9,15 @@ interface Labels {
 
 /** One message for everything a sync found. */
 function body(news: SoundcloudNews, t: Labels): string {
-  const tracks = news.tracks.map((track) => {
+  const tracks = news.tracks.map(track => {
     const lines = [
       track.playsMilestone && `🎉 ${t.plays(track.playsMilestone)}`,
       track.newComments > 0 && `💬 ${t.comments(track.newComments)}`,
     ].filter(Boolean);
     return `${track.title}\n${lines.join('\n')}\n${track.permalinkUrl}`;
   });
-  const followers = news.newFollowers > 0 ? [`👥 ${t.followers(news.newFollowers)}`] : [];
+  const followers =
+    news.newFollowers > 0 ? [`👥 ${t.followers(news.newFollowers)}`] : [];
   return [...followers, ...tracks].join('\n\n');
 }
 
@@ -26,18 +27,18 @@ const messages = {
     title: '☁️ SoundCloud',
     body: (news: SoundcloudNews) =>
       body(news, {
-        plays: (n) => `${n.toLocaleString('en')} plays!`,
-        comments: (n) => `New comments: ${n}`,
-        followers: (n) => `New followers: ${n}`,
+        plays: n => `${n.toLocaleString('en')} plays!`,
+        comments: n => `New comments: ${n}`,
+        followers: n => `New followers: ${n}`,
       }),
   },
   ru: {
     title: '☁️ SoundCloud',
     body: (news: SoundcloudNews) =>
       body(news, {
-        plays: (n) => `${n.toLocaleString('ru')} прослушиваний!`,
-        comments: (n) => `Новых комментариев: ${n}`,
-        followers: (n) => `Новых подписчиков: ${n}`,
+        plays: n => `${n.toLocaleString('ru')} прослушиваний!`,
+        comments: n => `Новых комментариев: ${n}`,
+        followers: n => `Новых подписчиков: ${n}`,
       }),
   },
 };

@@ -1,8 +1,14 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LifeService, localDaysRange, UsersService } from '@pd/api-core';
-import { LifeCard, LifeEvent } from '@pd/contracts';
-import { and, asc, count, desc, eq, gte, lt } from 'drizzle-orm';
-import { scrobbles } from './music.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  DB,
+  Database,
+  LifeService,
+  localDaysRange,
+  UsersService,
+} from '@pd/api-core';
+import {LifeCard, LifeEvent} from '@pd/contracts';
+import {and, asc, count, desc, eq, gte, lt} from 'drizzle-orm';
+import {scrobbles} from './music.schema';
 
 /** Leaders sharing the first place are all shown, up to this many. */
 const TOP_ARTISTS = 3;
@@ -23,14 +29,17 @@ export class MusicLife implements OnModuleInit {
     this.life.register({
       module: 'music',
       day: async (userId, day): Promise<LifeEvent[]> => {
-        const { plays, artist, topPlays } = await this.listened(userId, { from: day, to: day });
+        const {plays, artist, topPlays} = await this.listened(userId, {
+          from: day,
+          to: day,
+        });
         return plays
           ? [
               {
                 module: 'music',
                 icon: 'headphones',
                 key: 'music.life.day',
-                params: { plays, artist, topPlays },
+                params: {plays, artist, topPlays},
                 at: null,
                 link: '/music',
               },
@@ -38,9 +47,13 @@ export class MusicLife implements OnModuleInit {
           : [];
       },
       period: async (userId, period): Promise<LifeCard[]> => {
-        const { plays, artist, topPlays, top } = await this.listened(userId, period);
+        const {plays, artist, topPlays, top} = await this.listened(
+          userId,
+          period,
+        );
         const long =
-          Date.parse(period.to) - Date.parse(period.from) > LONG_PERIOD_DAYS * 86_400_000;
+          Date.parse(period.to) - Date.parse(period.from) >
+          LONG_PERIOD_DAYS * 86_400_000;
         return plays
           ? [
               {
@@ -52,9 +65,14 @@ export class MusicLife implements OnModuleInit {
                 ...(long
                   ? {
                       detailKey: 'music.life.topArtists',
-                      detailParams: { artists: top.map((row) => row.artist).join(', ') },
+                      detailParams: {
+                        artists: top.map(row => row.artist).join(', '),
+                      },
                     }
-                  : { detailKey: 'music.life.topArtist', detailParams: { artist, topPlays } }),
+                  : {
+                      detailKey: 'music.life.topArtist',
+                      detailParams: {artist, topPlays},
+                    }),
               },
             ]
           : [];
@@ -62,8 +80,8 @@ export class MusicLife implements OnModuleInit {
     });
   }
 
-  private async listened(userId: string, period: { from: string; to: string }) {
-    const { start, end } = localDaysRange(
+  private async listened(userId: string, period: {from: string; to: string}) {
+    const {start, end} = localDaysRange(
       this.users.timeZoneOf(await this.users.findById(userId)),
       period,
     );
@@ -72,9 +90,12 @@ export class MusicLife implements OnModuleInit {
       gte(scrobbles.playedAt, start),
       lt(scrobbles.playedAt, end),
     );
-    const [total] = await this.db.select({ plays: count() }).from(scrobbles).where(where);
+    const [total] = await this.db
+      .select({plays: count()})
+      .from(scrobbles)
+      .where(where);
     const top = await this.db
-      .select({ artist: scrobbles.artist, plays: count() })
+      .select({artist: scrobbles.artist, plays: count()})
       .from(scrobbles)
       .where(where)
       .groupBy(scrobbles.artist)
@@ -83,9 +104,14 @@ export class MusicLife implements OnModuleInit {
     // A tie is common on a varied day: picking one of the leaders would be arbitrary.
     const topPlays = top[0]?.plays ?? 0;
     const leaders = top
-      .filter((row) => row.plays === topPlays)
+      .filter(row => row.plays === topPlays)
       .slice(0, TOP_ARTISTS)
-      .map((row) => row.artist);
-    return { plays: total?.plays ?? 0, artist: leaders.join(', '), topPlays, top };
+      .map(row => row.artist);
+    return {
+      plays: total?.plays ?? 0,
+      artist: leaders.join(', '),
+      topPlays,
+      top,
+    };
   }
 }

@@ -1,9 +1,9 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, OtherComputersService } from '@pd/api-core';
-import { and, eq, gte, lte } from 'drizzle-orm';
-import { belongsTo, namesOf } from '../project-names';
-import { WakatimeSpansService } from './wakatime-spans.service';
-import { wakatimeDayBreakdown } from './wakatime.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, OtherComputersService} from '@pd/api-core';
+import {and, eq, gte, lte} from 'drizzle-orm';
+import {belongsTo, namesOf} from '../project-names';
+import {WakatimeSpansService} from './wakatime-spans.service';
+import {wakatimeDayBreakdown} from './wakatime.schema';
 
 /**
  * WakaTime knows which computer the coding time came from — also a work laptop the desktop app
@@ -42,15 +42,19 @@ export class WakatimeOtherComputers implements OnModuleInit {
           ),
       spans: async (userId, from, to) =>
         (await this.spans.between(userId, 'machine', from, to)).map(
-          ({ name, startedAt, endedAt }) => ({ computer: name, startedAt, endedAt }),
+          ({name, startedAt, endedAt}) => ({
+            computer: name,
+            startedAt,
+            endedAt,
+          }),
         ),
       projectSpans: async (userId, project, from, to) => {
         const names = namesOf(project);
-        const own = (await this.spans.names(userId, 'project', from, to)).filter((name) =>
-          belongsTo(name, names),
-        );
+        const own = (
+          await this.spans.names(userId, 'project', from, to)
+        ).filter(name => belongsTo(name, names));
         return (await this.spans.between(userId, 'project', from, to, own)).map(
-          ({ startedAt, endedAt }) => ({ startedAt, endedAt }),
+          ({startedAt, endedAt}) => ({startedAt, endedAt}),
         );
       },
     });

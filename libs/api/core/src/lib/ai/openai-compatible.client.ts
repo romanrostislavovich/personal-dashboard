@@ -1,25 +1,29 @@
-import { safeFetch } from '../net/outbound';
+import {safeFetch} from '../net/outbound';
 
 /** A message in Chat Completions format (OpenAI, DeepSeek, Ollama, etc.). */
 /** A part of a message with a picture (OpenAI's format, which compatible APIs follow). */
 export type ContentPart =
-  { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } };
+  {type: 'text'; text: string} | {type: 'image_url'; image_url: {url: string}};
 
 export type ChatMessage =
-  | { role: 'system'; content: string }
-  | { role: 'user'; content: string | ContentPart[] }
-  | { role: 'assistant'; content: string | null; tool_calls?: ToolCall[] }
-  | { role: 'tool'; tool_call_id: string; content: string };
+  | {role: 'system'; content: string}
+  | {role: 'user'; content: string | ContentPart[]}
+  | {role: 'assistant'; content: string | null; tool_calls?: ToolCall[]}
+  | {role: 'tool'; tool_call_id: string; content: string};
 
 export interface ToolCall {
   id: string;
   type: 'function';
-  function: { name: string; arguments: string };
+  function: {name: string; arguments: string};
 }
 
 export interface ToolDefinition {
   type: 'function';
-  function: { name: string; description: string; parameters: Record<string, unknown> };
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
 }
 
 export interface ChatConnection {
@@ -65,7 +69,7 @@ export interface TokenUsage {
 interface RawUsage {
   prompt_tokens?: number;
   completion_tokens?: number;
-  prompt_tokens_details?: { cached_tokens?: number };
+  prompt_tokens_details?: {cached_tokens?: number};
   prompt_cache_hit_tokens?: number;
 }
 
@@ -74,7 +78,7 @@ export async function chatCompletion(
   connection: ChatConnection,
   messages: ChatMessage[],
   tools: ToolDefinition[] = [],
-): Promise<Extract<ChatMessage, { role: 'assistant' }>> {
+): Promise<Extract<ChatMessage, {role: 'assistant'}>> {
   return (await chatCompletionWithUsage(connection, messages, tools)).message;
 }
 
@@ -83,23 +87,33 @@ export async function chatCompletionWithUsage(
   connection: ChatConnection,
   messages: ChatMessage[],
   tools: ToolDefinition[] = [],
-): Promise<{ message: Extract<ChatMessage, { role: 'assistant' }>; usage: TokenUsage | null }> {
+): Promise<{
+  message: Extract<ChatMessage, {role: 'assistant'}>;
+  usage: TokenUsage | null;
+}> {
   // The address is the user's: not into the server's own network (see net/outbound.ts).
-  const response = await safeFetch(`${connection.baseUrl.replace(/\/+$/, '')}/chat/completions`, {
-    method: 'POST',
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-    headers: {
-      'Content-Type': 'application/json',
-      ...(connection.apiKey ? { Authorization: `Bearer ${connection.apiKey}` } : {}),
+  const response = await safeFetch(
+    `${connection.baseUrl.replace(/\/+$/, '')}/chat/completions`,
+    {
+      method: 'POST',
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      headers: {
+        'Content-Type': 'application/json',
+        ...(connection.apiKey
+          ? {Authorization: `Bearer ${connection.apiKey}`}
+          : {}),
+      },
+      body: JSON.stringify({
+        model: connection.model,
+        messages,
+        ...(tools.length > 0 ? {tools} : {}),
+        ...(connection.reasoningEffort
+          ? {reasoning_effort: connection.reasoningEffort}
+          : {}),
+        temperature: 0.3,
+      }),
     },
-    body: JSON.stringify({
-      model: connection.model,
-      messages,
-      ...(tools.length > 0 ? { tools } : {}),
-      ...(connection.reasoningEffort ? { reasoning_effort: connection.reasoningEffort } : {}),
-      temperature: 0.3,
-    }),
-  });
+  );
   if (!response.ok) {
     throw new AiRequestError(
       `AI API ${response.status}: ${await response.text()}`,
@@ -107,10 +121,10 @@ export async function chatCompletionWithUsage(
     );
   }
   const data = (await response.json()) as {
-    choices: { message: Extract<ChatMessage, { role: 'assistant' }> }[];
+    choices: {message: Extract<ChatMessage, {role: 'assistant'}>}[];
     usage?: RawUsage;
   };
-  return { message: data.choices[0].message, usage: tokenUsage(data.usage) };
+  return {message: data.choices[0].message, usage: tokenUsage(data.usage)};
 }
 
 function tokenUsage(raw: RawUsage | undefined): TokenUsage | null {
@@ -120,7 +134,10 @@ function tokenUsage(raw: RawUsage | undefined): TokenUsage | null {
   return {
     promptTokens: raw.prompt_tokens,
     completionTokens: raw.completion_tokens ?? 0,
-    cachedTokens: raw.prompt_tokens_details?.cached_tokens ?? raw.prompt_cache_hit_tokens ?? 0,
+    cachedTokens:
+      raw.prompt_tokens_details?.cached_tokens ??
+      raw.prompt_cache_hit_tokens ??
+      0,
   };
 }
 
@@ -128,24 +145,36 @@ function tokenUsage(raw: RawUsage | undefined): TokenUsage | null {
  * Texts as vectors for search by meaning: `POST {baseUrl}/embeddings` (OpenAI, Ollama and
  * the like). One vector per text, in their order.
  */
-export async function embed(connection: ChatConnection, texts: string[]): Promise<number[][]> {
-  const response = await safeFetch(`${connection.baseUrl.replace(/\/+$/, '')}/embeddings`, {
-    method: 'POST',
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-    headers: {
-      'Content-Type': 'application/json',
-      ...(connection.apiKey ? { Authorization: `Bearer ${connection.apiKey}` } : {}),
+export async function embed(
+  connection: ChatConnection,
+  texts: string[],
+): Promise<number[][]> {
+  const response = await safeFetch(
+    `${connection.baseUrl.replace(/\/+$/, '')}/embeddings`,
+    {
+      method: 'POST',
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      headers: {
+        'Content-Type': 'application/json',
+        ...(connection.apiKey
+          ? {Authorization: `Bearer ${connection.apiKey}`}
+          : {}),
+      },
+      body: JSON.stringify({model: connection.model, input: texts}),
     },
-    body: JSON.stringify({ model: connection.model, input: texts }),
-  });
+  );
   if (!response.ok) {
     throw new AiRequestError(
       `Embeddings ${response.status}: ${await response.text()}`,
       response.status,
     );
   }
-  const { data } = (await response.json()) as { data: { index: number; embedding: number[] }[] };
-  return [...data].sort((a, b) => a.index - b.index).map((item) => item.embedding);
+  const {data} = (await response.json()) as {
+    data: {index: number; embedding: number[]}[];
+  };
+  return [...data]
+    .sort((a, b) => a.index - b.index)
+    .map(item => item.embedding);
 }
 
 export interface AudioFile {
@@ -165,7 +194,7 @@ export async function transcribe(
   const form = new FormData();
   form.append(
     'file',
-    new Blob([new Uint8Array(audio.data)], { type: audio.mimeType }),
+    new Blob([new Uint8Array(audio.data)], {type: audio.mimeType}),
     audio.fileName,
   );
   form.append('model', connection.model);
@@ -177,13 +206,15 @@ export async function transcribe(
     {
       method: 'POST',
       signal: AbortSignal.timeout(TIMEOUT_MS),
-      headers: connection.apiKey ? { Authorization: `Bearer ${connection.apiKey}` } : {},
+      headers: connection.apiKey
+        ? {Authorization: `Bearer ${connection.apiKey}`}
+        : {},
       body: form,
     },
   );
   if (!response.ok) {
     throw new AiRequestError(await response.text(), response.status);
   }
-  const { text } = (await response.json()) as { text?: string };
+  const {text} = (await response.json()) as {text?: string};
   return (text ?? '').trim();
 }

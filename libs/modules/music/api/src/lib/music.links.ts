@@ -1,12 +1,32 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LinksService, MOOD_METRIC, Period, UsersService } from '@pd/api-core';
-import { addDays, LocalDate, parseLocalDate, toLocalDate, zonedToUtc } from '@pd/contracts';
-import { and, asc, eq, gte, lt, sql } from 'drizzle-orm';
-import { moodArtists, MoodArtists } from './mood-artists';
-import { scrobbles } from './music.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  DB,
+  Database,
+  LinksService,
+  MOOD_METRIC,
+  Period,
+  UsersService,
+} from '@pd/api-core';
+import {
+  addDays,
+  LocalDate,
+  parseLocalDate,
+  toLocalDate,
+  zonedToUtc,
+} from '@pd/contracts';
+import {and, asc, eq, gte, lt, sql} from 'drizzle-orm';
+import {moodArtists, MoodArtists} from './mood-artists';
+import {scrobbles} from './music.schema';
 
 /** A payment named with one of these is for listening to music (the plays come from Last.fm). */
-const STREAMING = ['spotify', 'apple music', 'youtube music', 'deezer', 'tidal', 'last.fm'];
+const STREAMING = [
+  'spotify',
+  'apple music',
+  'youtube music',
+  'deezer',
+  'tidal',
+  'last.fm',
+];
 /** Plays told about a stretch of time: a focus session has a few dozen at most. */
 const MAX_MOMENTS = 300;
 
@@ -39,7 +59,7 @@ export class MusicLinks implements OnModuleInit {
           )
           .orderBy(asc(scrobbles.playedAt))
           .limit(MAX_MOMENTS);
-        return plays.map((play) => ({
+        return plays.map(play => ({
           module: 'music',
           kind: 'play',
           at: play.playedAt.toISOString(),
@@ -52,7 +72,7 @@ export class MusicLinks implements OnModuleInit {
     this.links.registerUsage({
       module: 'music',
       usage: async (userId, name, period) => {
-        if (!STREAMING.some((service) => name.includes(service))) {
+        if (!STREAMING.some(service => name.includes(service))) {
           return null;
         }
         const [row] = await this.db
@@ -76,7 +96,7 @@ export class MusicLinks implements OnModuleInit {
         const timeZone = await this.timeZone(userId);
         const day = sql<LocalDate>`to_char(${scrobbles.playedAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`;
         const days = await this.db
-          .select({ day, plays: sql<number>`count(*)::int` })
+          .select({day, plays: sql<number>`count(*)::int`})
           .from(scrobbles)
           .where(await this.within(userId, period))
           // By position: the time zone is a parameter (see ActivityService.stats).
@@ -88,7 +108,10 @@ export class MusicLinks implements OnModuleInit {
                 module: 'music',
                 labelKey: 'music.links.plays',
                 unit: 'count',
-                days: days.map(({ day: date, plays }) => ({ day: date, value: plays })),
+                days: days.map(({day: date, plays}) => ({
+                  day: date,
+                  value: plays,
+                })),
               },
             ]
           : [];
@@ -96,7 +119,11 @@ export class MusicLinks implements OnModuleInit {
     });
 
     this.links.registerPages([
-      { module: 'music', path: '/music/listening', description: 'listening history and tops' },
+      {
+        module: 'music',
+        path: '/music/listening',
+        description: 'listening history and tops',
+      },
     ]);
   }
 
@@ -110,7 +137,11 @@ export class MusicLinks implements OnModuleInit {
     const day = sql<LocalDate>`to_char(${scrobbles.playedAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`;
     const plays = mood?.days.length
       ? await this.db
-          .select({ day, artist: scrobbles.artist, plays: sql<number>`count(*)::int` })
+          .select({
+            day,
+            artist: scrobbles.artist,
+            plays: sql<number>`count(*)::int`,
+          })
           .from(scrobbles)
           .where(await this.within(userId, period))
           .groupBy(sql`1`, scrobbles.artist)
@@ -124,8 +155,14 @@ export class MusicLinks implements OnModuleInit {
     const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
     return and(
       eq(scrobbles.userId, userId),
-      gte(scrobbles.playedAt, zonedToUtc({ date: period.from, time: '00:00' }, timeZone)),
-      lt(scrobbles.playedAt, zonedToUtc({ date: after, time: '00:00' }, timeZone)),
+      gte(
+        scrobbles.playedAt,
+        zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+      ),
+      lt(
+        scrobbles.playedAt,
+        zonedToUtc({date: after, time: '00:00'}, timeZone),
+      ),
     );
   }
 

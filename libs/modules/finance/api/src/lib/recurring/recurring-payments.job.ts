@@ -1,8 +1,13 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { forEachUser, NotificationsService, SchedulerService, UsersService } from '@pd/api-core';
-import { financeMessages } from '../finance.messages';
-import { RecurringPaymentsService } from './recurring-payments.service';
-import { SubscriptionsService } from './subscriptions.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  forEachUser,
+  NotificationsService,
+  SchedulerService,
+  UsersService,
+} from '@pd/api-core';
+import {financeMessages} from '../finance.messages';
+import {RecurringPaymentsService} from './recurring-payments.service';
+import {SubscriptionsService} from './subscriptions.service';
 
 /** Every morning makes the recurring payments whose charge day has come and warns of trials. */
 @Injectable()
@@ -24,19 +29,23 @@ export class RecurringPaymentsJob implements OnModuleInit {
   }
 
   async run(): Promise<void> {
-    await forEachUser('finance.recurring-payments', await this.users.findAll(), async (user) => {
-      await this.subscriptions.remindTrials(user.id);
-      await this.subscriptions.remindDates(user.id);
-      const charged = await this.payments.chargeDue(user.id);
-      if (charged.length === 0) {
-        return;
-      }
-      const text = financeMessages(user.locale);
-      await this.notifications.send(user.id, {
-        title: text.chargedTitle,
-        body: text.chargedBody(charged),
-        source: 'finance',
-      });
-    });
+    await forEachUser(
+      'finance.recurring-payments',
+      await this.users.findAll(),
+      async user => {
+        await this.subscriptions.remindTrials(user.id);
+        await this.subscriptions.remindDates(user.id);
+        const charged = await this.payments.chargeDue(user.id);
+        if (charged.length === 0) {
+          return;
+        }
+        const text = financeMessages(user.locale);
+        await this.notifications.send(user.id, {
+          title: text.chargedTitle,
+          body: text.chargedBody(charged),
+          source: 'finance',
+        });
+      },
+    );
   }
 }

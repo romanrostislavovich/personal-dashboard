@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
-import { randomUUID } from 'node:crypto';
-import { newAccount, signIn } from './account';
+import {expect, test} from '@playwright/test';
+import {randomUUID} from 'node:crypto';
+import {newAccount, signIn} from './account';
 
 test('workstates and chronicles persist and remain isolated between accounts', async ({
   page,
@@ -8,8 +8,8 @@ test('workstates and chronicles persist and remain isolated between accounts', a
 }) => {
   const owner = await newAccount(request);
   const other = await newAccount(request);
-  const headers = { Authorization: `Bearer ${owner.token}` };
-  const otherHeaders = { Authorization: `Bearer ${other.token}` };
+  const headers = {Authorization: `Bearer ${owner.token}`};
+  const otherHeaders = {Authorization: `Bearer ${other.token}`};
   const id = randomUUID();
   const day = new Date().toISOString().slice(0, 10);
   const note = 'A deliberately saved context';
@@ -27,23 +27,32 @@ test('workstates and chronicles persist and remain isolated between accounts', a
     },
   });
   expect(capture.ok()).toBeTruthy();
-  const forbidden = await request.get(`/api/activity/workstates/${id}`, { headers: otherHeaders });
+  const forbidden = await request.get(`/api/activity/workstates/${id}`, {
+    headers: otherHeaders,
+  });
   expect(forbidden.status()).toBe(404);
   const restore = await request.post(`/api/activity/workstates/${id}/restore`, {
     headers,
     data: {},
   });
   expect(restore.ok()).toBeTruthy();
-  expect(await restore.json()).toMatchObject({ requiresConfirmation: true, workstateId: id });
+  expect(await restore.json()).toMatchObject({
+    requiresConfirmation: true,
+    workstateId: id,
+  });
 
-  const settings = await request.get('/api/life/narratives/settings', { headers });
-  expect(await settings.json()).toEqual({ enabled: false });
+  const settings = await request.get('/api/life/narratives/settings', {
+    headers,
+  });
+  expect(await settings.json()).toEqual({enabled: false});
   const savedNote = await request.put(`/api/life/narratives/${day}/note`, {
     headers,
-    data: { note: 'My own daily note.' },
+    data: {note: 'My own daily note.'},
   });
   expect(savedNote.ok()).toBeTruthy();
-  const hidden = await request.get(`/api/life/narratives/${day}`, { headers: otherHeaders });
+  const hidden = await request.get(`/api/life/narratives/${day}`, {
+    headers: otherHeaders,
+  });
   // Another account has no chronicle of that day: the server answers null, which NestJS sends
   // as an empty body.
   expect(hidden.ok()).toBeTruthy();
@@ -51,11 +60,11 @@ test('workstates and chronicles persist and remain isolated between accounts', a
 
   await signIn(page, owner);
   await page.goto('/activity/workstates');
-  await expect(page.getByText(note, { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(note, {exact: true}).first()).toBeVisible();
   await page.reload();
-  await expect(page.getByText(note, { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(note, {exact: true}).first()).toBeVisible();
   await page.goto('/life/chronicle');
-  await expect(page.locator('textarea').filter({ visible: true }).first()).toHaveValue(
-    'My own daily note.',
-  );
+  await expect(
+    page.locator('textarea').filter({visible: true}).first(),
+  ).toHaveValue('My own daily note.');
 });

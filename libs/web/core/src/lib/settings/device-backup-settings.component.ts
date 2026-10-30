@@ -1,14 +1,14 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { DeviceBackupService } from '../backup/device-backup.service';
-import { DeviceOnlyComponent } from './device-only.component';
+import {DatePipe} from '@angular/common';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {DeviceBackupService} from '../backup/device-backup.service';
+import {DeviceOnlyComponent} from './device-only.component';
 
 const KEEP_OPTIONS = [7, 14, 30, 90];
 
@@ -33,7 +33,10 @@ const KEEP_OPTIONS = [7, 14, 30, 90];
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>💾 {{ 'core.settings.deviceBackup.title' | transloco }}</mat-card-title>
+        <mat-card-title
+          >💾
+          {{ 'core.settings.deviceBackup.title' | transloco }}</mat-card-title
+        >
         <mat-card-subtitle>
           {{ 'core.settings.deviceBackup.subtitle' | transloco }}
         </mat-card-subtitle>
@@ -41,7 +44,9 @@ const KEEP_OPTIONS = [7, 14, 30, 90];
       <mat-card-content class="content">
         <pd-device-only kind="desktop" />
         @if (!backup.device) {
-          <p class="hint">{{ 'core.settings.deviceBackup.elsewhere' | transloco }}</p>
+          <p class="hint">
+            {{ 'core.settings.deviceBackup.elsewhere' | transloco }}
+          </p>
         } @else {
           @if (backup.status(); as status) {
             @if (status.copies[0]; as newest) {
@@ -61,8 +66,13 @@ const KEEP_OPTIONS = [7, 14, 30, 90];
             }
             <p class="hint folder">{{ status.folder }}</p>
             <mat-form-field subscriptSizing="dynamic" class="keep">
-              <mat-label>{{ 'core.settings.deviceBackup.keep' | transloco }}</mat-label>
-              <mat-select [value]="status.keep" (selectionChange)="backup.setKeep($event.value)">
+              <mat-label>{{
+                'core.settings.deviceBackup.keep' | transloco
+              }}</mat-label>
+              <mat-select
+                [value]="status.keep"
+                (selectionChange)="backup.setKeep($event.value)"
+              >
                 @for (keep of keepOptions; track keep) {
                   <mat-option [value]="keep">{{ keep }}</mat-option>
                 }
@@ -70,21 +80,31 @@ const KEEP_OPTIONS = [7, 14, 30, 90];
             </mat-form-field>
           }
           @if (backup.busy()) {
-            <p class="hint">{{ 'core.settings.deviceBackup.making' | transloco }}</p>
+            <p class="hint">
+              {{ 'core.settings.deviceBackup.making' | transloco }}
+            </p>
             <mat-progress-bar mode="indeterminate" />
           }
           @if (backup.error(); as error) {
             <p class="error" role="alert">
-              {{ 'core.settings.deviceBackup.failed' | transloco: { error } }}
+              {{ 'core.settings.deviceBackup.failed' | transloco: {error} }}
             </p>
           }
-          <p class="hint">{{ 'core.settings.deviceBackup.hint' | transloco }}</p>
+          <p class="hint">
+            {{ 'core.settings.deviceBackup.hint' | transloco }}
+          </p>
           <div class="actions">
-            <button matButton="filled" [disabled]="backup.busy()" (click)="backup.makeNow()">
-              <mat-icon>backup</mat-icon> {{ 'core.settings.deviceBackup.now' | transloco }}
+            <button
+              matButton="filled"
+              [disabled]="backup.busy()"
+              (click)="backup.makeNow()"
+            >
+              <mat-icon>backup</mat-icon>
+              {{ 'core.settings.deviceBackup.now' | transloco }}
             </button>
             <button matButton="outlined" (click)="backup.device.openFolder()">
-              <mat-icon>folder_open</mat-icon> {{ 'core.settings.deviceBackup.open' | transloco }}
+              <mat-icon>folder_open</mat-icon>
+              {{ 'core.settings.deviceBackup.open' | transloco }}
             </button>
             <button matButton (click)="backup.chooseFolder()">
               {{ 'core.settings.deviceBackup.change' | transloco }}

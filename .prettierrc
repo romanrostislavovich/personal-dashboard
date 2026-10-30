@@ -1,5 +1,13 @@
 {
+  "bracketSpacing": false,
   "singleQuote": true,
-  "printWidth": 100,
-  "overrides": [{ "files": "*.html", "excludeFiles": "apps/desktop/**", "options": { "parser": "angular" } }]
+  "trailingComma": "all",
+  "arrowParens": "avoid",
+  "overrides": [
+    {
+      "files": "*.html",
+      "excludeFiles": "apps/desktop/**",
+      "options": {"parser": "angular"}
+    }
+  ]
 }

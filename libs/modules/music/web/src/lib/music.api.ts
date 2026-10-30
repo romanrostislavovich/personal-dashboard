@@ -1,6 +1,6 @@
-import { httpResource } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { MUSIC_READS, musicApi } from '@pd/client-core';
+import {httpResource} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {MUSIC_READS, musicApi} from '@pd/client-core';
 import {
   LastfmSettingsInput,
   MusicSettings,
@@ -13,10 +13,10 @@ import {
   SoundcloudTrackUpdate,
   SpotifyAppInput,
 } from '@pd/contracts';
-import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
+import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /** The music requests of the client core (`@pd/client-core`) for Angular. */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class MusicApi {
   private readonly music = musicApi(inject(DASHBOARD_CLIENT).api);
 

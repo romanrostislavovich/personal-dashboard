@@ -1,4 +1,4 @@
-import { WebDashboardModule } from '@pd/web-core';
+import {WebDashboardModule} from '@pd/web-core';
 
 /**
  * Web part of achievements. The backend is in the core (AchievementsService), and the achievements
@@ -6,11 +6,12 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const achievementsModule: WebDashboardModule = {
   id: 'achievements',
-  nav: { labelKey: 'achievements.title', icon: 'emoji_events', group: 'bottom' },
+  nav: {labelKey: 'achievements.title', icon: 'emoji_events', group: 'bottom'},
   loadRoutes: async () => [
     {
       path: '',
-      loadComponent: () => import('./achievements.page').then((m) => m.AchievementsPage),
+      loadComponent: () =>
+        import('./achievements.page').then(m => m.AchievementsPage),
     },
   ],
   translations: {
@@ -21,7 +22,8 @@ export const achievementsModule: WebDashboardModule = {
     {
       id: 'achievements.summary',
       size: 'small',
-      loadComponent: () => import('./achievements.widget').then((m) => m.AchievementsWidget),
+      loadComponent: () =>
+        import('./achievements.widget').then(m => m.AchievementsWidget),
     },
   ],
 };

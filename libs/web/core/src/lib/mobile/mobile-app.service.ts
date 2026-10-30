@@ -1,16 +1,20 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { Router } from '@angular/router';
-import { App } from '@capacitor/app';
-import { appsApi } from '@pd/client-core';
-import { AuthService } from '../auth/auth.service';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { applyPendingBundle, fetchNewerBundle, removeOldBundles } from './interface-update';
-import { installId, isMobileApp, mobileServer, phoneModel } from './mobile-app';
-import { MobilePushService } from './mobile-push.service';
-import { prefetchForOffline } from './offline-prefetch';
-import { ShareInbox } from './share-inbox';
-import { onShared, takeShared } from './share-target';
+import {HttpClient} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {Router} from '@angular/router';
+import {App} from '@capacitor/app';
+import {appsApi} from '@pd/client-core';
+import {AuthService} from '../auth/auth.service';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {
+  applyPendingBundle,
+  fetchNewerBundle,
+  removeOldBundles,
+} from './interface-update';
+import {installId, isMobileApp, mobileServer, phoneModel} from './mobile-app';
+import {MobilePushService} from './mobile-push.service';
+import {prefetchForOffline} from './offline-prefetch';
+import {ShareInbox} from './share-inbox';
+import {onShared, takeShared} from './share-target';
 
 /** Not in the middle of the start. */
 const FIRST_CHECK_MS = 20_000;
@@ -28,7 +32,7 @@ const PREFETCH_ON_RESUME_MS = 60 * 60_000;
  * is a connection (offline-prefetch.ts), and the phone takes push notifications
  * (mobile-push.service.ts). In a browser and the desktop app it does nothing.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class MobileAppService {
   private readonly auth = inject(AuthService);
   private readonly api = inject(DASHBOARD_CLIENT).api;
@@ -48,13 +52,14 @@ export class MobileAppService {
     this.started = true;
     // A plugin the APK lacks throws at once, not in a promise: the app starts without it.
     try {
-      void App.addListener('backButton', ({ canGoBack }) =>
+      void App.addListener('backButton', ({canGoBack}) =>
         canGoBack ? history.back() : void App.minimizeApp(),
       ).catch(() => undefined);
       // Out of sight is the time to swap the interface: its reload is not seen.
-      void App.addListener('pause', () => void applyPendingBundle().catch(() => undefined)).catch(
-        () => undefined,
-      );
+      void App.addListener(
+        'pause',
+        () => void applyPendingBundle().catch(() => undefined),
+      ).catch(() => undefined);
       void App.addListener('resume', () => {
         if (Date.now() - this.prefetchedAt > PREFETCH_ON_RESUME_MS) {
           void this.prefetch();
@@ -65,7 +70,7 @@ export class MobileAppService {
         }
       }).catch(() => undefined);
       // personaldashboard://psychology/gentle — the widget opens a page of the app.
-      void App.addListener('appUrlOpen', ({ url }) => {
+      void App.addListener('appUrlOpen', ({url}) => {
         const route = url.replace(/^personaldashboard:\/\//, '/');
         if (route !== url) {
           void this.router.navigateByUrl(route);
@@ -87,7 +92,7 @@ export class MobileAppService {
     if (content) {
       this.inbox.put(content);
       // Reloaded if it is open already: it takes the new share.
-      await this.router.navigateByUrl('/', { skipLocationChange: true });
+      await this.router.navigateByUrl('/', {skipLocationChange: true});
       await this.router.navigateByUrl('/capture');
     }
   }

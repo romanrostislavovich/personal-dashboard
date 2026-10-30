@@ -1,8 +1,14 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { csvLine, DataExportService, DB, Database, ReadableFile } from '@pd/api-core';
-import { projects } from '@pd/api-core/schema';
-import { asc, eq } from 'drizzle-orm';
-import { transactions } from './finance.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  csvLine,
+  DataExportService,
+  DB,
+  Database,
+  ReadableFile,
+} from '@pd/api-core';
+import {projects} from '@pd/api-core/schema';
+import {asc, eq} from 'drizzle-orm';
+import {transactions} from './finance.schema';
 
 /** With it at the start Excel reads the file as UTF-8. */
 const BYTE_ORDER_MARK = String.fromCharCode(0xfeff);
@@ -16,7 +22,10 @@ export class FinanceExport implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.exporter.register({ module: 'finance', files: (userId) => this.files(userId) });
+    this.exporter.register({
+      module: 'finance',
+      files: userId => this.files(userId),
+    });
   }
 
   private async *files(userId: string): AsyncGenerator<ReadableFile> {
@@ -37,8 +46,16 @@ export class FinanceExport implements OnModuleInit {
     if (!rows.length) {
       return;
     }
-    const header = csvLine(['date', 'kind', 'amount', 'currency', 'category', 'note', 'wallet']);
-    const lines = rows.map((row) =>
+    const header = csvLine([
+      'date',
+      'kind',
+      'amount',
+      'currency',
+      'category',
+      'note',
+      'wallet',
+    ]);
+    const lines = rows.map(row =>
       csvLine([
         row.date,
         row.kind,
@@ -49,6 +66,9 @@ export class FinanceExport implements OnModuleInit {
         row.wallet ?? 'personal',
       ]),
     );
-    yield { path: 'transactions.csv', content: `${BYTE_ORDER_MARK}${header}${lines.join('')}` };
+    yield {
+      path: 'transactions.csv',
+      content: `${BYTE_ORDER_MARK}${header}${lines.join('')}`,
+    };
   }
 }

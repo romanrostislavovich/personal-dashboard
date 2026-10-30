@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DB, Database, withoutTrash, ZodValidationPipe } from '@pd/api-core';
+import {DB, Database, withoutTrash, ZodValidationPipe} from '@pd/api-core';
 import {
   Workstate,
   workstateCaptureSchema,
@@ -17,10 +17,14 @@ import {
   workstateSchema,
   workstateRestoreRequestSchema,
 } from '@pd/contracts';
-import { and, desc, eq, gte, lt, lte, or } from 'drizzle-orm';
-import { ActivityContextStore } from './activity-context.store';
-import { contextCutoff, restorePlan, sanitizeWorkstate } from './activity-context.policy';
-import { activityWorkstates } from './activity-context.schema';
+import {and, desc, eq, gte, lt, lte, or} from 'drizzle-orm';
+import {ActivityContextStore} from './activity-context.store';
+import {
+  contextCutoff,
+  restorePlan,
+  sanitizeWorkstate,
+} from './activity-context.policy';
+import {activityWorkstates} from './activity-context.schema';
 
 @Injectable()
 export class WorkstateService {
@@ -29,7 +33,11 @@ export class WorkstateService {
     private readonly context: ActivityContextStore,
   ) {}
 
-  async capture(userId: string, input: unknown, deviceId?: string): Promise<Workstate> {
+  async capture(
+    userId: string,
+    input: unknown,
+    deviceId?: string,
+  ): Promise<Workstate> {
     const body = new ZodValidationPipe(workstateInputSchema).transform(input);
     const now = Date.now();
     if (
@@ -49,7 +57,9 @@ export class WorkstateService {
         capturedAt: new Date(body.capturedAt),
         capture: JSON.stringify(sanitizeWorkstate(body.capture, words)),
       })
-      .onConflictDoNothing({ target: [activityWorkstates.userId, activityWorkstates.id] });
+      .onConflictDoNothing({
+        target: [activityWorkstates.userId, activityWorkstates.id],
+      });
     const state = await this.get(userId, body.id);
     if (state.deviceId !== (deviceId ?? null))
       throw new ConflictException('Capture ID already used');
@@ -87,7 +97,10 @@ export class WorkstateService {
           query.before && query.beforeId
             ? or(
                 lt(table.capturedAt, new Date(query.before)),
-                and(eq(table.capturedAt, new Date(query.before)), lt(table.id, query.beforeId)),
+                and(
+                  eq(table.capturedAt, new Date(query.before)),
+                  lt(table.id, query.beforeId),
+                ),
               )
             : undefined,
         ),
@@ -96,15 +109,23 @@ export class WorkstateService {
       .limit(query.limit);
     const words = await this.context.privateWords(userId);
     const items = rows
-      .map((row) => this.toWorkstate(row, words))
-      .filter(({ capture }) => {
-        const context = [capture.activeApp, capture.projectPath, capture.gitBranch]
+      .map(row => this.toWorkstate(row, words))
+      .filter(({capture}) => {
+        const context = [
+          capture.activeApp,
+          capture.projectPath,
+          capture.gitBranch,
+        ]
           .filter(Boolean)
           .join(' ');
-        const text = [...Object.values(capture).flat()].filter(Boolean).join(' ');
+        const text = [...Object.values(capture).flat()]
+          .filter(Boolean)
+          .join(' ');
         return (
-          (!query.search || text.toLowerCase().includes(query.search.toLowerCase())) &&
-          (!query.context || context.toLowerCase().includes(query.context.toLowerCase()))
+          (!query.search ||
+            text.toLowerCase().includes(query.search.toLowerCase())) &&
+          (!query.context ||
+            context.toLowerCase().includes(query.context.toLowerCase()))
         );
       });
     const last = rows.at(-1);
@@ -112,13 +133,17 @@ export class WorkstateService {
       items,
       nextCursor:
         last && rows.length === query.limit
-          ? { before: last.capturedAt.toISOString(), beforeId: last.id }
+          ? {before: last.capturedAt.toISOString(), beforeId: last.id}
           : null,
     };
   }
 
   /** Only a proposal. No process, filesystem or git operations are performed. */
-  async restore(userId: string, id: string, input: unknown = {}): Promise<WorkstateRestorePlan> {
+  async restore(
+    userId: string,
+    id: string,
+    input: unknown = {},
+  ): Promise<WorkstateRestorePlan> {
     new ZodValidationPipe(workstateRestoreRequestSchema).transform(input);
     const state = await this.get(userId, id);
     return restorePlan(state.id, state.capture);
@@ -126,21 +151,28 @@ export class WorkstateService {
 
   async remove(userId: string, id: string): Promise<void> {
     const parsed = new ZodValidationPipe(workstateIdSchema).transform(id);
-    await withoutTrash(this.db, async (tx) =>
+    await withoutTrash(this.db, async tx =>
       tx
         .delete(activityWorkstates)
-        .where(and(eq(activityWorkstates.userId, userId), eq(activityWorkstates.id, parsed))),
+        .where(
+          and(
+            eq(activityWorkstates.userId, userId),
+            eq(activityWorkstates.id, parsed),
+          ),
+        ),
     );
   }
 
   async clear(userId: string): Promise<void> {
-    await withoutTrash(this.db, async (tx) =>
-      tx.delete(activityWorkstates).where(eq(activityWorkstates.userId, userId)),
+    await withoutTrash(this.db, async tx =>
+      tx
+        .delete(activityWorkstates)
+        .where(eq(activityWorkstates.userId, userId)),
     );
   }
 
   async deleteOld(userId: string): Promise<void> {
-    await withoutTrash(this.db, async (tx) =>
+    await withoutTrash(this.db, async tx =>
       tx
         .delete(activityWorkstates)
         .where(
@@ -152,12 +184,18 @@ export class WorkstateService {
     );
   }
 
-  private toWorkstate(row: typeof activityWorkstates.$inferSelect, words: string[]): Workstate {
+  private toWorkstate(
+    row: typeof activityWorkstates.$inferSelect,
+    words: string[],
+  ): Workstate {
     return workstateSchema.parse({
       id: row.id,
       deviceId: row.deviceId,
       capturedAt: row.capturedAt.toISOString(),
-      capture: sanitizeWorkstate(workstateCaptureSchema.parse(JSON.parse(row.capture)), words),
+      capture: sanitizeWorkstate(
+        workstateCaptureSchema.parse(JSON.parse(row.capture)),
+        words,
+      ),
     });
   }
 }

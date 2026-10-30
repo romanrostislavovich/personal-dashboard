@@ -11,14 +11,14 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { DataImportReport } from '@pd/contracts';
-import type { Response } from 'express';
-import { tmpdir } from 'node:os';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { DataExportService } from './data-export.service';
-import { DataImportService } from './data-import.service';
-import { RateLimit } from '../system/rate-limit';
+import {FileInterceptor} from '@nestjs/platform-express';
+import {DataImportReport} from '@pd/contracts';
+import type {Response} from 'express';
+import {tmpdir} from 'node:os';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {DataExportService} from './data-export.service';
+import {DataImportService} from './data-import.service';
+import {RateLimit} from '../system/rate-limit';
 
 /** A history of years with its photos; anything larger is not an archive of one person. */
 const MAX_ARCHIVE_BYTES = 2 * 1024 * 1024 * 1024;
@@ -38,10 +38,16 @@ export class DataController {
 
   /** Everything of the signed-in user as a ZIP, written as it is read from the database. */
   @Get('export')
-  async export(@CurrentUser() user: AuthUser, @Res() response: Response): Promise<void> {
+  async export(
+    @CurrentUser() user: AuthUser,
+    @Res() response: Response,
+  ): Promise<void> {
     const day = new Date().toISOString().slice(0, 10);
     response.setHeader('Content-Type', 'application/zip');
-    response.setHeader('Content-Disposition', `attachment; filename="dashboard-${day}.zip"`);
+    response.setHeader(
+      'Content-Disposition',
+      `attachment; filename="dashboard-${day}.zip"`,
+    );
     try {
       await this.exporter.write(user.id, response);
     } catch (error) {
@@ -55,7 +61,10 @@ export class DataController {
   @Post('import')
   @UseInterceptors(
     // Kept on the disk, not in memory: an archive with photos is large.
-    FileInterceptor('file', { dest: tmpdir(), limits: { fileSize: MAX_ARCHIVE_BYTES } }),
+    FileInterceptor('file', {
+      dest: tmpdir(),
+      limits: {fileSize: MAX_ARCHIVE_BYTES},
+    }),
   )
   preview(
     @CurrentUser() user: AuthUser,
@@ -80,7 +89,10 @@ export class DataController {
   /** "Cancel": the uploaded archive is not needed. */
   @Delete('import/:id')
   @HttpCode(204)
-  discard(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  discard(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     return this.importer.discard(user.id, id);
   }
 }

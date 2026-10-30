@@ -1,6 +1,10 @@
 @if (!compact()) {
   <div class="filters">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search">
+    <mat-form-field
+      appearance="outline"
+      subscriptSizing="dynamic"
+      class="search"
+    >
       <mat-icon matPrefix>search</mat-icon>
       <input
         matInput
@@ -15,16 +19,28 @@
       [value]="kind()"
       (change)="kind.set($event.value)"
     >
-      <mat-button-toggle value="">{{ 'finance.scope.all' | transloco }}</mat-button-toggle>
-      <mat-button-toggle value="expense">{{ 'finance.kpi.expense' | transloco }}</mat-button-toggle>
-      <mat-button-toggle value="income">{{ 'finance.kpi.income' | transloco }}</mat-button-toggle>
+      <mat-button-toggle value="">{{
+        'finance.scope.all' | transloco
+      }}</mat-button-toggle>
+      <mat-button-toggle value="expense">{{
+        'finance.kpi.expense' | transloco
+      }}</mat-button-toggle>
+      <mat-button-toggle value="income">{{
+        'finance.kpi.income' | transloco
+      }}</mat-button-toggle>
     </mat-button-toggle-group>
 
     @if (category(); as selected) {
       <mat-chip-set>
-        <mat-chip (removed)="category.set(null)" [matTooltip]="selected.categories.join(', ')">
+        <mat-chip
+          (removed)="category.set(null)"
+          [matTooltip]="selected.categories.join(', ')"
+        >
           {{ selected.label ?? ('finance.categories.other' | transloco) }}
-          <button matChipRemove [attr.aria-label]="'finance.list.clearFilters' | transloco">
+          <button
+            matChipRemove
+            [attr.aria-label]="'finance.list.clearFilters' | transloco"
+          >
             <mat-icon>cancel</mat-icon>
           </button>
         </mat-chip>
@@ -46,8 +62,8 @@
       @if (!compact()) {
         <span class="day-total">
           @for (total of group.totals; track total.currency; let last = $last) {
-            {{ total.net > 0 ? '+' : '' }}{{ total.net | currency: total.currency
-            }}{{ last ? '' : ' · ' }}
+            {{ total.net > 0 ? '+' : ''
+            }}{{ total.net | currency: total.currency }}{{ last ? '' : ' · ' }}
           }
         </span>
       }
@@ -56,7 +72,12 @@
     @for (t of group.transactions; track t.id) {
       <div class="row">
         <!-- The auto-import amount is recalculated by the sync, it is not edited by hand. -->
-        <button type="button" class="main" [disabled]="!!t.costSourceId" (click)="edit.emit(t)">
+        <button
+          type="button"
+          class="main"
+          [disabled]="!!t.costSourceId"
+          (click)="edit.emit(t)"
+        >
           <span class="avatar" [class.income]="t.kind === 'income'">
             <mat-icon>{{ icon(t) }}</mat-icon>
           </span>
@@ -70,27 +91,36 @@
                 <span class="wallet">{{ project }}</span>
               }
               @if (t.recurringPaymentId) {
-                <mat-icon inline [matTooltip]="'finance.list.recurring' | transloco"
+                <mat-icon
+                  inline
+                  [matTooltip]="'finance.list.recurring' | transloco"
                   >autorenew</mat-icon
                 >
               }
               @if (t.costSourceId) {
-                <mat-icon inline [matTooltip]="'finance.costSources.autoTooltip' | transloco"
+                <mat-icon
+                  inline
+                  [matTooltip]="'finance.costSources.autoTooltip' | transloco"
                   >cloud_sync</mat-icon
                 >
               }
               @if (t.hasReceipt) {
-                <mat-icon inline [matTooltip]="'finance.list.receipt' | transloco"
+                <mat-icon
+                  inline
+                  [matTooltip]="'finance.list.receipt' | transloco"
                   >receipt_long</mat-icon
                 >
               }
             </span>
           </span>
           <span class="amount" [class.income]="t.kind === 'income'">
-            {{ t.kind === 'income' ? '+' : '−' }}{{ t.amount | currency: t.currency }}
+            {{ t.kind === 'income' ? '+' : '−'
+            }}{{ t.amount | currency: t.currency }}
             @if (mainCurrency(); as main) {
               @if (t.currency !== main && t.mainAmount !== null) {
-                <span class="in-main">≈ {{ t.mainAmount | currency: main }}</span>
+                <span class="in-main"
+                  >≈ {{ t.mainAmount | currency: main }}</span
+                >
               }
             }
           </span>
@@ -110,7 +140,8 @@
           }
           @if (t.hasReceipt) {
             <button mat-menu-item (click)="openReceipt(t)">
-              <mat-icon>receipt_long</mat-icon> {{ 'finance.list.openReceipt' | transloco }}
+              <mat-icon>receipt_long</mat-icon>
+              {{ 'finance.list.openReceipt' | transloco }}
             </button>
           }
           <button mat-menu-item (click)="remove.emit(t)">

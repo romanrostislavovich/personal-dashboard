@@ -7,21 +7,21 @@ import {
   OnApplicationShutdown,
   OnModuleInit,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { BackupStatus, RestoreCheck, SyncBackupInfo } from '@pd/contracts';
-import { createReadStream, createWriteStream } from 'node:fs';
-import { mkdir, open, rename, stat, unlink, utimes } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
-import { Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
-import { ReadableStream } from 'node:stream/web';
-import { AppConfig } from '../config/env';
-import { coreMessages } from '../i18n/core.messages';
-import { NotificationsService } from '../notifications/notifications.service';
-import { SchedulerService } from '../scheduler/scheduler.service';
-import { SyncClient } from '../sync/sync-client.service';
-import { SyncService } from '../sync/sync.service';
-import { UsersService } from '../users/users.service';
+import {ConfigService} from '@nestjs/config';
+import {BackupStatus, RestoreCheck, SyncBackupInfo} from '@pd/contracts';
+import {createReadStream, createWriteStream} from 'node:fs';
+import {mkdir, open, rename, stat, unlink, utimes} from 'node:fs/promises';
+import {join, resolve} from 'node:path';
+import {Readable} from 'node:stream';
+import {pipeline} from 'node:stream/promises';
+import {ReadableStream} from 'node:stream/web';
+import {AppConfig} from '../config/env';
+import {coreMessages} from '../i18n/core.messages';
+import {NotificationsService} from '../notifications/notifications.service';
+import {SchedulerService} from '../scheduler/scheduler.service';
+import {SyncClient} from '../sync/sync-client.service';
+import {SyncService} from '../sync/sync.service';
+import {UsersService} from '../users/users.service';
 import {
   backupProblems,
   DUMP_MAGIC,
@@ -46,7 +46,9 @@ const WARNED_STATE = 'backup-copy-warned';
  *   that survives losing the server.
  */
 @Injectable()
-export class BackupService implements OnModuleInit, OnApplicationBootstrap, OnApplicationShutdown {
+export class BackupService
+  implements OnModuleInit, OnApplicationBootstrap, OnApplicationShutdown
+{
   private readonly logger = new Logger(BackupService.name);
   private timers: NodeJS.Timeout[] = [];
   private copying: Promise<void> | null = null;
@@ -66,12 +68,12 @@ export class BackupService implements OnModuleInit, OnApplicationBootstrap, OnAp
 
   /** Server: the folder with the dumps; unset — the instance has no backup job. */
   private get dumpFolder(): string | undefined {
-    return this.config.get('BACKUP_DIR', { infer: true });
+    return this.config.get('BACKUP_DIR', {infer: true});
   }
 
   /** Client: where the copies go. */
   private get copyFolder(): string {
-    return resolve(this.config.get('BACKUP_COPY_DIR', { infer: true }));
+    return resolve(this.config.get('BACKUP_COPY_DIR', {infer: true}));
   }
 
   onModuleInit(): void {
@@ -89,7 +91,10 @@ export class BackupService implements OnModuleInit, OnApplicationBootstrap, OnAp
       return;
     }
     const tick = () => void this.copyNow();
-    this.timers = [setTimeout(tick, FIRST_COPY_DELAY_MS), setInterval(tick, COPY_INTERVAL_MS)];
+    this.timers = [
+      setTimeout(tick, FIRST_COPY_DELAY_MS),
+      setInterval(tick, COPY_INTERVAL_MS),
+    ];
   }
 
   onApplicationShutdown(): void {
@@ -136,30 +141,31 @@ export class BackupService implements OnModuleInit, OnApplicationBootstrap, OnAp
   }
 
   /** A dump by name, for the client to download. */
-  async open(name: string): Promise<{ stream: Readable; size: number }> {
+  async open(name: string): Promise<{stream: Readable; size: number}> {
     const folder = this.requireFolder();
     if (!DUMP_NAME.test(name)) {
       throw new NotFoundException();
     }
     const path = join(folder, name);
     const size = await stat(path).then(
-      (info) => info.size,
+      info => info.size,
       () => {
         throw new NotFoundException();
       },
     );
-    return { stream: createReadStream(path), size };
+    return {stream: createReadStream(path), size};
   }
 
   /** Daily: tells the owner what is wrong with the backups, if anything. */
   async report(): Promise<void> {
     const problems = (await this.status())?.problems ?? [];
     if (problems.length) {
-      await this.notifyOwner((text) => [
+      await this.notifyOwner(text => [
         text.backupTitle,
-        [...problems.map((problem) => text.backupProblems[problem]), text.backupSeeSettings].join(
-          '\n',
-        ),
+        [
+          ...problems.map(problem => text.backupProblems[problem]),
+          text.backupSeeSettings,
+        ].join('\n'),
       ]);
     }
   }
@@ -167,7 +173,9 @@ export class BackupService implements OnModuleInit, OnApplicationBootstrap, OnAp
   private requireFolder(): string {
     const folder = this.dumpFolder;
     if (!folder) {
-      throw new NotFoundException('This instance keeps no backups (BACKUP_DIR)');
+      throw new NotFoundException(
+        'This instance keeps no backups (BACKUP_DIR)',
+      );
     }
     return folder;
   }
@@ -183,17 +191,24 @@ export class BackupService implements OnModuleInit, OnApplicationBootstrap, OnAp
   private async copy(): Promise<void> {
     const folder = this.copyFolder;
     try {
-      const { latest, restoreCheck } = await this.syncClient.backupInfo();
+      const {latest, restoreCheck} = await this.syncClient.backupInfo();
       this.serverCheck = restoreCheck;
-      const here = (await listDumps(folder)).find((dump) => dump.name === latest?.name);
+      const here = (await listDumps(folder)).find(
+        dump => dump.name === latest?.name,
+      );
       if (latest && here?.size !== latest.size) {
-        await mkdir(folder, { recursive: true });
+        await mkdir(folder, {recursive: true});
         await this.download(folder, latest.name, latest.size);
         // The copy is as old as the dump, not as the download: "stale" then means stale data.
         const created = new Date(latest.createdAt);
         await utimes(join(folder, latest.name), created, created);
-        await pruneDumps(folder, this.config.get('BACKUP_COPY_KEEP', { infer: true }));
-        this.logger.log(`Backup copied: ${latest.name} (${Math.round(latest.size / 1e6)} MB)`);
+        await pruneDumps(
+          folder,
+          this.config.get('BACKUP_COPY_KEEP', {infer: true}),
+        );
+        this.logger.log(
+          `Backup copied: ${latest.name} (${Math.round(latest.size / 1e6)} MB)`,
+        );
       }
       this.lastError = null;
     } catch (error) {
@@ -207,12 +222,19 @@ export class BackupService implements OnModuleInit, OnApplicationBootstrap, OnAp
   }
 
   /** Downloads to a `.part` file first: a broken download never looks like a backup. */
-  private async download(folder: string, name: string, size: number): Promise<void> {
+  private async download(
+    folder: string,
+    name: string,
+    size: number,
+  ): Promise<void> {
     const target = join(folder, name);
     const part = `${target}.part`;
     try {
       const body = await this.syncClient.downloadBackup(name);
-      await pipeline(Readable.fromWeb(body as ReadableStream), createWriteStream(part));
+      await pipeline(
+        Readable.fromWeb(body as ReadableStream),
+        createWriteStream(part),
+      );
       const got = (await stat(part)).size;
       if (got !== size) {
         throw new Error(`The download was cut short (${got} of ${size} bytes)`);
@@ -247,7 +269,7 @@ export class BackupService implements OnModuleInit, OnApplicationBootstrap, OnAp
     const days = Math.floor(
       (Date.now() - new Date(status.latest.createdAt).getTime()) / 86_400_000,
     );
-    await this.notifyOwner((text) => [
+    await this.notifyOwner(text => [
       text.backupTitle,
       [text.backupCopyStale(days), status.lastError].filter(Boolean).join('\n'),
     ]);
@@ -259,7 +281,7 @@ export class BackupService implements OnModuleInit, OnApplicationBootstrap, OnAp
     const owner = await this.users.owner();
     if (owner) {
       const [title, body] = compose(coreMessages(owner.locale));
-      await this.notifications.send(owner.id, { title, body, source: 'backup' });
+      await this.notifications.send(owner.id, {title, body, source: 'backup'});
     }
   }
 }

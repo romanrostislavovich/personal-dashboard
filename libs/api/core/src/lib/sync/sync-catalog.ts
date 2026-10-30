@@ -1,5 +1,5 @@
-import { sql } from 'drizzle-orm';
-import { Database } from '../database/database.module';
+import {sql} from 'drizzle-orm';
+import {Database} from '../database/database.module';
 
 /** A synced table as PostgreSQL describes it. */
 export interface SyncTable {
@@ -19,7 +19,7 @@ export interface SyncTable {
  * The list is read from the database catalog, so new tables are picked up automatically.
  */
 export async function readSyncTables(db: Database): Promise<SyncTable[]> {
-  const { rows } = await db.execute<{
+  const {rows} = await db.execute<{
     name: string;
     columns: string[];
     primary_key: string[] | null;
@@ -49,8 +49,8 @@ export async function readSyncTables(db: Database): Promise<SyncTable[]> {
     WHERE n.nspname = 'public' AND c.relkind = 'r'
   `);
   const tables = rows
-    .filter((row) => row.primary_key?.length)
-    .map((row) => ({
+    .filter(row => row.primary_key?.length)
+    .map(row => ({
       name: row.name,
       primaryKey: row.primary_key ?? [],
       columns: row.columns,
@@ -65,10 +65,10 @@ export async function readSyncTables(db: Database): Promise<SyncTable[]> {
  * Referenced tables first (users → projects → transactions), so inserts can go in this order
  * and deletes in the reverse one.
  */
-export function dependencyOrder<T extends { name: string; references: string[] }>(
+export function dependencyOrder<T extends {name: string; references: string[]}>(
   tables: T[],
 ): T[] {
-  const byName = new Map(tables.map((table) => [table.name, table]));
+  const byName = new Map(tables.map(table => [table.name, table]));
   const ordered: T[] = [];
   const visited = new Set<string>();
   const visit = (table: T, path: Set<string>) => {
@@ -85,7 +85,9 @@ export function dependencyOrder<T extends { name: string; references: string[] }
     visited.add(table.name);
     ordered.push(table);
   };
-  for (const table of [...tables].sort((a, b) => a.name.localeCompare(b.name))) {
+  for (const table of [...tables].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  )) {
     visit(table, new Set());
   }
   return ordered;

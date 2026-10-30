@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { forEachUser, SchedulerService } from '@pd/api-core';
-import { RuleSuggestionsService } from './rule-suggestions.service';
-import { WellbeingService } from './wellbeing.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {forEachUser, SchedulerService} from '@pd/api-core';
+import {RuleSuggestionsService} from './rule-suggestions.service';
+import {WellbeingService} from './wellbeing.service';
 
 /**
  * Background work of the Activity section: the health of the computers is kept for a month,
@@ -25,8 +25,10 @@ export class ActivityJobs implements OnModuleInit {
       name: 'activity.rule-suggestions',
       cron: '10 5 * * *',
       handler: async () =>
-        forEachUser('activity.rule-suggestions', await this.suggestions.activeUserIds(), (userId) =>
-          this.suggestions.refresh(userId),
+        forEachUser(
+          'activity.rule-suggestions',
+          await this.suggestions.activeUserIds(),
+          userId => this.suggestions.refresh(userId),
         ),
     });
   }

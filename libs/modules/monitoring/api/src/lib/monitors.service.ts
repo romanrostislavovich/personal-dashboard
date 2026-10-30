@@ -1,8 +1,8 @@
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
-import { DB, Database, ProjectsService } from '@pd/api-core';
-import { Monitor, MonitorInput, ResponseTimePoint } from '@pd/contracts';
-import { and, asc, eq, sql } from 'drizzle-orm';
-import { checkResults, MonitorRow, monitors } from './monitoring.schema';
+import {ConflictException, Inject, Injectable} from '@nestjs/common';
+import {DB, Database, ProjectsService} from '@pd/api-core';
+import {Monitor, MonitorInput, ResponseTimePoint} from '@pd/contracts';
+import {and, asc, eq, sql} from 'drizzle-orm';
+import {checkResults, MonitorRow, monitors} from './monitoring.schema';
 
 interface UptimeRow extends Record<string, unknown> {
   monitor_id: string;
@@ -35,7 +35,7 @@ export class MonitorsService {
     }
 
     const ids = sql.join(
-      rows.map((row) => sql`${row.id}::uuid`),
+      rows.map(row => sql`${row.id}::uuid`),
       sql`, `,
     );
 
@@ -59,11 +59,11 @@ export class MonitorsService {
       ORDER BY hour
     `);
 
-    return rows.map((row) =>
+    return rows.map(row =>
       toMonitor(
         row,
-        uptime.rows.find((u) => u.monitor_id === row.id),
-        responses.rows.filter((r) => r.monitor_id === row.id),
+        uptime.rows.find(u => u.monitor_id === row.id),
+        responses.rows.filter(r => r.monitor_id === row.id),
       ),
     );
   }
@@ -79,13 +79,15 @@ export class MonitorsService {
     }
     const [row] = await this.db
       .insert(monitors)
-      .values({ userId, ...input })
+      .values({userId, ...input})
       .returning();
     return row;
   }
 
   async remove(userId: string, id: string): Promise<void> {
-    await this.db.delete(monitors).where(and(eq(monitors.id, id), eq(monitors.userId, userId)));
+    await this.db
+      .delete(monitors)
+      .where(and(eq(monitors.id, id), eq(monitors.userId, userId)));
   }
 }
 
@@ -109,7 +111,8 @@ function toMonitor(
     lastStatusCode: row.lastStatusCode,
     lastResponseMs: row.lastResponseMs,
     lastError: row.lastError,
-    downSince: row.status === 'down' ? (row.failingSince?.toISOString() ?? null) : null,
+    downSince:
+      row.status === 'down' ? (row.failingSince?.toISOString() ?? null) : null,
     sslExpiresAt: row.sslExpiresAt?.toISOString() ?? null,
     uptime: {
       day: uptime?.day ?? null,

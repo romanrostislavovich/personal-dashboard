@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { mobileReadCache } from './idb-read-cache';
-import { mobileServer, normalizeServer, setMobileServer } from './mobile-app';
+import {ChangeDetectionStrategy, Component, signal} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {mobileReadCache} from './idb-read-cache';
+import {mobileServer, normalizeServer, setMobileServer} from './mobile-app';
 
 /** How long to wait for a server that does not answer. */
 const CHECK_TIMEOUT_MS = 10_000;
@@ -18,17 +18,27 @@ const CHECK_TIMEOUT_MS = 10_000;
 @Component({
   selector: 'pd-connect-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, TranslocoPipe],
+  imports: [
+    MatButtonModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    TranslocoPipe,
+  ],
   template: `
     <mat-card class="card" appearance="outlined">
       <mat-card-header>
-        <mat-card-title>{{ 'core.mobile.connect.title' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'core.mobile.connect.title' | transloco
+        }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <p class="hint">{{ 'core.mobile.connect.hint' | transloco }}</p>
         <form (submit)="$event.preventDefault(); connect()">
           <mat-form-field>
-            <mat-label>{{ 'core.mobile.connect.address' | transloco }}</mat-label>
+            <mat-label>{{
+              'core.mobile.connect.address' | transloco
+            }}</mat-label>
             <input
               matInput
               name="server"
@@ -43,10 +53,16 @@ const CHECK_TIMEOUT_MS = 10_000;
           @if (error(); as key) {
             <p class="error" role="alert">{{ key | transloco }}</p>
           }
-          <button matButton="filled" type="submit" [disabled]="!address().trim() || checking()">
+          <button
+            matButton="filled"
+            type="submit"
+            [disabled]="!address().trim() || checking()"
+          >
             {{
-              (checking() ? 'core.mobile.connect.checking' : 'core.mobile.connect.submit')
-                | transloco
+              (checking()
+                ? 'core.mobile.connect.checking'
+                : 'core.mobile.connect.submit'
+              ) | transloco
             }}
           </button>
         </form>

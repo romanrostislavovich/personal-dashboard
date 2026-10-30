@@ -1,7 +1,13 @@
-import type { WritingIssue, WritingRewriteMode } from '@pd/contracts';
+import type {WritingIssue, WritingRewriteMode} from '@pd/contracts';
 
 /** As WRITING_REWRITE_MODES of contracts: a type only, or zod would come into every page. */
-const MODES: WritingRewriteMode[] = ['fix', 'shorter', 'polite', 'formal', 'friendly'];
+const MODES: WritingRewriteMode[] = [
+  'fix',
+  'shorter',
+  'polite',
+  'formal',
+  'friendly',
+];
 
 /*
  * What Writing draws over a page, in a closed shadow root of its own (the page can neither
@@ -10,7 +16,8 @@ const MODES: WritingRewriteMode[] = ['fix', 'shorter', 'polite', 'formal', 'frie
  * field stays the page's.
  */
 
-const t = (key: string, ...values: string[]) => chrome.i18n.getMessage(key, values) || key;
+const t = (key: string, ...values: string[]) =>
+  chrome.i18n.getMessage(key, values) || key;
 
 const COLOURS: Record<WritingIssue['kind'], string> = {
   spelling: '#e53935',
@@ -83,7 +90,7 @@ function shadow(): ShadowRoot {
     return root;
   }
   host = document.createElement('pd-writing');
-  root = host.attachShadow({ mode: 'closed' });
+  root = host.attachShadow({mode: 'closed'});
   const style = document.createElement('style');
   style.textContent = STYLE;
   layer = document.createElement('div');
@@ -93,12 +100,19 @@ function shadow(): ShadowRoot {
 }
 
 /** The marks under the mistakes, only the parts inside the field's box. */
-export function drawMarks(marks: { issue: WritingIssue; rects: DOMRect[] }[], box: DOMRect): void {
+export function drawMarks(
+  marks: {issue: WritingIssue; rects: DOMRect[]}[],
+  box: DOMRect,
+): void {
   shadow();
   const nodes: HTMLDivElement[] = [];
-  for (const { issue, rects } of marks) {
+  for (const {issue, rects} of marks) {
     for (const rect of rects) {
-      if (rect.bottom < box.top || rect.top > box.bottom || rect.right < box.left) {
+      if (
+        rect.bottom < box.top ||
+        rect.top > box.bottom ||
+        rect.right < box.left
+      ) {
         continue;
       }
       const left = Math.max(rect.left, box.left);
@@ -141,18 +155,20 @@ export function drawBadge(
     badge = document.createElement('button');
     badge.type = 'button';
     // Pressing it must not take the focus (and the caret) from the field.
-    badge.addEventListener('mousedown', (event) => event.preventDefault());
+    badge.addEventListener('mousedown', event => event.preventDefault());
     root?.append(badge);
   }
   badge.onclick = onClick;
   badge.className = `badge ${status}`;
-  badge.textContent = status === 'issues' ? String(count) : status === 'clean' ? '✓' : '✎';
+  badge.textContent =
+    status === 'issues' ? String(count) : status === 'clean' ? '✓' : '✎';
   badge.title =
     status === 'issues'
       ? t('writingBadge', String(count))
       : t(status === 'clean' ? 'writingBadgeClean' : 'writingBadgeIdle');
   // In the corner, inside the field; a field too low for it gets it beside the text.
-  const top = box.height >= 36 ? box.bottom - 28 : box.top + (box.height - 22) / 2;
+  const top =
+    box.height >= 36 ? box.bottom - 28 : box.top + (box.height - 22) / 2;
   badge.style.left = `${box.right - 28}px`;
   badge.style.top = `${top}px`;
 }
@@ -196,7 +212,11 @@ export function showIssueCard(
   kind.style.color = COLOURS[issue.kind];
   const fixes = element('div', 'fixes');
   for (const replacement of issue.replacements) {
-    fixes.append(button('fix', replacement || t('writingRemove'), () => act.fix(replacement)));
+    fixes.append(
+      button('fix', replacement || t('writingRemove'), () =>
+        act.fix(replacement),
+      ),
+    );
   }
   const actions = element('div', 'actions');
   if (issue.kind === 'spelling') {
@@ -224,7 +244,7 @@ export interface PanelActions {
 export function showPanel(
   at: DOMRect,
   status: BadgeStatus,
-  issues: { issue: WritingIssue; word: string }[],
+  issues: {issue: WritingIssue; word: string}[],
   act: PanelActions,
 ): void {
   const body = openCard(at);
@@ -238,7 +258,7 @@ export function showPanel(
   body.append(element('div', 'head', head));
   if (issues.length) {
     const list = element('div', 'issues');
-    for (const { issue, word } of issues.slice(0, 12)) {
+    for (const {issue, word} of issues.slice(0, 12)) {
       const row = button('issue', '', () => act.open(issue));
       const dot = element('div', 'dot');
       dot.style.background = COLOURS[issue.kind];
@@ -260,7 +280,9 @@ export function showPanel(
   if (act.rewrite) {
     const rewrite = act.rewrite;
     for (const mode of MODES) {
-      actions.append(button('action', t(`writingRewrite_${mode}`), () => rewrite(mode)));
+      actions.append(
+        button('action', t(`writingRewrite_${mode}`), () => rewrite(mode)),
+      );
     }
   }
   if (actions.childElementCount) {
@@ -279,7 +301,11 @@ export function showBusy(at: DOMRect): void {
 }
 
 /** The AI's version of the text, to put in place of it or not. */
-export function showProposal(at: DOMRect, text: string, accept: () => void): void {
+export function showProposal(
+  at: DOMRect,
+  text: string,
+  accept: () => void,
+): void {
   const body = openCard(at);
   const actions = element('div', 'actions');
   actions.append(
@@ -298,7 +324,7 @@ function openCard(at: DOMRect): HTMLDivElement {
   hideCard();
   card = document.createElement('div');
   card.className = 'card';
-  card.addEventListener('mousedown', (event) => event.preventDefault());
+  card.addEventListener('mousedown', event => event.preventDefault());
   const below = at.bottom + 8 + 200 < window.innerHeight;
   card.style.left = `${Math.max(8, Math.min(at.left, window.innerWidth - 328))}px`;
   if (below) {
@@ -310,14 +336,22 @@ function openCard(at: DOMRect): HTMLDivElement {
   return card;
 }
 
-function element<K extends 'div' | 'p'>(tag: K, className: string, text?: string) {
+function element<K extends 'div' | 'p'>(
+  tag: K,
+  className: string,
+  text?: string,
+) {
   const node = document.createElement(tag);
   node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
 }
 
-function button(className: string, text: string, onClick: () => void): HTMLButtonElement {
+function button(
+  className: string,
+  text: string,
+  onClick: () => void,
+): HTMLButtonElement {
   const node = document.createElement('button');
   node.type = 'button';
   node.className = className;

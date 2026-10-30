@@ -1,8 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
-import { asc, eq, sql } from 'drizzle-orm';
-import { dotaMatches, gameAccounts } from '../games.schema';
-import { longestWinStreak } from './win-streak';
+import {Inject, Injectable} from '@nestjs/common';
+import {DB, Database} from '@pd/api-core';
+import {asc, eq, sql} from 'drizzle-orm';
+import {dotaMatches, gameAccounts} from '../games.schema';
+import {longestWinStreak} from './win-streak';
 
 /** Career numbers over all Dota accounts of a user — the base for achievements. */
 export interface DotaCareer {
@@ -32,7 +32,10 @@ const YEAR_MS = 365.25 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class DotaCareerService {
-  private readonly cache = new Map<string, { at: number; career: Promise<DotaCareer> }>();
+  private readonly cache = new Map<
+    string,
+    {at: number; career: Promise<DotaCareer>}
+  >();
 
   constructor(@Inject(DB) private readonly db: Database) {}
 
@@ -42,17 +45,18 @@ export class DotaCareerService {
       return cached.career;
     }
     const career = this.load(userId);
-    this.cache.set(userId, { at: Date.now(), career });
+    this.cache.set(userId, {at: Date.now(), career});
     career.catch(() => this.cache.delete(userId));
     return career;
   }
 
   private async load(userId: string): Promise<DotaCareer> {
-    const [{ firstMatchAt, ...totals }, maxGamesOnHero, longestWinStreak] = await Promise.all([
-      this.totals(userId),
-      this.maxGamesOnHero(userId),
-      this.bestWinStreak(userId),
-    ]);
+    const [{firstMatchAt, ...totals}, maxGamesOnHero, longestWinStreak] =
+      await Promise.all([
+        this.totals(userId),
+        this.maxGamesOnHero(userId),
+        this.bestWinStreak(userId),
+      ]);
     return {
       ...totals,
       maxGamesOnHero,
@@ -90,12 +94,15 @@ export class DotaCareerService {
       .from(m)
       .innerJoin(gameAccounts, eq(gameAccounts.id, m.accountId))
       .where(eq(gameAccounts.userId, userId));
-    return { ...row, firstMatchAt: row.firstMatchAt ? new Date(row.firstMatchAt) : null };
+    return {
+      ...row,
+      firstMatchAt: row.firstMatchAt ? new Date(row.firstMatchAt) : null,
+    };
   }
 
   private async maxGamesOnHero(userId: string): Promise<number> {
     const [top] = await this.db
-      .select({ games: sql<number>`count(*)::int` })
+      .select({games: sql<number>`count(*)::int`})
       .from(dotaMatches)
       .innerJoin(gameAccounts, eq(gameAccounts.id, dotaMatches.accountId))
       .where(eq(gameAccounts.userId, userId))
@@ -109,7 +116,7 @@ export class DotaCareerService {
   /** The best streak across all of the user's Dota accounts. */
   private async bestWinStreak(userId: string): Promise<number> {
     const rows = await this.db
-      .select({ accountId: dotaMatches.accountId, won: dotaMatches.won })
+      .select({accountId: dotaMatches.accountId, won: dotaMatches.won})
       .from(dotaMatches)
       .innerJoin(gameAccounts, eq(gameAccounts.id, dotaMatches.accountId))
       .where(eq(gameAccounts.userId, userId))

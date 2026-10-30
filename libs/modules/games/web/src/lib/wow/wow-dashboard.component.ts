@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import {DatePipe, DecimalPipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,17 +8,17 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { GameAccount, WowSummary } from '@pd/contracts';
-import { SparklineComponent } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { GamesApi } from '../games.api';
-import { TimeAgoPipe } from '../time-ago.pipe';
-import { WowCharacterDetailsComponent } from './wow-character-details.component';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {GameAccount, WowSummary} from '@pd/contracts';
+import {SparklineComponent} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {GamesApi} from '../games.api';
+import {TimeAgoPipe} from '../time-ago.pipe';
+import {WowCharacterDetailsComponent} from './wow-character-details.component';
 
 /** Official class colours by Blizzard class id. */
 const CLASS_COLORS: Record<number, string> = {
@@ -76,7 +76,9 @@ interface Character {
           <span class="value">{{ totals().itemLevel ?? '—' }}</span>
         </div>
         <div class="tile">
-          <span class="label">{{ 'games.wow.achievementPoints' | transloco }}</span>
+          <span class="label">{{
+            'games.wow.achievementPoints' | transloco
+          }}</span>
           <span class="value">{{ totals().points | number }}</span>
         </div>
         <div class="tile">
@@ -91,16 +93,21 @@ interface Character {
         }
         @if (totals().mounts) {
           <div class="tile">
-            <span class="label">{{ 'games.wow.collections.mounts' | transloco }}</span>
+            <span class="label">{{
+              'games.wow.collections.mounts' | transloco
+            }}</span>
             <span class="value">{{ totals().mounts | number }}</span>
           </div>
         }
         @for (token of tokens.value(); track token.region) {
           <div class="tile token">
             <span class="label">
-              {{ 'games.wow.token' | transloco }} · {{ token.region.toUpperCase() }}
+              {{ 'games.wow.token' | transloco }} ·
+              {{ token.region.toUpperCase() }}
             </span>
-            <span class="value">{{ token.price | number }} <small>g</small></span>
+            <span class="value"
+              >{{ token.price | number }} <small>g</small></span
+            >
             @if (token.history.length > 1) {
               <pd-sparkline
                 [points]="tokenPoints(token.history)"
@@ -126,13 +133,16 @@ interface Character {
               }
               <div class="who">
                 @if (s.profileUrl; as url) {
-                  <a class="name" [href]="url" target="_blank" rel="noopener">{{ s.name }}</a>
+                  <a class="name" [href]="url" target="_blank" rel="noopener">{{
+                    s.name
+                  }}</a>
                 } @else {
                   <!-- Classic: Blizzard's site has no page for the character. -->
                   <span class="name">{{ s.name }}</span>
                 }
                 <span class="muted"
-                  >{{ s.level }} {{ s.raceName }} {{ s.specName ?? '' }} {{ s.className }}</span
+                  >{{ s.level }} {{ s.raceName }} {{ s.specName ?? '' }}
+                  {{ s.className }}</span
                 >
                 <span class="muted">
                   {{ s.realm }}
@@ -151,7 +161,8 @@ interface Character {
             </div>
             <div class="facts">
               <span
-                ><mat-icon inline>emoji_events</mat-icon> {{ s.achievementPoints | number }}</span
+                ><mat-icon inline>emoji_events</mat-icon>
+                {{ s.achievementPoints | number }}</span
               >
               @if (s.lastLoginAt) {
                 <span class="muted"
@@ -170,19 +181,26 @@ interface Character {
             @if (c.summary; as s) {
               <button matButton (click)="select(c.account.id)">
                 <mat-icon>{{
-                  selected()?.account?.id === c.account.id ? 'expand_less' : 'expand_more'
+                  selected()?.account?.id === c.account.id
+                    ? 'expand_less'
+                    : 'expand_more'
                 }}</mat-icon>
                 {{ 'games.wow.details.open' | transloco }}
               </button>
               <button
                 matIconButton
-                [matTooltip]="(s.notify ? 'games.wow.notifyOn' : 'games.wow.notifyOff') | transloco"
+                [matTooltip]="
+                  (s.notify ? 'games.wow.notifyOn' : 'games.wow.notifyOff')
+                    | transloco
+                "
                 [attr.aria-label]="'games.wow.notifyOn' | transloco"
                 [attr.aria-pressed]="s.notify"
                 [disabled]="busy()"
                 (click)="toggleNotify(c.account.id, s)"
               >
-                <mat-icon>{{ s.notify ? 'notifications_active' : 'notifications_off' }}</mat-icon>
+                <mat-icon>{{
+                  s.notify ? 'notifications_active' : 'notifications_off'
+                }}</mat-icon>
               </button>
             }
             <button
@@ -224,9 +242,13 @@ interface Character {
                 <th class="numeric">{{ 'games.wow.level' | transloco }}</th>
                 <th class="numeric">ilvl</th>
                 <th class="numeric">Mythic+</th>
-                <th class="numeric">{{ 'games.wow.details.raids' | transloco }}</th>
+                <th class="numeric">
+                  {{ 'games.wow.details.raids' | transloco }}
+                </th>
                 <th class="numeric">PvP</th>
-                <th class="numeric">{{ 'games.wow.collections.quests' | transloco }}</th>
+                <th class="numeric">
+                  {{ 'games.wow.collections.quests' | transloco }}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -266,7 +288,9 @@ interface Character {
               @if (characters().length > 1) {
                 <span class="muted">{{ a.character }}</span>
               }
-              <span class="muted date">{{ a.completedAt | date: 'd MMM y' }}</span>
+              <span class="muted date">{{
+                a.completedAt | date: 'd MMM y'
+              }}</span>
             </li>
           }
         </ul>
@@ -355,7 +379,11 @@ interface Character {
       border-radius: var(--pd-radius);
       border: 1px solid color-mix(in srgb, var(--class) 45%, var(--pd-border));
       background:
-        linear-gradient(135deg, color-mix(in srgb, var(--class) 16%, transparent), transparent 60%),
+        linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--class) 16%, transparent),
+          transparent 60%
+        ),
         var(--pd-card);
     }
     .head {
@@ -461,15 +489,18 @@ export class WowDashboardComponent {
 
   protected readonly characters = computed<Character[]>(() =>
     this.accounts()
-      .map((account) => ({
+      .map(account => ({
         account,
         summary: account.summary?.game === 'wow' ? account.summary : null,
       }))
-      .sort((a, b) => (b.summary?.itemLevel ?? 0) - (a.summary?.itemLevel ?? 0)),
+      .sort(
+        (a, b) => (b.summary?.itemLevel ?? 0) - (a.summary?.itemLevel ?? 0),
+      ),
   );
 
   protected readonly selected = computed(
-    () => this.characters().find((c) => c.account.id === this.selectedId()) ?? null,
+    () =>
+      this.characters().find(c => c.account.id === this.selectedId()) ?? null,
   );
 
   /**
@@ -477,27 +508,33 @@ export class WowDashboardComponent {
    * Battle.net account, so the total is the highest number, not a sum.
    */
   protected readonly totals = computed(() => {
-    const summaries = this.characters().flatMap((c) => (c.summary ? [c.summary] : []));
+    const summaries = this.characters().flatMap(c =>
+      c.summary ? [c.summary] : [],
+    );
     const best = (value: (s: WowSummary) => number | null | undefined) =>
-      summaries.length ? Math.max(...summaries.map((s) => value(s) ?? 0)) : null;
+      summaries.length ? Math.max(...summaries.map(s => value(s) ?? 0)) : null;
     return {
-      itemLevel: best((s) => s.itemLevel),
-      points: best((s) => s.achievementPoints) ?? 0,
-      achievements: best((s) => s.totalAchievements) ?? 0,
-      mythic: best((s) => s.details?.mythic?.rating),
-      mounts: best((s) => s.details?.collections.mounts),
+      itemLevel: best(s => s.itemLevel),
+      points: best(s => s.achievementPoints) ?? 0,
+      achievements: best(s => s.totalAchievements) ?? 0,
+      mythic: best(s => s.details?.mythic?.rating),
+      mounts: best(s => s.details?.collections.mounts),
     };
   });
 
   /** A line per character for the comparison table. */
   protected readonly compared = computed(() =>
-    this.characters().flatMap(({ account, summary }) => {
+    this.characters().flatMap(({account, summary}) => {
       if (!summary) {
         return [];
       }
       const raid = summary.details?.raids[0];
-      const kills = raid ? Math.max(0, ...raid.modes.map((mode) => mode.killed)) : null;
-      const total = raid ? Math.max(0, ...raid.modes.map((mode) => mode.total)) : null;
+      const kills = raid
+        ? Math.max(0, ...raid.modes.map(mode => mode.killed))
+        : null;
+      const total = raid
+        ? Math.max(0, ...raid.modes.map(mode => mode.total))
+        : null;
       const pvp = summary.details?.pvp?.brackets[0];
       return [
         {
@@ -520,27 +557,34 @@ export class WowDashboardComponent {
   protected readonly feed = computed(() => {
     const seen = new Set<number>();
     return this.characters()
-      .flatMap((c) =>
-        (c.summary?.recentAchievements ?? []).map((a) => ({
+      .flatMap(c =>
+        (c.summary?.recentAchievements ?? []).map(a => ({
           ...a,
           character: c.summary?.name ?? c.account.displayName,
         })),
       )
       .sort((a, b) => b.completedAt.localeCompare(a.completedAt))
-      .filter((a) => !seen.has(a.id) && seen.add(a.id))
+      .filter(a => !seen.has(a.id) && seen.add(a.id))
       .slice(0, RECENT_FEED);
   });
 
   protected select(accountId: string): void {
-    this.selectedId.update((current) => (current === accountId ? null : accountId));
+    this.selectedId.update(current =>
+      current === accountId ? null : accountId,
+    );
   }
 
-  protected tokenPoints(history: { day: string; price: number }[]) {
-    return history.map(({ day, price }) => ({ at: day, value: price }));
+  protected tokenPoints(history: {day: string; price: number}[]) {
+    return history.map(({day, price}) => ({at: day, value: price}));
   }
 
-  protected async toggleNotify(accountId: string, summary: WowSummary): Promise<void> {
-    await firstValueFrom(this.api.updateWowCharacter(accountId, { notify: !summary.notify }));
+  protected async toggleNotify(
+    accountId: string,
+    summary: WowSummary,
+  ): Promise<void> {
+    await firstValueFrom(
+      this.api.updateWowCharacter(accountId, {notify: !summary.notify}),
+    );
     this.changed.emit();
   }
 

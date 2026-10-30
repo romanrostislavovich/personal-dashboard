@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import {DatePipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,15 +8,15 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatIconModule} from '@angular/material/icon';
+import {MatMenuModule} from '@angular/material/menu';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {
   AI_ATTACHMENT_EXTENSIONS,
   AI_ATTACHMENT_MAX_BYTES,
@@ -35,9 +35,9 @@ import {
   errorStatus,
   EmptyStateComponent,
 } from '@pd/web-core';
-import { pastedFiles } from '@pd/client-core';
-import { firstValueFrom } from 'rxjs';
-import { AiApi } from './ai.api';
+import {pastedFiles} from '@pd/client-core';
+import {firstValueFrom} from 'rxjs';
+import {AiApi} from './ai.api';
 
 interface ChatEntry {
   role: 'user' | 'assistant';
@@ -54,7 +54,7 @@ const SUGGESTION_KEYS = ['birthdays', 'spending', 'sites', 'diary', 'music'];
 
 @Component({
   selector: 'pd-ai-page',
-  host: { '(click)': 'follow($event)' },
+  host: {'(click)': 'follow($event)'},
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
@@ -77,7 +77,8 @@ export class AiPage {
   /** Questions shown before the AI is connected (keys of `ai.examples`). */
   protected readonly examples = ['spent', 'mood', 'coding', 'health'];
   private readonly transloco = inject(TranslocoService);
-  private readonly messagesEnd = viewChild<ElementRef<HTMLElement>>('messagesEnd');
+  private readonly messagesEnd =
+    viewChild<ElementRef<HTMLElement>>('messagesEnd');
 
   protected readonly settings = this.api.settings();
   protected readonly suggestions = SUGGESTION_KEYS;
@@ -93,13 +94,19 @@ export class AiPage {
   protected readonly integrations = INTEGRATIONS_LINK;
   protected readonly activeConnection = computed(() => {
     const settings = this.settings.value();
-    return settings?.connections.find((c) => c.id === settings.activeConnectionId) ?? null;
+    return (
+      settings?.connections.find(c => c.id === settings.activeConnectionId) ??
+      null
+    );
   });
   /** Files read by the server, waiting to be sent with the next message. */
   protected readonly attachments = signal<AiAttachment[]>([]);
   protected readonly uploading = signal(false);
   protected readonly attachError = signal<string | null>(null);
-  protected readonly accept = [...AI_ATTACHMENT_EXTENSIONS, ...AI_IMAGE_EXTENSIONS].join(',');
+  protected readonly accept = [
+    ...AI_ATTACHMENT_EXTENSIONS,
+    ...AI_IMAGE_EXTENSIONS,
+  ].join(',');
   protected readonly maxAttachments = AI_MAX_ATTACHMENTS;
 
   constructor() {
@@ -107,17 +114,19 @@ export class AiPage {
     const question = inject(ActivatedRoute).snapshot.queryParamMap.get('q');
     if (question) {
       // Remove the question from the URL so a page reload does not send it again.
-      inject(Router).navigate([], { queryParams: {}, replaceUrl: true });
+      void inject(Router).navigate([], {queryParams: {}, replaceUrl: true});
     }
     // The question goes to the current conversation, so it waits until that is loaded.
-    const loaded = this.loadCurrent().then(() => (question ? this.send(question) : undefined));
+    const loaded = this.loadCurrent().then(() =>
+      question ? this.send(question) : undefined,
+    );
     // A bank statement the desktop app found in Downloads: /ai?statement=<id>, also while open.
     inject(ActivatedRoute)
       .queryParamMap.pipe(takeUntilDestroyed())
-      .subscribe((params) => {
+      .subscribe(params => {
         const statement = params.get('statement');
         if (statement) {
-          void this.router.navigate([], { queryParams: {}, replaceUrl: true });
+          void this.router.navigate([], {queryParams: {}, replaceUrl: true});
           void loaded.then(() => this.importStatement(statement));
         }
       });
@@ -129,7 +138,9 @@ export class AiPage {
     if (!file) {
       return;
     }
-    const bytes = Uint8Array.from(atob(file.base64), (char) => char.charCodeAt(0));
+    const bytes = Uint8Array.from(atob(file.base64), char =>
+      char.charCodeAt(0),
+    );
     this.uploading.set(true);
     try {
       await this.readFile(new File([bytes], file.name));
@@ -137,7 +148,9 @@ export class AiPage {
       this.uploading.set(false);
     }
     if (this.attachments().length) {
-      await this.send(this.transloco.translate('ai.importStatement', { name: file.name }));
+      await this.send(
+        this.transloco.translate('ai.importStatement', {name: file.name}),
+      );
     }
   }
 
@@ -158,22 +171,28 @@ export class AiPage {
     this.append({
       role: 'user',
       content: question,
-      attachments: attachments.map((file) => file.name),
+      attachments: attachments.map(file => file.name),
     });
     this.thinking.set(true);
     try {
-      const { conversationId, reply, toolsUsed } = await firstValueFrom(
+      const {conversationId, reply, toolsUsed} = await firstValueFrom(
         this.api.chat({
           conversationId: this.conversationId() ?? undefined,
           content: question,
-          ...(attachments.length ? { attachments } : {}),
+          ...(attachments.length ? {attachments} : {}),
         }),
       );
       this.conversationId.set(conversationId);
-      this.append({ role: 'assistant', content: reply, toolsUsed });
+      this.append({role: 'assistant', content: reply, toolsUsed});
     } catch (error) {
-      const key = isProviderError(error) ? 'ai.errors.api' : 'ai.errors.generic';
-      this.append({ role: 'assistant', content: this.transloco.translate(key), isError: true });
+      const key = isProviderError(error)
+        ? 'ai.errors.api'
+        : 'ai.errors.generic';
+      this.append({
+        role: 'assistant',
+        content: this.transloco.translate(key),
+        isError: true,
+      });
     } finally {
       this.thinking.set(false);
     }
@@ -181,7 +200,9 @@ export class AiPage {
 
   /** The one-click switch from the chat header: the next answer comes from this connection. */
   async useConnection(connection: AiConnection): Promise<void> {
-    this.settings.set(await firstValueFrom(this.api.activateConnection(connection.id)));
+    this.settings.set(
+      await firstValueFrom(this.api.activateConnection(connection.id)),
+    );
   }
 
   /** Reads the chosen files on the server; they are sent with the next message. */
@@ -218,7 +239,7 @@ export class AiPage {
   }
 
   removeAttachment(index: number): void {
-    this.attachments.update((list) => list.filter((_, i) => i !== index));
+    this.attachments.update(list => list.filter((_, i) => i !== index));
   }
 
   askSuggestion(key: string): Promise<void> {
@@ -247,10 +268,13 @@ export class AiPage {
     this.show(await firstValueFrom(this.api.conversation(conversation.id)));
   }
 
-  async removeConversation(conversation: AiConversation, event: Event): Promise<void> {
+  async removeConversation(
+    conversation: AiConversation,
+    event: Event,
+  ): Promise<void> {
     event.stopPropagation();
     await firstValueFrom(this.api.removeConversation(conversation.id));
-    this.archive.update((list) => list.filter((c) => c.id !== conversation.id));
+    this.archive.update(list => list.filter(c => c.id !== conversation.id));
     if (conversation.id === this.conversationId()) {
       await this.loadCurrent();
     }
@@ -267,12 +291,14 @@ export class AiPage {
   private show(conversation: AiConversationDetail | null): void {
     this.conversationId.set(conversation?.id ?? null);
     this.update(
-      (conversation?.messages ?? []).map(({ role, content, attachments, toolsUsed }) => ({
-        role,
-        content,
-        attachments,
-        toolsUsed,
-      })),
+      (conversation?.messages ?? []).map(
+        ({role, content, attachments, toolsUsed}) => ({
+          role,
+          content,
+          attachments,
+          toolsUsed,
+        }),
+      ),
     );
   }
 
@@ -283,17 +309,25 @@ export class AiPage {
 
   private async readFile(file: File): Promise<void> {
     if (file.size > AI_ATTACHMENT_MAX_BYTES) {
-      this.attachError.set(this.transloco.translate('ai.attach.tooLarge', { name: file.name }));
+      this.attachError.set(
+        this.transloco.translate('ai.attach.tooLarge', {name: file.name}),
+      );
       return;
     }
     try {
-      const { name, text, truncated } = await firstValueFrom(this.api.uploadAttachment(file));
-      this.attachments.update((list) => [...list, { name, text }]);
+      const {name, text, truncated} = await firstValueFrom(
+        this.api.uploadAttachment(file),
+      );
+      this.attachments.update(list => [...list, {name, text}]);
       if (truncated) {
-        this.attachError.set(this.transloco.translate('ai.attach.truncated', { name }));
+        this.attachError.set(
+          this.transloco.translate('ai.attach.truncated', {name}),
+        );
       }
     } catch (error) {
-      this.attachError.set(this.transloco.translate(attachErrorKey(error), { name: file.name }));
+      this.attachError.set(
+        this.transloco.translate(attachErrorKey(error), {name: file.name}),
+      );
     }
   }
 
@@ -303,12 +337,16 @@ export class AiPage {
 
   private update(history: ChatEntry[]): void {
     this.history.set(history);
-    setTimeout(() => this.messagesEnd()?.nativeElement.scrollIntoView({ behavior: 'smooth' }));
+    setTimeout(() =>
+      this.messagesEnd()?.nativeElement.scrollIntoView({behavior: 'smooth'}),
+    );
   }
 
   /** A link of an answer to a day or a diary entry opens inside the app, not as a page load. */
   protected follow(event: MouseEvent): void {
-    const href = (event.target as HTMLElement).closest('a')?.getAttribute('href');
+    const href = (event.target as HTMLElement)
+      .closest('a')
+      ?.getAttribute('href');
     if (href?.startsWith('/')) {
       event.preventDefault();
       void this.router.navigateByUrl(href);
@@ -326,8 +364,12 @@ function attachErrorKey(error: unknown): string {
   if (errorStatus(error) === 413) {
     return 'ai.attach.tooLarge';
   }
-  const reason = (errorBody(error) as { reason?: string } | null)?.reason;
-  if (reason === 'unsupported' || reason === 'empty' || reason === 'no-vision') {
+  const reason = (errorBody(error) as {reason?: string} | null)?.reason;
+  if (
+    reason === 'unsupported' ||
+    reason === 'empty' ||
+    reason === 'no-vision'
+  ) {
     return `ai.attach.${reason}`;
   }
   return 'ai.attach.failed';

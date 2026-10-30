@@ -1,11 +1,11 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, PERIOD_PARAMETERS } from '@pd/api-core';
-import { z } from 'zod';
-import { BandService } from './band.service';
-import { WearableService } from './wearable.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AiService, PERIOD_PARAMETERS} from '@pd/api-core';
+import {z} from 'zod';
+import {BandService} from './band.service';
+import {WearableService} from './wearable.service';
 
-const dayArgs = z.object({ day: z.iso.date() });
-const periodArgs = z.object({ from: z.iso.date(), to: z.iso.date() });
+const dayArgs = z.object({day: z.iso.date()});
+const periodArgs = z.object({from: z.iso.date(), to: z.iso.date()});
 
 /**
  * The assistant's access to the band (the web chat, Telegram, the phone's voice): the days of a
@@ -32,7 +32,8 @@ export class BandAiTools implements OnModuleInit {
         'pulse rose at rest), mindfulnessMinutes, skinTempDelta. A number the band did not tell ' +
         'is null. Never diagnose from it.',
       parameters: PERIOD_PARAMETERS,
-      handler: (userId, args) => this.wearable.days(userId, periodArgs.parse(args)),
+      handler: (userId, args) =>
+        this.wearable.days(userId, periodArgs.parse(args)),
     });
 
     this.ai.registerTool({
@@ -45,12 +46,18 @@ export class BandAiTools implements OnModuleInit {
         '(feeling). The pulse of every minute is left out; ask health_band_days for the totals.',
       parameters: {
         type: 'object',
-        properties: { day: { type: 'string', description: 'The day, YYYY-MM-DD' } },
+        properties: {day: {type: 'string', description: 'The day, YYYY-MM-DD'}},
         required: ['day'],
       },
       handler: async (userId, args) => {
-        const { minutes, ...day } = await this.band.day(userId, dayArgs.parse(args).day);
-        return { ...day, minutesWithPulse: minutes.filter((m) => m.bpm !== null).length };
+        const {minutes, ...day} = await this.band.day(
+          userId,
+          dayArgs.parse(args).day,
+        );
+        return {
+          ...day,
+          minutesWithPulse: minutes.filter(m => m.bpm !== null).length,
+        };
       },
     });
   }

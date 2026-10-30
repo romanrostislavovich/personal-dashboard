@@ -1,7 +1,12 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Achievement } from '@pd/contracts';
+import {DatePipe, DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {Achievement} from '@pd/contracts';
 
 /**
  * One achievement: icon, title, description, rarity and either progress or the unlock date.
@@ -11,7 +16,7 @@ import { Achievement } from '@pd/contracts';
   selector: 'pd-achievement-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DatePipe, DecimalPipe, TranslocoPipe],
-  host: { '[class]': "'rarity-' + achievement().rarity" },
+  host: {'[class]': "'rarity-' + achievement().rarity"},
   template: `
     @let a = achievement();
     <div class="card" [class.locked]="!a.unlockedAt">
@@ -19,7 +24,9 @@ import { Achievement } from '@pd/contracts';
       <div class="body">
         <div class="top">
           <span class="title">{{ a.title }}</span>
-          <span class="rarity">{{ 'achievements.rarity.' + a.rarity | transloco }}</span>
+          <span class="rarity">{{
+            'achievements.rarity.' + a.rarity | transloco
+          }}</span>
         </div>
         <span class="description">{{ a.description }}</span>
         @if (a.unlockedAt) {
@@ -88,7 +95,11 @@ import { Achievement } from '@pd/contracts';
       border-radius: 14px;
       font-size: 28px;
       line-height: 1;
-      background: color-mix(in srgb, var(--rarity) 20%, var(--mat-sys-surface-container));
+      background: color-mix(
+        in srgb,
+        var(--rarity) 20%,
+        var(--mat-sys-surface-container)
+      );
       box-shadow:
         inset 0 0 0 1px color-mix(in srgb, var(--rarity) 55%, transparent),
         0 6px 20px -8px var(--rarity);
@@ -135,7 +146,11 @@ import { Achievement } from '@pd/contracts';
       height: 6px;
       margin-top: 6px;
       border-radius: 3px;
-      background: color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+      background: color-mix(
+        in srgb,
+        var(--mat-sys-on-surface) 10%,
+        transparent
+      );
       overflow: hidden;
     }
     .bar span {
@@ -166,7 +181,7 @@ export class AchievementCardComponent {
   readonly achievement = input.required<Achievement>();
 
   protected readonly percent = computed(() => {
-    const { progress, goal } = this.achievement();
+    const {progress, goal} = this.achievement();
     return Math.round((progress / goal) * 100);
   });
 }

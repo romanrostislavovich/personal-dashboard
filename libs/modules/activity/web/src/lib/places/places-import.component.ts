@@ -1,13 +1,23 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { parseGoogleTimeline, PhoneLocationInput, TimelinePlaceName } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { ActivityApi } from '../activity.api';
+import {DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  output,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {
+  parseGoogleTimeline,
+  PhoneLocationInput,
+  TimelinePlaceName,
+} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {ActivityApi} from '../activity.api';
 
 const BATCH = 500;
 const NAMES_BATCH = 200;
@@ -32,8 +42,12 @@ const NAMES_BATCH = 200;
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>history</mat-icon>
-        <mat-card-title>{{ 'activity.places.import.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'activity.places.import.hint' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'activity.places.import.title' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'activity.places.import.hint' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content class="content">
         <input
@@ -45,7 +59,8 @@ const NAMES_BATCH = 200;
           (change)="read(file.files); file.value = ''"
         />
         <button matButton="tonal" [disabled]="busy()" (click)="file.click()">
-          <mat-icon>upload_file</mat-icon> {{ 'activity.places.import.pick' | transloco }}
+          <mat-icon>upload_file</mat-icon>
+          {{ 'activity.places.import.pick' | transloco }}
         </button>
         @if (busy()) {
           <mat-progress-bar mode="determinate" [value]="progress()" />
@@ -54,12 +69,19 @@ const NAMES_BATCH = 200;
           <p class="hint">
             {{
               'activity.places.import.done'
-                | transloco: { saved: (r.saved | number), read: (r.read | number), names: r.names }
+                | transloco
+                  : {
+                      saved: (r.saved | number),
+                      read: (r.read | number),
+                      names: r.names,
+                    }
             }}
           </p>
         }
         @if (failed()) {
-          <p class="error" role="alert">{{ 'activity.places.import.failed' | transloco }}</p>
+          <p class="error" role="alert">
+            {{ 'activity.places.import.failed' | transloco }}
+          </p>
         }
       </mat-card-content>
     </mat-card>
@@ -92,7 +114,11 @@ export class PlacesImportComponent {
   protected readonly busy = signal(false);
   protected readonly progress = signal(0);
   protected readonly failed = signal(false);
-  protected readonly result = signal<{ saved: number; read: number; names: number } | null>(null);
+  protected readonly result = signal<{
+    saved: number;
+    read: number;
+    names: number;
+  } | null>(null);
 
   protected async read(files: FileList | null): Promise<void> {
     if (!files?.length) {
@@ -129,10 +155,13 @@ export class PlacesImportComponent {
       // Names beyond what the location batches carried.
       for (let i = batches * NAMES_BATCH; i < names.length; i += NAMES_BATCH) {
         await firstValueFrom(
-          this.api.importTimeline({ locations: [], names: names.slice(i, i + NAMES_BATCH) }),
+          this.api.importTimeline({
+            locations: [],
+            names: names.slice(i, i + NAMES_BATCH),
+          }),
         );
       }
-      this.result.set({ saved, read: locations.length, names: names.length });
+      this.result.set({saved, read: locations.length, names: names.length});
       this.imported.emit();
     } catch {
       this.failed.set(true);

@@ -1,4 +1,4 @@
-import { ClothingExtra, WeatherCondition } from '@pd/contracts';
+import {ClothingExtra, WeatherCondition} from '@pd/contracts';
 
 const CONDITION_EMOJI: Record<WeatherCondition, string> = {
   clear: '☀️',
@@ -15,7 +15,10 @@ const CONDITION_EMOJI: Record<WeatherCondition, string> = {
 };
 
 /** A sun at night looks wrong: clear and partly cloudy skies get a moon. */
-export function conditionEmoji(condition: WeatherCondition, isDay = true): string {
+export function conditionEmoji(
+  condition: WeatherCondition,
+  isDay = true,
+): string {
   if (!isDay && condition === 'clear') {
     return '🌙';
   }
@@ -40,6 +43,10 @@ export const EXTRA_EMOJI: Record<ClothingExtra, string> = {
 };
 
 /** `HH:mm` between sunrise and sunset. */
-export function isDaytime(time: string, sunrise: string, sunset: string): boolean {
+export function isDaytime(
+  time: string,
+  sunrise: string,
+  sunset: string,
+): boolean {
   return time >= sunrise && time < sunset;
 }

@@ -18,7 +18,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {FileInterceptor} from '@nestjs/platform-express';
 import {
   AuthUser,
   AutomationsService,
@@ -49,8 +49,11 @@ import {
   IcdSearchQuery,
   icdSearchSchema,
 } from '@pd/contracts';
-import { DocumentReaderService, ValidDraftApply } from './documents/document-reader.service';
-import { HEALTH_ACTIONS } from './health.server-actions';
+import {
+  DocumentReaderService,
+  ValidDraftApply,
+} from './documents/document-reader.service';
+import {HEALTH_ACTIONS} from './health.server-actions';
 import {
   HealthService,
   ValidClinicInput,
@@ -60,8 +63,8 @@ import {
   ValidMedicationInput,
   ValidVisitInput,
 } from './health.service';
-import { IcdDictionaryService } from './icd/icd-dictionary.service';
-import { LabsService, ValidLabPanelInput, ValidStudyInput } from './labs.service';
+import {IcdDictionaryService} from './icd/icd-dictionary.service';
+import {LabsService, ValidLabPanelInput, ValidStudyInput} from './labs.service';
 
 interface UploadedDocument {
   buffer: Buffer;
@@ -94,7 +97,8 @@ export class HealthController {
   @Post('clinics')
   addClinic(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(healthClinicInputSchema)) input: ValidClinicInput,
+    @Body(new ZodValidationPipe(healthClinicInputSchema))
+    input: ValidClinicInput,
   ) {
     return this.health.saveClinic(user.id, input);
   }
@@ -103,14 +107,18 @@ export class HealthController {
   updateClinic(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(healthClinicInputSchema)) input: ValidClinicInput,
+    @Body(new ZodValidationPipe(healthClinicInputSchema))
+    input: ValidClinicInput,
   ) {
     return this.health.saveClinic(user.id, input, id);
   }
 
   @Delete('clinics/:id')
   @HttpCode(204)
-  removeClinic(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeClinic(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.health.removeClinic(user.id, id);
   }
 
@@ -119,7 +127,8 @@ export class HealthController {
   @Post('doctors')
   addDoctor(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(healthDoctorInputSchema)) input: ValidDoctorInput,
+    @Body(new ZodValidationPipe(healthDoctorInputSchema))
+    input: ValidDoctorInput,
   ) {
     return this.health.saveDoctor(user.id, input);
   }
@@ -128,14 +137,18 @@ export class HealthController {
   updateDoctor(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(healthDoctorInputSchema)) input: ValidDoctorInput,
+    @Body(new ZodValidationPipe(healthDoctorInputSchema))
+    input: ValidDoctorInput,
   ) {
     return this.health.saveDoctor(user.id, input, id);
   }
 
   @Delete('doctors/:id')
   @HttpCode(204)
-  removeDoctor(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeDoctor(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.health.removeDoctor(user.id, id);
   }
 
@@ -160,7 +173,10 @@ export class HealthController {
 
   @Delete('visits/:id')
   @HttpCode(204)
-  removeVisit(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeVisit(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.health.removeVisit(user.id, id);
   }
 
@@ -180,7 +196,7 @@ export class HealthController {
     if (!done) {
       throw new NotFoundException('Tasks are not enabled');
     }
-    return { created: true };
+    return {created: true};
   }
 
   // --- Diagnoses ---
@@ -188,7 +204,8 @@ export class HealthController {
   @Post('diagnoses')
   addDiagnosis(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(healthDiagnosisInputSchema)) input: ValidDiagnosisInput,
+    @Body(new ZodValidationPipe(healthDiagnosisInputSchema))
+    input: ValidDiagnosisInput,
   ) {
     return this.health.saveDiagnosis(user.id, input);
   }
@@ -197,14 +214,18 @@ export class HealthController {
   updateDiagnosis(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(healthDiagnosisInputSchema)) input: ValidDiagnosisInput,
+    @Body(new ZodValidationPipe(healthDiagnosisInputSchema))
+    input: ValidDiagnosisInput,
   ) {
     return this.health.saveDiagnosis(user.id, input, id);
   }
 
   @Delete('diagnoses/:id')
   @HttpCode(204)
-  removeDiagnosis(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeDiagnosis(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.health.removeDiagnosis(user.id, id);
   }
 
@@ -213,7 +234,8 @@ export class HealthController {
   @Post('medications')
   addMedication(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(healthMedicationInputSchema)) input: ValidMedicationInput,
+    @Body(new ZodValidationPipe(healthMedicationInputSchema))
+    input: ValidMedicationInput,
   ) {
     return this.health.saveMedication(user.id, input);
   }
@@ -222,14 +244,18 @@ export class HealthController {
   updateMedication(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(healthMedicationInputSchema)) input: ValidMedicationInput,
+    @Body(new ZodValidationPipe(healthMedicationInputSchema))
+    input: ValidMedicationInput,
   ) {
     return this.health.saveMedication(user.id, input, id);
   }
 
   @Delete('medications/:id')
   @HttpCode(204)
-  removeMedication(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeMedication(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.health.removeMedication(user.id, id);
   }
 
@@ -238,7 +264,8 @@ export class HealthController {
   @Post('labs')
   addLabPanel(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(healthLabPanelInputSchema)) input: ValidLabPanelInput,
+    @Body(new ZodValidationPipe(healthLabPanelInputSchema))
+    input: ValidLabPanelInput,
   ) {
     return this.labs.savePanel(user.id, input);
   }
@@ -247,14 +274,18 @@ export class HealthController {
   updateLabPanel(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(healthLabPanelInputSchema)) input: ValidLabPanelInput,
+    @Body(new ZodValidationPipe(healthLabPanelInputSchema))
+    input: ValidLabPanelInput,
   ) {
     return this.labs.savePanel(user.id, input, id);
   }
 
   @Delete('labs/:id')
   @HttpCode(204)
-  removeLabPanel(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeLabPanel(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.labs.removePanel(user.id, id);
   }
 
@@ -279,7 +310,10 @@ export class HealthController {
 
   @Delete('studies/:id')
   @HttpCode(204)
-  removeStudy(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeStudy(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.labs.removeStudy(user.id, id);
   }
 
@@ -287,23 +321,30 @@ export class HealthController {
 
   /** The file in `file`, its description in the other fields of the form. */
   @Post('documents')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: HEALTH_DOCUMENT_MAX_BYTES } }))
+  @UseInterceptors(
+    FileInterceptor('file', {limits: {fileSize: HEALTH_DOCUMENT_MAX_BYTES}}),
+  )
   addDocument(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(healthDocumentInputSchema)) input: ValidDocumentInput,
+    @Body(new ZodValidationPipe(healthDocumentInputSchema))
+    input: ValidDocumentInput,
     @UploadedFile() file: UploadedDocument | undefined,
   ) {
     if (!file) {
       throw new BadRequestException('Expected a file in the "file" field');
     }
-    return this.health.addDocument(user.id, input, { data: file.buffer, mimeType: file.mimetype });
+    return this.health.addDocument(user.id, input, {
+      data: file.buffer,
+      mimeType: file.mimetype,
+    });
   }
 
   @Put('documents/:id')
   updateDocument(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(healthDocumentInputSchema)) input: ValidDocumentInput,
+    @Body(new ZodValidationPipe(healthDocumentInputSchema))
+    input: ValidDocumentInput,
   ) {
     return this.health.updateDocument(user.id, id, input);
   }
@@ -316,13 +357,15 @@ export class HealthController {
     @Param('id', ParseUUIDPipe) id: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
   ) {
-    const { data, mimeType } = await this.health.documentFile(user.id, id, page);
-    return new StreamableFile(data, { type: mimeType });
+    const {data, mimeType} = await this.health.documentFile(user.id, id, page);
+    return new StreamableFile(data, {type: mimeType});
   }
 
   /** One more photographed page, in `file`, at the end. */
   @Post('documents/:id/pages')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: HEALTH_DOCUMENT_MAX_BYTES } }))
+  @UseInterceptors(
+    FileInterceptor('file', {limits: {fileSize: HEALTH_DOCUMENT_MAX_BYTES}}),
+  )
   addPage(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
@@ -331,7 +374,10 @@ export class HealthController {
     if (!file) {
       throw new BadRequestException('Expected a file in the "file" field');
     }
-    return this.health.addPage(user.id, id, { data: file.buffer, mimeType: file.mimetype });
+    return this.health.addPage(user.id, id, {
+      data: file.buffer,
+      mimeType: file.mimetype,
+    });
   }
 
   @Delete('documents/:id/pages/:page')
@@ -348,19 +394,28 @@ export class HealthController {
   /** Reads it now (a minute at most) and keeps the draft next to it. */
   @RateLimit(30, 3600)
   @Post('documents/:id/read')
-  readDocument(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  readDocument(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.reader.read(user.id, id);
   }
 
   /** The draft waiting to be checked; `null` — none. */
   @Get('documents/:id/draft')
-  async documentDraft(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    return { draft: await this.reader.draft(user.id, id) };
+  async documentDraft(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return {draft: await this.reader.draft(user.id, id)};
   }
 
   @Delete('documents/:id/draft')
   @HttpCode(204)
-  dropDraft(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  dropDraft(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.reader.dropDraft(user.id, id);
   }
 
@@ -375,7 +430,10 @@ export class HealthController {
 
   @Delete('documents/:id')
   @HttpCode(204)
-  removeDocument(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeDocument(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.health.removeDocument(user.id, id);
   }
 
@@ -396,16 +454,23 @@ export class HealthController {
 
   /** From a CSV or XLSX file of the user's (`file`), for its classification and language. */
   @Post('icd/import')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: ICD_FILE_MAX_BYTES } }))
+  @UseInterceptors(
+    FileInterceptor('file', {limits: {fileSize: ICD_FILE_MAX_BYTES}}),
+  )
   importIcd(
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(icdImportSchema)) input: IcdImportInput,
     @UploadedFile() file: UploadedDocument | undefined,
   ) {
     if (!file) {
-      throw new BadRequestException('Expected a CSV or XLSX file in the "file" field');
+      throw new BadRequestException(
+        'Expected a CSV or XLSX file in the "file" field',
+      );
     }
-    return this.icd.import(user.id, input, { name: file.originalname, data: file.buffer });
+    return this.icd.import(user.id, input, {
+      name: file.originalname,
+      data: file.buffer,
+    });
   }
 
   /** Downloads it from its publisher, on the server (a sync client asks the server). */
@@ -414,6 +479,10 @@ export class HealthController {
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(icdLoadSchema)) input: IcdLoadInput,
   ) {
-    return this.actions.run<IcdDictionary[]>(user.id, HEALTH_ACTIONS.loadIcd, input);
+    return this.actions.run<IcdDictionary[]>(
+      user.id,
+      HEALTH_ACTIONS.loadIcd,
+      input,
+    );
   }
 }

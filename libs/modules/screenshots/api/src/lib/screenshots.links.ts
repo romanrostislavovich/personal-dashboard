@@ -1,8 +1,14 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LinksService, UsersService } from '@pd/api-core';
-import { addDays, LocalDate, parseLocalDate, toLocalDate, zonedToUtc } from '@pd/contracts';
-import { and, eq, gte, lt, sql } from 'drizzle-orm';
-import { screenshots } from './screenshots.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, LinksService, UsersService} from '@pd/api-core';
+import {
+  addDays,
+  LocalDate,
+  parseLocalDate,
+  toLocalDate,
+  zonedToUtc,
+} from '@pd/contracts';
+import {and, eq, gte, lt, sql} from 'drizzle-orm';
+import {screenshots} from './screenshots.schema';
 
 /**
  * What Screenshots tells the other sections (see LinksService): how many screenshots were taken
@@ -20,7 +26,9 @@ export class ScreenshotsLinks implements OnModuleInit {
     this.links.registerDailyMetrics({
       module: 'screenshots',
       metrics: async (userId, period) => {
-        const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
+        const timeZone = this.users.timeZoneOf(
+          await this.users.findById(userId),
+        );
         const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
         const s = screenshots;
         const days = await this.db
@@ -32,8 +40,14 @@ export class ScreenshotsLinks implements OnModuleInit {
           .where(
             and(
               eq(s.userId, userId),
-              gte(s.createdAt, zonedToUtc({ date: period.from, time: '00:00' }, timeZone)),
-              lt(s.createdAt, zonedToUtc({ date: after, time: '00:00' }, timeZone)),
+              gte(
+                s.createdAt,
+                zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+              ),
+              lt(
+                s.createdAt,
+                zonedToUtc({date: after, time: '00:00'}, timeZone),
+              ),
             ),
           )
           // By position: the time zone is a parameter (see ActivityService.stats).
@@ -45,7 +59,7 @@ export class ScreenshotsLinks implements OnModuleInit {
                 module: 'screenshots',
                 labelKey: 'screenshots.links.taken',
                 unit: 'count',
-                days: days.map(({ day, count }) => ({ day, value: count })),
+                days: days.map(({day, count}) => ({day, value: count})),
               },
             ]
           : [];

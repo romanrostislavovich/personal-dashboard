@@ -1,11 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Correlation, CorrelationMetric } from '@pd/contracts';
-import { formatValue } from './links-format';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+} from '@angular/core';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {Correlation, CorrelationMetric} from '@pd/contracts';
+import {formatValue} from './links-format';
 
 const WIDTH = 520;
 const HEIGHT = 320;
-const PAD = { left: 64, right: 16, top: 12, bottom: 40 };
+const PAD = {left: 64, right: 16, top: 12, bottom: 40};
 
 interface Point {
   x: number;
@@ -23,7 +29,11 @@ interface Point {
   imports: [TranslocoPipe],
   template: `
     @if (chart(); as c) {
-      <svg [attr.viewBox]="'0 0 ' + width + ' ' + height" role="img" [attr.aria-label]="c.title">
+      <svg
+        [attr.viewBox]="'0 0 ' + width + ' ' + height"
+        role="img"
+        [attr.aria-label]="c.title"
+      >
         <line
           class="axis"
           [attr.x1]="pad.left"
@@ -49,7 +59,12 @@ interface Point {
           </text>
         }
         @for (tick of c.yTicks; track $index) {
-          <text class="tick" [attr.x]="pad.left - 6" [attr.y]="tick.at" text-anchor="end">
+          <text
+            class="tick"
+            [attr.x]="pad.left - 6"
+            [attr.y]="tick.at"
+            text-anchor="end"
+          >
             {{ tick.text }}
           </text>
         }
@@ -137,26 +152,30 @@ export class CorrelationScatterComponent {
 
   protected readonly chart = computed(() => {
     const [a, b, pair] = [this.a(), this.b(), this.pair()];
-    const later = new Map(b.values.map((value) => [value.day, value.value]));
-    const raw: { x: number; y: number; day: string }[] = [];
-    for (const { day, value } of a.values) {
+    const later = new Map(b.values.map(value => [value.day, value.value]));
+    const raw: {x: number; y: number; day: string}[] = [];
+    for (const {day, value} of a.values) {
       const y = later.get(pair.lag ? nextDay(day) : day);
       if (y !== undefined) {
-        raw.push({ x: value, y, day });
+        raw.push({x: value, y, day});
       }
     }
     if (!raw.length) {
       return null;
     }
-    const xs = raw.map((point) => point.x);
-    const ys = raw.map((point) => point.y);
+    const xs = raw.map(point => point.x);
+    const ys = raw.map(point => point.y);
     const [x0, x1] = range(xs);
     const [y0, y1] = range(ys);
-    const sx = (x: number) => PAD.left + ((x - x0) / (x1 - x0)) * (WIDTH - PAD.left - PAD.right);
+    const sx = (x: number) =>
+      PAD.left + ((x - x0) / (x1 - x0)) * (WIDTH - PAD.left - PAD.right);
     const sy = (y: number) =>
-      HEIGHT - PAD.bottom - ((y - y0) / (y1 - y0)) * (HEIGHT - PAD.top - PAD.bottom);
+      HEIGHT -
+      PAD.bottom -
+      ((y - y0) / (y1 - y0)) * (HEIGHT - PAD.top - PAD.bottom);
     // Whole numbers (counts, a 1–5 mood) pile on each other: spread a little, the same each time.
-    const spread = (index: number, scale: number) => (((index * 7919) % 13) / 13 - 0.5) * scale;
+    const spread = (index: number, scale: number) =>
+      (((index * 7919) % 13) / 13 - 0.5) * scale;
     const points: Point[] = raw.map((point, index) => ({
       x: sx(point.x) + (Number.isInteger(point.x) ? spread(index, 8) : 0),
       y: sy(point.y) + (Number.isInteger(point.y) ? spread(index + 5, 8) : 0),
@@ -166,13 +185,14 @@ export class CorrelationScatterComponent {
     const my = ys.reduce((sum, y) => sum + y, 0) / ys.length;
     const fitAt = (x: number) => clamp(my + pair.slope * (x - mx), y0, y1);
     const locale = this.transloco.getActiveLang();
-    const hours = (value: string) => this.transloco.translate('life.hours', { value });
+    const hours = (value: string) =>
+      this.transloco.translate('life.hours', {value});
     const ticks = (
       metric: CorrelationMetric,
       [low, high]: number[],
       scale: (v: number) => number,
     ) =>
-      [low, (low + high) / 2, high].map((value) => ({
+      [low, (low + high) / 2, high].map(value => ({
         at: scale(value),
         text: formatValue(metric, value, locale, hours),
       }));
@@ -180,8 +200,8 @@ export class CorrelationScatterComponent {
       title: `${this.name(a)} — ${this.name(b)}`,
       points,
       xTicks: ticks(a, [x0, x1], sx),
-      yTicks: ticks(b, [y0, y1], (y) => sy(y) + 4),
-      fit: { x1: sx(x0), y1: sy(fitAt(x0)), x2: sx(x1), y2: sy(fitAt(x1)) },
+      yTicks: ticks(b, [y0, y1], y => sy(y) + 4),
+      fit: {x1: sx(x0), y1: sy(fitAt(x0)), x2: sx(x1), y2: sy(fitAt(x1))},
     };
   });
 }

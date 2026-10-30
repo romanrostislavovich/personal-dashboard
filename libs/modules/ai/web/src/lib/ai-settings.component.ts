@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import {DatePipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,24 +8,24 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { AiAction, AiConnection, AiPreferences, AiSettings } from '@pd/contracts';
-import { errorStatus, IntegrationGuideComponent } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { AiApi } from './ai.api';
-import { AiConnectionFormDialog } from './ai-connection-form.dialog';
-import { AiModuleAccessComponent } from './ai-module-access.component';
-import { AiKnowledgeComponent } from './ai-knowledge.component';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatDialog} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {AiAction, AiConnection, AiPreferences, AiSettings} from '@pd/contracts';
+import {errorStatus, IntegrationGuideComponent} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {AiApi} from './ai.api';
+import {AiConnectionFormDialog} from './ai-connection-form.dialog';
+import {AiModuleAccessComponent} from './ai-module-access.component';
+import {AiKnowledgeComponent} from './ai-knowledge.component';
 
 /**
  * Saved AI connections — one of them active, switched in one click (say, when a balance runs
@@ -54,12 +54,17 @@ import { AiKnowledgeComponent } from './ai-knowledge.component';
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-card-title>{{ 'ai.settings.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'ai.settings.privacy' | transloco }}</mat-card-subtitle>
+        <mat-card-subtitle>{{
+          'ai.settings.privacy' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <h3 class="section">{{ 'ai.connections.title' | transloco }}</h3>
         @for (c of settings().connections; track c.id) {
-          <div class="connection" [class.active]="c.id === settings().activeConnectionId">
+          <div
+            class="connection"
+            [class.active]="c.id === settings().activeConnectionId"
+          >
             <mat-icon class="state">
               {{
                 c.id === settings().activeConnectionId
@@ -70,37 +75,60 @@ import { AiKnowledgeComponent } from './ai-knowledge.component';
             <span class="text">
               <span class="name">{{ c.name }}</span>
               <span class="details"
-                >{{ 'ai.settings.providers.' + c.provider | transloco }} · {{ c.model }}</span
+                >{{ 'ai.settings.providers.' + c.provider | transloco }} ·
+                {{ c.model }}</span
               >
               @if (c.usage.month.requests > 0) {
                 <span class="details" [class.over]="overLimit(c)">
                   {{ 'ai.usage.today' | transloco }}:
-                  {{ tokens(c.usage.today.promptTokens + c.usage.today.completionTokens) }}
+                  {{
+                    tokens(
+                      c.usage.today.promptTokens +
+                        c.usage.today.completionTokens
+                    )
+                  }}
                   @if (c.usage.today.cost !== null) {
                     · {{ money(c.usage.today.cost) }}
                   }
                   · {{ 'ai.usage.month' | transloco }}:
-                  {{ tokens(c.usage.month.promptTokens + c.usage.month.completionTokens) }}
+                  {{
+                    tokens(
+                      c.usage.month.promptTokens +
+                        c.usage.month.completionTokens
+                    )
+                  }}
                   @if (c.usage.month.cost !== null) {
                     · {{ money(c.usage.month.cost) }}
                     @if (c.monthlyLimit) {
-                      {{ 'ai.usage.of' | transloco: { limit: money(c.monthlyLimit) } }}
+                      {{
+                        'ai.usage.of'
+                          | transloco: {limit: money(c.monthlyLimit)}
+                      }}
                     }
                   }
                   @if (c.usage.month.cachedTokens > 0) {
-                    · {{ 'ai.usage.cached' | transloco: { percent: cachedPercent(c) } }}
+                    ·
+                    {{
+                      'ai.usage.cached' | transloco: {percent: cachedPercent(c)}
+                    }}
                   }
                 </span>
               }
             </span>
             @if (c.id === settings().activeConnectionId) {
-              <span class="badge">{{ 'ai.connections.active' | transloco }}</span>
+              <span class="badge">{{
+                'ai.connections.active' | transloco
+              }}</span>
             } @else {
               <button matButton (click)="activate(c)">
                 {{ 'ai.connections.use' | transloco }}
               </button>
             }
-            <button matIconButton (click)="edit(c)" [matTooltip]="'core.actions.edit' | transloco">
+            <button
+              matIconButton
+              (click)="edit(c)"
+              [matTooltip]="'core.actions.edit' | transloco"
+            >
               <mat-icon>edit</mat-icon>
             </button>
             <button
@@ -146,7 +174,9 @@ import { AiKnowledgeComponent } from './ai-knowledge.component';
             {{ 'ai.settings.morningDigest' | transloco }}
           </mat-slide-toggle>
           <mat-form-field subscriptSizing="dynamic" class="digest-time">
-            <mat-label>{{ 'ai.settings.morningDigestTime' | transloco }}</mat-label>
+            <mat-label>{{
+              'ai.settings.morningDigestTime' | transloco
+            }}</mat-label>
             <input
               matInput
               type="time"
@@ -176,9 +206,13 @@ import { AiKnowledgeComponent } from './ai-knowledge.component';
               <mat-label>{{ 'ai.speech.connection' | transloco }}</mat-label>
               <mat-select
                 [value]="settings().speechConnectionId"
-                (selectionChange)="savePreferences({ speechConnectionId: $event.value })"
+                (selectionChange)="
+                  savePreferences({speechConnectionId: $event.value})
+                "
               >
-                <mat-option [value]="null">{{ 'ai.speech.auto' | transloco }}</mat-option>
+                <mat-option [value]="null">{{
+                  'ai.speech.auto' | transloco
+                }}</mat-option>
                 @for (c of settings().connections; track c.id) {
                   <mat-option [value]="c.id">{{ c.name }}</mat-option>
                 }
@@ -201,9 +235,13 @@ import { AiKnowledgeComponent } from './ai-knowledge.component';
               <mat-label>{{ 'ai.speech.connection' | transloco }}</mat-label>
               <mat-select
                 [value]="settings().visionConnectionId"
-                (selectionChange)="savePreferences({ visionConnectionId: $event.value })"
+                (selectionChange)="
+                  savePreferences({visionConnectionId: $event.value})
+                "
               >
-                <mat-option [value]="null">{{ 'ai.speech.auto' | transloco }}</mat-option>
+                <mat-option [value]="null">{{
+                  'ai.speech.auto' | transloco
+                }}</mat-option>
                 @for (c of settings().connections; track c.id) {
                   <mat-option [value]="c.id">{{ c.name }}</mat-option>
                 }
@@ -226,9 +264,13 @@ import { AiKnowledgeComponent } from './ai-knowledge.component';
               <mat-label>{{ 'ai.speech.connection' | transloco }}</mat-label>
               <mat-select
                 [value]="settings().lightConnectionId"
-                (selectionChange)="savePreferences({ lightConnectionId: $event.value })"
+                (selectionChange)="
+                  savePreferences({lightConnectionId: $event.value})
+                "
               >
-                <mat-option [value]="null">{{ 'ai.light.active' | transloco }}</mat-option>
+                <mat-option [value]="null">{{
+                  'ai.light.active' | transloco
+                }}</mat-option>
                 @for (c of settings().connections; track c.id) {
                   <mat-option [value]="c.id">{{ c.name }}</mat-option>
                 }
@@ -236,7 +278,10 @@ import { AiKnowledgeComponent } from './ai-knowledge.component';
             </mat-form-field>
           </div>
 
-          <pd-ai-knowledge [settings]="settings()" (save)="savePreferences($event)" />
+          <pd-ai-knowledge
+            [settings]="settings()"
+            (save)="savePreferences($event)"
+          />
 
           <h3 class="section">👁️ {{ 'ai.privacy.title' | transloco }}</h3>
           <p class="hint">{{ 'ai.privacy.hint' | transloco }}</p>
@@ -250,10 +295,13 @@ import { AiKnowledgeComponent } from './ai-knowledge.component';
           @if (actions(); as list) {
             @for (action of list; track action.id) {
               <div class="action" [class.failed]="action.outcome === 'failed'">
-                <span class="action-time">{{ action.createdAt | date: 'd MMM, HH:mm' }}</span>
+                <span class="action-time">{{
+                  action.createdAt | date: 'd MMM, HH:mm'
+                }}</span>
                 <span class="action-body">
                   <span>
-                    {{ moduleName(action.module) }} · <code>{{ action.tool }}</code> ·
+                    {{ moduleName(action.module) }} ·
+                    <code>{{ action.tool }}</code> ·
                     {{ 'ai.log.outcome.' + action.outcome | transloco }}
                   </span>
                   <code class="action-args">{{ action.args }}</code>
@@ -413,7 +461,7 @@ export class AiSettingsComponent {
   /** Modules that give the AI data. */
   protected readonly modules = signal<string[]>([]);
   protected readonly namedModules = computed(() =>
-    this.modules().map((id) => ({ id, name: this.moduleName(id) })),
+    this.modules().map(id => ({id, name: this.moduleName(id)})),
   );
   /** Optional digest sections that modules offer (`development.streak`). */
   protected readonly digestOptions = signal<string[]>([]);
@@ -421,15 +469,17 @@ export class AiSettingsComponent {
   protected readonly actions = signal<AiAction[] | null>(null);
   /** The change being undone now, and why the last undo did not happen. */
   protected readonly undoing = signal<string | null>(null);
-  protected readonly undoError = signal<{ id: string; text: string } | null>(null);
+  protected readonly undoError = signal<{id: string; text: string} | null>(
+    null,
+  );
 
   constructor() {
     firstValueFrom(this.api.modules()).then(
-      (modules) => this.modules.set(modules),
+      modules => this.modules.set(modules),
       () => this.modules.set([]),
     );
     firstValueFrom(this.api.digestOptions()).then(
-      (options) => this.digestOptions.set(options),
+      options => this.digestOptions.set(options),
       () => this.digestOptions.set([]),
     );
   }
@@ -449,8 +499,10 @@ export class AiSettingsComponent {
   }
 
   async setDigestOption(option: string, enabled: boolean): Promise<void> {
-    const others = this.settings().digestOptIns.filter((id) => id !== option);
-    await this.savePreferences({ digestOptIns: enabled ? [...others, option] : others });
+    const others = this.settings().digestOptIns.filter(id => id !== option);
+    await this.savePreferences({
+      digestOptIns: enabled ? [...others, option] : others,
+    });
   }
 
   async loadActions(): Promise<void> {
@@ -465,8 +517,11 @@ export class AiSettingsComponent {
       await firstValueFrom(this.api.undoAction(action.id));
       await this.loadActions();
     } catch (error) {
-      const key = errorStatus(error) === 409 ? 'ai.log.undoConflict' : 'ai.log.undoFailed';
-      this.undoError.set({ id: action.id, text: this.transloco.translate(key) });
+      const key =
+        errorStatus(error) === 409
+          ? 'ai.log.undoConflict'
+          : 'ai.log.undoFailed';
+      this.undoError.set({id: action.id, text: this.transloco.translate(key)});
     } finally {
       this.undoing.set(null);
     }
@@ -489,21 +544,30 @@ export class AiSettingsComponent {
   }
 
   /** How much of the prompt this month came from the provider's cache. */
-  protected cachedPercent({ usage }: AiConnection): number {
-    return Math.round((usage.month.cachedTokens / Math.max(1, usage.month.promptTokens)) * 100);
+  protected cachedPercent({usage}: AiConnection): number {
+    return Math.round(
+      (usage.month.cachedTokens / Math.max(1, usage.month.promptTokens)) * 100,
+    );
   }
 
   protected overLimit(connection: AiConnection): boolean {
     const cost = connection.usage.month.cost;
-    return connection.monthlyLimit !== null && cost !== null && cost >= connection.monthlyLimit;
+    return (
+      connection.monthlyLimit !== null &&
+      cost !== null &&
+      cost >= connection.monthlyLimit
+    );
   }
 
   async edit(connection: AiConnection | null): Promise<void> {
     const settings = await firstValueFrom(
       this.dialog
-        .open<AiConnectionFormDialog, AiConnection | null, AiSettings>(AiConnectionFormDialog, {
-          data: connection,
-        })
+        .open<AiConnectionFormDialog, AiConnection | null, AiSettings>(
+          AiConnectionFormDialog,
+          {
+            data: connection,
+          },
+        )
         .afterClosed(),
     );
     if (settings) {
@@ -512,41 +576,51 @@ export class AiSettingsComponent {
   }
 
   async activate(connection: AiConnection): Promise<void> {
-    this.changed.emit(await firstValueFrom(this.api.activateConnection(connection.id)));
+    this.changed.emit(
+      await firstValueFrom(this.api.activateConnection(connection.id)),
+    );
   }
 
   async remove(connection: AiConnection): Promise<void> {
     if (
-      confirm(this.transloco.translate('ai.connections.confirmDelete', { name: connection.name }))
+      confirm(
+        this.transloco.translate('ai.connections.confirmDelete', {
+          name: connection.name,
+        }),
+      )
     ) {
-      this.changed.emit(await firstValueFrom(this.api.removeConnection(connection.id)));
+      this.changed.emit(
+        await firstValueFrom(this.api.removeConnection(connection.id)),
+      );
     }
   }
 
   async setMorningDigest(morningDigest: boolean): Promise<void> {
-    await this.savePreferences({ morningDigest });
+    await this.savePreferences({morningDigest});
   }
 
   /** An emptied field keeps the saved time. */
   async saveDigestTime(time: string): Promise<void> {
     if (time) {
-      await this.savePreferences({ morningDigestTime: time });
+      await this.savePreferences({morningDigestTime: time});
     }
   }
 
   async saveSpeechModel(model: string): Promise<void> {
     if (model.trim()) {
-      await this.savePreferences({ speechModel: model.trim() });
+      await this.savePreferences({speechModel: model.trim()});
     }
   }
 
   async saveVisionModel(model: string): Promise<void> {
     if (model.trim()) {
-      await this.savePreferences({ visionModel: model.trim() });
+      await this.savePreferences({visionModel: model.trim()});
     }
   }
 
   async savePreferences(preferences: AiPreferences): Promise<void> {
-    this.changed.emit(await firstValueFrom(this.api.savePreferences(preferences)));
+    this.changed.emit(
+      await firstValueFrom(this.api.savePreferences(preferences)),
+    );
   }
 }

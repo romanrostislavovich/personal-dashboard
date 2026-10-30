@@ -1,8 +1,10 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
-import { Repeat, repeatSchema } from './recurrence';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
+import {Repeat, repeatSchema} from './recurrence';
 
-const localDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD');
+const localDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD');
 
 // --- Lists ---
 
@@ -42,7 +44,7 @@ export type ChecklistItem = z.infer<typeof checklistItemSchema>;
 const tagSchema = z
   .string()
   .trim()
-  .transform((tag) => tag.replace(/^#/, '').toLowerCase())
+  .transform(tag => tag.replace(/^#/, '').toLowerCase())
   .pipe(z.string().min(1).max(30).regex(/^\S+$/, 'A tag has no spaces'));
 
 const taskFields = {
@@ -55,7 +57,7 @@ const taskFields = {
     .int()
     .min(0)
     .max(3)
-    .transform((value) => value as TaskPriority),
+    .transform(value => value as TaskPriority),
   horizon: z.enum(TASK_HORIZONS),
   listId: z.uuid().nullable(),
   projectId: z.uuid().nullable(),
@@ -69,8 +71,10 @@ const taskFields = {
 export const taskInputSchema = z
   .object(taskFields)
   .partial()
-  .required({ title: true })
-  .refine((task) => !task.repeat || task.dueDate, { message: 'A repeating task needs a due date' });
+  .required({title: true})
+  .refine(task => !task.repeat || task.dueDate, {
+    message: 'A repeating task needs a due date',
+  });
 export type TaskInput = z.input<typeof taskInputSchema>;
 
 /** `PATCH /api/tasks/:id`: only the fields sent change. */
@@ -112,7 +116,7 @@ export interface Task {
 export const REMINDER_STATUSES = ['scheduled', 'fired', 'done'] as const;
 export type ReminderStatus = (typeof REMINDER_STATUSES)[number];
 
-const instantSchema = z.iso.datetime({ offset: true });
+const instantSchema = z.iso.datetime({offset: true});
 
 export const reminderInputSchema = z.object({
   text: z.string().trim().min(1).max(500),
@@ -133,7 +137,7 @@ export const reminderUpdateSchema = z.object({
 export type ReminderUpdate = z.input<typeof reminderUpdateSchema>;
 
 /** `POST /api/tasks/reminders/:id/snooze`: remind again at this moment. */
-export const reminderSnoozeSchema = z.object({ remindAt: instantSchema });
+export const reminderSnoozeSchema = z.object({remindAt: instantSchema});
 export type ReminderSnooze = z.infer<typeof reminderSnoozeSchema>;
 
 export interface Reminder {

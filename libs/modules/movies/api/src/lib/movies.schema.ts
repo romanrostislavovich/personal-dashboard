@@ -1,5 +1,9 @@
-import { encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
-import { MovieKind, MovieViewKind } from '@pd/contracts';
+import {
+  encryptedText,
+  registerEncryptedTables,
+  users,
+} from '@pd/api-core/schema';
+import {MovieKind, MovieViewKind} from '@pd/contracts';
 import {
   boolean,
   date,
@@ -23,7 +27,7 @@ export const movieTitles = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     tmdbId: integer(),
     kind: text().$type<MovieKind>().notNull(),
     title: text().notNull(),
@@ -33,18 +37,18 @@ export const movieTitles = pgTable(
     posterPath: text(),
     genres: text().array().notNull().default([]),
     runtimeMinutes: integer(),
-    wantedAt: timestamp({ withTimezone: true }),
+    wantedAt: timestamp({withTimezone: true}),
     watchedOn: date(),
     rating: integer(),
     note: text(),
     /** "How was the film?" went out (an hour after it was seen); `null` — not yet. */
-    askedAt: timestamp({ withTimezone: true }),
+    askedAt: timestamp({withTimezone: true}),
     /** The page titles already found as this one: they are not looked up again. */
     matchKeys: text().array().notNull().default([]),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    updatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [unique().on(table.userId, table.tmdbId)],
+  table => [unique().on(table.userId, table.tmdbId)],
 );
 
 /**
@@ -58,8 +62,8 @@ export const movieViews = pgTable(
     id: uuid().primaryKey(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    titleId: uuid().references(() => movieTitles.id, { onDelete: 'set null' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
+    titleId: uuid().references(() => movieTitles.id, {onDelete: 'set null'}),
     kind: text().$type<MovieViewKind>().notNull(),
     site: text().notNull(),
     /** The title read from the page. */
@@ -68,8 +72,8 @@ export const movieViews = pgTable(
     hints: encryptedText().notNull(),
     season: integer(),
     episode: integer(),
-    startedAt: timestamp({ withTimezone: true }).notNull(),
-    endedAt: timestamp({ withTimezone: true }).notNull(),
+    startedAt: timestamp({withTimezone: true}).notNull(),
+    endedAt: timestamp({withTimezone: true}).notNull(),
     watchedSeconds: integer().notNull(),
     positionSeconds: doublePrecision().notNull(),
     durationSeconds: doublePrecision(),
@@ -79,9 +83,9 @@ export const movieViews = pgTable(
      * When the server looked for its title (`movies.match`, every few minutes); `null` — not yet.
      * The look-up runs on the server only: a sync client has no business calling TMDB.
      */
-    resolvedAt: timestamp({ withTimezone: true }),
+    resolvedAt: timestamp({withTimezone: true}),
   },
-  (table) => [
+  table => [
     index().on(table.userId, table.startedAt),
     index().on(table.titleId),
     index().on(table.resolvedAt),
@@ -91,7 +95,7 @@ export const movieViews = pgTable(
 export const movieSettings = pgTable('movies_settings', {
   userId: uuid()
     .primaryKey()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.id, {onDelete: 'cascade'}),
   track: boolean().notNull().default(true),
   ignoredSites: text().array().notNull().default([]),
 });

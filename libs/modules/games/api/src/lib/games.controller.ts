@@ -11,7 +11,12 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
+import {
+  AuthUser,
+  CurrentUser,
+  ServerActions,
+  ZodValidationPipe,
+} from '@pd/api-core';
 import {
   DotaMatchesQuery,
   dotaMatchesQuerySchema,
@@ -34,13 +39,13 @@ import {
   wowCredentialsInputSchema,
   WowToken,
 } from '@pd/contracts';
-import { DotaOverviewService } from './dota/dota-overview.service';
-import { OpenDotaKeyService } from './dota/opendota-key.service';
-import { GameAccountsService } from './game-accounts.service';
-import { WowService } from './wow/wow.service';
-import { GAMES_ACTIONS } from './games.server-actions';
-import { SteamKeyService } from './steam/steam-key.service';
-import { XboxService } from './xbox/xbox.service';
+import {DotaOverviewService} from './dota/dota-overview.service';
+import {OpenDotaKeyService} from './dota/opendota-key.service';
+import {GameAccountsService} from './game-accounts.service';
+import {WowService} from './wow/wow.service';
+import {GAMES_ACTIONS} from './games.server-actions';
+import {SteamKeyService} from './steam/steam-key.service';
+import {XboxService} from './xbox/xbox.service';
 
 @Controller('games')
 export class GamesController {
@@ -63,7 +68,8 @@ export class GamesController {
   @HttpCode(204)
   add(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(gameAccountInputSchema)) input: GameAccountInput,
+    @Body(new ZodValidationPipe(gameAccountInputSchema))
+    input: GameAccountInput,
   ) {
     return this.actions.run(user.id, GAMES_ACTIONS.addAccount, input);
   }
@@ -71,7 +77,7 @@ export class GamesController {
   @Post('accounts/:id/sync')
   @HttpCode(204)
   sync(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    return this.actions.run(user.id, GAMES_ACTIONS.syncAccount, { id });
+    return this.actions.run(user.id, GAMES_ACTIONS.syncAccount, {id});
   }
 
   /** "Refresh all": every game account now, without waiting for the half-hourly sync. */
@@ -83,7 +89,10 @@ export class GamesController {
 
   @Delete('accounts/:id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.accounts.remove(user.id, id);
   }
 
@@ -91,7 +100,8 @@ export class GamesController {
   @Get('dota/overview')
   dotaOverview(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(dotaOverviewQuerySchema)) query: DotaOverviewQuery,
+    @Query(new ZodValidationPipe(dotaOverviewQuerySchema))
+    query: DotaOverviewQuery,
   ): Promise<DotaOverview> {
     return this.dota.overview(user.id, query.accountId);
   }
@@ -99,7 +109,8 @@ export class GamesController {
   @Get('dota/matches')
   dotaMatches(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(dotaMatchesQuerySchema)) query: DotaMatchesQuery,
+    @Query(new ZodValidationPipe(dotaMatchesQuerySchema))
+    query: DotaMatchesQuery,
   ): Promise<DotaMatchesPage> {
     return this.dota.matches(user.id, query);
   }
@@ -121,7 +132,8 @@ export class GamesController {
   @HttpCode(204)
   saveWowCredentials(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(wowCredentialsInputSchema)) input: WowCredentialsInput,
+    @Body(new ZodValidationPipe(wowCredentialsInputSchema))
+    input: WowCredentialsInput,
   ) {
     return this.wow.saveCredentials(user.id, input);
   }
@@ -138,7 +150,8 @@ export class GamesController {
   updateWowCharacter(
     @CurrentUser() user: AuthUser,
     @Param('accountId', ParseUUIDPipe) accountId: string,
-    @Body(new ZodValidationPipe(wowCharacterUpdateSchema)) update: WowCharacterUpdate,
+    @Body(new ZodValidationPipe(wowCharacterUpdateSchema))
+    update: WowCharacterUpdate,
   ): Promise<void> {
     return this.wow.setNotify(user.id, accountId, update.notify);
   }
@@ -181,14 +194,21 @@ export class GamesController {
   saveOpenDotaKey(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) accountId: string,
-    @Body(new ZodValidationPipe(openDotaKeyInputSchema)) input: OpenDotaKeyInput,
+    @Body(new ZodValidationPipe(openDotaKeyInputSchema))
+    input: OpenDotaKeyInput,
   ) {
-    return this.actions.run(user.id, GAMES_ACTIONS.saveOpenDotaKey, { accountId, ...input });
+    return this.actions.run(user.id, GAMES_ACTIONS.saveOpenDotaKey, {
+      accountId,
+      ...input,
+    });
   }
 
   @Delete('accounts/:id/opendota-key')
   @HttpCode(204)
-  removeOpenDotaKey(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) accountId: string) {
+  removeOpenDotaKey(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) accountId: string,
+  ) {
     return this.openDotaKeys.remove(user.id, accountId);
   }
 }

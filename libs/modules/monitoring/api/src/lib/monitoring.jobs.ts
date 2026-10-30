@@ -1,15 +1,15 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import {Injectable, OnModuleInit} from '@nestjs/common';
 import {
   AutomationsService,
   NotificationsService,
   SchedulerService,
   UsersService,
 } from '@pd/api-core';
-import { ProjectChange } from '@pd/contracts';
-import { CheckerService, MonitorNotice } from './checker.service';
-import { MonitoringLinks } from './monitoring.links';
-import { monitoringMessages } from './monitoring.messages';
-import { isSslReminderDay } from './state/monitor-state';
+import {ProjectChange} from '@pd/contracts';
+import {CheckerService, MonitorNotice} from './checker.service';
+import {MonitoringLinks} from './monitoring.links';
+import {monitoringMessages} from './monitoring.messages';
+import {isSslReminderDay} from './state/monitor-state';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -45,22 +45,30 @@ export class MonitoringJobs implements OnModuleInit {
   async checkUptime(): Promise<void> {
     for (const notice of await this.checker.checkAll()) {
       const text = monitoringMessages(await this.localeOf(notice.userId));
-      const { event } = notice;
+      const {event} = notice;
       // A site that went down right after a commit or a release: the alert names it.
-      const [change] = event.type === 'down' ? await this.changesBefore(notice, event.since) : [];
+      const [change] =
+        event.type === 'down'
+          ? await this.changesBefore(notice, event.since)
+          : [];
       await this.notifications.send(notice.userId, {
-        title: event.type === 'down' ? text.downTitle(notice) : text.recoveredTitle(notice),
+        title:
+          event.type === 'down'
+            ? text.downTitle(notice)
+            : text.recoveredTitle(notice),
         body:
           event.type === 'down'
             ? text.downBody(notice) +
-              (change ? `\n${text.lastChange(change, event.since.getTime())}` : '')
+              (change
+                ? `\n${text.lastChange(change, event.since.getTime())}`
+                : '')
             : text.recoveredBody(notice, event.downtimeMs),
         source: 'monitoring',
       });
       await this.automations.emit(
         notice.userId,
         event.type === 'down' ? 'monitoring.down' : 'monitoring.up',
-        { site: notice.projectName, url: notice.url, error: notice.error ?? '' },
+        {site: notice.projectName, url: notice.url, error: notice.error ?? ''},
       );
     }
   }
@@ -68,7 +76,9 @@ export class MonitoringJobs implements OnModuleInit {
   async daily(): Promise<void> {
     await this.checker.deleteOldResults();
     for (const notice of await this.checker.refreshSsl()) {
-      const daysLeft = Math.floor((notice.expiresAt.getTime() - Date.now()) / DAY_MS);
+      const daysLeft = Math.floor(
+        (notice.expiresAt.getTime() - Date.now()) / DAY_MS,
+      );
       if (!isSslReminderDay(daysLeft)) {
         continue;
       }
@@ -82,9 +92,16 @@ export class MonitoringJobs implements OnModuleInit {
   }
 
   /** Never fails the alert: a code hosting that does not answer only leaves the line out. */
-  private async changesBefore(notice: MonitorNotice, since: Date): Promise<ProjectChange[]> {
+  private async changesBefore(
+    notice: MonitorNotice,
+    since: Date,
+  ): Promise<ProjectChange[]> {
     try {
-      return await this.links.changesBefore(notice.userId, notice.projectId, since);
+      return await this.links.changesBefore(
+        notice.userId,
+        notice.projectId,
+        since,
+      );
     } catch {
       return [];
     }

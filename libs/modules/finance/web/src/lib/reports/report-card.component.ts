@@ -1,13 +1,20 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { MarkdownPipe } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { FinanceApi } from '../finance.api';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {MarkdownPipe} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {FinanceApi} from '../finance.api';
 
 /**
  * The AI's review of a month: where the money went, what changed, where to save. Written on
@@ -29,11 +36,14 @@ import { FinanceApi } from '../finance.api';
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>auto_awesome</mat-icon>
-        <mat-card-title>{{ 'finance.report.title' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'finance.report.title' | transloco
+        }}</mat-card-title>
         <mat-card-subtitle>
           @if (report(); as r) {
             {{
-              'finance.report.written' | transloco: { date: (r.createdAt | date: 'd MMM, HH:mm') }
+              'finance.report.written'
+                | transloco: {date: (r.createdAt | date: 'd MMM, HH:mm')}
             }}
           } @else {
             {{ 'finance.report.subtitle' | transloco }}
@@ -57,7 +67,10 @@ import { FinanceApi } from '../finance.api';
       <mat-card-actions align="end">
         <button matButton (click)="write()" [disabled]="writing()">
           <mat-icon>{{ report() ? 'refresh' : 'auto_awesome' }}</mat-icon>
-          {{ (report() ? 'finance.report.rewrite' : 'finance.report.write') | transloco }}
+          {{
+            (report() ? 'finance.report.rewrite' : 'finance.report.write')
+              | transloco
+          }}
         </button>
       </mat-card-actions>
     </mat-card>
@@ -103,7 +116,7 @@ export class ReportCardComponent {
     this.error.set(false);
     this.empty.set(false);
     try {
-      const { report } = await firstValueFrom(this.api.writeReport(this.month()));
+      const {report} = await firstValueFrom(this.api.writeReport(this.month()));
       this.empty.set(!report);
       this.kept.reload();
     } catch {

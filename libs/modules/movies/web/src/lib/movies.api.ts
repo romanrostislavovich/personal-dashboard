@@ -1,6 +1,6 @@
-import { httpResource } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { MOVIES_READS, moviesApi } from '@pd/client-core';
+import {httpResource} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {MOVIES_READS, moviesApi} from '@pd/client-core';
 import {
   MovieAdd,
   MovieAssign,
@@ -11,10 +11,10 @@ import {
   MovieTitleUpdate,
   MovieView,
 } from '@pd/contracts';
-import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
+import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /** The movie requests of the client core (`@pd/client-core`) for Angular. */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class MoviesApi {
   private readonly movies = moviesApi(inject(DASHBOARD_CLIENT).api);
 
@@ -23,13 +23,18 @@ export class MoviesApi {
   }
 
   titles(list: 'history' | 'want') {
-    return httpResource<MovieTitle[]>(() => MOVIES_READS.titles(list), { defaultValue: [] });
+    return httpResource<MovieTitle[]>(() => MOVIES_READS.titles(list), {
+      defaultValue: [],
+    });
   }
 
   views(kind: 'unknown' | 'video') {
-    return httpResource<MovieView[]>(() => MOVIES_READS.views({ kind, limit: 200 }), {
-      defaultValue: [],
-    });
+    return httpResource<MovieView[]>(
+      () => MOVIES_READS.views({kind, limit: 200}),
+      {
+        defaultValue: [],
+      },
+    );
   }
 
   search(q: string) {

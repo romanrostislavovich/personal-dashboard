@@ -1,15 +1,15 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { ActivatedRoute } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { MovieView } from '@pd/contracts';
-import { DurationPipe, EmptyStateComponent } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { AssignDialog } from './assign.dialog';
-import { MoviesApi } from './movies.api';
+import {DatePipe} from '@angular/common';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDialog} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {ActivatedRoute} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {MovieView} from '@pd/contracts';
+import {DurationPipe, EmptyStateComponent} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {AssignDialog} from './assign.dialog';
+import {MoviesApi} from './movies.api';
 
 /**
  * Movies → Not found and Movies → Videos: single views as a list. One not found can be found by
@@ -101,12 +101,13 @@ import { MoviesApi } from './movies.api';
 export class ViewsPage {
   private readonly api = inject(MoviesApi);
   private readonly dialog = inject(MatDialog);
-  protected readonly kind = inject(ActivatedRoute).snapshot.data['kind'] as 'unknown' | 'video';
+  protected readonly kind = inject(ActivatedRoute).snapshot.data['kind'] as
+    'unknown' | 'video';
   protected readonly views = this.api.views(this.kind);
 
   find(view: MovieView): void {
     this.dialog
-      .open(AssignDialog, { data: view, width: '560px', maxWidth: '95vw' })
+      .open(AssignDialog, {data: view, width: '560px', maxWidth: '95vw'})
       .afterClosed()
       .subscribe(() => this.views.reload());
   }

@@ -1,4 +1,4 @@
-import { IntegrationState, IntegrationStatus } from '@pd/contracts';
+import {IntegrationState, IntegrationStatus} from '@pd/contracts';
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -28,7 +28,9 @@ export function stateOf(
   staleHours: number,
   now: Date,
 ): IntegrationState {
-  const expiresIn = report.expiresAt ? report.expiresAt.getTime() - now.getTime() : null;
+  const expiresIn = report.expiresAt
+    ? report.expiresAt.getTime() - now.getTime()
+    : null;
   if (expiresIn !== null && expiresIn <= 0) {
     return 'expired';
   }
@@ -39,7 +41,10 @@ export function stateOf(
     return 'expiring';
   }
   // Never refreshed yet is not stale: the first refresh is on its way.
-  if (report.lastSyncedAt && now.getTime() - report.lastSyncedAt.getTime() > staleHours * HOUR_MS) {
+  if (
+    report.lastSyncedAt &&
+    now.getTime() - report.lastSyncedAt.getTime() > staleHours * HOUR_MS
+  ) {
     return 'stale';
   }
   return 'ok';
@@ -54,12 +59,16 @@ export function isTrouble(state: IntegrationState): boolean {
 export function newTroubles(
   statuses: Pick<IntegrationStatus, 'id' | 'state'>[],
   told: ReadonlyMap<string, IntegrationState>,
-): { tell: string[]; forget: string[] } {
+): {tell: string[]; forget: string[]} {
   const tell = statuses
-    .filter((status) => isTrouble(status.state) && told.get(status.id) !== status.state)
-    .map((status) => status.id);
+    .filter(
+      status => isTrouble(status.state) && told.get(status.id) !== status.state,
+    )
+    .map(status => status.id);
   // Back in order, or disconnected: the next trouble is told again.
-  const troubled = new Set(statuses.filter((s) => isTrouble(s.state)).map((s) => s.id));
-  const forget = [...told.keys()].filter((id) => !troubled.has(id));
-  return { tell, forget };
+  const troubled = new Set(
+    statuses.filter(s => isTrouble(s.state)).map(s => s.id),
+  );
+  const forget = [...told.keys()].filter(id => !troubled.has(id));
+  return {tell, forget};
 }

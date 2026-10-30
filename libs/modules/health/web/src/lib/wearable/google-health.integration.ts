@@ -1,13 +1,22 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute, Router } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { IntegrationGuideComponent, ServerKeyComponent, ServerKeyField } from '@pd/web-core';
-import { HealthApi } from '../health.api';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {ActivatedRoute, Router} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {
+  IntegrationGuideComponent,
+  ServerKeyComponent,
+  ServerKeyField,
+} from '@pd/web-core';
+import {HealthApi} from '../health.api';
 
 /**
  * Google Health (the Fitbit band), in Settings → Integrations (see `integrations` in
@@ -31,12 +40,16 @@ import { HealthApi } from '../health.api';
       <mat-card-header>
         <mat-icon mat-card-avatar>watch</mat-icon>
         <mat-card-title>Google Health</mat-card-title>
-        <mat-card-subtitle>{{ 'health.band.integration.subtitle' | transloco }}</mat-card-subtitle>
+        <mat-card-subtitle>{{
+          'health.band.integration.subtitle' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       @if (status.value(); as s) {
         <mat-card-content>
           @if (!s.available) {
-            <p class="hint">{{ 'health.band.integration.notConfigured' | transloco }}</p>
+            <p class="hint">
+              {{ 'health.band.integration.notConfigured' | transloco }}
+            </p>
           } @else if (s.connected) {
             <p class="ok">
               <mat-icon inline>check_circle</mat-icon>
@@ -49,7 +62,9 @@ import { HealthApi } from '../health.api';
               </p>
             }
             @if (s.error) {
-              <p class="error">{{ 'health.band.integration.failed' | transloco }} {{ s.error }}</p>
+              <p class="error">
+                {{ 'health.band.integration.failed' | transloco }} {{ s.error }}
+              </p>
             }
           } @else {
             <p class="hint">{{ 'health.band.integration.hint' | transloco }}</p>
@@ -64,7 +79,7 @@ import { HealthApi } from '../health.api';
               [fields]="fields"
               [set]="s.available"
               [summary]="app.clientId"
-              [initial]="{ clientId: app.clientId }"
+              [initial]="{clientId: app.clientId}"
               [save]="saveApp"
               [remove]="removeApp"
               (changed)="status.reload()"
@@ -85,7 +100,11 @@ import { HealthApi } from '../health.api';
                 {{ 'health.band.integration.sync' | transloco }}
               </button>
             } @else {
-              <button matButton="filled" (click)="connect()" [disabled]="busy()">
+              <button
+                matButton="filled"
+                (click)="connect()"
+                [disabled]="busy()"
+              >
                 {{ 'health.band.integration.connect' | transloco }}
               </button>
             }
@@ -125,7 +144,11 @@ export class GoogleHealthIntegration {
       label: 'health.band.integration.clientId',
       placeholder: '…apps.googleusercontent.com',
     },
-    { name: 'clientSecret', label: 'health.band.integration.clientSecret', secret: true },
+    {
+      name: 'clientSecret',
+      label: 'health.band.integration.clientSecret',
+      secret: true,
+    },
   ];
   protected readonly saveApp = (values: Record<string, string>) =>
     this.api.client.setGoogleHealthApp({
@@ -141,7 +164,7 @@ export class GoogleHealthIntegration {
   /** Go to the Google sign-in page; it sends us back to the settings with `?googleHealth=…`. */
   async connect(): Promise<void> {
     await this.run(async () => {
-      const { url } = await this.api.client.wearableConnectUrl();
+      const {url} = await this.api.client.wearableConnectUrl();
       window.location.href = url;
     });
   }
@@ -159,9 +182,13 @@ export class GoogleHealthIntegration {
     try {
       await action();
     } catch {
-      this.snackBar.open(this.transloco.translate('health.band.integration.actionFailed'), 'OK', {
-        duration: 8000,
-      });
+      this.snackBar.open(
+        this.transloco.translate('health.band.integration.actionFailed'),
+        'OK',
+        {
+          duration: 8000,
+        },
+      );
     } finally {
       this.busy.set(false);
       this.status.reload();
@@ -169,14 +196,19 @@ export class GoogleHealthIntegration {
   }
 
   private showSignInResult(): void {
-    const result = inject(ActivatedRoute).snapshot.queryParamMap.get('googleHealth');
+    const result =
+      inject(ActivatedRoute).snapshot.queryParamMap.get('googleHealth');
     if (result) {
-      this.snackBar.open(this.transloco.translate(`health.band.integration.${result}`), 'OK', {
-        duration: 5000,
-      });
+      this.snackBar.open(
+        this.transloco.translate(`health.band.integration.${result}`),
+        'OK',
+        {
+          duration: 5000,
+        },
+      );
       // Remove the parameter so the message does not repeat on reload; the tab stays.
       void inject(Router).navigate([], {
-        queryParams: { googleHealth: null },
+        queryParams: {googleHealth: null},
         queryParamsHandling: 'merge',
         replaceUrl: true,
       });

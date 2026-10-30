@@ -1,4 +1,4 @@
-import { coverage, CoverageRow, settledByRules } from './finding-coverage';
+import {coverage, CoverageRow, settledByRules} from './finding-coverage';
 
 const row = (id: string, changes: Partial<CoverageRow> = {}): CoverageRow => ({
   id,
@@ -10,16 +10,21 @@ const row = (id: string, changes: Partial<CoverageRow> = {}): CoverageRow => ({
   covers: [],
   ...changes,
 });
-const ai = (id: string, covers: string[], changes: Partial<CoverageRow> = {}): CoverageRow =>
-  row(id, { key: `ai:${id}`, origin: 'ai', covers, ...changes });
+const ai = (
+  id: string,
+  covers: string[],
+  changes: Partial<CoverageRow> = {},
+): CoverageRow => row(id, {key: `ai:${id}`, origin: 'ai', covers, ...changes});
 
 describe('coverage', () => {
   it('folds the rules’ findings under the AI finding that covers them', () => {
     const result = coverage([
-      row('ssh-password', { severity: 'high' }),
-      row('firewall-off', { severity: 'high' }),
-      row('reboot', { severity: 'low' }),
-      ai('exposed', ['server:ssh-password', 'server:firewall-off'], { severity: 'critical' }),
+      row('ssh-password', {severity: 'high'}),
+      row('firewall-off', {severity: 'high'}),
+      row('reboot', {severity: 'low'}),
+      ai('exposed', ['server:ssh-password', 'server:firewall-off'], {
+        severity: 'critical',
+      }),
     ]);
     expect(result.get('ssh-password')?.coveredBy).toBe('exposed');
     expect(result.get('firewall-off')?.coveredBy).toBe('exposed');
@@ -28,16 +33,16 @@ describe('coverage', () => {
       severity: 'critical',
       coveredBy: null,
       covers: [
-        { id: 'ssh-password', title: 'ssh-password', severity: 'high' },
-        { id: 'firewall-off', title: 'firewall-off', severity: 'high' },
+        {id: 'ssh-password', title: 'ssh-password', severity: 'high'},
+        {id: 'firewall-off', title: 'firewall-off', severity: 'high'},
       ],
     });
   });
 
   it('never shows the AI finding milder than what it covers', () => {
     const result = coverage([
-      row('ssh-password', { severity: 'high' }),
-      ai('talked-down', ['server:ssh-password'], { severity: 'low' }),
+      row('ssh-password', {severity: 'high'}),
+      ai('talked-down', ['server:ssh-password'], {severity: 'low'}),
     ]);
     expect(result.get('talked-down')?.severity).toBe('high');
   });
@@ -45,7 +50,7 @@ describe('coverage', () => {
   it('keeps the rules’ findings folded while the owner ignores the AI one', () => {
     const result = coverage([
       row('ssh-password'),
-      ai('exposed', ['server:ssh-password'], { status: 'ignored' }),
+      ai('exposed', ['server:ssh-password'], {status: 'ignored'}),
     ]);
     expect(result.get('ssh-password')?.coveredBy).toBe('exposed');
   });
@@ -53,11 +58,11 @@ describe('coverage', () => {
   it('brings them back once the AI finding is gone, and ignores what is fixed', () => {
     const gone = coverage([
       row('ssh-password'),
-      ai('exposed', ['server:ssh-password'], { status: 'resolved' }),
+      ai('exposed', ['server:ssh-password'], {status: 'resolved'}),
     ]);
     expect(gone.get('ssh-password')?.coveredBy).toBeNull();
     const fixed = coverage([
-      row('ssh-password', { status: 'resolved' }),
+      row('ssh-password', {status: 'resolved'}),
       ai('exposed', ['server:ssh-password', 'server:never-existed']),
     ]);
     expect(fixed.get('exposed')?.covers).toEqual([]);
@@ -76,8 +81,8 @@ describe('coverage', () => {
 
   it('closes an AI finding once the rules saw every finding it covers fixed', () => {
     const rows = [
-      row('ssh-password', { status: 'resolved' }),
-      row('firewall-off', { status: 'resolved' }),
+      row('ssh-password', {status: 'resolved'}),
+      row('firewall-off', {status: 'resolved'}),
       row('two-factor-off'),
       ai('exposed', ['server:ssh-password', 'server:firewall-off']),
       ai('weak-login', ['server:two-factor-off', 'server:ssh-password']),

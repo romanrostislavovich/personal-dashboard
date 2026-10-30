@@ -1,4 +1,4 @@
-import { addDays, LocalDate, parseLocalDate, toLocalDate } from '@pd/contracts';
+import {addDays, LocalDate, parseLocalDate, toLocalDate} from '@pd/contracts';
 
 /** Units of a currency per 1 EUR, by day — the shape of ECB rates. */
 export type DailyRates = Map<LocalDate, Record<string, number>>;
@@ -21,15 +21,19 @@ export interface Converted {
  * The rate of `currency` on `day`: that day's, or the last published before it (no rates on
  * weekends and holidays). EUR is the base, always 1.
  */
-export function rateOn(rates: DailyRates, currency: string, day: LocalDate): number | null {
+export function rateOn(
+  rates: DailyRates,
+  currency: string,
+  day: LocalDate,
+): number | null {
   if (currency === 'EUR') {
     return 1;
   }
-  let best: { day: LocalDate; rate: number } | null = null;
+  let best: {day: LocalDate; rate: number} | null = null;
   for (const [date, values] of rates) {
     const rate = values[currency];
     if (rate !== undefined && date <= day && (!best || date > best.day)) {
-      best = { day: date, rate };
+      best = {day: date, rate};
     }
   }
   // A day before the fetched range still gets the earliest rate rather than nothing.
@@ -37,7 +41,7 @@ export function rateOn(rates: DailyRates, currency: string, day: LocalDate): num
     for (const [date, values] of rates) {
       const rate = values[currency];
       if (rate !== undefined && (!best || date < best.day)) {
-        best = { day: date, rate };
+        best = {day: date, rate};
       }
     }
   }
@@ -69,7 +73,7 @@ export function convertAll(
     missing.add(currency);
     return null;
   };
-  const values = amounts.map(({ amount, currency, day }) => {
+  const values = amounts.map(({amount, currency, day}) => {
     if (currency === main) {
       return amount;
     }
@@ -77,16 +81,25 @@ export function convertAll(
     const to = rate(main, day);
     return from === null || to === null ? null : round((amount / from) * to);
   });
-  return { values, approximate: [...approximate].sort(), missing: [...missing].sort() };
+  return {
+    values,
+    approximate: [...approximate].sort(),
+    missing: [...missing].sort(),
+  };
 }
 
 /** The range of days to fetch for these amounts: a week before the first covers a holiday. */
-export function rateRange(amounts: Amount[]): { from: LocalDate; to: LocalDate } | null {
+export function rateRange(
+  amounts: Amount[],
+): {from: LocalDate; to: LocalDate} | null {
   if (amounts.length === 0) {
     return null;
   }
-  const days = amounts.map((a) => a.day).sort();
-  return { from: toLocalDate(addDays(parseLocalDate(days[0]), -7)), to: days[days.length - 1] };
+  const days = amounts.map(a => a.day).sort();
+  return {
+    from: toLocalDate(addDays(parseLocalDate(days[0]), -7)),
+    to: days[days.length - 1],
+  };
 }
 
 export function round(value: number): number {

@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {Inject, Injectable, Logger} from '@nestjs/common';
 import {
   BotActionReply,
   DB,
@@ -7,11 +7,20 @@ import {
   UserRow,
   UsersService,
 } from '@pd/api-core';
-import { HealthIntake, IntakeStatus, LocalDate, zonedDateTime } from '@pd/contracts';
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
-import { healthMessages } from '../health.messages';
-import { HealthIntakeRow, healthIntakes, healthMedications } from '../health.schema';
-import { found } from '../owned';
+import {
+  HealthIntake,
+  IntakeStatus,
+  LocalDate,
+  zonedDateTime,
+} from '@pd/contracts';
+import {and, desc, eq, gte, sql} from 'drizzle-orm';
+import {healthMessages} from '../health.messages';
+import {
+  HealthIntakeRow,
+  healthIntakes,
+  healthMedications,
+} from '../health.schema';
+import {found} from '../owned';
 
 /** The Telegram button under a reminder: `<name>:<t|s>:<intake id>`. */
 export const INTAKE_ACTION = 'hti';
@@ -21,9 +30,10 @@ const CATCH_UP_MINUTES = 30;
 
 /** The times of a medication to remind of now: come, and not long ago. */
 export function dueTimes(times: readonly string[], now: string): string[] {
-  const minutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+  const minutes = (time: string) =>
+    Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
   const current = minutes(now);
-  return times.filter((time) => {
+  return times.filter(time => {
     const at = minutes(time);
     return at <= current && current - at < CATCH_UP_MINUTES;
   });
@@ -74,13 +84,16 @@ export class IntakesService {
     const users = new Map<string, UserRow | undefined>();
     for (const medication of medications) {
       if (!users.has(medication.userId)) {
-        users.set(medication.userId, await this.users.findById(medication.userId));
+        users.set(
+          medication.userId,
+          await this.users.findById(medication.userId),
+        );
       }
       const user = users.get(medication.userId);
       if (!user) {
         continue;
       }
-      const { date, time } = zonedDateTime(now, this.users.timeZoneOf(user));
+      const {date, time} = zonedDateTime(now, this.users.timeZoneOf(user));
       const taken =
         (!medication.startedOn || medication.startedOn <= date) &&
         (!medication.stoppedOn || medication.stoppedOn >= date);
@@ -88,17 +101,21 @@ export class IntakesService {
         continue;
       }
       for (const due of dueTimes(medication.times, time)) {
-        await this.send(user, medication, date, due).catch((error) =>
+        await this.send(user, medication, date, due).catch(error =>
           this.logger.warn(`A medication reminder was not sent: ${error}`),
         );
       }
     }
   }
 
-  async answer(userId: string, id: string, status: Exclude<IntakeStatus, 'pending'>) {
+  async answer(
+    userId: string,
+    id: string,
+    status: Exclude<IntakeStatus, 'pending'>,
+  ) {
     const [row] = await this.db
       .update(healthIntakes)
-      .set({ status, answeredAt: new Date() })
+      .set({status, answeredAt: new Date()})
       .where(and(eq(healthIntakes.id, id), eq(healthIntakes.userId, userId)))
       .returning();
     return toIntake(found(row, 'Intake'));
@@ -118,15 +135,15 @@ export class IntakesService {
 
   private async send(
     user: UserRow,
-    medication: { id: string; name: string; dose: string | null },
+    medication: {id: string; name: string; dose: string | null},
     day: LocalDate,
     time: string,
   ): Promise<void> {
     const [intake] = await this.db
       .insert(healthIntakes)
-      .values({ userId: user.id, medicationId: medication.id, day, time })
+      .values({userId: user.id, medicationId: medication.id, day, time})
       .onConflictDoNothing()
-      .returning({ id: healthIntakes.id });
+      .returning({id: healthIntakes.id});
     // Another run sent it already.
     if (!intake) {
       return;
@@ -137,8 +154,8 @@ export class IntakesService {
       body: [medication.name, medication.dose].filter(Boolean).join(' — '),
       source: 'health',
       actions: [
-        { label: text.buttons.taken, action: `${INTAKE_ACTION}:t:${intake.id}` },
-        { label: text.buttons.skip, action: `${INTAKE_ACTION}:s:${intake.id}` },
+        {label: text.buttons.taken, action: `${INTAKE_ACTION}:t:${intake.id}`},
+        {label: text.buttons.skip, action: `${INTAKE_ACTION}:s:${intake.id}`},
       ],
     });
   }

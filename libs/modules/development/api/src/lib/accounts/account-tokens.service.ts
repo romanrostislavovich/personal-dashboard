@@ -1,16 +1,23 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { SecretsService } from '@pd/api-core';
-import { BitbucketTokenInput, CodeAccountsSettings, TokenProvider } from '@pd/contracts';
-import { BitbucketAccountSource } from '../bitbucket/bitbucket-account.source';
-import { BitbucketRepoSource } from '../bitbucket/bitbucket-repos.source';
-import { BitbucketWorkspaces } from '../bitbucket/bitbucket-workspaces';
-import { BitbucketClient, BitbucketCredentials } from '../bitbucket/bitbucket.client';
-import { GithubTokenService } from '../github/github-token.service';
-import { GitlabAccountSource } from '../gitlab/gitlab-account.source';
-import { GitlabRepoSource } from '../gitlab/gitlab-repos.source';
-import { GitlabClient } from '../gitlab/gitlab.client';
-import { RepoSource } from '../open-source/repo-source';
-import { AccountAuthError, AccountSource } from './account-source';
+import {BadRequestException, Injectable} from '@nestjs/common';
+import {SecretsService} from '@pd/api-core';
+import {
+  BitbucketTokenInput,
+  CodeAccountsSettings,
+  TokenProvider,
+} from '@pd/contracts';
+import {BitbucketAccountSource} from '../bitbucket/bitbucket-account.source';
+import {BitbucketRepoSource} from '../bitbucket/bitbucket-repos.source';
+import {BitbucketWorkspaces} from '../bitbucket/bitbucket-workspaces';
+import {
+  BitbucketClient,
+  BitbucketCredentials,
+} from '../bitbucket/bitbucket.client';
+import {GithubTokenService} from '../github/github-token.service';
+import {GitlabAccountSource} from '../gitlab/gitlab-account.source';
+import {GitlabRepoSource} from '../gitlab/gitlab-repos.source';
+import {GitlabClient} from '../gitlab/gitlab.client';
+import {RepoSource} from '../open-source/repo-source';
+import {AccountAuthError, AccountSource} from './account-source';
 
 const KEYS: Record<TokenProvider, string> = {
   gitlab: 'development.gitlab-token',
@@ -45,16 +52,21 @@ export class AccountTokensService {
       this.has(userId, 'gitlab'),
       this.has(userId, 'bitbucket'),
     ]);
-    return { github, gitlab, bitbucket };
+    return {github, gitlab, bitbucket};
   }
 
   /** `null` — the service is not connected: nothing is read from it then. */
-  async sources(userId: string, provider: TokenProvider): Promise<ServiceSources | null> {
+  async sources(
+    userId: string,
+    provider: TokenProvider,
+  ): Promise<ServiceSources | null> {
     const secret = await this.secrets.get(userId, KEYS[provider]);
     if (!secret) {
       return null;
     }
-    return provider === 'gitlab' ? gitlabSources(secret) : bitbucketSources(JSON.parse(secret));
+    return provider === 'gitlab'
+      ? gitlabSources(secret)
+      : bitbucketSources(JSON.parse(secret));
   }
 
   /** The GitLab API with the user's token (for what the sources above do not cover). */
@@ -65,7 +77,9 @@ export class AccountTokensService {
 
   async bitbucket(userId: string): Promise<BitbucketClient | null> {
     const secret = await this.secrets.get(userId, KEYS.bitbucket);
-    return secret ? new BitbucketClient(JSON.parse(secret) as BitbucketCredentials) : null;
+    return secret
+      ? new BitbucketClient(JSON.parse(secret) as BitbucketCredentials)
+      : null;
   }
 
   /** The token is checked against GitLab before it is saved. */
@@ -74,8 +88,13 @@ export class AccountTokensService {
     await this.secrets.set(userId, KEYS.gitlab, token);
   }
 
-  async saveBitbucket(userId: string, credentials: BitbucketTokenInput): Promise<void> {
-    await this.verify(() => new BitbucketWorkspaces(new BitbucketClient(credentials)).me());
+  async saveBitbucket(
+    userId: string,
+    credentials: BitbucketTokenInput,
+  ): Promise<void> {
+    await this.verify(() =>
+      new BitbucketWorkspaces(new BitbucketClient(credentials)).me(),
+    );
     await this.secrets.set(userId, KEYS.bitbucket, JSON.stringify(credentials));
   }
 
@@ -98,7 +117,10 @@ export class AccountTokensService {
 
 function gitlabSources(token: string): ServiceSources {
   const client = new GitlabClient(token);
-  return { account: new GitlabAccountSource(client), repos: new GitlabRepoSource(client) };
+  return {
+    account: new GitlabAccountSource(client),
+    repos: new GitlabRepoSource(client),
+  };
 }
 
 function bitbucketSources(credentials: BitbucketCredentials): ServiceSources {

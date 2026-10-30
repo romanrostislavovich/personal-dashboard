@@ -1,8 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { isMobileApp } from '../mobile/mobile-app';
-import { desktopBridge } from '../realtime/desktop-bridge';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {isMobileApp} from '../mobile/mobile-app';
+import {desktopBridge} from '../realtime/desktop-bridge';
 
 export type DeviceKind = 'phone' | 'desktop';
 
@@ -17,7 +22,9 @@ export type DeviceKind = 'phone' | 'desktop';
   imports: [MatIconModule, TranslocoPipe],
   template: `
     <p class="mark" [class]="kind()">
-      <mat-icon inline>{{ kind() === 'phone' ? 'smartphone' : 'computer' }}</mat-icon>
+      <mat-icon inline>{{
+        kind() === 'phone' ? 'smartphone' : 'computer'
+      }}</mat-icon>
       <span>
         <b>{{ 'core.settings.deviceOnly.' + kind() + '.title' | transloco }}</b>
         —

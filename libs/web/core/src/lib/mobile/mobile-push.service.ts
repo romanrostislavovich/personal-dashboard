@@ -1,12 +1,12 @@
-import { inject, Injectable, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { Capacitor } from '@capacitor/core';
-import { PushNotifications } from '@capacitor/push-notifications';
-import { pushApi } from '@pd/client-core';
-import { PUSH_CHANNEL } from '@pd/contracts';
-import { AuthService } from '../auth/auth.service';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { installId, isMobileApp, phoneModel } from './mobile-app';
+import {inject, Injectable, signal} from '@angular/core';
+import {Router} from '@angular/router';
+import {Capacitor} from '@capacitor/core';
+import {PushNotifications} from '@capacitor/push-notifications';
+import {pushApi} from '@pd/client-core';
+import {PUSH_CHANNEL} from '@pd/contracts';
+import {AuthService} from '../auth/auth.service';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {installId, isMobileApp, phoneModel} from './mobile-app';
 
 /** Switched off on this phone by its user (Settings → Notifications). */
 const OFF_KEY = 'pd.mobile.pushOff';
@@ -20,7 +20,7 @@ export type PhonePush = 'on' | 'off' | 'denied' | 'unavailable';
  * Telegram. Nothing happens until the owner has set the server's Firebase key; an APK built
  * without Firebase just says no. A tap on a notification opens the app.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class MobilePushService {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -44,7 +44,10 @@ export class MobilePushService {
       return;
     }
     let permission = await PushNotifications.checkPermissions();
-    if (permission.receive === 'prompt' || permission.receive === 'prompt-with-rationale') {
+    if (
+      permission.receive === 'prompt' ||
+      permission.receive === 'prompt-with-rationale'
+    ) {
       permission = await PushNotifications.requestPermissions();
     }
     if (permission.receive !== 'granted') {
@@ -81,7 +84,7 @@ export class MobilePushService {
       return;
     }
     this.listening = true;
-    await PushNotifications.addListener('registration', ({ value }) => {
+    await PushNotifications.addListener('registration', ({value}) => {
       void this.push
         .register(installId(), {
           token: value,
@@ -93,16 +96,19 @@ export class MobilePushService {
         .then(() => this.state.set('on'))
         .catch(() => undefined);
     });
-    await PushNotifications.addListener('registrationError', ({ error }) => {
+    await PushNotifications.addListener('registrationError', ({error}) => {
       console.error(`Push notifications: ${error}`);
       this.state.set('unavailable');
     });
     // A tap on a notification: the app comes up on the page it is about (the server tells).
-    await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-      const route = action.notification.data?.['route'];
-      void this.router.navigateByUrl(
-        typeof route === 'string' && route.startsWith('/') ? route : '/',
-      );
-    });
+    await PushNotifications.addListener(
+      'pushNotificationActionPerformed',
+      action => {
+        const route = action.notification.data?.['route'];
+        void this.router.navigateByUrl(
+          typeof route === 'string' && route.startsWith('/') ? route : '/',
+        );
+      },
+    );
   }
 }

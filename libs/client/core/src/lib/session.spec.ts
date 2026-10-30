@@ -1,12 +1,12 @@
-import { Session } from './session';
-import { memoryStorage } from './testing';
+import {Session} from './session';
+import {memoryStorage} from './testing';
 
 describe('Session', () => {
   it('keeps the access token in memory and an app’s refresh token in the storage', async () => {
     const storage = memoryStorage();
     const session = new Session(storage, 'storage');
     const seen: (string | null)[] = [];
-    session.subscribe((token) => seen.push(token));
+    session.subscribe(token => seen.push(token));
 
     await session.start('access-1', 'refresh-1');
     expect(session.token).toBe('access-1');

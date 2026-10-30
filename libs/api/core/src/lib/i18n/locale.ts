@@ -1,4 +1,4 @@
-import { Locale, SUPPORTED_LOCALES } from '@pd/contracts';
+import {Locale, SUPPORTED_LOCALES} from '@pd/contracts';
 
 /** Default language for server texts if the user has no supported one set. */
 export const FALLBACK_LOCALE: Locale = 'en';
@@ -11,7 +11,10 @@ export const FALLBACK_LOCALE: Locale = 'en';
  * const text = pickMessages(messages, user.locale);
  * ```
  */
-export function pickMessages<T>(messages: Record<Locale, T>, locale: string | null | undefined): T {
+export function pickMessages<T>(
+  messages: Record<Locale, T>,
+  locale: string | null | undefined,
+): T {
   return messages[toLocale(locale)];
 }
 
@@ -26,9 +29,17 @@ export function toLocale(value: string | null | undefined): Locale {
 /** Текст на нескольких языках: `{ en: 'Week in a row', ru: 'Неделя подряд' }`. */
 export type LocalizedText = Partial<Record<Locale, string>>;
 
-export function localize(text: LocalizedText | string, locale: string | null | undefined): string {
+export function localize(
+  text: LocalizedText | string,
+  locale: string | null | undefined,
+): string {
   if (typeof text === 'string') {
     return text;
   }
-  return text[toLocale(locale)] ?? text[FALLBACK_LOCALE] ?? Object.values(text)[0] ?? '';
+  return (
+    text[toLocale(locale)] ??
+    text[FALLBACK_LOCALE] ??
+    Object.values(text)[0] ??
+    ''
+  );
 }

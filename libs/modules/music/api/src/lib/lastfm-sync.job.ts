@@ -1,7 +1,7 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { AchievementsService, forEachUser, SchedulerService } from '@pd/api-core';
-import { LastfmHistoryImport } from './lastfm-history.import';
-import { LastfmService } from './lastfm.service';
+import {Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {AchievementsService, forEachUser, SchedulerService} from '@pd/api-core';
+import {LastfmHistoryImport} from './lastfm-history.import';
+import {LastfmService} from './lastfm.service';
 
 /**
  * Every 15 minutes: new plays from Last.fm, then a portion of the old history until all of it
@@ -24,8 +24,10 @@ export class LastfmSyncJob implements OnModuleInit {
       name: 'music.lastfm-sync',
       cron: '*/15 * * * *',
       handler: async () =>
-        forEachUser('music.lastfm-sync', await this.lastfm.connectedUserIds(), (userId) =>
-          this.syncUser(userId),
+        forEachUser(
+          'music.lastfm-sync',
+          await this.lastfm.connectedUserIds(),
+          userId => this.syncUser(userId),
         ),
     });
   }
@@ -37,7 +39,9 @@ export class LastfmSyncJob implements OnModuleInit {
     if ((await this.lastfm.storedCount(userId)) > before) {
       await this.achievements
         .evaluate(userId)
-        .catch((error) => this.logger.warn(`Achievements check for ${userId} failed: ${error}`));
+        .catch(error =>
+          this.logger.warn(`Achievements check for ${userId} failed: ${error}`),
+        );
     }
   }
 }

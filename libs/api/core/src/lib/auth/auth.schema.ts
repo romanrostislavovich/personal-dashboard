@@ -1,5 +1,5 @@
-import { index, pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from '../users/users.schema';
+import {index, pgSchema, text, timestamp, uuid} from 'drizzle-orm/pg-core';
+import {users} from '../users/users.schema';
 
 /**
  * Sign-in sessions live in their own schema, so they are not synced (docs/sync.md): each instance
@@ -17,19 +17,19 @@ export const sessions = authSchema.table(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     tokenHash: text().notNull().unique(),
     /** The token before the last rotation, still accepted for a minute: two tabs may race. */
     previousHash: text(),
-    rotatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    lastUsedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    rotatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    lastUsedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
     /** Moves forward with every use: an idle device is signed out after a while. */
-    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    expiresAt: timestamp({withTimezone: true}).notNull(),
     userAgent: text(),
     ip: text(),
   },
-  (table) => [index().on(table.userId), index().on(table.previousHash)],
+  table => [index().on(table.userId), index().on(table.previousHash)],
 );
 
 export type SessionRow = typeof sessions.$inferSelect;

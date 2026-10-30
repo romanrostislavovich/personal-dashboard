@@ -1,4 +1,4 @@
-import { clamlCodes, decodeEntities } from './claml';
+import {clamlCodes, decodeEntities} from './claml';
 
 const XML = `<?xml version="1.0" encoding="UTF-8"?>
 <ClaML version="2.0.0">
@@ -27,14 +27,16 @@ const XML = `<?xml version="1.0" encoding="UTF-8"?>
 describe('clamlCodes', () => {
   it('takes the categories with their preferred titles', () => {
     expect([...clamlCodes(XML)]).toEqual([
-      { code: 'F41', title: 'Other anxiety disorders' },
-      { code: 'F41.1', title: 'Generalized anxiety disorder & more' },
+      {code: 'F41', title: 'Other anxiety disorders'},
+      {code: 'F41.1', title: 'Generalized anxiety disorder & more'},
     ]);
   });
 });
 
 describe('decodeEntities', () => {
   it('reads named and numeric entities', () => {
-    expect(decodeEntities('a &lt;b&gt; &#233; &#x41; &unknown;')).toBe('a <b> é A &unknown;');
+    expect(decodeEntities('a &lt;b&gt; &#233; &#x41; &unknown;')).toBe(
+      'a <b> é A &unknown;',
+    );
   });
 });

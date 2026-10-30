@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import {DatePipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,24 +7,28 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { SecurityFinding, SecuritySettings, SecuritySeverity } from '@pd/contracts';
-import { EmptyStateComponent, errorStatus, MarkdownPipe } from '@pd/web-core';
-import { firstValueFrom, Observable } from 'rxjs';
-import { SecurityApi } from './security.api';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatExpansionModule} from '@angular/material/expansion';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {
+  SecurityFinding,
+  SecuritySettings,
+  SecuritySeverity,
+} from '@pd/contracts';
+import {EmptyStateComponent, errorStatus, MarkdownPipe} from '@pd/web-core';
+import {firstValueFrom, Observable} from 'rxjs';
+import {SecurityApi} from './security.api';
 
 /** "The assistant's connection": mat-select treats null as no selection. */
 const ASSISTANT = '';
@@ -67,13 +71,19 @@ const ICONS: Record<SecuritySeverity, string> = {
     <header class="page-header">
       <h1 class="page-title">{{ 'security.title' | transloco }}</h1>
       <div class="actions">
-        <button matButton="outlined" (click)="scan()" [disabled]="busy() !== null || forbidden()">
+        <button
+          matButton="outlined"
+          (click)="scan()"
+          [disabled]="busy() !== null || forbidden()"
+        >
           <mat-icon>refresh</mat-icon> {{ 'security.scan' | transloco }}
         </button>
         <!-- A disabled button shows no tooltip: the span around it does, and says why. -->
         <span
           [matTooltip]="
-            status.value()?.aiAvailable === false ? ('security.aiMissing' | transloco) : ''
+            status.value()?.aiAvailable === false
+              ? ('security.aiMissing' | transloco)
+              : ''
           "
         >
           <button
@@ -81,7 +91,8 @@ const ICONS: Record<SecuritySeverity, string> = {
             (click)="investigate()"
             [disabled]="busy() !== null || !status.value()?.aiAvailable"
           >
-            <mat-icon>psychology</mat-icon> {{ 'security.investigate' | transloco }}
+            <mat-icon>psychology</mat-icon>
+            {{ 'security.investigate' | transloco }}
           </button>
         </span>
       </div>
@@ -100,7 +111,11 @@ const ICONS: Record<SecuritySeverity, string> = {
       <p class="hint">
         <!-- Never checked: said once, where the findings would be. -->
         @if (s.scannedAt) {
-          {{ 'security.checked' | transloco: { date: (s.scannedAt | date: 'd MMM, HH:mm') } }} ·
+          {{
+            'security.checked'
+              | transloco: {date: (s.scannedAt | date: 'd MMM, HH:mm')}
+          }}
+          ·
         }
         {{ 'security.readOnly' | transloco }}
       </p>
@@ -108,13 +123,17 @@ const ICONS: Record<SecuritySeverity, string> = {
       <div class="areas">
         @for (area of s.areas; track area.area) {
           <div class="area" [class.off]="!area.available">
-            <mat-icon>{{ area.available ? 'check_circle' : 'link_off' }}</mat-icon>
+            <mat-icon>{{
+              area.available ? 'check_circle' : 'link_off'
+            }}</mat-icon>
             <span>
               <b>{{ 'security.areas.' + area.area | transloco }}</b>
               <span class="hint">
                 {{
-                  (area.available ? 'security.areaChecked' : 'security.areaHints.' + area.area)
-                    | transloco
+                  (area.available
+                    ? 'security.areaChecked'
+                    : 'security.areaHints.' + area.area
+                  ) | transloco
                 }}
               </span>
             </span>
@@ -128,7 +147,8 @@ const ICONS: Record<SecuritySeverity, string> = {
             <mat-icon mat-card-avatar>psychology</mat-icon>
             <mat-card-title>{{ 'security.report' | transloco }}</mat-card-title>
             <mat-card-subtitle>
-              {{ report.createdAt | date: 'd MMM y, HH:mm' }} · {{ report.model }}
+              {{ report.createdAt | date: 'd MMM y, HH:mm' }} ·
+              {{ report.model }}
             </mat-card-subtitle>
           </mat-card-header>
           <mat-card-content>
@@ -138,10 +158,14 @@ const ICONS: Record<SecuritySeverity, string> = {
       }
 
       <h2 class="section">
-        {{ 'security.open' | transloco: { count: open().length } }}
+        {{ 'security.open' | transloco: {count: open().length} }}
       </h2>
       @for (finding of open(); track finding.id) {
-        <mat-card appearance="outlined" class="finding" [class]="finding.severity">
+        <mat-card
+          appearance="outlined"
+          class="finding"
+          [class]="finding.severity"
+        >
           <mat-card-header>
             <mat-icon mat-card-avatar>{{ icon(finding.severity) }}</mat-icon>
             <mat-card-title>{{ finding.title }}</mat-card-title>
@@ -149,7 +173,10 @@ const ICONS: Record<SecuritySeverity, string> = {
               {{ 'security.severity.' + finding.severity | transloco }} ·
               {{ 'security.areas.' + finding.area | transloco }} ·
               {{ 'security.origin.' + finding.origin | transloco }} ·
-              {{ 'security.since' | transloco: { date: (finding.firstSeenAt | date: 'd MMM y') } }}
+              {{
+                'security.since'
+                  | transloco: {date: (finding.firstSeenAt | date: 'd MMM y')}
+              }}
             </mat-card-subtitle>
           </mat-card-header>
           <mat-card-content>
@@ -171,13 +198,21 @@ const ICONS: Record<SecuritySeverity, string> = {
             }
             @if (finding.guide && shown() === finding.id) {
               <div class="guide">
-                <div class="markdown" [innerHTML]="finding.guide | markdown"></div>
+                <div
+                  class="markdown"
+                  [innerHTML]="finding.guide | markdown"
+                ></div>
                 <p class="hint">
                   {{
                     'security.guideBy'
-                      | transloco: { date: (finding.guideAt | date: 'd MMM y, HH:mm') }
+                      | transloco
+                        : {date: (finding.guideAt | date: 'd MMM y, HH:mm')}
                   }}
-                  <button matButton (click)="writeGuide(finding)" [disabled]="busy() !== null">
+                  <button
+                    matButton
+                    (click)="writeGuide(finding)"
+                    [disabled]="busy() !== null"
+                  >
                     {{ 'security.guideAgain' | transloco }}
                   </button>
                 </p>
@@ -192,7 +227,9 @@ const ICONS: Record<SecuritySeverity, string> = {
             <button
               matButton
               (click)="showGuide(finding)"
-              [disabled]="writing() !== null || (!finding.guide && !s.aiAvailable)"
+              [disabled]="
+                writing() !== null || (!finding.guide && !s.aiAvailable)
+              "
             >
               <mat-icon>menu_book</mat-icon>
               {{
@@ -203,7 +240,8 @@ const ICONS: Record<SecuritySeverity, string> = {
               }}
             </button>
             <button matButton (click)="setStatus(finding, 'ignored')">
-              <mat-icon>visibility_off</mat-icon> {{ 'security.ignore' | transloco }}
+              <mat-icon>visibility_off</mat-icon>
+              {{ 'security.ignore' | transloco }}
             </button>
           </mat-card-actions>
         </mat-card>
@@ -219,7 +257,11 @@ const ICONS: Record<SecuritySeverity, string> = {
             [title]="'security.emptyTitle' | transloco"
             [text]="'security.readOnly' | transloco"
           >
-            <button matButton="filled" (click)="scan()" [disabled]="busy() !== null || forbidden()">
+            <button
+              matButton="filled"
+              (click)="scan()"
+              [disabled]="busy() !== null || forbidden()"
+            >
               <mat-icon>refresh</mat-icon> {{ 'security.scan' | transloco }}
             </button>
           </pd-empty-state>
@@ -231,7 +273,7 @@ const ICONS: Record<SecuritySeverity, string> = {
           <mat-expansion-panel>
             <mat-expansion-panel-header>
               <mat-panel-title>
-                {{ 'security.ignored' | transloco: { count: ignored().length } }}
+                {{ 'security.ignored' | transloco: {count: ignored().length} }}
               </mat-panel-title>
             </mat-expansion-panel-header>
             @for (finding of ignored(); track finding.id) {
@@ -251,7 +293,9 @@ const ICONS: Record<SecuritySeverity, string> = {
           <mat-expansion-panel>
             <mat-expansion-panel-header>
               <mat-panel-title>
-                {{ 'security.resolved' | transloco: { count: resolved().length } }}
+                {{
+                  'security.resolved' | transloco: {count: resolved().length}
+                }}
               </mat-panel-title>
             </mat-expansion-panel-header>
             @for (finding of resolved(); track finding.id) {
@@ -261,7 +305,8 @@ const ICONS: Record<SecuritySeverity, string> = {
                   <span class="hint">
                     {{
                       'security.resolvedOn'
-                        | transloco: { date: (finding.resolvedAt | date: 'd MMM y') }
+                        | transloco
+                          : {date: (finding.resolvedAt | date: 'd MMM y')}
                     }}
                   </span>
                 </span>
@@ -271,7 +316,9 @@ const ICONS: Record<SecuritySeverity, string> = {
         }
         <mat-expansion-panel>
           <mat-expansion-panel-header>
-            <mat-panel-title>{{ 'security.settings.title' | transloco }}</mat-panel-title>
+            <mat-panel-title>{{
+              'security.settings.title' | transloco
+            }}</mat-panel-title>
           </mat-expansion-panel-header>
           <div class="settings">
             <mat-slide-toggle [(ngModel)]="aiEnabled">
@@ -279,19 +326,29 @@ const ICONS: Record<SecuritySeverity, string> = {
             </mat-slide-toggle>
             <p class="hint">{{ 'security.settings.aiHint' | transloco }}</p>
             <mat-form-field>
-              <mat-label>{{ 'security.settings.connection' | transloco }}</mat-label>
+              <mat-label>{{
+                'security.settings.connection' | transloco
+              }}</mat-label>
               <mat-select [(ngModel)]="connectionId">
                 <mat-option [value]="assistant">
                   {{ 'security.settings.assistant' | transloco }}
                 </mat-option>
                 @for (connection of s.connections; track connection.id) {
-                  <mat-option [value]="connection.id">{{ connection.name }}</mat-option>
+                  <mat-option [value]="connection.id">{{
+                    connection.name
+                  }}</mat-option>
                 }
               </mat-select>
-              <mat-hint>{{ 'security.settings.connectionHint' | transloco }}</mat-hint>
+              <mat-hint>{{
+                'security.settings.connectionHint' | transloco
+              }}</mat-hint>
             </mat-form-field>
             <div>
-              <button matButton="filled" (click)="saveSettings()" [disabled]="busy() !== null">
+              <button
+                matButton="filled"
+                (click)="saveSettings()"
+                [disabled]="busy() !== null"
+              >
                 {{ 'core.actions.save' | transloco }}
               </button>
             </div>
@@ -419,21 +476,25 @@ export class SecurityPage {
 
   protected readonly status = this.api.status();
   /** The agent reports to the owner of the instance only. */
-  protected readonly forbidden = computed(() => errorStatus(this.status.error()) === 403);
+  protected readonly forbidden = computed(
+    () => errorStatus(this.status.error()) === 403,
+  );
   /** What runs now: the key of its text (`scanning`, `investigating`). */
   protected readonly busy = signal<'scanning' | 'investigating' | null>(null);
 
   /** A finding of the rules the AI's one covers is shown under it, not on its own. */
   private readonly findings = computed(() =>
-    (this.status.value()?.findings ?? []).filter((f) => !f.coveredBy),
+    (this.status.value()?.findings ?? []).filter(f => !f.coveredBy),
   );
-  protected readonly open = computed(() => this.findings().filter((f) => f.status === 'open'));
+  protected readonly open = computed(() =>
+    this.findings().filter(f => f.status === 'open'),
+  );
   protected readonly ignored = computed(() =>
-    this.findings().filter((f) => f.status === 'ignored'),
+    this.findings().filter(f => f.status === 'ignored'),
   );
   protected readonly resolved = computed(() =>
     this.findings()
-      .filter((f) => f.status === 'resolved')
+      .filter(f => f.status === 'resolved')
       .sort((a, b) => (b.resolvedAt ?? '').localeCompare(a.resolvedAt ?? ''))
       .slice(0, 30),
   );
@@ -469,7 +530,10 @@ export class SecurityPage {
     return this.run('investigating', this.api.investigate());
   }
 
-  protected async setStatus(finding: SecurityFinding, status: 'open' | 'ignored'): Promise<void> {
+  protected async setStatus(
+    finding: SecurityFinding,
+    status: 'open' | 'ignored',
+  ): Promise<void> {
     await firstValueFrom(this.api.setFindingStatus(finding.id, status));
     this.status.reload();
   }
@@ -493,7 +557,11 @@ export class SecurityPage {
     } catch (error) {
       const status = errorStatus(error);
       this.notify(
-        status === 400 ? 'security.noAi' : status === 502 ? 'security.aiFailed' : 'security.failed',
+        status === 400
+          ? 'security.noAi'
+          : status === 502
+            ? 'security.aiFailed'
+            : 'security.failed',
       );
     } finally {
       this.writing.set(null);
@@ -515,14 +583,21 @@ export class SecurityPage {
     }
   }
 
-  private async run(step: 'scanning' | 'investigating', request: Observable<unknown>) {
+  private async run(
+    step: 'scanning' | 'investigating',
+    request: Observable<unknown>,
+  ) {
     this.busy.set(step);
     try {
       await firstValueFrom(request);
     } catch (error) {
       const status = errorStatus(error);
       this.notify(
-        status === 400 ? 'security.noAi' : status === 502 ? 'security.aiFailed' : 'security.failed',
+        status === 400
+          ? 'security.noAi'
+          : status === 502
+            ? 'security.aiFailed'
+            : 'security.failed',
       );
     } finally {
       this.busy.set(null);
@@ -531,6 +606,6 @@ export class SecurityPage {
   }
 
   private notify(key: string): void {
-    this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 6000 });
+    this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 6000});
   }
 }

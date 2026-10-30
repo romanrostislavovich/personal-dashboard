@@ -1,4 +1,4 @@
-import type { PgTable } from 'drizzle-orm/pg-core';
+import type {PgTable} from 'drizzle-orm/pg-core';
 
 /**
  * A tool through which the AI gets a module's data. A module registers
@@ -51,14 +51,17 @@ export interface AiTool {
 }
 
 /** JSON Schema for a tool without arguments. */
-export const NO_PARAMETERS = { type: 'object', properties: {} } as const;
+export const NO_PARAMETERS = {type: 'object', properties: {}} as const;
 
 /** Common case: a `from`–`to` period in YYYY-MM-DD format. */
 export const PERIOD_PARAMETERS = {
   type: 'object',
   properties: {
-    from: { type: 'string', description: 'Start of the period, YYYY-MM-DD' },
-    to: { type: 'string', description: 'End of the period, inclusive, YYYY-MM-DD' },
+    from: {type: 'string', description: 'Start of the period, YYYY-MM-DD'},
+    to: {
+      type: 'string',
+      description: 'End of the period, inclusive, YYYY-MM-DD',
+    },
   },
   required: ['from', 'to'],
 } as const;
@@ -67,7 +70,7 @@ export const PERIOD_PARAMETERS = {
 export function idParameters(description: string) {
   return {
     type: 'object',
-    properties: { id: { type: 'string', description } },
+    properties: {id: {type: 'string', description}},
     required: ['id'],
   } as const;
 }
@@ -76,15 +79,25 @@ export function idParameters(description: string) {
  * The record with the id the model passed, from a list of the user's records.
  * The error goes back to the model, which then looks the id up with a listing tool.
  */
-export function findById<T extends { id: string }>(items: T[], id: unknown, what: string): T {
-  const item = items.find((candidate) => candidate.id === id);
+export function findById<T extends {id: string}>(
+  items: T[],
+  id: unknown,
+  what: string,
+): T {
+  const item = items.find(candidate => candidate.id === id);
   if (!item) {
-    throw new Error(`${what} with id "${String(id)}" not found — look the id up first`);
+    throw new Error(
+      `${what} with id "${String(id)}" not found — look the id up first`,
+    );
   }
   return item;
 }
 
 /** Arguments without `id` — the fields to change in a partial update. */
-export function changedFields(args: Record<string, unknown>): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(args).filter(([key]) => key !== 'id'));
+export function changedFields(
+  args: Record<string, unknown>,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(args).filter(([key]) => key !== 'id'),
+  );
 }

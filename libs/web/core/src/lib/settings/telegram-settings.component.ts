@@ -1,17 +1,22 @@
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { CORE_READS, notificationsApi } from '@pd/client-core';
-import { NotificationSettings } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {CORE_READS, notificationsApi} from '@pd/client-core';
+import {NotificationSettings} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
 
 /** Telegram: where notifications go and where the assistant answers. */
-import { IntegrationGuideComponent } from '../ui/integration-guide.component';
-import { ServerKeyComponent, ServerKeyField } from '../ui/server-key.component';
+import {IntegrationGuideComponent} from '../ui/integration-guide.component';
+import {ServerKeyComponent, ServerKeyField} from '../ui/server-key.component';
 @Component({
   selector: 'pd-telegram-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,7 +49,9 @@ import { ServerKeyComponent, ServerKeyField } from '../ui/server-key.component';
           } @else {
             <p>{{ 'core.settings.telegram.notConnected' | transloco }}</p>
             @if (linkOpened()) {
-              <p class="hint">{{ 'core.settings.telegram.afterStart' | transloco }}</p>
+              <p class="hint">
+                {{ 'core.settings.telegram.afterStart' | transloco }}
+              </p>
             }
           }
         }
@@ -100,7 +107,9 @@ import { ServerKeyComponent, ServerKeyField } from '../ui/server-key.component';
   `,
 })
 export class TelegramSettingsComponent {
-  private readonly notifications = notificationsApi(inject(DASHBOARD_CLIENT).api);
+  private readonly notifications = notificationsApi(
+    inject(DASHBOARD_CLIENT).api,
+  );
   private readonly snackBar = inject(MatSnackBar);
   private readonly transloco = inject(TranslocoService);
 
@@ -117,7 +126,7 @@ export class TelegramSettingsComponent {
     },
   ];
   protected readonly saveBot = (values: Record<string, string>) =>
-    this.notifications.setBot({ token: values['token'] });
+    this.notifications.setBot({token: values['token']});
   protected readonly removeBot = () => this.notifications.removeBot();
 
   async connect(): Promise<void> {
@@ -133,8 +142,12 @@ export class TelegramSettingsComponent {
 
   async sendTest(): Promise<void> {
     await this.notifications.sendTest();
-    this.snackBar.open(this.transloco.translate('core.settings.telegram.testSent'), 'OK', {
-      duration: 3000,
-    });
+    this.snackBar.open(
+      this.transloco.translate('core.settings.telegram.testSent'),
+      'OK',
+      {
+        duration: 3000,
+      },
+    );
   }
 }

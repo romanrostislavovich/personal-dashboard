@@ -44,7 +44,7 @@ import {
   IcdLoadInput,
   WearableDaysQuery,
 } from '@pd/contracts';
-import { ApiClient, apiRequest } from '../api-client';
+import {ApiClient, apiRequest} from '../api-client';
 
 /** `/api/health` is the server's own health check, so Health lives at `/api/medical`. */
 const BASE = '/api/medical';
@@ -59,14 +59,17 @@ export const HEALTH_READS = {
   /** The band through the Google Health API: connected or not, the last sync. */
   wearable: () => apiRequest(`${BASE}/wearable`),
   /** The band's days of a period, oldest first. */
-  wearableDays: (query: WearableDaysQuery) => apiRequest(`${BASE}/wearable/days`, query),
+  wearableDays: (query: WearableDaysQuery) =>
+    apiRequest(`${BASE}/wearable/days`, query),
   /** A day of the band from the phone's Health Connect: by hours, its night, its reactions. */
   bandDay: (query: BandDayQuery) => apiRequest(`${BASE}/band/day`, query),
 };
 
 /** Adds without an id, changes with one. */
 const save = <T>(api: ApiClient, path: string, input: object, id?: string) =>
-  id ? api.put<T>(`${BASE}/${path}/${id}`, input) : api.post<T>(`${BASE}/${path}`, input);
+  id
+    ? api.put<T>(`${BASE}/${path}/${id}`, input)
+    : api.post<T>(`${BASE}/${path}`, input);
 
 export function healthApi(api: ApiClient) {
   return {
@@ -85,9 +88,11 @@ export function healthApi(api: ApiClient) {
     removeVisit: (id: string) => api.delete(`${BASE}/visits/${id}`),
 
     /** A recommendation of a doctor as a task of the TODO list; 404 without Tasks. */
-    addTask: (input: HealthTaskInput) => api.post<{ created: boolean }>(`${BASE}/tasks`, input),
+    addTask: (input: HealthTaskInput) =>
+      api.post<{created: boolean}>(`${BASE}/tasks`, input),
 
-    saveProfile: (input: HealthProfileInput) => api.put<HealthProfile>(`${BASE}/profile`, input),
+    saveProfile: (input: HealthProfileInput) =>
+      api.put<HealthProfile>(`${BASE}/profile`, input),
     saveAllergy: (input: HealthAllergyInput, id?: string) =>
       save<HealthAllergy>(api, 'allergies', input, id),
     removeAllergy: (id: string) => api.delete(`${BASE}/allergies/${id}`),
@@ -133,7 +138,9 @@ export function healthApi(api: ApiClient) {
       api.put<HealthDocument>(`${BASE}/documents/${id}`, input),
     /** The bytes of a page, for an object URL (a link cannot send the auth header). */
     documentFile: (id: string, page = 1) =>
-      api.blob(`${BASE}/documents/${id}/file${page > 1 ? `?page=${page}` : ''}`),
+      api.blob(
+        `${BASE}/documents/${id}/file${page > 1 ? `?page=${page}` : ''}`,
+      ),
     /** One more photographed page at the end. */
     addDocumentPage: (id: string, file: Blob) => {
       const form = new FormData();
@@ -146,26 +153,33 @@ export function healthApi(api: ApiClient) {
     removeDocument: (id: string) => api.delete(`${BASE}/documents/${id}`),
 
     /** The AI reads the document into a draft (kept next to it); takes up to a minute. */
-    readDocument: (id: string) => api.post<HealthDocumentDraft>(`${BASE}/documents/${id}/read`, {}),
+    readDocument: (id: string) =>
+      api.post<HealthDocumentDraft>(`${BASE}/documents/${id}/read`, {}),
     /** The draft waiting to be checked, if any. */
     documentDraft: (id: string) =>
-      api.read<{ draft: HealthDocumentDraft | null }>(apiRequest(`${BASE}/documents/${id}/draft`)),
+      api.read<{draft: HealthDocumentDraft | null}>(
+        apiRequest(`${BASE}/documents/${id}/draft`),
+      ),
     dropDraft: (id: string) => api.delete(`${BASE}/documents/${id}/draft`),
     /** Saves a checked draft at once: the visit, the lab report or the study, with the document. */
     applyDraft: (input: HealthDraftApplyInput) =>
       api.post<HealthDraftApplied>(`${BASE}/drafts/apply`, input),
 
     /** The summary for a doctor as a page to print (HTML) or a Word document. */
-    summaryHtml: (options: HealthSummaryOptionsInput) => api.blob(`${BASE}/summary/html`, options),
-    summaryDocx: (options: HealthSummaryOptionsInput) => api.blob(`${BASE}/summary/docx`, options),
+    summaryHtml: (options: HealthSummaryOptionsInput) =>
+      api.blob(`${BASE}/summary/html`, options),
+    summaryDocx: (options: HealthSummaryOptionsInput) =>
+      api.blob(`${BASE}/summary/docx`, options),
     shares: () => api.read<HealthShare[]>(HEALTH_READS.shares()),
     /** A link for a doctor; its address comes only now. */
-    share: (input: HealthShareInput) => api.post<HealthShareCreated>(`${BASE}/shares`, input),
+    share: (input: HealthShareInput) =>
+      api.post<HealthShareCreated>(`${BASE}/shares`, input),
     revokeShare: (id: string) => api.delete(`${BASE}/shares/${id}`),
 
     dictionaries: () => api.read<IcdDictionary[]>(HEALTH_READS.dictionaries()),
     /** Downloads a dictionary from its publisher on the server; takes a minute. */
-    loadDictionary: (input: IcdLoadInput) => api.post<IcdDictionary[]>(`${BASE}/icd/load`, input),
+    loadDictionary: (input: IcdLoadInput) =>
+      api.post<IcdDictionary[]>(`${BASE}/icd/load`, input),
     /** A dictionary from a CSV or XLSX file the user downloaded themselves. */
     importDictionary: (input: IcdImportInput, file: Blob, name: string) => {
       const form = new FormData();
@@ -175,10 +189,11 @@ export function healthApi(api: ApiClient) {
       return api.post<IcdDictionary[]>(`${BASE}/icd/import`, form);
     },
     searchIcd: (q: string, limit?: number) =>
-      api.read<IcdEntry[]>(apiRequest(`${BASE}/icd/search`, { q, limit })),
+      api.read<IcdEntry[]>(apiRequest(`${BASE}/icd/search`, {q, limit})),
 
     /** The Google sign-in page the user has to open to connect the band. */
-    wearableConnectUrl: () => api.post<{ url: string }>(`${BASE}/wearable/connect`, {}),
+    wearableConnectUrl: () =>
+      api.post<{url: string}>(`${BASE}/wearable/connect`, {}),
     disconnectWearable: () => api.delete(`${BASE}/wearable`),
     /** Reads the band's new days now. */
     syncWearable: () => api.post<void>(`${BASE}/wearable/sync`, {}),
@@ -188,9 +203,11 @@ export function healthApi(api: ApiClient) {
     removeGoogleHealthApp: () => api.delete(`${BASE}/wearable/app`),
     /** What a reaction of the body was (the owner's answer). */
     setReactionFeeling: (id: string, feeling: ReactionFeeling) =>
-      api.put<void>(`${BASE}/band/reactions/${id}`, { feeling }),
+      api.put<void>(`${BASE}/band/reactions/${id}`, {feeling}),
     /** A breathing session done in the dashboard. */
-    addMindfulness: (input: MindfulnessInput) => api.post<void>(`${BASE}/band/mindfulness`, input),
-    removeMindfulness: (id: string) => api.delete(`${BASE}/band/mindfulness/${id}`),
+    addMindfulness: (input: MindfulnessInput) =>
+      api.post<void>(`${BASE}/band/mindfulness`, input),
+    removeMindfulness: (id: string) =>
+      api.delete(`${BASE}/band/mindfulness/${id}`),
   };
 }

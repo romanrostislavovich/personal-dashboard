@@ -1,7 +1,7 @@
-import { callKey, PendingConfirmations } from './pending-confirmations';
+import {callKey, PendingConfirmations} from './pending-confirmations';
 
 describe('PendingConfirmations', () => {
-  const call = callKey('birthdays_delete', { id: 'b1' });
+  const call = callKey('birthdays_delete', {id: 'b1'});
 
   it('asks first and runs the same call in a later turn', () => {
     const confirmations = new PendingConfirmations();
@@ -20,9 +20,13 @@ describe('PendingConfirmations', () => {
   it('confirms only the exact call for the same user', () => {
     const confirmations = new PendingConfirmations();
     confirmations.confirmOrRequest('u1', call, 1);
-    expect(confirmations.confirmOrRequest('u1', callKey('birthdays_delete', { id: 'b2' }), 2)).toBe(
-      false,
-    );
+    expect(
+      confirmations.confirmOrRequest(
+        'u1',
+        callKey('birthdays_delete', {id: 'b2'}),
+        2,
+      ),
+    ).toBe(false);
     expect(confirmations.confirmOrRequest('u2', call, 2)).toBe(false);
   });
 
@@ -35,6 +39,6 @@ describe('PendingConfirmations', () => {
   });
 
   it('ignores the order of arguments', () => {
-    expect(callKey('t', { a: 1, b: 2 })).toBe(callKey('t', { b: 2, a: 1 }));
+    expect(callKey('t', {a: 1, b: 2})).toBe(callKey('t', {b: 2, a: 1}));
   });
 });

@@ -1,6 +1,6 @@
-import { WebView } from '@capacitor/core';
-import { Directory, Filesystem } from '@capacitor/filesystem';
-import { unzipSync } from 'fflate';
+import {WebView} from '@capacitor/core';
+import {Directory, Filesystem} from '@capacitor/filesystem';
+import {unzipSync} from 'fflate';
 
 /**
  * A newer interface for the Android app. The APK carries the interface it was built with; the
@@ -27,25 +27,32 @@ interface PendingBundle {
 
 /** The version of the interface shown now; `null` — the one inside the APK. */
 export async function currentBundle(): Promise<string | null> {
-  const { path } = await WebView.getServerBasePath();
+  const {path} = await WebView.getServerBasePath();
   const match = path.match(new RegExp(`/${BUNDLES_DIR}/([^/]+)/?$`));
   return match?.[1] ?? null;
 }
 
 /** Takes the server's interface if it differs from the one shown (and is not unpacked yet). */
 export async function fetchNewerBundle(server: string): Promise<void> {
-  const response = await fetch(`${server}${UPDATES_PATH}/bundle.json`, { cache: 'no-store' });
+  const response = await fetch(`${server}${UPDATES_PATH}/bundle.json`, {
+    cache: 'no-store',
+  });
   if (!response.ok) {
     return; // A server without the mobile interface.
   }
-  const { version } = (await response.json()) as { version?: unknown };
+  const {version} = (await response.json()) as {version?: unknown};
   if (typeof version !== 'string' || !/^[\w.-]+$/.test(version)) {
     return;
   }
-  if (version === (await currentBundle()) || version === pendingBundle()?.version) {
+  if (
+    version === (await currentBundle()) ||
+    version === pendingBundle()?.version
+  ) {
     return;
   }
-  const zip = await fetch(`${server}${UPDATES_PATH}/web.zip`, { cache: 'no-store' });
+  const zip = await fetch(`${server}${UPDATES_PATH}/web.zip`, {
+    cache: 'no-store',
+  });
   if (!zip.ok) {
     return;
   }
@@ -54,9 +61,11 @@ export async function fetchNewerBundle(server: string): Promise<void> {
     return; // Not an interface: the one shown stays.
   }
   const dir = `${BUNDLES_DIR}/${version}`;
-  await Filesystem.rmdir({ path: dir, directory: Directory.Data, recursive: true }).catch(
-    () => undefined,
-  );
+  await Filesystem.rmdir({
+    path: dir,
+    directory: Directory.Data,
+    recursive: true,
+  }).catch(() => undefined);
   for (const [name, data] of Object.entries(files)) {
     if (name.endsWith('/')) {
       continue;
@@ -68,8 +77,11 @@ export async function fetchNewerBundle(server: string): Promise<void> {
       recursive: true,
     });
   }
-  const { uri } = await Filesystem.getUri({ path: dir, directory: Directory.Data });
-  const pending: PendingBundle = { version, path: decodeURIComponent(new URL(uri).pathname) };
+  const {uri} = await Filesystem.getUri({path: dir, directory: Directory.Data});
+  const pending: PendingBundle = {
+    version,
+    path: decodeURIComponent(new URL(uri).pathname),
+  };
   localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
 }
 
@@ -80,17 +92,17 @@ export async function applyPendingBundle(): Promise<void> {
     return;
   }
   localStorage.removeItem(PENDING_KEY);
-  await WebView.setServerBasePath({ path: pending.path });
+  await WebView.setServerBasePath({path: pending.path});
   await WebView.persistServerBasePath();
 }
 
 /** The folders of interfaces neither shown nor waiting: they only take space. */
 export async function removeOldBundles(): Promise<void> {
   const keep = new Set([await currentBundle(), pendingBundle()?.version]);
-  const { files } = await Filesystem.readdir({
+  const {files} = await Filesystem.readdir({
     path: BUNDLES_DIR,
     directory: Directory.Data,
-  }).catch(() => ({ files: [] }));
+  }).catch(() => ({files: []}));
   for (const entry of files) {
     if (!keep.has(entry.name)) {
       await Filesystem.rmdir({
@@ -104,8 +116,12 @@ export async function removeOldBundles(): Promise<void> {
 
 function pendingBundle(): PendingBundle | null {
   try {
-    const value = JSON.parse(localStorage.getItem(PENDING_KEY) ?? 'null') as PendingBundle | null;
-    return value && typeof value.version === 'string' && typeof value.path === 'string'
+    const value = JSON.parse(
+      localStorage.getItem(PENDING_KEY) ?? 'null',
+    ) as PendingBundle | null;
+    return value &&
+      typeof value.version === 'string' &&
+      typeof value.path === 'string'
       ? value
       : null;
   } catch {

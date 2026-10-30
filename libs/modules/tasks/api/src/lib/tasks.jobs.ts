@@ -1,10 +1,15 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { SchedulerService, TelegramBotService, UserRow, UsersService } from '@pd/api-core';
-import { taskInputSchema, zonedDateTime } from '@pd/contracts';
-import { REMINDER_ACTION, RemindersService } from './reminders.service';
-import { formatWhen, tasksMessages } from './tasks.messages';
-import { TasksService } from './tasks.service';
-import { parseWhen } from './when';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  SchedulerService,
+  TelegramBotService,
+  UserRow,
+  UsersService,
+} from '@pd/api-core';
+import {taskInputSchema, zonedDateTime} from '@pd/contracts';
+import {REMINDER_ACTION, RemindersService} from './reminders.service';
+import {formatWhen, tasksMessages} from './tasks.messages';
+import {TasksService} from './tasks.service';
+import {parseWhen} from './when';
 
 /** `#home` at the end or inside a task typed in Telegram becomes its tag. */
 const HASHTAG = /(^|\s)#([^\s#]+)/g;
@@ -58,15 +63,15 @@ export class TasksJobs implements OnModuleInit {
         en: 'Tasks for today and overdue ones',
         ru: 'Задачи на сегодня и просроченные',
       },
-      handler: (user) => this.today(user),
+      handler: user => this.today(user),
     });
   }
 
   private async addTask(user: UserRow, text: string): Promise<string> {
     const messages = tasksMessages(user.locale);
-    const tags = [...text.matchAll(HASHTAG)].map((match) => match[2]);
+    const tags = [...text.matchAll(HASHTAG)].map(match => match[2]);
     const title = text.replace(HASHTAG, '$1').replace(/\s+/g, ' ').trim();
-    const input = taskInputSchema.safeParse({ title, tags });
+    const input = taskInputSchema.safeParse({title, tags});
     if (!input.success) {
       return messages.todoUsage;
     }
@@ -81,25 +86,37 @@ export class TasksJobs implements OnModuleInit {
     if (!when || !when.rest) {
       return messages.remindUsage;
     }
-    await this.reminders.create(user.id, { text: when.rest, remindAt: when.at.toISOString() });
-    return messages.remindAdded(formatWhen(when.at, timeZone, user.locale), when.rest);
+    await this.reminders.create(user.id, {
+      text: when.rest,
+      remindAt: when.at.toISOString(),
+    });
+    return messages.remindAdded(
+      formatWhen(when.at, timeZone, user.locale),
+      when.rest,
+    );
   }
 
   /** Overdue and today's tasks by the user's own calendar. */
   private async today(user: UserRow): Promise<string> {
     const messages = tasksMessages(user.locale);
     const today = zonedDateTime(new Date(), this.users.timeZoneOf(user)).date;
-    const open = (await this.tasks.list(user.id)).filter((task) => !task.completedAt);
+    const open = (await this.tasks.list(user.id)).filter(
+      task => !task.completedAt,
+    );
     const section = (title: string, items: string[]) =>
-      items.length ? `${title}:\n${items.map((item) => `• ${item}`).join('\n')}` : '';
+      items.length
+        ? `${title}:\n${items.map(item => `• ${item}`).join('\n')}`
+        : '';
     const reply = [
       section(
         messages.tasksOverdue,
-        open.filter((task) => task.dueDate && task.dueDate < today).map((task) => task.title),
+        open
+          .filter(task => task.dueDate && task.dueDate < today)
+          .map(task => task.title),
       ),
       section(
         messages.tasksToday,
-        open.filter((task) => task.dueDate === today).map((task) => task.title),
+        open.filter(task => task.dueDate === today).map(task => task.title),
       ),
     ]
       .filter(Boolean)

@@ -1,5 +1,5 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LinksService, UsersService } from '@pd/api-core';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, LinksService, UsersService} from '@pd/api-core';
 import {
   addDays,
   DailyMetric,
@@ -8,8 +8,8 @@ import {
   toLocalDate,
   zonedToUtc,
 } from '@pd/contracts';
-import { and, eq, gte, isNotNull, isNull, lt, sql } from 'drizzle-orm';
-import { tasks } from './tasks.schema';
+import {and, eq, gte, isNotNull, isNull, lt, sql} from 'drizzle-orm';
+import {tasks} from './tasks.schema';
 
 /**
  * What tasks tell the other sections (see LinksService): the tasks of a project for its
@@ -27,8 +27,14 @@ export class TasksLinks implements OnModuleInit {
     this.links.registerProject({
       module: 'tasks',
       facts: async (userId, project, period) => {
-        const ofProject = and(eq(tasks.userId, userId), eq(tasks.projectId, project.id));
-        const open = await this.db.$count(tasks, and(ofProject, isNull(tasks.completedAt)));
+        const ofProject = and(
+          eq(tasks.userId, userId),
+          eq(tasks.projectId, project.id),
+        );
+        const open = await this.db.$count(
+          tasks,
+          and(ofProject, isNull(tasks.completedAt)),
+        );
         const done = await this.db.$count(
           tasks,
           and(ofProject, await this.doneWithin(userId, period)),
@@ -60,9 +66,14 @@ export class TasksLinks implements OnModuleInit {
         const timeZone = await this.timeZone(userId);
         const day = sql<LocalDate>`to_char(${tasks.completedAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`;
         const days = await this.db
-          .select({ day, done: sql<number>`count(*)::int` })
+          .select({day, done: sql<number>`count(*)::int`})
           .from(tasks)
-          .where(and(eq(tasks.userId, userId), await this.doneWithin(userId, period)))
+          .where(
+            and(
+              eq(tasks.userId, userId),
+              await this.doneWithin(userId, period),
+            ),
+          )
           // By position: the time zone is a parameter (see ActivityService.stats).
           .groupBy(sql`1`);
         // The tasks that came up: what landed on the day, done or not.
@@ -76,8 +87,14 @@ export class TasksLinks implements OnModuleInit {
           .where(
             and(
               eq(tasks.userId, userId),
-              gte(tasks.createdAt, zonedToUtc({ date: period.from, time: '00:00' }, timeZone)),
-              lt(tasks.createdAt, zonedToUtc({ date: after, time: '00:00' }, timeZone)),
+              gte(
+                tasks.createdAt,
+                zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+              ),
+              lt(
+                tasks.createdAt,
+                zonedToUtc({date: after, time: '00:00'}, timeZone),
+              ),
             ),
           )
           .groupBy(sql`1`);
@@ -87,34 +104,43 @@ export class TasksLinks implements OnModuleInit {
             module: 'tasks',
             labelKey: 'tasks.links.done',
             unit: 'count',
-            days: days.map(({ day: date, done }) => ({ day: date, value: done })),
+            days: days.map(({day: date, done}) => ({day: date, value: done})),
           },
           {
             key: 'tasks.created',
             module: 'tasks',
             labelKey: 'tasks.links.created',
             unit: 'count',
-            days: created.map(({ day: date, count }) => ({ day: date, value: count })),
+            days: created.map(({day: date, count}) => ({
+              day: date,
+              value: count,
+            })),
           },
         ];
-        return metrics.filter((metric) => metric.days.length);
+        return metrics.filter(metric => metric.days.length);
       },
     });
 
     this.links.registerPages([
-      { module: 'tasks', path: '/tasks/todo', description: 'the TODO list' },
-      { module: 'tasks', path: '/tasks/reminders', description: 'reminders' },
+      {module: 'tasks', path: '/tasks/todo', description: 'the TODO list'},
+      {module: 'tasks', path: '/tasks/reminders', description: 'reminders'},
     ]);
   }
 
   /** Done on the user's own days of a period. */
-  private async doneWithin(userId: string, period: { from: LocalDate; to: LocalDate }) {
+  private async doneWithin(
+    userId: string,
+    period: {from: LocalDate; to: LocalDate},
+  ) {
     const timeZone = await this.timeZone(userId);
     const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
     return and(
       isNotNull(tasks.completedAt),
-      gte(tasks.completedAt, zonedToUtc({ date: period.from, time: '00:00' }, timeZone)),
-      lt(tasks.completedAt, zonedToUtc({ date: after, time: '00:00' }, timeZone)),
+      gte(
+        tasks.completedAt,
+        zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+      ),
+      lt(tasks.completedAt, zonedToUtc({date: after, time: '00:00'}, timeZone)),
     );
   }
 

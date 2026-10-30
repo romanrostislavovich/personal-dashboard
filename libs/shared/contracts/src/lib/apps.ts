@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /*
  * The apps of the dashboard besides the web: the desktop app, the browser extension and, later,
@@ -10,7 +10,14 @@ export const APP_KINDS = ['desktop', 'extension', 'mobile'] as const;
 export type AppKind = (typeof APP_KINDS)[number];
 
 /** What an installer is for. */
-export const APP_PLATFORMS = ['windows', 'macos', 'linux', 'chrome', 'android', 'ios'] as const;
+export const APP_PLATFORMS = [
+  'windows',
+  'macos',
+  'linux',
+  'chrome',
+  'android',
+  'ios',
+] as const;
 export type AppPlatform = (typeof APP_PLATFORMS)[number];
 
 export interface AppDownload {

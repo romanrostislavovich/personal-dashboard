@@ -1,6 +1,13 @@
-import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import {createHash} from 'node:crypto';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import {dirname, join} from 'node:path';
 
 /**
  * The shell is two parts. The **base** is what the installer puts on the computer: Electron
@@ -50,7 +57,9 @@ export function isManifest(value: unknown): value is BundleManifest {
 /** The manifest of a folder if every file in it is what the manifest says; `null` otherwise. */
 export function readBundle(dir: string): BundleManifest | null {
   try {
-    const manifest: unknown = JSON.parse(readFileSync(join(dir, MANIFEST_FILE), 'utf8'));
+    const manifest: unknown = JSON.parse(
+      readFileSync(join(dir, MANIFEST_FILE), 'utf8'),
+    );
     if (!isManifest(manifest)) {
       return null;
     }
@@ -88,16 +97,16 @@ export class BundleStore {
     let state = this.state();
     if (state.builtin !== builtin.version) {
       // A fresh install (or a reinstall): what was downloaded for the old one is not kept.
-      rmSync(this.root, { recursive: true, force: true });
-      state = { builtin: builtin.version, starting: null, bad: [] };
+      rmSync(this.root, {recursive: true, force: true});
+      state = {builtin: builtin.version, starting: null, bad: []};
     }
     if (state.starting) {
       state.bad = [...state.bad, state.starting];
       state.starting = null;
-      rmSync(this.current, { recursive: true, force: true });
+      rmSync(this.current, {recursive: true, force: true});
     }
     if (existsSync(this.next)) {
-      rmSync(this.current, { recursive: true, force: true });
+      rmSync(this.current, {recursive: true, force: true});
       renameSync(this.next, this.current);
     }
 
@@ -116,7 +125,7 @@ export class BundleStore {
   confirmStarted(): void {
     const state = this.state();
     if (state.starting) {
-      this.save({ ...state, starting: null });
+      this.save({...state, starting: null});
     }
   }
 
@@ -132,14 +141,14 @@ export class BundleStore {
   /** Saves a downloaded bundle as the one to switch to on the next start. */
   stage(manifest: BundleManifest, files: ReadonlyMap<string, Buffer>): void {
     const staging = join(this.root, 'downloading');
-    rmSync(staging, { recursive: true, force: true });
+    rmSync(staging, {recursive: true, force: true});
     for (const [name, content] of files) {
       const path = join(staging, name);
-      mkdirSync(dirname(path), { recursive: true });
+      mkdirSync(dirname(path), {recursive: true});
       writeFileSync(path, content);
     }
     writeFileSync(join(staging, MANIFEST_FILE), JSON.stringify(manifest));
-    rmSync(this.next, { recursive: true, force: true });
+    rmSync(this.next, {recursive: true, force: true});
     renameSync(staging, this.next);
   }
 
@@ -153,19 +162,21 @@ export class BundleStore {
 
   private state(): StoreState {
     try {
-      const state = JSON.parse(readFileSync(join(this.root, 'state.json'), 'utf8')) as StoreState;
+      const state = JSON.parse(
+        readFileSync(join(this.root, 'state.json'), 'utf8'),
+      ) as StoreState;
       return {
         builtin: state.builtin ?? null,
         starting: state.starting ?? null,
         bad: state.bad ?? [],
       };
     } catch {
-      return { builtin: null, starting: null, bad: [] };
+      return {builtin: null, starting: null, bad: []};
     }
   }
 
   private save(state: StoreState): void {
-    mkdirSync(this.root, { recursive: true });
+    mkdirSync(this.root, {recursive: true});
     writeFileSync(join(this.root, 'state.json'), JSON.stringify(state));
   }
 }

@@ -1,13 +1,22 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { AuthService } from '../auth/auth.service';
-import { errorStatus } from '../client/core-requests';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {AuthService} from '../auth/auth.service';
+import {errorStatus} from '../client/core-requests';
 
 @Component({
   selector: 'pd-password-settings',
@@ -23,12 +32,16 @@ import { errorStatus } from '../client/core-requests';
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>{{ 'core.settings.password.title' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'core.settings.password.title' | transloco
+        }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <form class="form" [formGroup]="form" (ngSubmit)="save()">
           <mat-form-field>
-            <mat-label>{{ 'core.settings.password.current' | transloco }}</mat-label>
+            <mat-label>{{
+              'core.settings.password.current' | transloco
+            }}</mat-label>
             <input
               matInput
               type="password"
@@ -37,7 +50,9 @@ import { errorStatus } from '../client/core-requests';
             />
           </mat-form-field>
           <mat-form-field>
-            <mat-label>{{ 'core.settings.password.new' | transloco }}</mat-label>
+            <mat-label>{{
+              'core.settings.password.new' | transloco
+            }}</mat-label>
             <input
               matInput
               type="password"
@@ -46,7 +61,11 @@ import { errorStatus } from '../client/core-requests';
             />
             <mat-hint>{{ 'core.register.passwordHint' | transloco }}</mat-hint>
           </mat-form-field>
-          <button matButton="filled" type="submit" [disabled]="form.invalid || saving()">
+          <button
+            matButton="filled"
+            type="submit"
+            [disabled]="form.invalid || saving()"
+          >
             {{ 'core.settings.password.submit' | transloco }}
           </button>
         </form>
@@ -92,6 +111,6 @@ export class PasswordSettingsComponent {
   }
 
   private notify(key: string): void {
-    this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 4000 });
+    this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 4000});
   }
 }

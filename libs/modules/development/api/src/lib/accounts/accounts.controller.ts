@@ -10,7 +10,12 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
+import {
+  AuthUser,
+  CurrentUser,
+  ServerActions,
+  ZodValidationPipe,
+} from '@pd/api-core';
 import {
   BitbucketTokenInput,
   bitbucketTokenInputSchema,
@@ -26,10 +31,10 @@ import {
   TokenProvider,
   tokenProviderSchema,
 } from '@pd/contracts';
-import { AccountTokensService } from './account-tokens.service';
-import { ACCOUNT_ACTIONS } from './accounts.server-actions';
-import { AccountsService } from './accounts.service';
-import { CodeAccountsService } from './code-accounts.service';
+import {AccountTokensService} from './account-tokens.service';
+import {ACCOUNT_ACTIONS} from './accounts.server-actions';
+import {AccountsService} from './accounts.service';
+import {CodeAccountsService} from './code-accounts.service';
 
 const provider = new ZodValidationPipe(codeProviderSchema);
 const tokenProvider = new ZodValidationPipe(tokenProviderSchema);
@@ -65,7 +70,11 @@ export class AccountsController {
     @CurrentUser() user: AuthUser,
     @Query('year', year) of: number,
   ): Promise<GithubContributionDay[]> {
-    return this.accounts.summaryContributions(user.id, `${of}-01-01`, `${of}-12-31`);
+    return this.accounts.summaryContributions(
+      user.id,
+      `${of}-01-01`,
+      `${of}-12-31`,
+    );
   }
 
   /** Saves the GitLab token and loads the account it belongs to right away. */
@@ -73,7 +82,8 @@ export class AccountsController {
   @HttpCode(204)
   async saveGitlabToken(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(gitlabTokenInputSchema)) input: GitlabTokenInput,
+    @Body(new ZodValidationPipe(gitlabTokenInputSchema))
+    input: GitlabTokenInput,
   ): Promise<void> {
     await this.actions.run(user.id, ACCOUNT_ACTIONS.saveGitlabToken, input);
     await this.firstSync(user.id, 'gitlab');
@@ -83,7 +93,8 @@ export class AccountsController {
   @HttpCode(204)
   async saveBitbucketToken(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(bitbucketTokenInputSchema)) input: BitbucketTokenInput,
+    @Body(new ZodValidationPipe(bitbucketTokenInputSchema))
+    input: BitbucketTokenInput,
   ): Promise<void> {
     await this.actions.run(user.id, ACCOUNT_ACTIONS.saveBitbucketToken, input);
     await this.firstSync(user.id, 'bitbucket');
@@ -116,7 +127,12 @@ export class AccountsController {
     @Param('provider', provider) of: CodeProvider,
     @Query('year', year) ofYear: number,
   ): Promise<GithubContributionDay[]> {
-    return this.accounts.contributions(user.id, of, `${ofYear}-01-01`, `${ofYear}-12-31`);
+    return this.accounts.contributions(
+      user.id,
+      of,
+      `${ofYear}-01-01`,
+      `${ofYear}-12-31`,
+    );
   }
 
   /** Refresh now without waiting for the hourly sync. */
@@ -126,13 +142,15 @@ export class AccountsController {
     @CurrentUser() user: AuthUser,
     @Param('provider', provider) of: CodeProvider,
   ): Promise<void> {
-    await this.actions.run(user.id, ACCOUNT_ACTIONS.sync, { provider: of });
+    await this.actions.run(user.id, ACCOUNT_ACTIONS.sync, {provider: of});
   }
 
   /** A token that reads only a part (no private projects, say) is still a valid one. */
   private async firstSync(userId: string, of: TokenProvider): Promise<void> {
     await this.actions
-      .run(userId, ACCOUNT_ACTIONS.sync, { provider: of })
-      .catch((error) => this.logger.warn(`${of} account of ${userId} was not loaded: ${error}`));
+      .run(userId, ACCOUNT_ACTIONS.sync, {provider: of})
+      .catch(error =>
+        this.logger.warn(`${of} account of ${userId} was not loaded: ${error}`),
+      );
   }
 }

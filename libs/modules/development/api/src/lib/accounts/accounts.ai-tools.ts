@@ -1,13 +1,13 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, NO_PARAMETERS, ServerActions } from '@pd/api-core';
-import { TOKEN_PROVIDERS, tokenProviderSchema } from '@pd/contracts';
-import { z } from 'zod';
-import { ACCOUNT_ACTIONS } from './accounts.server-actions';
-import { AccountsService } from './accounts.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AiService, NO_PARAMETERS, ServerActions} from '@pd/api-core';
+import {TOKEN_PROVIDERS, tokenProviderSchema} from '@pd/contracts';
+import {z} from 'zod';
+import {ACCOUNT_ACTIONS} from './accounts.server-actions';
+import {AccountsService} from './accounts.service';
 
 const LOCAL_DATE = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-const accountSchema = z.object({ provider: tokenProviderSchema });
-const periodSchema = accountSchema.extend({ from: LOCAL_DATE, to: LOCAL_DATE });
+const accountSchema = z.object({provider: tokenProviderSchema});
+const periodSchema = accountSchema.extend({from: LOCAL_DATE, to: LOCAL_DATE});
 
 const PROVIDER = {
   type: 'string',
@@ -39,7 +39,7 @@ export class AccountsAiTools implements OnModuleInit {
         '`null` — no service is connected. Use it for "how much did I code" unless one service ' +
         'is asked about.',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.accounts.summary(userId),
+      handler: userId => this.accounts.summary(userId),
     });
 
     this.ai.registerTool({
@@ -49,10 +49,23 @@ export class AccountsAiTools implements OnModuleInit {
         "The user's own GitLab or Bitbucket account: own repositories, contributions in total, " +
         'today and over 7 days, streaks, the busiest day, per-year totals, languages, top ' +
         'repositories; on GitLab also followers and stars. `null` — the service is not connected.',
-      parameters: { type: 'object', properties: { provider: PROVIDER }, required: ['provider'] },
+      parameters: {
+        type: 'object',
+        properties: {provider: PROVIDER},
+        required: ['provider'],
+      },
       handler: async (userId, args) => {
-        const account = await this.accounts.account(userId, accountSchema.parse(args).provider);
-        return account && { ...account, followersHistory: undefined, avatarUrl: undefined };
+        const account = await this.accounts.account(
+          userId,
+          accountSchema.parse(args).provider,
+        );
+        return (
+          account && {
+            ...account,
+            followersHistory: undefined,
+            avatarUrl: undefined,
+          }
+        );
       },
     });
 
@@ -66,15 +79,26 @@ export class AccountsAiTools implements OnModuleInit {
         type: 'object',
         properties: {
           provider: PROVIDER,
-          from: { type: 'string', description: 'Start of the period, YYYY-MM-DD' },
-          to: { type: 'string', description: 'End of the period, inclusive, YYYY-MM-DD' },
+          from: {
+            type: 'string',
+            description: 'Start of the period, YYYY-MM-DD',
+          },
+          to: {
+            type: 'string',
+            description: 'End of the period, inclusive, YYYY-MM-DD',
+          },
         },
         required: ['provider', 'from', 'to'],
       },
       handler: async (userId, args) => {
-        const { provider, from, to } = periodSchema.parse(args);
-        const days = await this.accounts.contributions(userId, provider, from, to);
-        return { total: days.reduce((sum, day) => sum + day.count, 0), days };
+        const {provider, from, to} = periodSchema.parse(args);
+        const days = await this.accounts.contributions(
+          userId,
+          provider,
+          from,
+          to,
+        );
+        return {total: days.reduce((sum, day) => sum + day.count, 0), days};
       },
     });
 
@@ -85,11 +109,15 @@ export class AccountsAiTools implements OnModuleInit {
       description:
         'Refreshes the GitLab or Bitbucket account statistics now instead of waiting for the ' +
         'hourly sync.',
-      parameters: { type: 'object', properties: { provider: PROVIDER }, required: ['provider'] },
+      parameters: {
+        type: 'object',
+        properties: {provider: PROVIDER},
+        required: ['provider'],
+      },
       handler: async (userId, args) => {
-        const { provider } = accountSchema.parse(args);
-        await this.actions.run(userId, ACCOUNT_ACTIONS.sync, { provider });
-        return { refreshed: true };
+        const {provider} = accountSchema.parse(args);
+        await this.actions.run(userId, ACCOUNT_ACTIONS.sync, {provider});
+        return {refreshed: true};
       },
     });
   }

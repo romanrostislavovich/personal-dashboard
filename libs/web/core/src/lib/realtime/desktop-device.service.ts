@@ -1,7 +1,7 @@
-import { inject, Injectable } from '@angular/core';
-import { DeviceLink, DeviceTool } from '@pd/client-core';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { desktopBridge } from './desktop-bridge';
+import {inject, Injectable} from '@angular/core';
+import {DeviceLink, DeviceTool} from '@pd/client-core';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {desktopBridge} from './desktop-bridge';
 
 /** Screenshots listed at most. */
 const RECENT_SCREENSHOTS = 20;
@@ -11,7 +11,7 @@ const RECENT_SCREENSHOTS = 20;
  * session): while the app runs, the assistant and the outside AI clients may ask what window
  * is in front and which screenshots were taken lately (see device-tools in contracts).
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class DesktopDeviceService {
   private readonly client = inject(DASHBOARD_CLIENT);
   private link: DeviceLink | null = null;
@@ -29,8 +29,8 @@ export class DesktopDeviceService {
         description:
           "The program and the window in front on the user's computer now, and how many seconds " +
           'there has been no keyboard or mouse input. A private window comes without its title.',
-        inputSchema: { type: 'object', properties: {} },
-        run: async () => (await device.frontWindow()) ?? { window: null },
+        inputSchema: {type: 'object', properties: {}},
+        run: async () => (await device.frontWindow()) ?? {window: null},
       },
     ];
     if (screenshots) {
@@ -39,10 +39,10 @@ export class DesktopDeviceService {
         description:
           "The names of the latest screenshots in the folder of the user's computer " +
           '(month/date time.png), newest first. Their pictures are in the Screenshots section.',
-        inputSchema: { type: 'object', properties: {} },
+        inputSchema: {type: 'object', properties: {}},
         run: async () =>
           (await screenshots.list())
-            .map((file) => file.name)
+            .map(file => file.name)
             .sort()
             .reverse()
             .slice(0, RECENT_SCREENSHOTS),
@@ -54,7 +54,8 @@ export class DesktopDeviceService {
       name: desktop.activity?.hostname || 'Computer',
       // A fresh token for every hello: the one in the session may be past its fifteen minutes.
       accessToken: async () =>
-        (await this.client.api.refresh())?.accessToken ?? this.client.session.token,
+        (await this.client.api.refresh())?.accessToken ??
+        this.client.session.token,
       tools: () => tools,
     });
     this.link.start();

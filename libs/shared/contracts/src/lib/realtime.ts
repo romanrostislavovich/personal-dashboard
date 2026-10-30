@@ -1,11 +1,11 @@
-import { Achievement } from './achievements';
+import {Achievement} from './achievements';
 
 /**
  * Events the server pushes to an open dashboard (`GET /api/events`, Server-Sent Events).
  * The web app shows them as toasts; the desktop app also as system notifications.
  */
 export type RealtimeEvent =
-  | { type: 'achievements'; achievements: Achievement[] }
+  | {type: 'achievements'; achievements: Achievement[]}
   | {
       type: 'notification';
       title: string;
@@ -17,6 +17,6 @@ export type RealtimeEvent =
       route?: string;
     }
   /** The bell changed: a notification came, was read or answered (on any device). */
-  | { type: 'inbox' }
+  | {type: 'inbox'}
   /** Keeps proxies from closing an idle connection; the client ignores it. */
-  | { type: 'ping' };
+  | {type: 'ping'};

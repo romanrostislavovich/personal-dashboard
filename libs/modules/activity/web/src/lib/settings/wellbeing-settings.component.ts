@@ -1,15 +1,21 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { ActivityLimitInput, ActivitySettingsUpdate } from '@pd/contracts';
-import { DurationPipe } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { ActivityApi } from '../activity.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSelectModule} from '@angular/material/select';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {ActivityLimitInput, ActivitySettingsUpdate} from '@pd/contracts';
+import {DurationPipe} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {ActivityApi} from '../activity.api';
 
 const BREAK_MINUTES = [0, 30, 45, 50, 60, 90, 120];
 const SUMMARY_TIMES = ['18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
@@ -41,34 +47,44 @@ const FOCUS = {
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>self_improvement</mat-icon>
-        <mat-card-title>{{ 'activity.wellbeing.title' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'activity.wellbeing.title' | transloco
+        }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <p class="hint">{{ 'activity.wellbeing.hint' | transloco }}</p>
         @if (settings.value(); as current) {
           <div class="row">
             <mat-form-field subscriptSizing="dynamic">
-              <mat-label>{{ 'activity.wellbeing.break' | transloco }}</mat-label>
+              <mat-label>{{
+                'activity.wellbeing.break' | transloco
+              }}</mat-label>
               <mat-select
                 [value]="current.breakMinutes"
-                (valueChange)="save({ breakMinutes: $event })"
+                (valueChange)="save({breakMinutes: $event})"
               >
                 @for (minutes of breakOptions; track minutes) {
                   <mat-option [value]="minutes">
                     {{
-                      minutes ? (minutes * 60 | pdDuration) : ('activity.wellbeing.off' | transloco)
+                      minutes
+                        ? (minutes * 60 | pdDuration)
+                        : ('activity.wellbeing.off' | transloco)
                     }}
                   </mat-option>
                 }
               </mat-select>
             </mat-form-field>
             <mat-form-field subscriptSizing="dynamic">
-              <mat-label>{{ 'activity.wellbeing.summary' | transloco }}</mat-label>
+              <mat-label>{{
+                'activity.wellbeing.summary' | transloco
+              }}</mat-label>
               <mat-select
                 [value]="current.summaryTime"
-                (valueChange)="save({ summaryTime: $event })"
+                (valueChange)="save({summaryTime: $event})"
               >
-                <mat-option [value]="null">{{ 'activity.wellbeing.off' | transloco }}</mat-option>
+                <mat-option [value]="null">{{
+                  'activity.wellbeing.off' | transloco
+                }}</mat-option>
                 @for (time of summaryTimes; track time) {
                   <mat-option [value]="time">{{ time }}</mat-option>
                 }
@@ -81,7 +97,10 @@ const FOCUS = {
         <div class="row">
           <mat-form-field subscriptSizing="dynamic">
             <mat-label>{{ 'activity.wellbeing.games' | transloco }}</mat-label>
-            <mat-select [value]="minutesOf('games')" (valueChange)="setKind('games', $event)">
+            <mat-select
+              [value]="minutesOf('games')"
+              (valueChange)="setKind('games', $event)"
+            >
               @for (minutes of gameOptions; track minutes) {
                 <mat-option [value]="minutes">
                   {{
@@ -95,7 +114,10 @@ const FOCUS = {
           </mat-form-field>
           <mat-form-field subscriptSizing="dynamic">
             <mat-label>{{ 'activity.wellbeing.total' | transloco }}</mat-label>
-            <mat-select [value]="minutesOf('total')" (valueChange)="setKind('total', $event)">
+            <mat-select
+              [value]="minutesOf('total')"
+              (valueChange)="setKind('total', $event)"
+            >
               @for (minutes of totalOptions; track minutes) {
                 <mat-option [value]="minutes">
                   {{
@@ -112,22 +134,27 @@ const FOCUS = {
         @if (minutesOf('games')) {
           <div class="row">
             <mat-form-field subscriptSizing="dynamic">
-              <mat-label>{{ 'activity.wellbeing.gamesPerTask' | transloco }}</mat-label>
+              <mat-label>{{
+                'activity.wellbeing.gamesPerTask' | transloco
+              }}</mat-label>
               <mat-select
                 [value]="settings.value()?.gamesMinutesPerTask ?? 0"
-                (valueChange)="save({ gamesMinutesPerTask: $event })"
+                (valueChange)="save({gamesMinutesPerTask: $event})"
               >
                 @for (minutes of gamesPerTaskOptions; track minutes) {
                   <mat-option [value]="minutes">
                     {{
                       minutes
-                        ? ('activity.wellbeing.plusMinutes' | transloco: { minutes })
+                        ? ('activity.wellbeing.plusMinutes'
+                          | transloco: {minutes})
                         : ('activity.wellbeing.noBonus' | transloco)
                     }}
                   </mat-option>
                 }
               </mat-select>
-              <mat-hint>{{ 'activity.wellbeing.gamesPerTaskHint' | transloco }}</mat-hint>
+              <mat-hint>{{
+                'activity.wellbeing.gamesPerTaskHint' | transloco
+              }}</mat-hint>
             </mat-form-field>
           </div>
         }
@@ -142,7 +169,9 @@ const FOCUS = {
                 (valueChange)="setApp(limit.app, $event)"
               >
                 @for (minutes of appOptions; track minutes) {
-                  <mat-option [value]="minutes">{{ minutes * 60 | pdDuration }}</mat-option>
+                  <mat-option [value]="minutes">{{
+                    minutes * 60 | pdDuration
+                  }}</mat-option>
                 }
               </mat-select>
             </mat-form-field>
@@ -159,7 +188,10 @@ const FOCUS = {
         <div class="row">
           <mat-form-field subscriptSizing="dynamic">
             <mat-label>{{ 'activity.wellbeing.addApp' | transloco }}</mat-label>
-            <mat-select [value]="null" (valueChange)="$event && setApp($event, 60)">
+            <mat-select
+              [value]="null"
+              (valueChange)="$event && setApp($event, 60)"
+            >
               @for (app of freeApps(); track app.app) {
                 <mat-option [value]="app.app">{{ app.name }}</mat-option>
               }
@@ -172,11 +204,20 @@ const FOCUS = {
           <div class="row">
             @for (field of focusFields; track field) {
               <mat-form-field subscriptSizing="dynamic" class="narrow">
-                <mat-label>{{ 'activity.wellbeing.' + field | transloco }}</mat-label>
-                <mat-select [value]="current[field]" (valueChange)="setFocus(field, $event)">
+                <mat-label>{{
+                  'activity.wellbeing.' + field | transloco
+                }}</mat-label>
+                <mat-select
+                  [value]="current[field]"
+                  (valueChange)="setFocus(field, $event)"
+                >
                   @for (value of focusOptions[field]; track value) {
                     <mat-option [value]="value">
-                      {{ field === 'roundsBeforeLongBreak' ? value : (value * 60 | pdDuration) }}
+                      {{
+                        field === 'roundsBeforeLongBreak'
+                          ? value
+                          : (value * 60 | pdDuration)
+                      }}
                     </mat-option>
                   }
                 </mat-select>
@@ -236,29 +277,33 @@ export class WellbeingSettingsComponent {
   private readonly current = computed(
     () =>
       this.limits() ??
-      this.limitsResource.value().map(({ kind, app, minutes }) => ({ kind, app, minutes })),
+      this.limitsResource
+        .value()
+        .map(({kind, app, minutes}) => ({kind, app, minutes})),
   );
 
   protected readonly appLimits = computed(() =>
     this.current()
-      .filter((limit) => limit.kind === 'app')
-      .map((limit) => ({ app: limit.app ?? '', minutes: limit.minutes })),
+      .filter(limit => limit.kind === 'app')
+      .map(limit => ({app: limit.app ?? '', minutes: limit.minutes})),
   );
   protected readonly freeApps = computed(() => {
-    const limited = new Set(this.appLimits().map((limit) => limit.app));
-    return this.apps.value().filter((app) => !app.excluded && !limited.has(app.app));
+    const limited = new Set(this.appLimits().map(limit => limit.app));
+    return this.apps
+      .value()
+      .filter(app => !app.excluded && !limited.has(app.app));
   });
 
   protected minutesOf(kind: 'games' | 'total'): number {
-    return this.current().find((limit) => limit.kind === kind)?.minutes ?? 0;
+    return this.current().find(limit => limit.kind === kind)?.minutes ?? 0;
   }
 
   protected nameOf(app: string): string {
-    return this.apps.value().find((known) => known.app === app)?.name ?? app;
+    return this.apps.value().find(known => known.app === app)?.name ?? app;
   }
 
   protected setFocus(field: keyof typeof FOCUS, value: number): void {
-    void this.save({ [field]: value });
+    void this.save({[field]: value});
   }
 
   protected async save(update: ActivitySettingsUpdate): Promise<void> {
@@ -267,14 +312,20 @@ export class WellbeingSettingsComponent {
   }
 
   protected setKind(kind: 'games' | 'total', minutes: number): void {
-    const others = this.current().filter((limit) => limit.kind !== kind);
-    void this.saveLimits(minutes ? [...others, { kind, app: null, minutes }] : others);
+    const others = this.current().filter(limit => limit.kind !== kind);
+    void this.saveLimits(
+      minutes ? [...others, {kind, app: null, minutes}] : others,
+    );
   }
 
   /** `0` removes the program's limit. */
   protected setApp(app: string, minutes: number): void {
-    const others = this.current().filter((limit) => !(limit.kind === 'app' && limit.app === app));
-    void this.saveLimits(minutes ? [...others, { kind: 'app', app, minutes }] : others);
+    const others = this.current().filter(
+      limit => !(limit.kind === 'app' && limit.app === app),
+    );
+    void this.saveLimits(
+      minutes ? [...others, {kind: 'app', app, minutes}] : others,
+    );
   }
 
   private async saveLimits(limits: ActivityLimitInput[]): Promise<void> {
@@ -283,7 +334,7 @@ export class WellbeingSettingsComponent {
     await firstValueFrom(
       this.api.replaceLimits(
         ['games', 'total', 'app'],
-        limits.filter((limit) => limit.kind !== 'site'),
+        limits.filter(limit => limit.kind !== 'site'),
       ),
     );
     this.limitsResource.reload();

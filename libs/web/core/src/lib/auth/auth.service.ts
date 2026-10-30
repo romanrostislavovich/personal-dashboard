@@ -1,5 +1,5 @@
-import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import {computed, DestroyRef, inject, Injectable, signal} from '@angular/core';
+import {Router} from '@angular/router';
 import {
   AuthConfig,
   CurrentUser,
@@ -9,14 +9,14 @@ import {
   RegisterRequest,
   deviceTimeZone,
 } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { applyLanguage } from '../i18n/language';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {applyLanguage} from '../i18n/language';
 
 /**
  * The signed-in user for Angular: signals over the session of the client core. Whoever ends the
  * session — sign-out, a 401 from any request — lands on the sign-in page.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class AuthService {
   private readonly client = inject(DASHBOARD_CLIENT);
   private readonly router = inject(Router);
@@ -32,7 +32,7 @@ export class AuthService {
   readonly isLoggedIn = computed(() => this.token() !== null || this.offline());
 
   constructor() {
-    const unsubscribe = this.client.session.subscribe((token) => {
+    const unsubscribe = this.client.session.subscribe(token => {
       this.token.set(token);
       if (token !== null) {
         this.offline.set(false);
@@ -50,10 +50,12 @@ export class AuthService {
   }
 
   /** The password step; `challengeToken` — a code from the authenticator app is needed. */
-  async login(credentials: Omit<LoginRequest, 'client'>): Promise<{ challengeToken?: string }> {
+  async login(
+    credentials: Omit<LoginRequest, 'client'>,
+  ): Promise<{challengeToken?: string}> {
     const result = await this.client.signIn(credentials);
     if (result.status === 'code-required') {
-      return { challengeToken: result.challengeToken };
+      return {challengeToken: result.challengeToken};
     }
     this.signedIn(result.user);
     return {};
@@ -148,8 +150,8 @@ export class AuthService {
     const timeZone = deviceTimeZone();
     if (timeZone && timeZone !== user.timeZone) {
       void this.client.auth
-        .updateProfile({ timeZone })
-        .then((updated) => this.user.set(updated))
+        .updateProfile({timeZone})
+        .then(updated => this.user.set(updated))
         // Not worth an error on screen: the next opening tries again.
         .catch(() => undefined);
     }
@@ -164,7 +166,9 @@ async function forgetSavedData(): Promise<void> {
   try {
     const names = await globalThis.caches?.keys();
     await Promise.all(
-      (names ?? []).filter((name) => name.includes(':data:')).map((name) => caches.delete(name)),
+      (names ?? [])
+        .filter(name => name.includes(':data:'))
+        .map(name => caches.delete(name)),
     );
   } catch {
     // No cache storage (an old browser, a private window): nothing was saved.

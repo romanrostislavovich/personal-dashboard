@@ -8,13 +8,13 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthDocument } from '@pd/contracts';
-import { HealthApi } from '../health.api';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {HealthDocument} from '@pd/contracts';
+import {HealthApi} from '../health.api';
 
 /**
  * The original of a document, page by page: a photo, or a PDF in the browser's own viewer
@@ -24,7 +24,12 @@ import { HealthApi } from '../health.api';
 @Component({
   selector: 'pd-health-document-pages',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatIconModule, MatProgressBarModule, TranslocoPipe],
+  imports: [
+    MatButtonModule,
+    MatIconModule,
+    MatProgressBarModule,
+    TranslocoPipe,
+  ],
   template: `
     <div class="page">
       @if (imageUrl(); as url) {
@@ -47,7 +52,10 @@ import { HealthApi } from '../health.api';
           <mat-icon>chevron_left</mat-icon>
         </button>
         <span>
-          {{ 'health.document.page' | transloco: { page: page(), pages: document().pages } }}
+          {{
+            'health.document.page'
+              | transloco: {page: page(), pages: document().pages}
+          }}
         </span>
         <button
           matIconButton
@@ -61,12 +69,24 @@ import { HealthApi } from '../health.api';
       }
       <span class="spacer"></span>
       @if (removable() && page() > 1) {
-        <button matButton type="button" [disabled]="busy()" (click)="removePage()">
-          <mat-icon>delete</mat-icon> {{ 'health.document.removePage' | transloco }}
+        <button
+          matButton
+          type="button"
+          [disabled]="busy()"
+          (click)="removePage()"
+        >
+          <mat-icon>delete</mat-icon>
+          {{ 'health.document.removePage' | transloco }}
         </button>
       }
-      <button matButton type="button" [disabled]="!objectUrl" (click)="download()">
-        <mat-icon>download</mat-icon> {{ 'health.document.download' | transloco }}
+      <button
+        matButton
+        type="button"
+        [disabled]="!objectUrl"
+        (click)="download()"
+      >
+        <mat-icon>download</mat-icon>
+        {{ 'health.document.download' | transloco }}
       </button>
     </div>
   `,
@@ -130,7 +150,10 @@ export class DocumentPagesComponent implements OnDestroy {
       const link = document.createElement('a');
       link.href = this.objectUrl;
       const pages = this.document().pages;
-      link.download = pages > 1 ? `${this.document().name} (${this.page()})` : this.document().name;
+      link.download =
+        pages > 1
+          ? `${this.document().name} (${this.page()})`
+          : this.document().name;
       link.click();
     }
   }
@@ -139,7 +162,10 @@ export class DocumentPagesComponent implements OnDestroy {
     this.busy.set(true);
     try {
       const page = this.page();
-      const document = await this.api.client.removeDocumentPage(this.document().id, page);
+      const document = await this.api.client.removeDocumentPage(
+        this.document().id,
+        page,
+      );
       this.page.set(Math.min(page, document.pages));
       this.changed.emit(document);
     } finally {
@@ -157,7 +183,9 @@ export class DocumentPagesComponent implements OnDestroy {
     this.objectUrl = URL.createObjectURL(blob);
     if (document.mimeType === 'application/pdf') {
       // Our own blob of the user's own file: safe to show in the frame.
-      this.pdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.objectUrl));
+      this.pdfUrl.set(
+        this.sanitizer.bypassSecurityTrustResourceUrl(this.objectUrl),
+      );
     } else {
       this.imageUrl.set(this.objectUrl);
     }

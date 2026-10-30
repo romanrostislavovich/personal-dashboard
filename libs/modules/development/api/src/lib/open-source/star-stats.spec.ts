@@ -1,4 +1,4 @@
-import { crossedStarMilestone, starsDelta } from './star-stats';
+import {crossedStarMilestone, starsDelta} from './star-stats';
 
 describe('crossedStarMilestone', () => {
   it('returns null when no milestone is crossed', () => {
@@ -19,12 +19,12 @@ describe('crossedStarMilestone', () => {
 });
 
 describe('starsDelta', () => {
-  const today = { year: 2026, month: 9, day: 30 };
+  const today = {year: 2026, month: 9, day: 30};
   const history = [
-    { day: '2026-09-01', stars: 80 },
-    { day: '2026-09-20', stars: 90 },
-    { day: '2026-09-23', stars: 95 },
-    { day: '2026-09-29', stars: 99 },
+    {day: '2026-09-01', stars: 80},
+    {day: '2026-09-20', stars: 90},
+    {day: '2026-09-23', stars: 95},
+    {day: '2026-09-29', stars: 99},
   ];
 
   it('uses the latest point at least N days old as the baseline', () => {

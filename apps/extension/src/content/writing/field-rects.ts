@@ -1,4 +1,4 @@
-import { domRange, FieldText, isPlainField, TextField } from './field-text';
+import {domRange, FieldText, isPlainField, TextField} from './field-text';
 
 /*
  * Where a stretch of the text is on the screen. A rich editor's text is in the page: a range
@@ -43,17 +43,17 @@ let mirror: HTMLDivElement | null = null;
 export function rectsOf(
   field: TextField,
   read: FieldText,
-  stretches: { start: number; end: number }[],
+  stretches: {start: number; end: number}[],
 ): DOMRect[][] {
   if (!isPlainField(field)) {
-    return stretches.map(({ start, end }) => {
+    return stretches.map(({start, end}) => {
       const range = read.segments ? domRange(read.segments, start, end) : null;
       return range ? [...range.getClientRects()] : [];
     });
   }
   const copy = layOut(field);
   const node = copy.firstChild as Text | null;
-  const result = stretches.map(({ start, end }) => {
+  const result = stretches.map(({start, end}) => {
     if (!node || end > node.data.length) {
       return [];
     }
@@ -90,7 +90,8 @@ function layOut(field: HTMLTextAreaElement | HTMLInputElement): HTMLDivElement {
     borderColor: 'transparent',
     // A textarea wraps; an input is one line that scrolls sideways.
     whiteSpace: field instanceof HTMLTextAreaElement ? 'pre-wrap' : 'pre',
-    overflowWrap: field instanceof HTMLTextAreaElement ? 'break-word' : 'normal',
+    overflowWrap:
+      field instanceof HTMLTextAreaElement ? 'break-word' : 'normal',
     zIndex: '-1',
   });
   mirror.textContent = field.value;

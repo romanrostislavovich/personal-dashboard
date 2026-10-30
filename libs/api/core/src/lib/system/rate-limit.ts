@@ -7,10 +7,10 @@ import {
   Injectable,
   SetMetadata,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Reflector } from '@nestjs/core';
-import { AuthUser } from '../auth/current-user.decorator';
-import { AppConfig } from '../config/env';
+import {ConfigService} from '@nestjs/config';
+import {Reflector} from '@nestjs/core';
+import {AuthUser} from '../auth/current-user.decorator';
+import {AppConfig} from '../config/env';
 
 const RATE_LIMIT = 'rateLimit';
 /** Keys kept at most; the oldest windows give way beyond it. */
@@ -32,28 +32,30 @@ interface Limit {
  * ```
  */
 export const RateLimit = (limit: number, perSeconds: number) =>
-  SetMetadata(RATE_LIMIT, { limit, perSeconds } satisfies Limit);
+  SetMetadata(RATE_LIMIT, {limit, perSeconds} satisfies Limit);
 
 /** Fixed windows a key; kept in memory, which is fine for one server. */
 export class RateLimiter {
-  private readonly windows = new Map<string, { count: number; since: number }>();
+  private readonly windows = new Map<string, {count: number; since: number}>();
 
   constructor(private readonly now: () => number = Date.now) {}
 
   /** Counts a request; the seconds to wait when it is one too many, `null` when it may go. */
-  hit(key: string, { limit, perSeconds }: Limit): number | null {
+  hit(key: string, {limit, perSeconds}: Limit): number | null {
     const now = this.now();
     const windowMs = perSeconds * 1000;
     let window = this.windows.get(key);
     if (!window || now - window.since >= windowMs) {
-      window = { count: 0, since: now };
+      window = {count: 0, since: now};
       // Re-inserted: the map keeps the newest windows last, the oldest are pruned first.
       this.windows.delete(key);
       this.windows.set(key, window);
       this.prune();
     }
     window.count++;
-    return window.count > limit ? Math.ceil((window.since + windowMs - now) / 1000) : null;
+    return window.count > limit
+      ? Math.ceil((window.since + windowMs - now) / 1000)
+      : null;
   }
 
   private prune(): void {
@@ -77,27 +79,29 @@ export class RateLimitGuard implements CanActivate {
     private readonly reflector: Reflector,
     @Inject(ConfigService) config: AppConfig,
   ) {
-    this.enabled = config.get('RATE_LIMITS', { infer: true });
+    this.enabled = config.get('RATE_LIMITS', {infer: true});
   }
 
   canActivate(context: ExecutionContext): boolean {
     if (!this.enabled) {
       return true;
     }
-    const limit = this.reflector.getAllAndOverride<Limit | undefined>(RATE_LIMIT, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const limit = this.reflector.getAllAndOverride<Limit | undefined>(
+      RATE_LIMIT,
+      [context.getHandler(), context.getClass()],
+    );
     if (!limit) {
       return true;
     }
-    const request = context.switchToHttp().getRequest<{ user?: AuthUser; ip?: string }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<{user?: AuthUser; ip?: string}>();
     const who = request.user?.id ?? `ip:${request.ip ?? 'unknown'}`;
     const route = `${context.getClass().name}.${context.getHandler().name}`;
     const retryAfter = this.limiter.hit(`${route}:${who}`, limit);
     if (retryAfter !== null) {
       throw new HttpException(
-        { message: 'Too many requests, try again later', retryAfter },
+        {message: 'Too many requests, try again later', retryAfter},
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }

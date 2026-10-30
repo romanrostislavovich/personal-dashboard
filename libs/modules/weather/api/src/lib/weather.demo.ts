@@ -1,6 +1,6 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, DemoService } from '@pd/api-core';
-import { weatherLocations } from './weather.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, DemoService} from '@pd/api-core';
+import {weatherLocations} from './weather.schema';
 
 /** The demo data of Weather: a city. The forecast itself is real (Open-Meteo needs no key). */
 @Injectable()
@@ -13,7 +13,7 @@ export class WeatherDemo implements OnModuleInit {
   onModuleInit(): void {
     this.demo.register({
       module: 'weather',
-      seed: async ({ userId }) => {
+      seed: async ({userId}) => {
         await this.db.insert(weatherLocations).values({
           userId,
           name: 'Lisbon',

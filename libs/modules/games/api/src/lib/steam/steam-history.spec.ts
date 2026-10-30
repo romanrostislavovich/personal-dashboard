@@ -1,5 +1,5 @@
-import { SteamListedMatch } from './steam-dota.client';
-import { HistoryPageReader, wholeHistory } from './steam-history';
+import {SteamListedMatch} from './steam-dota.client';
+import {HistoryPageReader, wholeHistory} from './steam-history';
 
 const PAGE = 100;
 
@@ -17,44 +17,53 @@ function account(heroes: number[]) {
     }
   });
   const queries: string[] = [];
-  const readPage: HistoryPageReader = async ({ beforeMatchId, heroId }) => {
+  const readPage: HistoryPageReader = async ({beforeMatchId, heroId}) => {
     queries.push(`${heroId ?? 'all'}:${beforeMatchId ?? 'newest'}`);
     // Like Steam: newest first, a query never reaches past its 500 newest matches.
     const visible = matches
-      .filter((match) => !heroId || match.heroId === heroId)
+      .filter(match => !heroId || match.heroId === heroId)
       .sort((a, b) => b.matchId - a.matchId)
       .slice(0, 500);
-    const rest = visible.filter((match) => !beforeMatchId || match.matchId < beforeMatchId);
-    return { matches: rest.slice(0, PAGE), hasMore: rest.length > PAGE };
+    const rest = visible.filter(
+      match => !beforeMatchId || match.matchId < beforeMatchId,
+    );
+    return {matches: rest.slice(0, PAGE), hasMore: rest.length > PAGE};
   };
-  return { matches, queries, readPage, heroIds: async () => heroes.map((_, index) => index + 1) };
+  return {
+    matches,
+    queries,
+    readPage,
+    heroIds: async () => heroes.map((_, index) => index + 1),
+  };
 }
 
 describe('wholeHistory', () => {
   it('reads a short history with one query, page by page', async () => {
-    const { readPage, heroIds, queries } = account([150, 80]);
+    const {readPage, heroIds, queries} = account([150, 80]);
     const history = await wholeHistory(readPage, heroIds);
     expect(history).toHaveLength(230);
     expect(queries).toEqual(['all:newest', 'all:131', 'all:31']);
   });
 
   it('goes hero by hero when the history is longer than a query gives', async () => {
-    const { readPage, heroIds, matches } = account([700, 300, 40]);
+    const {readPage, heroIds, matches} = account([700, 300, 40]);
     const history = await wholeHistory(readPage, heroIds);
     // 500 of the 700 on the first hero are reachable, the other two heroes are complete.
     expect(history).toHaveLength(500 + 300 + 40);
-    expect(new Set(history.map((match) => match.matchId)).size).toBe(history.length);
+    expect(new Set(history.map(match => match.matchId)).size).toBe(
+      history.length,
+    );
     expect(history.length).toBeLessThan(matches.length);
   });
 
   it('reads past 500 when Steam answers a query that starts below them', async () => {
-    const { matches } = account([1234]);
+    const {matches} = account([1234]);
     // A Steam whose limit is counted from where the query starts.
-    const windowed: HistoryPageReader = async ({ beforeMatchId }) => {
+    const windowed: HistoryPageReader = async ({beforeMatchId}) => {
       const rest = matches
-        .filter((match) => !beforeMatchId || match.matchId < beforeMatchId)
+        .filter(match => !beforeMatchId || match.matchId < beforeMatchId)
         .sort((a, b) => b.matchId - a.matchId);
-      return { matches: rest.slice(0, PAGE), hasMore: rest.length > PAGE };
+      return {matches: rest.slice(0, PAGE), hasMore: rest.length > PAGE};
     };
     const history = await wholeHistory(windowed, async () => {
       throw new Error('heroes are not needed');
@@ -63,31 +72,40 @@ describe('wholeHistory', () => {
   });
 
   it('saves every query as it is read, so a later failure loses nothing', async () => {
-    const { readPage, heroIds } = account([700, 300]);
+    const {readPage, heroIds} = account([700, 300]);
     const saved: number[] = [];
-    const failing: HistoryPageReader = (query) =>
-      query.heroId === 2 ? Promise.reject(new Error('Steam 500')) : readPage(query);
+    const failing: HistoryPageReader = query =>
+      query.heroId === 2
+        ? Promise.reject(new Error('Steam 500'))
+        : readPage(query);
     await expect(
-      wholeHistory(failing, heroIds, async (part) => void saved.push(part.length)),
+      wholeHistory(
+        failing,
+        heroIds,
+        async part => void saved.push(part.length),
+      ),
     ).rejects.toThrow('Steam 500');
     // The 500 newest of all, then the 500 on the first hero.
     expect(saved).toEqual([500, 500]);
   });
 
   it('stops asking by hero once Steam refuses such a query', async () => {
-    const { readPage, heroIds, queries } = account([700, 300, 40]);
-    const refusing: HistoryPageReader = async (query) =>
+    const {readPage, heroIds, queries} = account([700, 300, 40]);
+    const refusing: HistoryPageReader = async query =>
       query.heroId
-        ? (queries.push(`refused:${query.heroId}`), { matches: [], hasMore: false, refused: true })
+        ? (queries.push(`refused:${query.heroId}`),
+          {matches: [], hasMore: false, refused: true})
         : readPage(query);
     expect(await wholeHistory(refusing, heroIds)).toHaveLength(500);
-    expect(queries.filter((query) => query.startsWith('refused'))).toEqual(['refused:1']);
+    expect(queries.filter(query => query.startsWith('refused'))).toEqual([
+      'refused:1',
+    ]);
     // One look below the first 500 before the heroes.
-    expect(queries.filter((query) => query.startsWith('all'))).toHaveLength(6);
+    expect(queries.filter(query => query.startsWith('all'))).toHaveLength(6);
   });
 
   it('gives nothing for an account without matches', async () => {
-    const { readPage, heroIds } = account([]);
+    const {readPage, heroIds} = account([]);
     expect(await wholeHistory(readPage, heroIds)).toEqual([]);
   });
 });

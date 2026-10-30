@@ -1,6 +1,6 @@
-import { httpResource } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { TASKS_READS, tasksApi } from '@pd/client-core';
+import {httpResource} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {TASKS_READS, tasksApi} from '@pd/client-core';
 import {
   Reminder,
   ReminderInput,
@@ -10,23 +10,27 @@ import {
   TaskList,
   TaskUpdate,
 } from '@pd/contracts';
-import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
+import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /** The tasks requests of the client core (`@pd/client-core`) for Angular. */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class TasksApi {
   private readonly api = tasksApi(inject(DASHBOARD_CLIENT).api);
 
   tasks() {
-    return httpResource<Task[]>(() => TASKS_READS.tasks(), { defaultValue: [] });
+    return httpResource<Task[]>(() => TASKS_READS.tasks(), {defaultValue: []});
   }
 
   lists() {
-    return httpResource<TaskList[]>(() => TASKS_READS.lists(), { defaultValue: [] });
+    return httpResource<TaskList[]>(() => TASKS_READS.lists(), {
+      defaultValue: [],
+    });
   }
 
   reminders() {
-    return httpResource<Reminder[]>(() => TASKS_READS.reminders(), { defaultValue: [] });
+    return httpResource<Reminder[]>(() => TASKS_READS.reminders(), {
+      defaultValue: [],
+    });
   }
 
   create(input: TaskInput) {

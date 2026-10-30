@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { SchedulerService, TelegramBotService } from '@pd/api-core';
-import { HABIT_ACTION, HabitsService } from './habits.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {SchedulerService, TelegramBotService} from '@pd/api-core';
+import {HABIT_ACTION, HabitsService} from './habits.service';
 
 /** The evening question goes out every minute it is due; the buttons under it answer. */
 @Injectable()

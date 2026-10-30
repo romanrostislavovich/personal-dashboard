@@ -7,21 +7,21 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { EmergencyContact, HealthRecord } from '@pd/contracts';
-import { AuthService } from '@pd/web-core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {EmergencyContact, HealthRecord} from '@pd/contracts';
+import {AuthService} from '@pd/web-core';
 import QRCode from 'qrcode';
-import { HealthApi } from '../health.api';
-import { today } from '../health-labels';
-import { iceLines, IceWords } from './ice-card';
+import {HealthApi} from '../health.api';
+import {today} from '../health-labels';
+import {iceLines, IceWords} from './ice-card';
 
 /** A phone's lock screen, tall: the clock keeps the top, the card is below. */
-const SCREEN = { width: 1170, height: 2532 };
+const SCREEN = {width: 1170, height: 2532};
 
 /**
  * The ICE card of the profile: whom to call in an emergency, and the card itself — to print
@@ -87,11 +87,16 @@ const SCREEN = { width: 1170, height: 2532 };
       <div class="actions">
         @if (contacts().length < 5) {
           <button matButton (click)="addContact()">
-            <mat-icon>person_add</mat-icon> {{ 'health.ice.addContact' | transloco }}
+            <mat-icon>person_add</mat-icon>
+            {{ 'health.ice.addContact' | transloco }}
           </button>
         }
         @if (dirty()) {
-          <button matButton="filled" [disabled]="!valid()" (click)="saveContacts()">
+          <button
+            matButton="filled"
+            [disabled]="!valid()"
+            (click)="saveContacts()"
+          >
             {{ 'core.actions.save' | transloco }}
           </button>
         }
@@ -108,7 +113,8 @@ const SCREEN = { width: 1170, height: 2532 };
             <mat-icon>print</mat-icon> {{ 'health.ice.print' | transloco }}
           </button>
           <button matButton="tonal" (click)="downloadLockScreen()">
-            <mat-icon>smartphone</mat-icon> {{ 'health.ice.lockScreen' | transloco }}
+            <mat-icon>smartphone</mat-icon>
+            {{ 'health.ice.lockScreen' | transloco }}
           </button>
         </mat-card-actions>
       </mat-card>
@@ -166,22 +172,35 @@ export class IceCardComponent {
   );
   protected readonly dirty = computed(() => this.edited() !== null);
   protected readonly valid = computed(() =>
-    this.contacts().every((contact) => contact.name.trim() && contact.phone.trim().length >= 3),
+    this.contacts().every(
+      contact => contact.name.trim() && contact.phone.trim().length >= 3,
+    ),
   );
 
   protected readonly lines = computed(() =>
-    iceLines(this.record(), this.auth.user()?.displayName ?? '', today(), this.words()),
+    iceLines(
+      this.record(),
+      this.auth.user()?.displayName ?? '',
+      today(),
+      this.words(),
+    ),
   );
 
-  protected change(index: number, field: keyof EmergencyContact, event: Event): void {
+  protected change(
+    index: number,
+    field: keyof EmergencyContact,
+    event: Event,
+  ): void {
     const value = (event.target as HTMLInputElement).value;
     this.edited.set(
-      this.contacts().map((contact, i) => (i === index ? { ...contact, [field]: value } : contact)),
+      this.contacts().map((contact, i) =>
+        i === index ? {...contact, [field]: value} : contact,
+      ),
     );
   }
 
   protected addContact(): void {
-    this.edited.set([...this.contacts(), { name: '', phone: '', relation: '' }]);
+    this.edited.set([...this.contacts(), {name: '', phone: '', relation: ''}]);
   }
 
   protected removeContact(index: number): void {
@@ -208,13 +227,15 @@ export class IceCardComponent {
       return;
     }
     const lines = this.lines()
-      .map((line, i) => (i === 0 ? `<h1>${escape(line)}</h1>` : `<p>${escape(line)}</p>`))
+      .map((line, i) =>
+        i === 0 ? `<h1>${escape(line)}</h1>` : `<p>${escape(line)}</p>`,
+      )
       .join('');
     page.document.write(
-      `<!doctype html><meta charset="utf-8"><title>ICE</title>` +
-        `<style>body{font:14px system-ui,sans-serif;margin:24px}` +
-        `.card{border:2px solid #c00;border-radius:12px;padding:16px;max-width:420px}` +
-        `h1{font-size:18px;color:#c00;margin:0 0 8px}p{margin:4px 0}</style>` +
+      '<!doctype html><meta charset="utf-8"><title>ICE</title>' +
+        '<style>body{font:14px system-ui,sans-serif;margin:24px}' +
+        '.card{border:2px solid #c00;border-radius:12px;padding:16px;max-width:420px}' +
+        'h1{font-size:18px;color:#c00;margin:0 0 8px}p{margin:4px 0}</style>' +
         `<div class="card">${lines}</div>`,
     );
     page.document.close();
@@ -245,7 +266,10 @@ export class IceCardComponent {
       y += 16;
     });
     const qr = new Image();
-    qr.src = await QRCode.toDataURL(this.lines().join('\n'), { margin: 1, width: 520 });
+    qr.src = await QRCode.toDataURL(this.lines().join('\n'), {
+      margin: 1,
+      width: 520,
+    });
     await qr.decode();
     const size = 520;
     context.fillStyle = '#fff';
@@ -255,7 +279,13 @@ export class IceCardComponent {
       size + 40,
       size + 40,
     );
-    context.drawImage(qr, (SCREEN.width - size) / 2, SCREEN.height - size - 200, size, size);
+    context.drawImage(
+      qr,
+      (SCREEN.width - size) / 2,
+      SCREEN.height - size - 200,
+      size,
+      size,
+    );
     const link = document.createElement('a');
     link.download = 'ice-lock-screen.png';
     link.href = canvas.toDataURL('image/png');
@@ -263,7 +293,8 @@ export class IceCardComponent {
   }
 
   private words(): IceWords {
-    const t = (key: string) => this.transloco.translate(`health.ice.card.${key}`);
+    const t = (key: string) =>
+      this.transloco.translate(`health.ice.card.${key}`);
     return {
       title: t('title'),
       blood: t('blood'),
@@ -274,7 +305,9 @@ export class IceCardComponent {
       contacts: t('contacts'),
       severity: {
         mild: this.transloco.translate('health.profile.severities.mild'),
-        moderate: this.transloco.translate('health.profile.severities.moderate'),
+        moderate: this.transloco.translate(
+          'health.profile.severities.moderate',
+        ),
         severe: this.transloco.translate('health.profile.severities.severe'),
       },
     };
@@ -282,7 +315,11 @@ export class IceCardComponent {
 }
 
 /** A line broken into the pieces that fit the width. */
-function wrap(context: CanvasRenderingContext2D, line: string, width: number): string[] {
+function wrap(
+  context: CanvasRenderingContext2D,
+  line: string,
+  width: number,
+): string[] {
   const pieces: string[] = [];
   let current = '';
   for (const word of line.split(' ')) {

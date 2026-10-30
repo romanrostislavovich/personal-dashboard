@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import {randomUUID} from 'node:crypto';
 
 /** The timer's lengths, from the dashboard (ActivityFocusSettings in contracts). */
 export interface FocusSettings {
@@ -18,7 +18,7 @@ export interface FocusSession {
   completed: boolean;
   projectId: string | null;
   note: string | null;
-  distractions: { app: string; name: string; seconds: number }[];
+  distractions: {app: string; name: string; seconds: number}[];
 }
 
 export type FocusPhase = 'idle' | 'focus' | 'short-break' | 'long-break';
@@ -57,7 +57,7 @@ export class FocusTimer {
     plannedMinutes: number;
     projectId: string | null;
     note: string | null;
-    distractions: Map<string, { name: string; seconds: number }>;
+    distractions: Map<string, {name: string; seconds: number}>;
   } | null = null;
   private held = 0;
 
@@ -75,7 +75,8 @@ export class FocusTimer {
   status(): FocusStatus {
     return {
       phase: this.phase,
-      endsAt: this.phase === 'idle' ? null : new Date(this.endsAt).toISOString(),
+      endsAt:
+        this.phase === 'idle' ? null : new Date(this.endsAt).toISOString(),
       round: this.round,
       roundsBeforeLongBreak: this.settings().roundsBeforeLongBreak,
       projectId: this.current?.projectId ?? null,
@@ -88,7 +89,7 @@ export class FocusTimer {
     return this.phase === 'focus';
   }
 
-  start(options: { projectId?: string | null; note?: string | null } = {}): void {
+  start(options: {projectId?: string | null; note?: string | null} = {}): void {
     if (this.phase === 'focus') {
       return;
     }
@@ -118,7 +119,7 @@ export class FocusTimer {
     if (this.phase !== 'focus' || !this.current) {
       return;
     }
-    const known = this.current.distractions.get(app) ?? { name, seconds: 0 };
+    const known = this.current.distractions.get(app) ?? {name, seconds: 0};
     known.seconds += seconds;
     this.current.distractions.set(app, known);
   }
@@ -184,7 +185,7 @@ export class FocusTimer {
       projectId: session.projectId,
       note: session.note,
       distractions: [...session.distractions]
-        .map(([app, { name, seconds }]) => ({ app, name, seconds }))
+        .map(([app, {name, seconds}]) => ({app, name, seconds}))
         .sort((a, b) => b.seconds - a.seconds)
         .slice(0, MAX_DISTRACTIONS),
     });

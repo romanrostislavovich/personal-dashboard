@@ -1,4 +1,4 @@
-import { ClientMeta } from './sessions.service';
+import {ClientMeta} from './sessions.service';
 
 /** The parts of an Express request and response the auth endpoints use. */
 export interface AuthRequest {
@@ -28,16 +28,29 @@ interface CookieOptions {
 const REFRESH_COOKIE = 'pd_refresh';
 const COOKIE_MAX_AGE_MS = 60 * 24 * 60 * 60 * 1000;
 
-export function setRefreshCookie(request: AuthRequest, response: AuthResponse, token: string) {
-  response.cookie(REFRESH_COOKIE, token, { ...cookieOptions(request), maxAge: COOKIE_MAX_AGE_MS });
+export function setRefreshCookie(
+  request: AuthRequest,
+  response: AuthResponse,
+  token: string,
+) {
+  response.cookie(REFRESH_COOKIE, token, {
+    ...cookieOptions(request),
+    maxAge: COOKIE_MAX_AGE_MS,
+  });
 }
 
-export function clearRefreshCookie(request: AuthRequest, response: AuthResponse) {
+export function clearRefreshCookie(
+  request: AuthRequest,
+  response: AuthResponse,
+) {
   response.clearCookie(REFRESH_COOKIE, cookieOptions(request));
 }
 
 /** The refresh token from the app (the body) or from the cookie (the web). */
-export function refreshTokenOf(request: AuthRequest, fromBody?: string): string | null {
+export function refreshTokenOf(
+  request: AuthRequest,
+  fromBody?: string,
+): string | null {
   return fromBody ?? readCookie(request, REFRESH_COOKIE);
 }
 

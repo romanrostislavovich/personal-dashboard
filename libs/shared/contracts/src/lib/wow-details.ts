@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 /** A piece of gear the character wears. */
 export interface WowItem {
@@ -60,7 +60,7 @@ export interface WowRaid {
   expansion: string;
   name: string;
   /** Bosses killed on each difficulty. */
-  modes: { difficulty: string; killed: number; total: number }[];
+  modes: {difficulty: string; killed: number; total: number}[];
 }
 
 export interface WowPvpBracket {
@@ -99,7 +99,7 @@ export interface WowProfession {
   name: string;
   primary: boolean;
   /** One line per expansion the profession has been levelled in. */
-  tiers: { name: string; skill: number; max: number }[];
+  tiers: {name: string; skill: number; max: number}[];
 }
 
 export interface WowGuild {
@@ -147,7 +147,7 @@ export interface WowToken {
   price: number;
   updatedAt: string;
   /** One point a day. */
-  history: { day: LocalDate; price: number }[];
+  history: {day: LocalDate; price: number}[];
 }
 
 /** `PATCH /api/games/wow/:accountId`: the notifications of one character. */

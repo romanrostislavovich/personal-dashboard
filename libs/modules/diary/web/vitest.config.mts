@@ -1,11 +1,11 @@
-import { defineConfig } from 'vitest/config';
+import {defineConfig} from 'vitest/config';
 
 // Tests of plain TypeScript (the editor's Markdown), without Angular components.
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../../../node_modules/.vite/libs/modules/diary/web',
   // @pd/* aliases from tsconfig.base.json.
-  resolve: { tsconfigPaths: true },
+  resolve: {tsconfigPaths: true},
   test: {
     name: 'diary-web',
     watch: false,

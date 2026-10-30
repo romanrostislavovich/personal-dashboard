@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {Inject, Injectable, Logger, NotFoundException} from '@nestjs/common';
 import {
   BotActionReply,
   DB,
@@ -22,9 +22,9 @@ import {
   ValidHabitInput,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, asc, eq, isNotNull, isNull, ne, or } from 'drizzle-orm';
-import { habitsMessages } from './habits.messages';
-import { HabitDayRow, habitDays, HabitRow, habits } from './habits.schema';
+import {and, asc, eq, isNotNull, isNull, ne, or} from 'drizzle-orm';
+import {habitsMessages} from './habits.messages';
+import {HabitDayRow, habitDays, HabitRow, habits} from './habits.schema';
 
 /** The Telegram buttons under the evening question: `<name>:<c|u>:<habit id>:<day>`. */
 export const HABIT_ACTION = 'hb';
@@ -60,17 +60,19 @@ export class HabitsService {
       .where(eq(habitDays.userId, userId))
       .orderBy(asc(habitDays.day));
     const today = await this.today(userId);
-    return rows.map((row) =>
+    return rows.map(row =>
       toHabit(
         row,
-        marks.filter((mark) => mark.habitId === row.id),
+        marks.filter(mark => mark.habitId === row.id),
         today,
       ),
     );
   }
 
   async get(userId: string, id: string): Promise<Habit> {
-    const habit = (await this.list(userId)).find((candidate) => candidate.id === id);
+    const habit = (await this.list(userId)).find(
+      candidate => candidate.id === id,
+    );
     if (!habit) {
       throw new NotFoundException('Habit not found');
     }
@@ -80,17 +82,21 @@ export class HabitsService {
   async create(userId: string, input: ValidHabitInput): Promise<Habit> {
     const [row] = await this.db
       .insert(habits)
-      .values({ userId, ...fields(input) })
-      .returning({ id: habits.id });
+      .values({userId, ...fields(input)})
+      .returning({id: habits.id});
     return this.get(userId, row.id);
   }
 
-  async update(userId: string, id: string, input: ValidHabitInput): Promise<Habit> {
+  async update(
+    userId: string,
+    id: string,
+    input: ValidHabitInput,
+  ): Promise<Habit> {
     const [row] = await this.db
       .update(habits)
-      .set({ ...fields(input), updatedAt: new Date() })
+      .set({...fields(input), updatedAt: new Date()})
       .where(and(eq(habits.id, id), eq(habits.userId, userId)))
-      .returning({ id: habits.id });
+      .returning({id: habits.id});
     if (!row) {
       throw new NotFoundException('Habit not found');
     }
@@ -98,19 +104,26 @@ export class HabitsService {
   }
 
   async remove(userId: string, id: string): Promise<void> {
-    await this.db.delete(habits).where(and(eq(habits.id, id), eq(habits.userId, userId)));
+    await this.db
+      .delete(habits)
+      .where(and(eq(habits.id, id), eq(habits.userId, userId)));
   }
 
   /** A day with it (and how much) or clean; one mark a day. */
-  async mark(userId: string, id: string, day: LocalDate, input: HabitDayInput): Promise<Habit> {
+  async mark(
+    userId: string,
+    id: string,
+    day: LocalDate,
+    input: HabitDayInput,
+  ): Promise<Habit> {
     await this.owned(userId, id);
     const amount = input.status === 'used' ? (input.amount ?? null) : null;
     await this.db
       .insert(habitDays)
-      .values({ userId, habitId: id, day, status: input.status, amount })
+      .values({userId, habitId: id, day, status: input.status, amount})
       .onConflictDoUpdate({
         target: [habitDays.habitId, habitDays.day],
-        set: { status: input.status, amount },
+        set: {status: input.status, amount},
       });
     return this.get(userId, id);
   }
@@ -120,13 +133,22 @@ export class HabitsService {
     await this.owned(userId, id);
     await this.db
       .delete(habitDays)
-      .where(and(eq(habitDays.habitId, id), eq(habitDays.userId, userId), eq(habitDays.day, day)));
+      .where(
+        and(
+          eq(habitDays.habitId, id),
+          eq(habitDays.userId, userId),
+          eq(habitDays.day, day),
+        ),
+      );
     return this.get(userId, id);
   }
 
   /** Every minute: the evening question of each habit whose time has come, once a day. */
   async askDue(now: Date = new Date()): Promise<void> {
-    const due = await this.db.select().from(habits).where(isNotNull(habits.askAt));
+    const due = await this.db
+      .select()
+      .from(habits)
+      .where(isNotNull(habits.askAt));
     const users = new Map<string, UserRow | undefined>();
     for (const habit of due) {
       if (!users.has(habit.userId)) {
@@ -136,11 +158,15 @@ export class HabitsService {
       if (!user || !habit.askAt) {
         continue;
       }
-      const { date, time } = zonedDateTime(now, this.users.timeZoneOf(user));
-      if (date < habit.startedOn || habit.askedOn === date || !isDue(habit.askAt, time)) {
+      const {date, time} = zonedDateTime(now, this.users.timeZoneOf(user));
+      if (
+        date < habit.startedOn ||
+        habit.askedOn === date ||
+        !isDue(habit.askAt, time)
+      ) {
         continue;
       }
-      await this.ask(user, habit, date).catch((error) =>
+      await this.ask(user, habit, date).catch(error =>
         this.logger.warn(`An evening question was not sent: ${error}`),
       );
     }
@@ -155,9 +181,11 @@ export class HabitsService {
       try {
         const habit =
           what === 'd'
-            ? await this.mark(user.id, id, day, { status: 'done' })
+            ? await this.mark(user.id, id, day, {status: 'done'})
             : await this.unmark(user.id, id, day);
-        return what === 'd' ? text.done(habit.stats.currentStreak) : text.notToday;
+        return what === 'd'
+          ? text.done(habit.stats.currentStreak)
+          : text.notToday;
       } catch {
         return text.gone;
       }
@@ -165,7 +193,7 @@ export class HabitsService {
     const status: HabitDayStatus = what === 'u' ? 'used' : 'clean';
     let habit: Habit;
     try {
-      habit = await this.mark(user.id, id, day, { status });
+      habit = await this.mark(user.id, id, day, {status});
     } catch {
       return text.gone;
     }
@@ -183,17 +211,21 @@ export class HabitsService {
         if (!Number.isFinite(amount) || amount < 0 || amount > 10_000) {
           return text.noAmount;
         }
-        await this.mark(answerer.id, id, day, { status: 'used', amount });
+        await this.mark(answerer.id, id, day, {status: 'used', amount});
         return text.amount(amount, unit);
       },
     };
   }
 
-  private async ask(user: UserRow, habit: HabitRow, day: LocalDate): Promise<void> {
+  private async ask(
+    user: UserRow,
+    habit: HabitRow,
+    day: LocalDate,
+  ): Promise<void> {
     // Taken by this run only: another run (or instance) asking at the same minute gets nothing.
     const [claimed] = await this.db
       .update(habits)
-      .set({ askedOn: day })
+      .set({askedOn: day})
       .where(
         and(
           eq(habits.id, habit.id),
@@ -201,7 +233,7 @@ export class HabitsService {
           or(isNull(habits.askedOn), ne(habits.askedOn, day)),
         ),
       )
-      .returning({ askedOn: habits.askedOn });
+      .returning({askedOn: habits.askedOn});
     if (!claimed) {
       return;
     }
@@ -209,12 +241,21 @@ export class HabitsService {
     const streak = (await this.get(user.id, habit.id)).stats.currentStreak;
     if (isBuilding(habit.goal)) {
       await this.notifications.send(user.id, {
-        title: habit.kind === 'gym' ? text.question.gym : text.question.build(habit.name ?? ''),
+        title:
+          habit.kind === 'gym'
+            ? text.question.gym
+            : text.question.build(habit.name ?? ''),
         body: text.buildBody(streak),
         source: 'habits',
         actions: [
-          { label: text.buttons.done, action: `${HABIT_ACTION}:d:${habit.id}:${day}` },
-          { label: text.buttons.notToday, action: `${HABIT_ACTION}:n:${habit.id}:${day}` },
+          {
+            label: text.buttons.done,
+            action: `${HABIT_ACTION}:d:${habit.id}:${day}`,
+          },
+          {
+            label: text.buttons.notToday,
+            action: `${HABIT_ACTION}:n:${habit.id}:${day}`,
+          },
         ],
       });
       return;
@@ -227,15 +268,21 @@ export class HabitsService {
       body: text.body(streak),
       source: 'habits',
       actions: [
-        { label: text.buttons.clean, action: `${HABIT_ACTION}:c:${habit.id}:${day}` },
-        { label: text.buttons.used, action: `${HABIT_ACTION}:u:${habit.id}:${day}` },
+        {
+          label: text.buttons.clean,
+          action: `${HABIT_ACTION}:c:${habit.id}:${day}`,
+        },
+        {
+          label: text.buttons.used,
+          action: `${HABIT_ACTION}:u:${habit.id}:${day}`,
+        },
       ],
     });
   }
 
   private async owned(userId: string, id: string): Promise<void> {
     const [row] = await this.db
-      .select({ id: habits.id })
+      .select({id: habits.id})
       .from(habits)
       .where(and(eq(habits.id, id), eq(habits.userId, userId)));
     if (!row) {
@@ -251,7 +298,8 @@ export class HabitsService {
 
 /** The time of the question has come, not long ago. */
 function isDue(askAt: string, now: string): boolean {
-  const minutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+  const minutes = (time: string) =>
+    Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
   const late = minutes(now) - minutes(askAt);
   return late >= 0 && late < CATCH_UP_MINUTES;
 }
@@ -270,12 +318,14 @@ function fields(input: ValidHabitInput) {
 }
 
 function toHabit(row: HabitRow, marks: HabitDayRow[], today: LocalDate): Habit {
-  const days: HabitDay[] = marks.map((mark) => ({
+  const days: HabitDay[] = marks.map(mark => ({
     day: mark.day,
     status: mark.status,
     amount: mark.amount,
   }));
-  const since = toLocalDate(addDays(parseLocalDate(today), -HABIT_CALENDAR_DAYS));
+  const since = toLocalDate(
+    addDays(parseLocalDate(today), -HABIT_CALENDAR_DAYS),
+  );
   return {
     id: row.id,
     kind: row.kind,
@@ -287,6 +337,6 @@ function toHabit(row: HabitRow, marks: HabitDayRow[], today: LocalDate): Habit {
     startedOn: row.startedOn,
     askAt: row.askAt,
     stats: habitStats(row, days, today),
-    recent: days.filter((mark) => mark.day > since),
+    recent: days.filter(mark => mark.day > since),
   };
 }

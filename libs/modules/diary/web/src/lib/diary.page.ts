@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import {DatePipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,16 +7,16 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDialog } from '@angular/material/dialog';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatDialog} from '@angular/material/dialog';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
+import {MatMenuModule} from '@angular/material/menu';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {
   addDays,
   DIARY_MARK_EMOJIS,
@@ -27,17 +27,23 @@ import {
   parseLocalDate,
   toLocalDate,
 } from '@pd/contracts';
-import { currentMonth, monthAsDate, monthRange, shiftMonth, todayLocalDate } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { DiaryApi } from './diary.api';
-import { DiaryDeleteDialog } from './diary-delete.dialog';
-import { DiaryEditorComponent } from './diary-editor.component';
-import { DiaryHeatmapComponent } from './diary-heatmap.component';
-import { DiaryInsightsComponent } from './diary-insights.component';
-import { DiaryDayContextComponent } from './diary-day-context.component';
-import { DiaryMemoriesComponent } from './diary-memories.component';
-import { DiaryTemplateDialog } from './diary-template.dialog';
-import { MOOD_EMOJI } from './mood';
+import {
+  currentMonth,
+  monthAsDate,
+  monthRange,
+  shiftMonth,
+  todayLocalDate,
+} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {DiaryApi} from './diary.api';
+import {DiaryDeleteDialog} from './diary-delete.dialog';
+import {DiaryEditorComponent} from './diary-editor.component';
+import {DiaryHeatmapComponent} from './diary-heatmap.component';
+import {DiaryInsightsComponent} from './diary-insights.component';
+import {DiaryDayContextComponent} from './diary-day-context.component';
+import {DiaryMemoriesComponent} from './diary-memories.component';
+import {DiaryTemplateDialog} from './diary-template.dialog';
+import {MOOD_EMOJI} from './mood';
 
 const PREVIEW_LENGTH = 120;
 
@@ -105,10 +111,13 @@ export class DiaryPage {
   /** The editor's palette plus any other emoji used in marks, with how often each is used. */
   protected readonly markFilters = computed(() => {
     const counts = new Map(
-      (this.stats.value()?.topMarks ?? []).map(({ emoji, count }) => [emoji, count]),
+      (this.stats.value()?.topMarks ?? []).map(({emoji, count}) => [
+        emoji,
+        count,
+      ]),
     );
     const emojis = new Set([...DIARY_MARK_EMOJIS, ...counts.keys()]);
-    return [...emojis].map((emoji) => ({ emoji, count: counts.get(emoji) ?? 0 }));
+    return [...emojis].map(emoji => ({emoji, count: counts.get(emoji) ?? 0}));
   });
 
   protected readonly selectedDay = signal<LocalDate>(this.today);
@@ -119,27 +128,27 @@ export class DiaryPage {
   } | null>(null);
 
   shiftMonth(delta: number): void {
-    this.month.update((month) => shiftMonth(month, delta));
+    this.month.update(month => shiftMonth(month, delta));
   }
 
   toggleTag(tag: string): void {
-    this.tag.update((current) => (current === tag ? null : tag));
+    this.tag.update(current => (current === tag ? null : tag));
     this.query.set('');
     this.markEmoji.set(null);
   }
 
   toggleMark(emoji: string): void {
-    this.markEmoji.update((current) => (current === emoji ? null : emoji));
+    this.markEmoji.update(current => (current === emoji ? null : emoji));
     this.query.set('');
   }
 
   /** Opens a day; the editor saves what was typed for the previous one by itself. */
   selectDay(day: LocalDate): void {
     this.selectedDay.set(day);
-    const { year, month } = parseLocalDate(day);
+    const {year, month} = parseLocalDate(day);
     const current = this.month();
     if (current.year !== year || current.month !== month) {
-      this.month.set({ year, month });
+      this.month.set({year, month});
     }
   }
 
@@ -160,7 +169,7 @@ export class DiaryPage {
       weeklySummary: false,
       template: null,
     };
-    await firstValueFrom(this.api.saveSettings({ ...current, ...change }));
+    await firstValueFrom(this.api.saveSettings({...current, ...change}));
     this.settings.reload();
   }
 
@@ -178,7 +187,9 @@ export class DiaryPage {
 
   async deleteAll(): Promise<void> {
     const confirmed = await firstValueFrom(
-      this.dialog.open<DiaryDeleteDialog, void, boolean>(DiaryDeleteDialog).afterClosed(),
+      this.dialog
+        .open<DiaryDeleteDialog, void, boolean>(DiaryDeleteDialog)
+        .afterClosed(),
     );
     if (!confirmed) {
       return;
@@ -197,15 +208,17 @@ export class DiaryPage {
         .afterClosed(),
     );
     if (text !== undefined) {
-      await this.updateSettings({ template: text.trim() || null });
+      await this.updateSettings({template: text.trim() || null});
     }
   }
 
   /** AI summary of the last 7 days (requires a configured AI). */
   async summarizeWeek(): Promise<void> {
-    this.summary.set({ loading: true, text: null, error: false });
+    this.summary.set({loading: true, text: null, error: false});
     try {
-      const { summary } = await firstValueFrom(this.api.summarize(lastWeek(this.today)));
+      const {summary} = await firstValueFrom(
+        this.api.summarize(lastWeek(this.today)),
+      );
       this.summary.set({
         loading: false,
         text: summary ?? this.transloco.translate('diary.summary.noEntries'),
@@ -222,23 +235,25 @@ export class DiaryPage {
 
   protected preview(entry: DiaryEntry): string {
     const plain = diaryPlainText(entry.content);
-    return plain.length > PREVIEW_LENGTH ? `${plain.slice(0, PREVIEW_LENGTH)}…` : plain;
+    return plain.length > PREVIEW_LENGTH
+      ? `${plain.slice(0, PREVIEW_LENGTH)}…`
+      : plain;
   }
 
   /** Splits a snippet around the search query so the match can be highlighted. */
-  protected highlight(snippet: string): { text: string; match: boolean }[] {
+  protected highlight(snippet: string): {text: string; match: boolean}[] {
     const query = this.query().trim();
     if (!query) {
-      return [{ text: snippet, match: false }];
+      return [{text: snippet, match: false}];
     }
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return snippet
       .split(new RegExp(`(${escaped})`, 'gi'))
       .filter(Boolean)
-      .map((text) => ({ text, match: text.toLowerCase() === query.toLowerCase() }));
+      .map(text => ({text, match: text.toLowerCase() === query.toLowerCase()}));
   }
 }
 
-function lastWeek(today: LocalDate): { from: LocalDate; to: LocalDate } {
-  return { from: toLocalDate(addDays(parseLocalDate(today), -6)), to: today };
+function lastWeek(today: LocalDate): {from: LocalDate; to: LocalDate} {
+  return {from: toLocalDate(addDays(parseLocalDate(today), -6)), to: today};
 }

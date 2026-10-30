@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {Injectable, Logger} from '@nestjs/common';
 import {
   DailyMetric,
   LocalDate,
@@ -27,9 +27,18 @@ export interface Period {
 /** What a section tells about a project (`<module>.links.ts`). */
 export interface ProjectSource {
   module: string;
-  facts?(userId: string, project: ProjectRef, period: Period): Promise<ProjectFact[]>;
+  facts?(
+    userId: string,
+    project: ProjectRef,
+    period: Period,
+  ): Promise<ProjectFact[]>;
   /** What changed in the project between two moments, newest first. */
-  changes?(userId: string, project: ProjectRef, from: Date, to: Date): Promise<ProjectChange[]>;
+  changes?(
+    userId: string,
+    project: ProjectRef,
+    from: Date,
+    to: Date,
+  ): Promise<ProjectChange[]>;
 }
 
 /**
@@ -42,7 +51,11 @@ export interface UsageSource {
    * The use of a service by the name its payment has ("Spotify Premium"), lower case;
    * `null` — the section knows no such service (which is not the same as "not used").
    */
-  usage(userId: string, name: string, period: Period): Promise<Omit<ServiceUsage, 'module'> | null>;
+  usage(
+    userId: string,
+    name: string,
+    period: Period,
+  ): Promise<Omit<ServiceUsage, 'module'> | null>;
 }
 
 /** A page of the app the assistant may link to (`<module>.links.ts`). */
@@ -70,7 +83,10 @@ export interface MomentSource {
 export interface PeriodSource {
   module: string;
   /** The periods that touch the range. */
-  periods(userId: string, range: Period): Promise<Omit<TimelinePeriod, 'module'>[]>;
+  periods(
+    userId: string,
+    range: Period,
+  ): Promise<Omit<TimelinePeriod, 'module'>[]>;
 }
 
 /** A section that knows how long was worked on something called by a name. */
@@ -91,7 +107,10 @@ export type TimeSpent = Record<TimeSpentKind, number>;
 export interface PeopleSource {
   module: string;
   /** What it keeps for each of the names, lower case; a name it knows nothing of is left out. */
-  about(userId: string, names: string[]): Promise<Map<string, Omit<PersonNote, 'module'>[]>>;
+  about(
+    userId: string,
+    names: string[],
+  ): Promise<Map<string, Omit<PersonNote, 'module'>[]>>;
 }
 
 /**
@@ -149,8 +168,14 @@ export class LinksService {
     return this.appPages;
   }
 
-  async projectFacts(userId: string, project: ProjectRef, period: Period): Promise<ProjectFact[]> {
-    return this.collect(this.projects, (source) => source.facts?.(userId, project, period));
+  async projectFacts(
+    userId: string,
+    project: ProjectRef,
+    period: Period,
+  ): Promise<ProjectFact[]> {
+    return this.collect(this.projects, source =>
+      source.facts?.(userId, project, period),
+    );
   }
 
   /** What changed in a project between two moments, newest first. */
@@ -160,50 +185,65 @@ export class LinksService {
     from: Date,
     to: Date,
   ): Promise<ProjectChange[]> {
-    const changes = await this.collect(this.projects, (source) =>
+    const changes = await this.collect(this.projects, source =>
       source.changes?.(userId, project, from, to),
     );
     return changes.sort((a, b) => b.at.localeCompare(a.at));
   }
 
   /** The use of a service a payment is named after; empty — no section knows such a service. */
-  async usageOf(userId: string, name: string, period: Period): Promise<ServiceUsage[]> {
+  async usageOf(
+    userId: string,
+    name: string,
+    period: Period,
+  ): Promise<ServiceUsage[]> {
     const wanted = name.trim().toLowerCase();
     const found: ServiceUsage[] = [];
     for (const source of this.usages) {
       try {
         const usage = await source.usage(userId, wanted, period);
         if (usage) {
-          found.push({ module: source.module, ...usage });
+          found.push({module: source.module, ...usage});
         }
       } catch (error) {
-        this.logger.warn(`Usage of ${source.module} was not read: ${String(error)}`);
+        this.logger.warn(
+          `Usage of ${source.module} was not read: ${String(error)}`,
+        );
       }
     }
     return found;
   }
 
   async dailyMetrics(userId: string, period: Period): Promise<DailyMetric[]> {
-    return this.collect(this.metrics, (source) => source.metrics(userId, period));
+    return this.collect(this.metrics, source => source.metrics(userId, period));
   }
 
   /**
    * One daily number by its key (`diary.mood`): only the section it belongs to is asked — the
    * key starts with the section's id. `null` — the section has no such number in the period.
    */
-  async dailyMetric(userId: string, key: string, period: Period): Promise<DailyMetric | null> {
+  async dailyMetric(
+    userId: string,
+    key: string,
+    period: Period,
+  ): Promise<DailyMetric | null> {
     const module = key.split('.')[0];
     const metrics = await this.collect(
-      this.metrics.filter((source) => source.module === module),
-      (source) => source.metrics(userId, period),
+      this.metrics.filter(source => source.module === module),
+      source => source.metrics(userId, period),
     );
-    return metrics.find((metric) => metric.key === key) ?? null;
+    return metrics.find(metric => metric.key === key) ?? null;
   }
 
   /** What the sections keep about the people of these names; the keys are lower case. */
-  async aboutPeople(userId: string, names: string[]): Promise<Map<string, PersonNote[]>> {
+  async aboutPeople(
+    userId: string,
+    names: string[],
+  ): Promise<Map<string, PersonNote[]>> {
     const notes = new Map<string, PersonNote[]>();
-    const wanted = [...new Set(names.map((name) => name.trim().toLowerCase()).filter(Boolean))];
+    const wanted = [
+      ...new Set(names.map(name => name.trim().toLowerCase()).filter(Boolean)),
+    ];
     if (!wanted.length) {
       return notes;
     }
@@ -212,26 +252,37 @@ export class LinksService {
         for (const [name, found] of await source.about(userId, wanted)) {
           notes.set(name, [
             ...(notes.get(name) ?? []),
-            ...found.map((note) => ({ module: source.module, ...note })),
+            ...found.map(note => ({module: source.module, ...note})),
           ]);
         }
       } catch (error) {
-        this.logger.warn(`People of ${source.module} were not read: ${String(error)}`);
+        this.logger.warn(
+          `People of ${source.module} were not read: ${String(error)}`,
+        );
       }
     }
     return notes;
   }
 
   /** What happened between two moments, oldest first. */
-  async momentsBetween(userId: string, from: Date, to: Date): Promise<Moment[]> {
-    const moments = await this.collect(this.moments, (source) => source.between(userId, from, to));
+  async momentsBetween(
+    userId: string,
+    from: Date,
+    to: Date,
+  ): Promise<Moment[]> {
+    const moments = await this.collect(this.moments, source =>
+      source.between(userId, from, to),
+    );
     return moments.sort((a, b) => a.at.localeCompare(b.at));
   }
 
   /** What lasted over the range across the sections, the latest start first. */
-  async periodsBetween(userId: string, range: Period): Promise<TimelinePeriod[]> {
-    const periods = await this.collect(this.periodSources, async (source) =>
-      (await source.periods(userId, range)).map((period) => ({
+  async periodsBetween(
+    userId: string,
+    range: Period,
+  ): Promise<TimelinePeriod[]> {
+    const periods = await this.collect(this.periodSources, async source =>
+      (await source.periods(userId, range)).map(period => ({
         ...period,
         module: source.module,
       })),
@@ -240,27 +291,34 @@ export class LinksService {
   }
 
   /** Seconds worked on each of the names (lower case), by how the time was counted. */
-  async timeSpentOn(userId: string, names: string[]): Promise<Map<string, TimeSpent>> {
+  async timeSpentOn(
+    userId: string,
+    names: string[],
+  ): Promise<Map<string, TimeSpent>> {
     const total = new Map<string, TimeSpent>();
-    const wanted = [...new Set(names.map((name) => name.trim().toLowerCase()).filter(Boolean))];
+    const wanted = [
+      ...new Set(names.map(name => name.trim().toLowerCase()).filter(Boolean)),
+    ];
     if (!wanted.length) {
       return total;
     }
     for (const source of this.timeSpent) {
       try {
         for (const [name, seconds] of await source.spent(userId, wanted)) {
-          const spent = total.get(name) ?? { focus: 0, windows: 0 };
+          const spent = total.get(name) ?? {focus: 0, windows: 0};
           spent[source.kind] += seconds;
           total.set(name, spent);
         }
       } catch (error) {
-        this.logger.warn(`Time spent of ${source.module} was not read: ${String(error)}`);
+        this.logger.warn(
+          `Time spent of ${source.module} was not read: ${String(error)}`,
+        );
       }
     }
     return total;
   }
 
-  private async collect<S extends { module: string }, T>(
+  private async collect<S extends {module: string}, T>(
     sources: S[],
     ask: (source: S) => Promise<T[]> | undefined,
   ): Promise<T[]> {
@@ -269,7 +327,9 @@ export class LinksService {
       try {
         all.push(...((await ask(source)) ?? []));
       } catch (error) {
-        this.logger.warn(`A link to ${source.module} failed: ${String(error).slice(0, 200)}`);
+        this.logger.warn(
+          `A link to ${source.module} failed: ${String(error).slice(0, 200)}`,
+        );
       }
     }
     return all;

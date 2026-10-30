@@ -1,10 +1,23 @@
-import { DEFAULT_PASSWORD_OPTIONS, generatePassword } from '@pd/client-core';
-import { OpenVaultItem } from '@pd/contracts';
-import { ExtensionError, FieldKind, FillAnswer, MenuState, PageCommand } from '../shared/messages';
-import { matchesPage, siteName, siteOf } from '../shared/site';
-import { email } from './account';
-import { readJson, writeJson } from './storage';
-import { isUnlocked, saveItem, unlock, vaultItem, vaultItems, vaultStatus } from './vault';
+import {DEFAULT_PASSWORD_OPTIONS, generatePassword} from '@pd/client-core';
+import {OpenVaultItem} from '@pd/contracts';
+import {
+  ExtensionError,
+  FieldKind,
+  FillAnswer,
+  MenuState,
+  PageCommand,
+} from '../shared/messages';
+import {matchesPage, siteName, siteOf} from '../shared/site';
+import {email} from './account';
+import {readJson, writeJson} from './storage';
+import {
+  isUnlocked,
+  saveItem,
+  unlock,
+  vaultItem,
+  vaultItems,
+  vaultStatus,
+} from './vault';
 
 /*
  * The menu under a field of a page (content/inline.ts draws it, inline-menu.ts is its page).
@@ -74,13 +87,14 @@ export async function menuState(token: string): Promise<MenuState> {
     site: siteName(session.frameUrl),
     logins:
       unlocked && (session.kind === 'username' || session.kind === 'password')
-        ? (await loginsFor(session.frameUrl)).map((item) => ({
+        ? (await loginsFor(session.frameUrl)).map(item => ({
             id: item.id,
             title: item.title,
             username: item.username,
           }))
         : [],
-    suggestions: unlocked && session.kind === 'signup-username' ? await suggestions() : [],
+    suggestions:
+      unlocked && session.kind === 'signup-username' ? await suggestions() : [],
   };
 }
 
@@ -101,12 +115,18 @@ export async function menuFill(token: string, id: string): Promise<void> {
 }
 
 /** A suggested email or login into the field. */
-export async function menuFillText(token: string, value: string): Promise<void> {
+export async function menuFillText(
+  token: string,
+  value: string,
+): Promise<void> {
   const session = await sessionOf(token);
-  if (session.kind !== 'signup-username' || !(await suggestions()).includes(value)) {
+  if (
+    session.kind !== 'signup-username' ||
+    !(await suggestions()).includes(value)
+  ) {
     throw new ExtensionError('not-allowed');
   }
-  await send(session, { type: 'fill-field', fieldId: session.fieldId, value });
+  await send(session, {type: 'fill-field', fieldId: session.fieldId, value});
   await close(token, session);
 }
 
@@ -121,7 +141,7 @@ export async function menuGenerate(token: string): Promise<void> {
     throw new ExtensionError('locked');
   }
   const password = generatePassword(DEFAULT_PASSWORD_OPTIONS);
-  const answer = await send(session, { type: 'fill-new-password', password });
+  const answer = await send(session, {type: 'fill-new-password', password});
   if (!answer?.filled) {
     throw new ExtensionError('failed');
   }
@@ -134,17 +154,23 @@ export async function menuGenerate(token: string): Promise<void> {
     password,
     notes: '',
     favorite: false,
-    source: { app: DRAFT_SOURCE, id: String(Date.now()) },
+    source: {app: DRAFT_SOURCE, id: String(Date.now())},
   });
   await close(token, session);
 }
 
-export async function menuUnlock(token: string, masterPassword: string): Promise<void> {
+export async function menuUnlock(
+  token: string,
+  masterPassword: string,
+): Promise<void> {
   await sessionOf(token);
   await unlock(masterPassword);
 }
 
-async function worthShowing(kind: FieldKind, frameUrl: string): Promise<boolean> {
+async function worthShowing(
+  kind: FieldKind,
+  frameUrl: string,
+): Promise<boolean> {
   if (!(await isUnlocked())) {
     return false; // The key icon is there; the unlock form waits for a click on it.
   }
@@ -158,15 +184,19 @@ async function worthShowing(kind: FieldKind, frameUrl: string): Promise<boolean>
 }
 
 async function loginsFor(frameUrl: string): Promise<OpenVaultItem[]> {
-  const { items } = await vaultItems({ use: false });
+  const {items} = await vaultItems({use: false});
   return items
-    .filter((item) => item.kind === 'login' && matchesPage(item.urls, frameUrl))
-    .sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.title.localeCompare(b.title));
+    .filter(item => item.kind === 'login' && matchesPage(item.urls, frameUrl))
+    .sort(
+      (a, b) =>
+        Number(b.favorite) - Number(a.favorite) ||
+        a.title.localeCompare(b.title),
+    );
 }
 
 /** The emails and logins of the vault and the account's email, the most used first. */
 async function suggestions(): Promise<string[]> {
-  const { items } = await vaultItems({ use: false });
+  const {items} = await vaultItems({use: false});
   const count = new Map<string, number>();
   for (const item of items) {
     const login = item.username.trim();
@@ -179,19 +209,29 @@ async function suggestions(): Promise<string[]> {
     count.set(account, (count.get(account) ?? 0) + 1);
   }
   return [...count.entries()]
-    .sort((a, b) => b[1] - a[1] || Number(b[0].includes('@')) - Number(a[0].includes('@')))
+    .sort(
+      (a, b) =>
+        b[1] - a[1] || Number(b[0].includes('@')) - Number(a[0].includes('@')),
+    )
     .slice(0, MAX_SUGGESTIONS)
     .map(([login]) => login);
 }
 
-async function send(session: MenuSession, command: PageCommand): Promise<FillAnswer | undefined> {
-  return chrome.tabs.sendMessage<PageCommand, FillAnswer | undefined>(session.tabId, command, {
-    frameId: session.frameId,
-  });
+async function send(
+  session: MenuSession,
+  command: PageCommand,
+): Promise<FillAnswer | undefined> {
+  return chrome.tabs.sendMessage<PageCommand, FillAnswer | undefined>(
+    session.tabId,
+    command,
+    {
+      frameId: session.frameId,
+    },
+  );
 }
 
 async function close(token: string, session: MenuSession): Promise<void> {
-  await send(session, { type: 'close-menu' }).catch(() => undefined);
+  await send(session, {type: 'close-menu'}).catch(() => undefined);
   const sessions = await fresh();
   delete sessions[token];
   await writeJson(chrome.storage.session, MENUS_KEY, sessions);
@@ -207,7 +247,11 @@ async function sessionOf(token: string): Promise<MenuSession> {
 
 /** The menus still open, the newest MAX_MENUS of them. */
 async function fresh(): Promise<Record<string, MenuSession>> {
-  const all = await readJson<Record<string, MenuSession>>(chrome.storage.session, MENUS_KEY, {});
+  const all = await readJson<Record<string, MenuSession>>(
+    chrome.storage.session,
+    MENUS_KEY,
+    {},
+  );
   return Object.fromEntries(
     Object.entries(all)
       .filter(([, session]) => Date.now() - session.at < MENU_MS)

@@ -1,8 +1,18 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { compressImage, Database, DB } from '@pd/api-core';
-import { DIARY_PHOTO_MAX_BYTES, DIARY_PHOTO_TYPES, DiaryPhoto, LocalDate } from '@pd/contracts';
-import { and, asc, count, eq } from 'drizzle-orm';
-import { diaryPhotos } from './diary.schema';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {compressImage, Database, DB} from '@pd/api-core';
+import {
+  DIARY_PHOTO_MAX_BYTES,
+  DIARY_PHOTO_TYPES,
+  DiaryPhoto,
+  LocalDate,
+} from '@pd/contracts';
+import {and, asc, count, eq} from 'drizzle-orm';
+import {diaryPhotos} from './diary.schema';
 
 export interface PhotoUpload {
   data: Buffer;
@@ -31,7 +41,7 @@ export class DiaryPhotosService {
       .from(diaryPhotos)
       .where(and(eq(diaryPhotos.userId, userId), eq(diaryPhotos.day, day)))
       .orderBy(asc(diaryPhotos.createdAt));
-    return rows.map((row) => ({
+    return rows.map(row => ({
       id: row.id,
       day: row.day,
       mimeType: row.mimeType,
@@ -41,15 +51,21 @@ export class DiaryPhotosService {
     }));
   }
 
-  async add(userId: string, day: LocalDate, photo: PhotoUpload): Promise<DiaryPhoto> {
+  async add(
+    userId: string,
+    day: LocalDate,
+    photo: PhotoUpload,
+  ): Promise<DiaryPhoto> {
     if (!DIARY_PHOTO_TYPES.includes(photo.mimeType)) {
-      throw new BadRequestException(`Unsupported image type: ${photo.mimeType}`);
+      throw new BadRequestException(
+        `Unsupported image type: ${photo.mimeType}`,
+      );
     }
     if (photo.data.length > DIARY_PHOTO_MAX_BYTES) {
       throw new BadRequestException('The image is too large');
     }
     // Made small and stripped of where it was taken before it is kept (an animation stays).
-    const { data, mimeType } = await compressImage(photo);
+    const {data, mimeType} = await compressImage(photo);
     const [row] = await this.db
       .insert(diaryPhotos)
       .values({
@@ -61,12 +77,15 @@ export class DiaryPhotosService {
         data,
       })
       .returning(photoInfo);
-    return { ...row, createdAt: row.createdAt.toISOString() };
+    return {...row, createdAt: row.createdAt.toISOString()};
   }
 
-  async file(userId: string, id: string): Promise<{ data: Buffer; mimeType: string }> {
+  async file(
+    userId: string,
+    id: string,
+  ): Promise<{data: Buffer; mimeType: string}> {
     const [row] = await this.db
-      .select({ data: diaryPhotos.data, mimeType: diaryPhotos.mimeType })
+      .select({data: diaryPhotos.data, mimeType: diaryPhotos.mimeType})
       .from(diaryPhotos)
       .where(and(eq(diaryPhotos.id, id), eq(diaryPhotos.userId, userId)));
     if (!row) {
@@ -83,7 +102,7 @@ export class DiaryPhotosService {
 
   async count(userId: string): Promise<number> {
     const [row] = await this.db
-      .select({ value: count() })
+      .select({value: count()})
       .from(diaryPhotos)
       .where(eq(diaryPhotos.userId, userId));
     return row?.value ?? 0;

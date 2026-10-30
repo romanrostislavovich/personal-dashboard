@@ -1,9 +1,19 @@
-import { describe, expect, it } from 'vitest';
-import { SmartBreak, SmartBreakSample, SMART_BREAK_WORK_MS } from './smart-break';
+import {describe, expect, it} from 'vitest';
+import {SmartBreak, SmartBreakSample, SMART_BREAK_WORK_MS} from './smart-break';
 
-const active: SmartBreakSample = { allowed: true, active: true, idleMs: 2000, quiet: false };
-function work(state: SmartBreak, start = 0, duration = SMART_BREAK_WORK_MS): number {
-  for (let at = start; at <= start + duration; at += 5000) state.sample(at, active);
+const active: SmartBreakSample = {
+  allowed: true,
+  active: true,
+  idleMs: 2000,
+  quiet: false,
+};
+function work(
+  state: SmartBreak,
+  start = 0,
+  duration = SMART_BREAK_WORK_MS,
+): number {
+  for (let at = start; at <= start + duration; at += 5000)
+    state.sample(at, active);
   return start + duration;
 }
 const event = (completedAt: number) => ({
@@ -36,13 +46,13 @@ describe('SmartBreak', () => {
     const state = new SmartBreak();
     let now = work(state);
     for (let idle = 5000; idle <= 60_000; idle += 5000) {
-      state.sample(now + idle, { ...active, active: false, idleMs: idle });
+      state.sample(now + idle, {...active, active: false, idleMs: idle});
     }
     now += 65_000;
     state.sample(now, active);
     expect(state.transition(event(now), now)).toBe(true);
     for (let idle = 5000; idle <= 300_000; idle += 5000) {
-      state.sample(now + idle, { ...active, active: false, idleMs: idle });
+      state.sample(now + idle, {...active, active: false, idleMs: idle});
     }
     now += 305_000;
     state.sample(now, active);
@@ -52,19 +62,22 @@ describe('SmartBreak', () => {
   });
 
   it.each([
-    { allowed: false },
-    { active: false },
-    { quiet: true },
-    { idleMs: 0 },
-    { idleMs: Number.NaN },
-  ])('rejects gated transitions without scheduling a later notification: %j', (gate) => {
-    const state = new SmartBreak();
-    const now = work(state);
-    state.sample(now, { ...active, ...gate });
-    expect(state.transition(event(now), now)).toBe(false);
-    state.sample(now + 5000, active);
-    expect(state.transition(event(now), now + 5000)).toBe(false);
-  });
+    {allowed: false},
+    {active: false},
+    {quiet: true},
+    {idleMs: 0},
+    {idleMs: Number.NaN},
+  ])(
+    'rejects gated transitions without scheduling a later notification: %j',
+    gate => {
+      const state = new SmartBreak();
+      const now = work(state);
+      state.sample(now, {...active, ...gate});
+      expect(state.transition(event(now), now)).toBe(false);
+      state.sample(now + 5000, active);
+      expect(state.transition(event(now), now + 5000)).toBe(false);
+    },
+  );
 
   it('clears work on pause/privacy and does not count missing samples or backward time', () => {
     const state = new SmartBreak();
@@ -92,7 +105,9 @@ describe('SmartBreak', () => {
   it('rejects stale callbacks and unsupported categories', () => {
     const state = new SmartBreak();
     const now = work(state);
-    expect(state.transition({ ...event(now), category: 'build' as 'test' }, now)).toBe(false);
+    expect(
+      state.transition({...event(now), category: 'build' as 'test'}, now),
+    ).toBe(false);
     expect(state.transition(event(now), now + 1)).toBe(false);
     expect(state.transition(event(now + 11_000), now + 11_000)).toBe(false);
   });

@@ -1,7 +1,7 @@
-import { zonedDateTime } from '@pd/contracts';
-import { coreMessages } from '../i18n/core.messages';
-import { AppPage } from '../links/links.service';
-import { UserRow } from '../users/users.schema';
+import {zonedDateTime} from '@pd/contracts';
+import {coreMessages} from '../i18n/core.messages';
+import {AppPage} from '../links/links.service';
+import {UserRow} from '../users/users.schema';
 
 /**
  * The tone: the dashboard holds a person's money, mood, habits and time — the assistant
@@ -25,20 +25,25 @@ export const NO_JUDGEMENT =
  * judgement, and the user's language — `null` keeps the language of the content. The evals
  * build it the same way, so they test what production sends.
  */
-export function completionSystem(instruction: string, language: string | null): string {
+export function completionSystem(
+  instruction: string,
+  language: string | null,
+): string {
   const system = `${instruction} ${NO_JUDGEMENT}`;
   return language ? `${system} Always answer in ${language}.` : system;
 }
 
 /** The user's memories for the prompt; they change seldom, so they stay before the time. */
-function memoryLines(memories: { id: string; text: string }[]): string[] {
+function memoryLines(memories: {id: string; text: string}[]): string[] {
   if (!memories.length) {
     return [];
   }
   return [
     'The user asked you to remember these facts (use them when they matter; core_forget',
     'removes one by its id):',
-    ...memories.map((memory) => `[${memory.id}] ${memory.text.replace(/\s+/g, ' ')};`),
+    ...memories.map(
+      memory => `[${memory.id}] ${memory.text.replace(/\s+/g, ' ')};`,
+    ),
   ];
 }
 
@@ -102,7 +107,7 @@ function pageLinks(pages: AppPage[]): string[] {
   return [
     'When an answer is about something that has a page in the app, end with a markdown link to',
     'it, like [Finance](/finance). Use only these paths (fill in <id> from a tool result):',
-    pages.map((page) => `${page.path} — ${page.description}`).join('; ') + '.',
+    pages.map(page => `${page.path} — ${page.description}`).join('; ') + '.',
   ];
 }
 
@@ -132,7 +137,7 @@ export interface PromptOptions {
   /** The pages of the app the answer may link to (see LinksService.registerPages). */
   pages?: AppPage[];
   /** What the user asked the assistant to remember (see AiMemoryService). */
-  memories?: { id: string; text: string }[];
+  memories?: {id: string; text: string}[];
   /** The answer is read aloud by the phone (the voice assistant): short, nothing to look at. */
   spoken?: boolean;
 }
@@ -144,7 +149,14 @@ export interface PromptOptions {
 export function systemPrompt(
   user: UserRow | undefined,
   timeZone: string,
-  { plainText, allowWrites, hasAttachments, pages, memories, spoken }: PromptOptions,
+  {
+    plainText,
+    allowWrites,
+    hasAttachments,
+    pages,
+    memories,
+    spoken,
+  }: PromptOptions,
 ): string {
   const now = zonedDateTime(new Date(), timeZone);
   return [

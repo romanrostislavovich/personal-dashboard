@@ -1,8 +1,8 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MorningDigestService } from '@pd/api-core';
-import { addDays, parseLocalDate, toLocalDate } from '@pd/contracts';
-import { ActivityService } from './activity.service';
-import { WellbeingService } from './wellbeing.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {MorningDigestService} from '@pd/api-core';
+import {addDays, parseLocalDate, toLocalDate} from '@pd/contracts';
+import {ActivityService} from './activity.service';
+import {WellbeingService} from './wellbeing.service';
 
 const HOUR = 3600;
 const hours = (seconds: number) => Math.round((seconds / HOUR) * 10) / 10;
@@ -25,22 +25,30 @@ export class ActivityDigest implements OnModuleInit {
         'their hours, time on `projects`, and `focus` sessions (Pomodoro) when there were any: ' +
         'how many, their `hours`, the `streak` of days in a row. Say in a line how the day went: ' +
         'how long, on what; praise a focus streak.',
-      collect: async (userId) => {
+      collect: async userId => {
         const yesterday = toLocalDate(
           addDays(parseLocalDate(await this.activity.today(userId)), -1),
         );
-        const stats = await this.activity.stats(userId, { from: yesterday, to: yesterday });
+        const stats = await this.activity.stats(userId, {
+          from: yesterday,
+          to: yesterday,
+        });
         if (stats.totalSeconds < 60) {
           return null; // The computer was off, or no tracker is installed.
         }
-        const top = <T extends { seconds: number }>(list: T[], name: (item: T) => string) =>
-          list.slice(0, 3).map((item) => ({ name: name(item), hours: hours(item.seconds) }));
+        const top = <T extends {seconds: number}>(
+          list: T[],
+          name: (item: T) => string,
+        ) =>
+          list
+            .slice(0, 3)
+            .map(item => ({name: name(item), hours: hours(item.seconds)}));
         return {
           day: yesterday,
           hours: hours(stats.totalSeconds),
-          categories: top(stats.categories, (c) => c.category),
-          apps: top(stats.apps, (a) => a.name),
-          projects: top(stats.projects, (p) => p.name),
+          categories: top(stats.categories, c => c.category),
+          apps: top(stats.apps, a => a.name),
+          projects: top(stats.projects, p => p.name),
           focus: await this.focus(userId, yesterday),
         };
       },
@@ -48,7 +56,7 @@ export class ActivityDigest implements OnModuleInit {
   }
 
   private async focus(userId: string, day: string) {
-    const focus = await this.wellbeing.focusStats(userId, { from: day, to: day });
+    const focus = await this.wellbeing.focusStats(userId, {from: day, to: day});
     return focus.sessions.length
       ? {
           sessions: focus.completed,

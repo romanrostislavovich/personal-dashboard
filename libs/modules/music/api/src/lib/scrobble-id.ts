@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import {createHash} from 'node:crypto';
 
 /** A fixed namespace for scrobble ids (a random UUID, chosen once). */
 const NAMESPACE = Buffer.from('6f1c2a9e4b7d4e0f9a3b5c8d2e1f7a64', 'hex');
@@ -8,7 +8,11 @@ const NAMESPACE = Buffer.from('6f1c2a9e4b7d4e0f9a3b5c8d2e1f7a64', 'hex');
  * The server and a local instance may both import the same Last.fm history; with equal ids
  * sync merges the rows instead of reporting thousands of conflicts (see docs/sync.md).
  */
-export function scrobbleId(userId: string, playedAt: Date, track: string): string {
+export function scrobbleId(
+  userId: string,
+  playedAt: Date,
+  track: string,
+): string {
   const hash = createHash('sha1')
     .update(NAMESPACE)
     .update(`${userId}|${playedAt.toISOString()}|${track}`)

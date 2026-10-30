@@ -1,48 +1,77 @@
-import { HabitDay, habitInputSchema, habitStats } from './habits';
+import {HabitDay, habitInputSchema, habitStats} from './habits';
 
 const used = (...days: string[]): HabitDay[] =>
-  days.map((day) => ({ day, status: 'used', amount: null }));
+  days.map(day => ({day, status: 'used', amount: null}));
 
 describe('the numbers of a habit', () => {
-  const quit = { goal: 'quit' as const, maxDaysPerWeek: null };
+  const quit = {goal: 'quit' as const, maxDaysPerWeek: null};
 
   it('counts every day since the start as clean, today included', () => {
-    const stats = habitStats({ ...quit, startedOn: '2026-10-01' }, [], '2026-10-15');
-    expect(stats).toMatchObject({ currentStreak: 15, bestStreak: 15, cleanDays: 15, usedDays: 0 });
-    expect(habitStats({ ...quit, startedOn: '2026-10-15' }, [], '2026-10-15').currentStreak).toBe(
-      1,
+    const stats = habitStats(
+      {...quit, startedOn: '2026-10-01'},
+      [],
+      '2026-10-15',
     );
+    expect(stats).toMatchObject({
+      currentStreak: 15,
+      bestStreak: 15,
+      cleanDays: 15,
+      usedDays: 0,
+    });
+    expect(
+      habitStats({...quit, startedOn: '2026-10-15'}, [], '2026-10-15')
+        .currentStreak,
+    ).toBe(1);
   });
 
   it('starts the run again after a day with it, and keeps the best one', () => {
     const stats = habitStats(
-      { ...quit, startedOn: '2026-10-01' },
+      {...quit, startedOn: '2026-10-01'},
       used('2026-10-11'),
       '2026-10-15',
     );
-    expect(stats).toMatchObject({ currentStreak: 4, bestStreak: 10, cleanDays: 14, usedDays: 1 });
+    expect(stats).toMatchObject({
+      currentStreak: 4,
+      bestStreak: 10,
+      cleanDays: 14,
+      usedDays: 1,
+    });
     expect(
-      habitStats({ ...quit, startedOn: '2026-10-01' }, used('2026-10-15'), '2026-10-15')
-        .currentStreak,
+      habitStats(
+        {...quit, startedOn: '2026-10-01'},
+        used('2026-10-15'),
+        '2026-10-15',
+      ).currentStreak,
     ).toBe(0);
   });
 
   it('ignores marks before the start and an explicit clean mark changes nothing', () => {
     const marks: HabitDay[] = [
       ...used('2026-09-20'),
-      { day: '2026-10-02', status: 'clean', amount: null },
+      {day: '2026-10-02', status: 'clean', amount: null},
     ];
-    expect(habitStats({ ...quit, startedOn: '2026-10-01' }, marks, '2026-10-03').cleanDays).toBe(3);
+    expect(
+      habitStats({...quit, startedOn: '2026-10-01'}, marks, '2026-10-03')
+        .cleanDays,
+    ).toBe(3);
   });
 
   it('counts the clean days of this year only', () => {
-    const stats = habitStats({ ...quit, startedOn: '2025-12-30' }, [], '2026-01-02');
+    const stats = habitStats(
+      {...quit, startedOn: '2025-12-30'},
+      [],
+      '2026-01-02',
+    );
     expect(stats.cleanDays).toBe(4);
     expect(stats.cleanDaysThisYear).toBe(2);
   });
 
   it('cutting down: finished weeks in a row within the limit, the last first', () => {
-    const less = { goal: 'less' as const, maxDaysPerWeek: 2, startedOn: '2026-09-07' };
+    const less = {
+      goal: 'less' as const,
+      maxDaysPerWeek: 2,
+      startedOn: '2026-09-07',
+    };
     // Weeks from Monday: 09-07 (3 days — over), 09-14 (2), 09-21 (1), 09-28 (0), 10-05 (2);
     // this week from 10-12: one day so far.
     const marks = used(
@@ -59,17 +88,29 @@ describe('the numbers of a habit', () => {
     const stats = habitStats(less, marks, '2026-10-15');
     expect(stats.weeksWithinLimit).toBe(4);
     expect(stats.usedThisWeek).toBe(1);
-    expect(habitStats({ ...less, goal: 'quit' }, marks, '2026-10-15').weeksWithinLimit).toBe(0);
+    expect(
+      habitStats({...less, goal: 'quit'}, marks, '2026-10-15').weeksWithinLimit,
+    ).toBe(0);
   });
 });
 
 describe('the numbers of a habit to build', () => {
   const done = (...days: string[]): HabitDay[] =>
-    days.map((day) => ({ day, status: 'done', amount: null }));
+    days.map(day => ({day, status: 'done', amount: null}));
 
   it('every day: days in a row done; today not done yet keeps the run', () => {
-    const habit = { goal: 'daily' as const, maxDaysPerWeek: null, startedOn: '2026-10-01' };
-    const marks = done('2026-10-02', '2026-10-03', '2026-10-05', '2026-10-06', '2026-10-07');
+    const habit = {
+      goal: 'daily' as const,
+      maxDaysPerWeek: null,
+      startedOn: '2026-10-01',
+    };
+    const marks = done(
+      '2026-10-02',
+      '2026-10-03',
+      '2026-10-05',
+      '2026-10-06',
+      '2026-10-07',
+    );
     expect(habitStats(habit, marks, '2026-10-08')).toMatchObject({
       currentStreak: 3,
       bestStreak: 3,
@@ -105,22 +146,30 @@ describe('the numbers of a habit to build', () => {
 });
 
 describe('the kinds of a habit', () => {
-  const start = { startedOn: '2026-10-01' };
+  const start = {startedOn: '2026-10-01'};
 
   it('builds the gym, never quits it', () => {
     expect(
-      habitInputSchema.safeParse({ ...start, kind: 'gym', goal: 'weekly', timesPerWeek: 3 })
-        .success,
+      habitInputSchema.safeParse({
+        ...start,
+        kind: 'gym',
+        goal: 'weekly',
+        timesPerWeek: 3,
+      }).success,
     ).toBe(true);
-    expect(habitInputSchema.safeParse({ ...start, kind: 'gym', goal: 'quit' }).success).toBe(false);
+    expect(
+      habitInputSchema.safeParse({...start, kind: 'gym', goal: 'quit'}).success,
+    ).toBe(false);
   });
 
   it('quits alcohol, never builds it', () => {
-    expect(habitInputSchema.safeParse({ ...start, kind: 'alcohol', goal: 'quit' }).success).toBe(
-      true,
-    );
-    expect(habitInputSchema.safeParse({ ...start, kind: 'alcohol', goal: 'daily' }).success).toBe(
-      false,
-    );
+    expect(
+      habitInputSchema.safeParse({...start, kind: 'alcohol', goal: 'quit'})
+        .success,
+    ).toBe(true);
+    expect(
+      habitInputSchema.safeParse({...start, kind: 'alcohol', goal: 'daily'})
+        .success,
+    ).toBe(false);
   });
 });

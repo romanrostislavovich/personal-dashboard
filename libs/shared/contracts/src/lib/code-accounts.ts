@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 import {
   GithubContributionDay,
   GithubFollowersPoint,
@@ -6,7 +6,7 @@ import {
   GithubTopRepo,
   GithubYearTotals,
 } from './github-profile';
-import { REPO_PROVIDERS, RepoProvider } from './open-source';
+import {REPO_PROVIDERS, RepoProvider} from './open-source';
 
 /** Code hosting services whose accounts the Development section shows. */
 export const CODE_PROVIDERS = REPO_PROVIDERS;
@@ -41,7 +41,7 @@ export interface CodeAccount {
   today: number;
   /** The last 7 days, today included. */
   week: number;
-  streak: { current: number; longest: number };
+  streak: {current: number; longest: number};
   busiestDay: GithubContributionDay | null;
 
   /** Newest first. */
@@ -62,7 +62,7 @@ export interface CodeAccountBrief {
   totalContributions: number;
   today: number;
   week: number;
-  streak: { current: number; longest: number };
+  streak: {current: number; longest: number};
   lastSyncedAt: string | null;
   syncError: string | null;
 }
@@ -81,7 +81,7 @@ export interface CodeAccountsSummary {
   totalContributions: number;
   today: number;
   week: number;
-  streak: { current: number; longest: number };
+  streak: {current: number; longest: number};
   busiestDay: GithubContributionDay | null;
   /** Newest first. */
   years: CodeSummaryYear[];

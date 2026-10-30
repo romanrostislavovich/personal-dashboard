@@ -1,4 +1,4 @@
-import { pastWeatherMetrics } from './past-weather';
+import {pastWeatherMetrics} from './past-weather';
 
 describe('pastWeatherMetrics', () => {
   it('turns the archive into daily numbers and leaves out the days not measured yet', () => {
@@ -10,29 +10,31 @@ describe('pastWeatherMetrics', () => {
         sunshine_duration: [18000, 3600, null],
       },
     });
-    expect(metrics.map((metric) => [metric.key, metric.unit, metric.days])).toEqual([
+    expect(
+      metrics.map(metric => [metric.key, metric.unit, metric.days]),
+    ).toEqual([
       [
         'weather.temperature',
         'degrees',
         [
-          { day: '2026-10-01', value: 12.3 },
-          { day: '2026-10-02', value: 9 },
+          {day: '2026-10-01', value: 12.3},
+          {day: '2026-10-02', value: 9},
         ],
       ],
       [
         'weather.rain',
         'count',
         [
-          { day: '2026-10-01', value: 0 },
-          { day: '2026-10-02', value: 4.3 },
+          {day: '2026-10-01', value: 0},
+          {day: '2026-10-02', value: 4.3},
         ],
       ],
       [
         'weather.sun',
         'hours',
         [
-          { day: '2026-10-01', value: 5 },
-          { day: '2026-10-02', value: 1 },
+          {day: '2026-10-01', value: 5},
+          {day: '2026-10-02', value: 1},
         ],
       ],
     ]);

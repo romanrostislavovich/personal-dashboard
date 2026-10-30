@@ -1,6 +1,6 @@
-import { ask } from '../shared/messages';
-import { BlockReason } from '../shared/site-rules';
-import { h, t } from '../popup/dom';
+import {ask} from '../shared/messages';
+import {BlockReason} from '../shared/site-rules';
+import {h, t} from '../popup/dom';
 
 /*
  * Shown instead of a site kept closed (see background/sites.ts): why — a focus session of the
@@ -16,7 +16,10 @@ void show();
 
 async function show(): Promise<void> {
   document.title = site;
-  const block = await ask<BlockReason | null>({ type: 'blocked-info', back }).catch(() => null);
+  const block = await ask<BlockReason | null>({
+    type: 'blocked-info',
+    back,
+  }).catch(() => null);
   if (!block) {
     // Not closed any more (the session ended, a new day): the site itself.
     location.replace(back);
@@ -24,12 +27,12 @@ async function show(): Promise<void> {
   }
   const app = document.getElementById('app') as HTMLElement;
   app.replaceChildren(
-    h('div', { class: 'emoji', text: block.reason === 'focus' ? '🎯' : '⏳' }),
-    h('h1', { text: title(block) }),
-    h('p', { text: hint(block) }),
+    h('div', {class: 'emoji', text: block.reason === 'focus' ? '🎯' : '⏳'}),
+    h('h1', {text: title(block)}),
+    h('p', {text: hint(block)}),
     h(
       'div',
-      { class: 'actions' },
+      {class: 'actions'},
       h('button', {
         class: 'primary',
         type: 'button',
@@ -46,7 +49,9 @@ async function show(): Promise<void> {
 }
 
 function title(block: BlockReason): string {
-  return block.reason === 'focus' ? t('blockedFocusTitle') : t('blockedLimitTitle', site);
+  return block.reason === 'focus'
+    ? t('blockedFocusTitle')
+    : t('blockedLimitTitle', site);
 }
 
 function hint(block: BlockReason): string {
@@ -57,7 +62,11 @@ function hint(block: BlockReason): string {
     });
     return t('blockedFocusHint', site, until);
   }
-  return t('blockedLimitHint', minutes(block.usedSeconds), minutes(block.minutes * 60));
+  return t(
+    'blockedLimitHint',
+    minutes(block.usedSeconds),
+    minutes(block.minutes * 60),
+  );
 }
 
 /** 1 h 05 min, 40 min. */
@@ -70,7 +79,7 @@ function minutes(seconds: number): string {
 }
 
 async function openAnyway(): Promise<void> {
-  await ask({ type: 'pass-site', site });
+  await ask({type: 'pass-site', site});
   location.replace(back);
 }
 

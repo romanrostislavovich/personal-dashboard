@@ -1,8 +1,14 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { contains, DB, Database, SEARCH_LIMIT, SearchService } from '@pd/api-core';
-import { SearchHit } from '@pd/contracts';
-import { and, desc, eq, or } from 'drizzle-orm';
-import { trackedRepos } from './open-source.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  contains,
+  DB,
+  Database,
+  SEARCH_LIMIT,
+  SearchService,
+} from '@pd/api-core';
+import {SearchHit} from '@pd/contracts';
+import {and, desc, eq, or} from 'drizzle-orm';
+import {trackedRepos} from './open-source.schema';
 
 /** Repositories for the command palette: by the name and the description. */
 @Injectable()
@@ -26,12 +32,15 @@ export class OpenSourceSearch implements OnModuleInit {
       .where(
         and(
           eq(trackedRepos.userId, userId),
-          or(contains(trackedRepos.fullName, query), contains(trackedRepos.description, query)),
+          or(
+            contains(trackedRepos.fullName, query),
+            contains(trackedRepos.description, query),
+          ),
         ),
       )
       .orderBy(desc(trackedRepos.stars))
       .limit(SEARCH_LIMIT);
-    return rows.map((row) => ({
+    return rows.map(row => ({
       module: 'development',
       kind: 'repository',
       title: row.fullName,

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {Inject, Injectable} from '@nestjs/common';
 import {
   AutomationsService,
   Database,
@@ -26,9 +26,19 @@ import {
   toLocalDate,
   zonedToUtc,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gte, inArray, lt, notInArray, sql } from 'drizzle-orm';
-import { categoryOf, longestRun } from './activity-stats';
-import { activityMessages } from './activity.messages';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  lt,
+  notInArray,
+  sql,
+} from 'drizzle-orm';
+import {categoryOf, longestRun} from './activity-stats';
+import {activityMessages} from './activity.messages';
 import {
   activityDevices,
   ActivityDeviceRow,
@@ -38,7 +48,7 @@ import {
   activityOutages,
   activitySpans,
 } from './activity.schema';
-import { ActivityService } from './activity.service';
+import {ActivityService} from './activity.service';
 import {
   alertKey,
   BatteryWeek,
@@ -73,20 +83,28 @@ export class WellbeingService {
 
   // --- Focus sessions ---
 
-  async saveFocus(device: ActivityDeviceRow, sessions: ActivityFocusSessionInput[]): Promise<void> {
+  async saveFocus(
+    device: ActivityDeviceRow,
+    sessions: ActivityFocusSessionInput[],
+  ): Promise<void> {
     if (!sessions.length) {
       return;
     }
     // A project of somebody else is not linked: the session stays, without it.
-    const own = new Set((await this.projects.list(device.userId)).map((project) => project.id));
+    const own = new Set(
+      (await this.projects.list(device.userId)).map(project => project.id),
+    );
     await this.db
       .insert(activityFocusSessions)
       .values(
-        sessions.map((session) => ({
+        sessions.map(session => ({
           id: session.id,
           userId: device.userId,
           deviceId: device.id,
-          projectId: session.projectId && own.has(session.projectId) ? session.projectId : null,
+          projectId:
+            session.projectId && own.has(session.projectId)
+              ? session.projectId
+              : null,
           note: session.note,
           startedAt: new Date(session.startedAt),
           endedAt: new Date(session.endedAt),
@@ -99,7 +117,10 @@ export class WellbeingService {
       .onConflictDoNothing();
   }
 
-  async focusStats(userId: string, period: ActivityPeriod): Promise<ActivityFocusStats> {
+  async focusStats(
+    userId: string,
+    period: ActivityPeriod,
+  ): Promise<ActivityFocusStats> {
     const timeZone = await this.activity.timeZone(userId);
     const s = activityFocusSessions;
     const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
@@ -109,25 +130,34 @@ export class WellbeingService {
       .where(
         and(
           eq(s.userId, userId),
-          gte(s.startedAt, zonedToUtc({ date: period.from, time: '00:00' }, timeZone)),
-          lt(s.startedAt, zonedToUtc({ date: after, time: '00:00' }, timeZone)),
+          gte(
+            s.startedAt,
+            zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+          ),
+          lt(s.startedAt, zonedToUtc({date: after, time: '00:00'}, timeZone)),
           period.deviceId ? eq(s.deviceId, period.deviceId) : undefined,
         ),
       )
       .orderBy(desc(s.startedAt));
     const names = new Map(
-      (await this.projects.list(userId)).map((project) => [project.id, project.name]),
+      (await this.projects.list(userId)).map(project => [
+        project.id,
+        project.name,
+      ]),
     );
-    const dayOf = (at: Date) => new Intl.DateTimeFormat('en-CA', { timeZone }).format(at);
+    const dayOf = (at: Date) =>
+      new Intl.DateTimeFormat('en-CA', {timeZone}).format(at);
     const distracted = (row: (typeof rows)[number]) =>
       row.distractions.reduce((sum, item) => sum + item.seconds, 0);
 
     return {
       ...buildFocusStats(
-        rows.map((row) => ({
+        rows.map(row => ({
           day: dayOf(row.startedAt),
           projectId: row.projectId,
-          projectName: row.projectId ? (names.get(row.projectId) ?? null) : null,
+          projectName: row.projectId
+            ? (names.get(row.projectId) ?? null)
+            : null,
           focusSeconds: row.focusSeconds,
           completed: row.completed,
           distractedSeconds: distracted(row),
@@ -136,7 +166,7 @@ export class WellbeingService {
         await this.completedDays(userId),
         dayOf(new Date()),
       ),
-      sessions: rows.map((row) => ({
+      sessions: rows.map(row => ({
         id: row.id,
         deviceId: row.deviceId,
         startedAt: row.startedAt.toISOString(),
@@ -155,13 +185,18 @@ export class WellbeingService {
   async removeFocus(userId: string, id: string): Promise<void> {
     await this.db
       .delete(activityFocusSessions)
-      .where(and(eq(activityFocusSessions.id, id), eq(activityFocusSessions.userId, userId)));
+      .where(
+        and(
+          eq(activityFocusSessions.id, id),
+          eq(activityFocusSessions.userId, userId),
+        ),
+      );
   }
 
   /** Completed sessions, focus time and the longest run of days — for the achievements. */
   async focusRecords(
     userId: string,
-  ): Promise<{ sessions: number; seconds: number; longestStreak: number }> {
+  ): Promise<{sessions: number; seconds: number; longestStreak: number}> {
     const s = activityFocusSessions;
     const [totals] = await this.db
       .select({
@@ -187,7 +222,7 @@ export class WellbeingService {
       })
       .from(s)
       .where(and(eq(s.userId, userId), eq(s.completed, true)));
-    return rows.map((row) => row.day);
+    return rows.map(row => row.day);
   }
 
   // --- Daily limits ---
@@ -198,44 +233,54 @@ export class WellbeingService {
       .from(activityLimits)
       .where(eq(activityLimits.userId, userId))
       .orderBy(asc(activityLimits.kind), asc(activityLimits.app));
-    return rows.map(({ id, kind, app, minutes }) => ({ id, kind, app, minutes }));
+    return rows.map(({id, kind, app, minutes}) => ({id, kind, app, minutes}));
   }
 
   /** The whole set at once; a limit that stays keeps its "reported today". */
-  async saveLimits(userId: string, limits: ActivityLimitInput[]): Promise<void> {
-    const key = (limit: { kind: string; app: string | null }) => `${limit.kind}:${limit.app ?? ''}`;
+  async saveLimits(
+    userId: string,
+    limits: ActivityLimitInput[],
+  ): Promise<void> {
+    const key = (limit: {kind: string; app: string | null}) =>
+      `${limit.kind}:${limit.app ?? ''}`;
     // A site as the user typed it (`https://www.youtube.com/`) is kept as its domain.
-    const normalized = limits.map((limit) =>
+    const normalized = limits.map(limit =>
       limit.kind === 'site' && limit.app
         ? {
             ...limit,
             app:
-              siteOf(limit.app.includes('://') ? limit.app : `https://${limit.app}`) ?? limit.app,
+              siteOf(
+                limit.app.includes('://') ? limit.app : `https://${limit.app}`,
+              ) ?? limit.app,
           }
         : limit,
     );
-    const unique = [...new Map(normalized.map((limit) => [key(limit), limit])).values()];
-    await this.db.transaction(async (tx) => {
+    const unique = [
+      ...new Map(normalized.map(limit => [key(limit), limit])).values(),
+    ];
+    await this.db.transaction(async tx => {
       const existing = await tx
         .select()
         .from(activityLimits)
         .where(eq(activityLimits.userId, userId));
-      const wanted = new Map(unique.map((limit) => [key(limit), limit]));
-      const gone = existing.filter((row) => !wanted.has(key(row))).map((row) => row.id);
+      const wanted = new Map(unique.map(limit => [key(limit), limit]));
+      const gone = existing
+        .filter(row => !wanted.has(key(row)))
+        .map(row => row.id);
       if (gone.length) {
         await tx.delete(activityLimits).where(inArray(activityLimits.id, gone));
       }
       for (const limit of unique) {
-        const row = existing.find((candidate) => key(candidate) === key(limit));
+        const row = existing.find(candidate => key(candidate) === key(limit));
         if (row) {
           if (row.minutes !== limit.minutes) {
             await tx
               .update(activityLimits)
-              .set({ minutes: limit.minutes })
+              .set({minutes: limit.minutes})
               .where(eq(activityLimits.id, row.id));
           }
         } else {
-          await tx.insert(activityLimits).values({ userId, ...limit });
+          await tx.insert(activityLimits).values({userId, ...limit});
         }
       }
     });
@@ -251,7 +296,7 @@ export class WellbeingService {
       return;
     }
     const timeZone = await this.activity.timeZone(userId);
-    const day = new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date());
+    const day = new Intl.DateTimeFormat('en-CA', {timeZone}).format(new Date());
     const rows = await this.db
       .select({
         app: activitySpans.app,
@@ -262,15 +307,18 @@ export class WellbeingService {
       .where(
         and(
           eq(activitySpans.userId, userId),
-          gte(activitySpans.startedAt, zonedToUtc({ date: day, time: '00:00' }, timeZone)),
+          gte(
+            activitySpans.startedAt,
+            zonedToUtc({date: day, time: '00:00'}, timeZone),
+          ),
         ),
       )
       .groupBy(activitySpans.app);
     const categories = await this.activity.chosenCategories(userId);
     const reached = reachedLimits(
       limits,
-      new Map(rows.map((row) => [row.app, row.seconds])),
-      (app) => categoryOf(app, categories),
+      new Map(rows.map(row => [row.app, row.seconds])),
+      app => categoryOf(app, categories),
       day,
       await this.gamesBonusMinutes(userId, day),
     );
@@ -278,8 +326,8 @@ export class WellbeingService {
       return;
     }
     const text = activityMessages((await this.users.findById(userId))?.locale);
-    const names = new Map(rows.map((row) => [row.app, row.appName]));
-    for (const { limit, usedSeconds } of reached) {
+    const names = new Map(rows.map(row => [row.app, row.appName]));
+    for (const {limit, usedSeconds} of reached) {
       const limitSeconds = limit.minutes * 60;
       await this.notifications.send(userId, {
         title: text.limitTitle,
@@ -296,18 +344,24 @@ export class WellbeingService {
         source: 'activity',
       });
       await this.automations.emit(userId, 'activity.limit', {
-        what: limit.kind === 'app' ? (names.get(limit.app ?? '') ?? limit.app ?? '') : limit.kind,
+        what:
+          limit.kind === 'app'
+            ? (names.get(limit.app ?? '') ?? limit.app ?? '')
+            : limit.kind,
         minutes: String(limit.minutes),
       });
       await this.db
         .update(activityLimits)
-        .set({ notifiedOn: day })
+        .set({notifiedOn: day})
         .where(eq(activityLimits.id, limit.id));
     }
   }
 
   /** Minutes the tasks done today add to the limit of games (see `gamesMinutesPerTask`). */
-  private async gamesBonusMinutes(userId: string, day: LocalDate): Promise<number> {
+  private async gamesBonusMinutes(
+    userId: string,
+    day: LocalDate,
+  ): Promise<number> {
     return (await this.gamesBonus(userId, day)).minutes;
   }
 
@@ -315,13 +369,16 @@ export class WellbeingService {
   async gamesBonus(
     userId: string,
     day: LocalDate,
-  ): Promise<{ minutesPerTask: number; tasksDone: number; minutes: number }> {
-    const { gamesMinutesPerTask } = await this.activity.settings(userId);
+  ): Promise<{minutesPerTask: number; tasksDone: number; minutes: number}> {
+    const {gamesMinutesPerTask} = await this.activity.settings(userId);
     if (!gamesMinutesPerTask) {
-      return { minutesPerTask: 0, tasksDone: 0, minutes: 0 };
+      return {minutesPerTask: 0, tasksDone: 0, minutes: 0};
     }
     // The tasks are another section's: the core tells how many were done today.
-    const done = await this.links.dailyMetric(userId, 'tasks.done', { from: day, to: day });
+    const done = await this.links.dailyMetric(userId, 'tasks.done', {
+      from: day,
+      to: day,
+    });
     const tasksDone = done?.days[0]?.value ?? 0;
     return {
       minutesPerTask: gamesMinutesPerTask,
@@ -332,9 +389,12 @@ export class WellbeingService {
 
   // --- Health of the computers ---
 
-  async saveHealth(device: ActivityDeviceRow, health: ActivityHealthInput): Promise<void> {
+  async saveHealth(
+    device: ActivityDeviceRow,
+    health: ActivityHealthInput,
+  ): Promise<void> {
     const recent = await this.db
-      .select({ system: activityHealth.system })
+      .select({system: activityHealth.system})
       .from(activityHealth)
       .where(eq(activityHealth.deviceId, device.id))
       .orderBy(desc(activityHealth.at))
@@ -355,10 +415,10 @@ export class WellbeingService {
       .onConflictDoNothing();
 
     const timeZone = await this.activity.timeZone(device.userId);
-    const day = new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date());
+    const day = new Intl.DateTimeFormat('en-CA', {timeZone}).format(new Date());
     const warnings = computerWarnings(
       health,
-      recent.map((row) => row.system),
+      recent.map(row => row.system),
       device.alertedOn,
       day,
       health.system?.battery ? await this.batteryWeek(device.id) : null,
@@ -366,18 +426,23 @@ export class WellbeingService {
     if (!warnings.length) {
       return;
     }
-    const text = activityMessages((await this.users.findById(device.userId))?.locale);
+    const text = activityMessages(
+      (await this.users.findById(device.userId))?.locale,
+    );
     for (const warning of warnings) {
       const message = this.warningText(text, device.name, warning);
-      await this.notifications.send(device.userId, { ...message, source: 'activity' });
+      await this.notifications.send(device.userId, {
+        ...message,
+        source: 'activity',
+      });
     }
-    const alertedOn = { ...device.alertedOn };
+    const alertedOn = {...device.alertedOn};
     for (const warning of warnings) {
       alertedOn[alertKey(warning)] = day;
     }
     await this.db
       .update(activityDevices)
-      .set({ alertedOn })
+      .set({alertedOn})
       .where(eq(activityDevices.id, device.id));
   }
 
@@ -385,7 +450,7 @@ export class WellbeingService {
     text: ReturnType<typeof activityMessages>,
     computer: string,
     warning: ComputerWarning,
-  ): { title: string; body: string } {
+  ): {title: string; body: string} {
     const gb = (bytes: number) => (bytes / 1024 ** 3).toFixed(1);
     switch (warning.kind) {
       case 'disk':
@@ -393,7 +458,7 @@ export class WellbeingService {
           title: text.diskTitle(computer),
           body: text.diskBody(
             warning.disks
-              .map((disk) => `${disk.mount} ${gb(disk.free)} ${text.gigabytes}`)
+              .map(disk => `${disk.mount} ${gb(disk.free)} ${text.gigabytes}`)
               .join(', '),
           ),
         };
@@ -403,11 +468,17 @@ export class WellbeingService {
           body: text.diskHealthBody(warning.disks.join(', ')),
         };
       case 'heat':
-        return { title: text.heatTitle(computer), body: text.heatBody };
+        return {title: text.heatTitle(computer), body: text.heatBody};
       case 'reboot':
-        return { title: text.rebootTitle(computer), body: text.rebootBody(warning.days) };
+        return {
+          title: text.rebootTitle(computer),
+          body: text.rebootBody(warning.days),
+        };
       case 'batteryFull':
-        return { title: text.batteryFullTitle(computer), body: text.batteryFullBody };
+        return {
+          title: text.batteryFullTitle(computer),
+          body: text.batteryFullBody,
+        };
       case 'batteryHealth':
         return {
           title: text.batteryHealthTitle(computer),
@@ -425,19 +496,27 @@ export class WellbeingService {
         full: sql<number>`count(*) filter (where (${h.system} -> 'battery' ->> 'onAc')::boolean and (${h.system} -> 'battery' ->> 'charge')::int >= 98)::int`,
       })
       .from(h)
-      .where(and(eq(h.deviceId, deviceId), gte(h.at, new Date(Date.now() - 7 * DAY_MS))));
-    return { readings: row?.readings ?? 0, full: row?.full ?? 0 };
+      .where(
+        and(
+          eq(h.deviceId, deviceId),
+          gte(h.at, new Date(Date.now() - 7 * DAY_MS)),
+        ),
+      );
+    return {readings: row?.readings ?? 0, full: row?.full ?? 0};
   }
 
   /** The times the computer could not reach the server, sent once it could again. */
-  async saveOutages(device: ActivityDeviceRow, outages: ActivityOutage[]): Promise<void> {
+  async saveOutages(
+    device: ActivityDeviceRow,
+    outages: ActivityOutage[],
+  ): Promise<void> {
     if (!outages.length) {
       return;
     }
     await this.db
       .insert(activityOutages)
       .values(
-        outages.map((outage) => ({
+        outages.map(outage => ({
           id: outage.id,
           userId: device.userId,
           deviceId: device.id,
@@ -454,17 +533,24 @@ export class WellbeingService {
     const devices = await this.db
       .select()
       .from(activityDevices)
-      .where(and(eq(activityDevices.userId, userId), notInArray(activityDevices.platform, PHONES)))
+      .where(
+        and(
+          eq(activityDevices.userId, userId),
+          notInArray(activityDevices.platform, PHONES),
+        ),
+      )
       .orderBy(asc(activityDevices.name));
     const h = activityHealth;
     const rows = await this.db
       .select()
       .from(h)
-      .where(and(eq(h.userId, userId), gte(h.at, new Date(Date.now() - DAY_MS))))
+      .where(
+        and(eq(h.userId, userId), gte(h.at, new Date(Date.now() - DAY_MS))),
+      )
       .orderBy(asc(h.at));
     return Promise.all(
-      devices.map(async (device) => {
-        const history = rows.filter((row) => row.deviceId === device.id);
+      devices.map(async device => {
+        const history = rows.filter(row => row.deviceId === device.id);
         const outages = await this.db
           .select({
             kind: activityOutages.kind,
@@ -500,22 +586,24 @@ export class WellbeingService {
                 memoryTotal: last.memoryTotal,
                 uptimeSeconds: last.uptimeSeconds,
                 disks: last.disks,
-                ...(last.system ? { system: last.system } : {}),
+                ...(last.system ? {system: last.system} : {}),
               }
             : null,
-          outages: outages.map((outage) => ({
+          outages: outages.map(outage => ({
             kind: outage.kind,
             startedAt: outage.startedAt.toISOString(),
             endedAt: outage.endedAt.toISOString(),
           })),
-          history: history.map((row) => {
+          history: history.map(row => {
             const zones = row.system?.thermal ?? [];
             return {
               at: row.at.toISOString(),
               cpu: Math.round(row.cpu),
               memory: Math.round((row.memoryUsed / row.memoryTotal) * 100),
               gpu: row.system?.gpuLoad ?? null,
-              celsius: zones.length ? Math.max(...zones.map((zone) => zone.celsius)) : null,
+              celsius: zones.length
+                ? Math.max(...zones.map(zone => zone.celsius))
+                : null,
               battery: row.system?.battery?.charge ?? null,
             };
           }),
@@ -528,9 +616,11 @@ export class WellbeingService {
   async deleteOldHealth(): Promise<void> {
     const before = new Date(Date.now() - HEALTH_KEEP_DAYS * DAY_MS);
     // Housekeeping, not the user's deletion: nothing of it goes to the trash.
-    await withoutTrash(this.db, async (tx) => {
+    await withoutTrash(this.db, async tx => {
       await tx.delete(activityHealth).where(lt(activityHealth.at, before));
-      await tx.delete(activityOutages).where(lt(activityOutages.startedAt, before));
+      await tx
+        .delete(activityOutages)
+        .where(lt(activityOutages.startedAt, before));
     });
   }
 }

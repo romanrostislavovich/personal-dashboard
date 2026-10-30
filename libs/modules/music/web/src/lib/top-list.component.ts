@@ -1,8 +1,13 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { MusicTopItem } from '@pd/contracts';
-import { SongShareComponent } from './song-share.component';
+import {DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {MusicTopItem} from '@pd/contracts';
+import {SongShareComponent} from './song-share.component';
 
 /** Top 10: position, title, play count and a bar relative to the leader. */
 @Component({
@@ -20,7 +25,13 @@ import { SongShareComponent } from './song-share.component';
           }
           <div class="body">
             <div class="line">
-              <a class="name" [href]="item.url" target="_blank" rel="noopener">{{ item.name }}</a>
+              <a
+                class="name"
+                [href]="item.url"
+                target="_blank"
+                rel="noopener"
+                >{{ item.name }}</a
+              >
               <span class="count" [title]="'music.plays' | transloco">{{
                 item.playcount | number
               }}</span>
@@ -114,7 +125,7 @@ export class TopListComponent {
 
   protected readonly rows = computed(() => {
     const items = this.items();
-    const max = Math.max(1, ...items.map((item) => item.playcount));
-    return items.map((item) => ({ ...item, share: (item.playcount / max) * 100 }));
+    const max = Math.max(1, ...items.map(item => item.playcount));
+    return items.map(item => ({...item, share: (item.playcount / max) * 100}));
   });
 }

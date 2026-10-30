@@ -1,6 +1,6 @@
-import { appsApi } from '@pd/client-core';
-import { readJson, writeJson } from './storage';
-import { dashboard, serverUrl } from './account';
+import {appsApi} from '@pd/client-core';
+import {readJson, writeJson} from './storage';
+import {dashboard, serverUrl} from './account';
 
 /*
  * How the extension stays up to date without a store. It runs from a folder on the disk: the
@@ -45,12 +45,18 @@ function runningVersion(): string {
 }
 
 export function scheduleSelfUpdate(): void {
-  void chrome.alarms.create(UPDATE_ALARM, { delayInMinutes: 1, periodInMinutes: UPDATE_MINUTES });
+  void chrome.alarms.create(UPDATE_ALARM, {
+    delayInMinutes: 1,
+    periodInMinutes: UPDATE_MINUTES,
+  });
 }
 
 /** The regular check: newer files on the disk, the server's version, the report to the server. */
 export async function checkForUpdate(): Promise<void> {
-  if ((await diskVersion()) !== chrome.runtime.getManifest().version && !(await popupOpen())) {
+  if (
+    (await diskVersion()) !== chrome.runtime.getManifest().version &&
+    !(await popupOpen())
+  ) {
     chrome.runtime.reload();
     return;
   }
@@ -61,16 +67,20 @@ export async function checkForUpdate(): Promise<void> {
 export async function updateStatus(): Promise<UpdateStatus> {
   const state = await readState();
   return {
-    outdated: state.behindSince !== null && Date.now() - state.behindSince > STALE_MS,
-    waitingReload: (await diskVersion()) !== chrome.runtime.getManifest().version,
+    outdated:
+      state.behindSince !== null && Date.now() - state.behindSince > STALE_MS,
+    waitingReload:
+      (await diskVersion()) !== chrome.runtime.getManifest().version,
   };
 }
 
 /** The version of the manifest on the disk now; the running one when it cannot be read. */
 async function diskVersion(): Promise<string> {
   try {
-    const response = await fetch(chrome.runtime.getURL('manifest.json'), { cache: 'no-store' });
-    return ((await response.json()) as { version: string }).version;
+    const response = await fetch(chrome.runtime.getURL('manifest.json'), {
+      cache: 'no-store',
+    });
+    return ((await response.json()) as {version: string}).version;
   } catch {
     return chrome.runtime.getManifest().version;
   }
@@ -89,11 +99,13 @@ async function compareWithServer(): Promise<void> {
   if (!server) {
     return;
   }
-  const response = await fetch(`${server}/extension-updates/bundle.json`, { cache: 'no-store' });
+  const response = await fetch(`${server}/extension-updates/bundle.json`, {
+    cache: 'no-store',
+  });
   const state = await readState();
   // A server without the extension's files (run from the sources): nothing to compare with.
   const serverVersion = response.ok
-    ? ((await response.json()) as { version: string }).version
+    ? ((await response.json()) as {version: string}).version
     : null;
   const behind = serverVersion !== null && serverVersion !== runningVersion();
   await writeState({
@@ -118,7 +130,7 @@ async function reportInstall(): Promise<void> {
   ) {
     return;
   }
-  const { browser, system } = describeBrowser();
+  const {browser, system} = describeBrowser();
   await appsApi(client.api).report({
     installId: await installId(),
     kind: 'extension',
@@ -126,12 +138,20 @@ async function reportInstall(): Promise<void> {
     platform: 'chrome',
     version,
   });
-  await writeState({ ...state, reportedAt: Date.now(), reportedVersion: version });
+  await writeState({
+    ...state,
+    reportedAt: Date.now(),
+    reportedVersion: version,
+  });
 }
 
 /** Made once, kept on the disk: this browser is one line in the list of devices. */
 async function installId(): Promise<string> {
-  const saved = await readJson<string | null>(chrome.storage.local, INSTALL_ID_KEY, null);
+  const saved = await readJson<string | null>(
+    chrome.storage.local,
+    INSTALL_ID_KEY,
+    null,
+  );
   if (saved) {
     return saved;
   }
@@ -141,16 +161,16 @@ async function installId(): Promise<string> {
 }
 
 /** `Google Chrome`, `Microsoft Edge`, `Brave`…, and the system, as the browser tells them. */
-function describeBrowser(): { browser: string; system: string } {
+function describeBrowser(): {browser: string; system: string} {
   const data = (
     navigator as Navigator & {
-      userAgentData?: { brands: { brand: string }[]; platform: string };
+      userAgentData?: {brands: {brand: string}[]; platform: string};
     }
   ).userAgentData;
   const brand = data?.brands
-    .map((entry) => entry.brand)
-    .find((name) => !/not.?a.?brand|chromium/i.test(name));
-  return { browser: brand ?? 'Chromium', system: data?.platform || 'unknown' };
+    .map(entry => entry.brand)
+    .find(name => !/not.?a.?brand|chromium/i.test(name));
+  return {browser: brand ?? 'Chromium', system: data?.platform || 'unknown'};
 }
 
 function readState(): Promise<UpdateState> {

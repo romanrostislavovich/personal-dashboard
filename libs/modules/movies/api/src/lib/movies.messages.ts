@@ -1,4 +1,4 @@
-import { pickMessages } from '@pd/api-core';
+import {pickMessages} from '@pd/api-core';
 
 /** Server texts of the section: "How was the film?" in Telegram and the replies to it. */
 const messages = {
@@ -26,6 +26,8 @@ const messages = {
 
 export type MoviesMessages = (typeof messages)['en'];
 
-export function moviesMessages(locale: string | null | undefined): MoviesMessages {
+export function moviesMessages(
+  locale: string | null | undefined,
+): MoviesMessages {
   return pickMessages(messages, locale ?? 'en');
 }

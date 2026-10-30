@@ -32,16 +32,21 @@ const MIN_SPAN_MS = 1000;
  * excluded), closes it. `feed` returns the span that was closed, if one was.
  */
 export class SpanBuilder {
-  private open: { sample: WindowSample; startedAt: number; lastSeenAt: number } | null = null;
+  private open: {
+    sample: WindowSample;
+    startedAt: number;
+    lastSeenAt: number;
+  } | null = null;
 
   /** `sample` — what is in front at `at`; `null` — there is nothing to record from `at` on. */
   feed(sample: WindowSample | null, at: number): Span | null {
     const open = this.open;
     if (!open) {
-      this.open = sample ? { sample, startedAt: at, lastSeenAt: at } : null;
+      this.open = sample ? {sample, startedAt: at, lastSeenAt: at} : null;
       return null;
     }
-    const same = sample?.app === open.sample.app && sample.title === open.sample.title;
+    const same =
+      sample?.app === open.sample.app && sample.title === open.sample.title;
     if (same && at - open.startedAt < MAX_SPAN_MS) {
       open.lastSeenAt = at;
       return null;
@@ -49,7 +54,9 @@ export class SpanBuilder {
     // The span ends where the next begins; "nothing to record" may be told about a moment in
     // the past (the user went away a few minutes ago), never earlier than the span started.
     const endedAt = Math.max(open.startedAt, at);
-    this.open = sample ? { sample, startedAt: endedAt, lastSeenAt: endedAt } : null;
+    this.open = sample
+      ? {sample, startedAt: endedAt, lastSeenAt: endedAt}
+      : null;
     return toSpan(open.sample, open.startedAt, endedAt);
   }
 
@@ -61,7 +68,11 @@ export class SpanBuilder {
   }
 }
 
-function toSpan(sample: WindowSample, startedAt: number, endedAt: number): Span | null {
+function toSpan(
+  sample: WindowSample,
+  startedAt: number,
+  endedAt: number,
+): Span | null {
   if (endedAt - startedAt < MIN_SPAN_MS) {
     return null;
   }

@@ -102,7 +102,9 @@
   padding: 18px 20px;
   border-radius: var(--pd-radius);
   border: 1px solid var(--pd-border);
-  background: radial-gradient(circle at 0 0, var(--pd-glow), transparent 55%), var(--pd-card);
+  background:
+    radial-gradient(circle at 0 0, var(--pd-glow), transparent 55%),
+    var(--pd-card);
 }
 
 .avatars {
@@ -150,7 +152,8 @@
   gap: 12px;
   padding: 14px 16px;
   border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--pd-rarity-legendary) 50%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--pd-rarity-legendary) 50%, transparent);
   background: color-mix(in srgb, var(--pd-rarity-legendary) 10%, transparent);
 
   mat-icon {

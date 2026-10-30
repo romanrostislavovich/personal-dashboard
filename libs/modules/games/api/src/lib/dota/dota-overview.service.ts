@@ -1,6 +1,6 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database } from '@pd/api-core';
+import {Inject, Injectable, NotFoundException} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, DB, Database} from '@pd/api-core';
 import {
   DOTA_RECORDS,
   DotaAccountSummary,
@@ -13,11 +13,21 @@ import {
   DotaOverview,
   DotaRecord,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gt, inArray, isNotNull, SQL, sql } from 'drizzle-orm';
-import { dotaMatches, gameAccounts, GameAccountRow } from '../games.schema';
-import { DotaHeroesService } from './dota-heroes.service';
-import { sumByMode } from './mode-stats';
-import { DotaProfile } from './opendota.client';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  SQL,
+  sql,
+} from 'drizzle-orm';
+import {dotaMatches, gameAccounts, GameAccountRow} from '../games.schema';
+import {DotaHeroesService} from './dota-heroes.service';
+import {sumByMode} from './mode-stats';
+import {DotaProfile} from './opendota.client';
 
 const RECENT_MATCHES = 15;
 const ACTIVITY_DAYS = 365;
@@ -39,24 +49,34 @@ export class DotaOverviewService {
 
   async overview(userId: string, accountId?: string): Promise<DotaOverview> {
     const accounts = await this.accounts(userId, accountId);
-    const ids = accounts.map((account) => account.id);
+    const ids = accounts.map(account => account.id);
     if (ids.length === 0) {
       return emptyOverview();
     }
     const hero = await this.heroes.resolver();
-    const [totals, perAccount, modes, last30Days, records, heroes, activity, recent] =
-      await Promise.all([
-        this.totals(ids),
-        this.perAccount(ids),
-        this.modes(ids),
-        this.last30Days(ids),
-        this.records(ids, hero),
-        this.heroStats(ids, hero),
-        this.activity(ids),
-        this.matchRows(ids, sql`true`, RECENT_MATCHES, 0, hero),
-      ]);
+    const [
+      totals,
+      perAccount,
+      modes,
+      last30Days,
+      records,
+      heroes,
+      activity,
+      recent,
+    ] = await Promise.all([
+      this.totals(ids),
+      this.perAccount(ids),
+      this.modes(ids),
+      this.last30Days(ids),
+      this.records(ids, hero),
+      this.heroStats(ids, hero),
+      this.activity(ids),
+      this.matchRows(ids, sql`true`, RECENT_MATCHES, 0, hero),
+    ]);
     return {
-      accounts: accounts.map((account) => toAccountSummary(account, perAccount.get(account.id))),
+      accounts: accounts.map(account =>
+        toAccountSummary(account, perAccount.get(account.id)),
+      ),
       totals,
       modes,
       last30Days,
@@ -68,11 +88,16 @@ export class DotaOverviewService {
   }
 
   /** All matches, newest first, a page at a time, with the Dotabuff-like filters. */
-  async matches(userId: string, query: DotaMatchesQuery): Promise<DotaMatchesPage> {
-    const ids = (await this.accounts(userId, query.accountId)).map((account) => account.id);
-    const { page, pageSize } = query;
+  async matches(
+    userId: string,
+    query: DotaMatchesQuery,
+  ): Promise<DotaMatchesPage> {
+    const ids = (await this.accounts(userId, query.accountId)).map(
+      account => account.id,
+    );
+    const {page, pageSize} = query;
     if (ids.length === 0) {
-      return { items: [], total: 0, page, pageSize };
+      return {items: [], total: 0, page, pageSize};
     }
     const m = dotaMatches;
     const filters: SQL[] = [];
@@ -93,23 +118,34 @@ export class DotaOverviewService {
     }
     const where = filters.length ? sql.join(filters, sql` AND `) : sql`true`;
     const [items, total] = await Promise.all([
-      this.matchRows(ids, where, pageSize, page * pageSize, await this.heroes.resolver()),
+      this.matchRows(
+        ids,
+        where,
+        pageSize,
+        page * pageSize,
+        await this.heroes.resolver(),
+      ),
       this.db.$count(m, and(inArray(m.accountId, ids), where)),
     ]);
-    return { items, total, page, pageSize };
+    return {items, total, page, pageSize};
   }
 
   /** The user's Dota accounts, or the one asked for (404 if it is not theirs). */
-  private async accounts(userId: string, accountId?: string): Promise<GameAccountRow[]> {
+  private async accounts(
+    userId: string,
+    accountId?: string,
+  ): Promise<GameAccountRow[]> {
     const rows = await this.db
       .select()
       .from(gameAccounts)
-      .where(and(eq(gameAccounts.userId, userId), eq(gameAccounts.game, 'dota2')))
+      .where(
+        and(eq(gameAccounts.userId, userId), eq(gameAccounts.game, 'dota2')),
+      )
       .orderBy(asc(gameAccounts.createdAt));
     if (!accountId) {
       return rows;
     }
-    const account = rows.find((row) => row.id === accountId);
+    const account = rows.find(row => row.id === accountId);
     if (!account) {
       throw new NotFoundException();
     }
@@ -136,7 +172,11 @@ export class DotaOverviewService {
       })
       .from(m)
       .where(inArray(m.accountId, ids));
-    return { ...row, firstMatchAt: iso(row.firstMatchAt), lastMatchAt: iso(row.lastMatchAt) };
+    return {
+      ...row,
+      firstMatchAt: iso(row.firstMatchAt),
+      lastMatchAt: iso(row.lastMatchAt),
+    };
   }
 
   private async perAccount(ids: string[]) {
@@ -152,7 +192,7 @@ export class DotaOverviewService {
       .from(m)
       .where(inArray(m.accountId, ids))
       .groupBy(m.accountId);
-    return new Map(rows.map((row) => [row.accountId, row]));
+    return new Map(rows.map(row => [row.accountId, row]));
   }
 
   /** Matches and wins per mode; the grouping itself lives in contracts (`dotaMatchMode`). */
@@ -180,45 +220,58 @@ export class DotaOverviewService {
         losses: sql<number>`count(*) FILTER (WHERE NOT ${m.won})::int`,
       })
       .from(m)
-      .where(and(inArray(m.accountId, ids), gt(m.startedAt, new Date(Date.now() - 30 * DAY_MS))));
+      .where(
+        and(
+          inArray(m.accountId, ids),
+          gt(m.startedAt, new Date(Date.now() - 30 * DAY_MS)),
+        ),
+      );
     return row;
   }
 
   /** The best match for each record kind, over all selected accounts. */
-  private async records(ids: string[], hero: Hero): Promise<DotaOverview['records']> {
+  private async records(
+    ids: string[],
+    hero: Hero,
+  ): Promise<DotaOverview['records']> {
     const m = dotaMatches;
     const records = await Promise.all(
-      DOTA_RECORDS.map(async (kind): Promise<(DotaRecord & { accountId: string }) | null> => {
-        const column = m[kind];
-        const [best] = await this.db
-          .select({
-            value: column,
-            matchId: m.matchId,
-            heroId: m.heroId,
-            startedAt: m.startedAt,
-            accountId: m.accountId,
-          })
-          .from(m)
-          .where(and(inArray(m.accountId, ids), isNotNull(column)))
-          .orderBy(desc(column))
-          .limit(1);
-        return best?.value
-          ? {
-              kind,
-              value: best.value,
-              matchId: best.matchId,
-              hero: hero(best.heroId),
-              startedAt: best.startedAt.toISOString(),
-              accountId: best.accountId,
-            }
-          : null;
-      }),
+      DOTA_RECORDS.map(
+        async (kind): Promise<(DotaRecord & {accountId: string}) | null> => {
+          const column = m[kind];
+          const [best] = await this.db
+            .select({
+              value: column,
+              matchId: m.matchId,
+              heroId: m.heroId,
+              startedAt: m.startedAt,
+              accountId: m.accountId,
+            })
+            .from(m)
+            .where(and(inArray(m.accountId, ids), isNotNull(column)))
+            .orderBy(desc(column))
+            .limit(1);
+          return best?.value
+            ? {
+                kind,
+                value: best.value,
+                matchId: best.matchId,
+                hero: hero(best.heroId),
+                startedAt: best.startedAt.toISOString(),
+                accountId: best.accountId,
+              }
+            : null;
+        },
+      ),
     );
-    return records.filter((record) => record !== null);
+    return records.filter(record => record !== null);
   }
 
   /** Every hero played: matches, win rate, average KDA and farm, like Dotabuff's heroes table. */
-  private async heroStats(ids: string[], hero: Hero): Promise<DotaOverview['heroes']> {
+  private async heroStats(
+    ids: string[],
+    hero: Hero,
+  ): Promise<DotaOverview['heroes']> {
     const m = dotaMatches;
     const rows = await this.db
       .select({
@@ -237,7 +290,7 @@ export class DotaOverviewService {
       .where(inArray(m.accountId, ids))
       .groupBy(m.heroId)
       .orderBy(desc(sql`count(*)`), asc(m.heroId));
-    return rows.map(({ heroId, lastPlayedAt, ...stats }) => ({
+    return rows.map(({heroId, lastPlayedAt, ...stats}) => ({
       hero: hero(heroId),
       ...stats,
       lastPlayedAt: new Date(lastPlayedAt).toISOString(),
@@ -285,7 +338,7 @@ export class DotaOverviewService {
       .orderBy(desc(m.startedAt), desc(m.matchId))
       .limit(limit)
       .offset(offset);
-    return rows.map((row) => ({
+    return rows.map(row => ({
       matchId: row.matchId,
       accountId: row.accountId,
       hero: hero(row.heroId),
@@ -304,7 +357,7 @@ export class DotaOverviewService {
   }
 
   private timeZone(): string {
-    return this.config.get('APP_TIMEZONE', { infer: true });
+    return this.config.get('APP_TIMEZONE', {infer: true});
   }
 }
 
@@ -324,9 +377,19 @@ function modeFilter(mode: DotaMatchMode): SQL {
   }
 }
 
-type MatchCounts = { matches: number; decided: number; wins: number; lastMatchAt: string };
+type MatchCounts = {
+  matches: number;
+  decided: number;
+  wins: number;
+  lastMatchAt: string;
+};
 
-const NO_MATCHES: MatchCounts = { matches: 0, decided: 0, wins: 0, lastMatchAt: '' };
+const NO_MATCHES: MatchCounts = {
+  matches: 0,
+  decided: 0,
+  wins: 0,
+  lastMatchAt: '',
+};
 
 function toAccountSummary(
   account: GameAccountRow,
@@ -377,7 +440,7 @@ function emptyOverview(): DotaOverview {
       lastMatchAt: null,
     },
     modes: [],
-    last30Days: { wins: 0, losses: 0 },
+    last30Days: {wins: 0, losses: 0},
     records: [],
     heroes: [],
     activity: [],

@@ -30,13 +30,13 @@ import {
   SpotifyAppInput,
   spotifyAppInputSchema,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { LastfmHistoryImport } from './lastfm-history.import';
-import { LastfmService } from './lastfm.service';
-import { SoundcloudService } from './soundcloud/soundcloud.service';
-import { SongLinksService } from './song-links.service';
-import { SpotifyService } from './spotify.service';
-import { MUSIC_ACTIONS } from './music.server-actions';
+import {z} from 'zod';
+import {LastfmHistoryImport} from './lastfm-history.import';
+import {LastfmService} from './lastfm.service';
+import {SoundcloudService} from './soundcloud/soundcloud.service';
+import {SongLinksService} from './song-links.service';
+import {SpotifyService} from './spotify.service';
+import {MUSIC_ACTIONS} from './music.server-actions';
 
 @Controller('music')
 export class MusicController {
@@ -62,7 +62,9 @@ export class MusicController {
         history: username
           ? {
               ...(await this.history.status(user.id)),
-              total: await this.lastfm.totalScrobbles(user.id).catch(() => null),
+              total: await this.lastfm
+                .totalScrobbles(user.id)
+                .catch(() => null),
             }
           : null,
       },
@@ -70,7 +72,10 @@ export class MusicController {
         available: await this.spotify.isAvailable(),
         connected: await this.spotify.isConnected(user.id),
         app: (await this.keys.isOwner(user.id))
-          ? { clientId: await this.spotify.clientId(), redirectUri: this.spotify.redirectUri }
+          ? {
+              clientId: await this.spotify.clientId(),
+              redirectUri: this.spotify.redirectUri,
+            }
           : null,
       },
       soundcloud: await this.soundcloud.settings(user.id),
@@ -85,7 +90,10 @@ export class MusicController {
   @Get('tops')
   tops(
     @CurrentUser() user: AuthUser,
-    @Query('period', new ZodValidationPipe(z.enum(MUSIC_TOP_PERIODS).default('7day')))
+    @Query(
+      'period',
+      new ZodValidationPipe(z.enum(MUSIC_TOP_PERIODS).default('7day')),
+    )
     period: MusicTopPeriod,
   ) {
     return this.lastfm.tops(user.id, period);
@@ -94,7 +102,10 @@ export class MusicController {
   /** Spotify first (more precise, with progress); if it is not connected — Last.fm. */
   @Get('now-playing')
   async nowPlaying(@CurrentUser() user: AuthUser): Promise<NowPlaying | null> {
-    return (await this.spotify.nowPlaying(user.id)) ?? (await this.lastfm.nowPlaying(user.id));
+    return (
+      (await this.spotify.nowPlaying(user.id)) ??
+      (await this.lastfm.nowPlaying(user.id))
+    );
   }
 
   /** "Share" of a song: the links straight to it on YouTube Music and Spotify. */
@@ -102,7 +113,11 @@ export class MusicController {
   findSongLinks(
     @Query(new ZodValidationPipe(songLinksQuerySchema)) song: SongLinksQuery,
   ): Promise<SongLinks> {
-    return this.songLinks.find({ track: song.track, artist: song.artist ?? null, url: song.url });
+    return this.songLinks.find({
+      track: song.track,
+      artist: song.artist ?? null,
+      url: song.url,
+    });
   }
 
   // --- Last.fm ---
@@ -112,7 +127,8 @@ export class MusicController {
   @HttpCode(204)
   async connectLastfm(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(lastfmSettingsInputSchema)) input: LastfmSettingsInput,
+    @Body(new ZodValidationPipe(lastfmSettingsInputSchema))
+    input: LastfmSettingsInput,
   ) {
     await this.actions.run(user.id, MUSIC_ACTIONS.connectLastfm, input);
   }
@@ -157,16 +173,19 @@ export class MusicController {
   }
 
   @Post('spotify/connect')
-  async connectSpotify(@CurrentUser() user: AuthUser): Promise<{ url: string }> {
-    return { url: await this.spotify.connectUrl(user.id) };
+  async connectSpotify(@CurrentUser() user: AuthUser): Promise<{url: string}> {
+    return {url: await this.spotify.connectUrl(user.id)};
   }
 
   /** Spotify returns the browser here after sign-in; the user is identified by `state`. */
   @Public()
   @Get('spotify/callback')
   @Redirect()
-  async spotifyCallback(@Query('code') code?: string, @Query('state') state?: string) {
-    return { url: await this.spotify.handleCallback(code, state) };
+  async spotifyCallback(
+    @Query('code') code?: string,
+    @Query('state') state?: string,
+  ) {
+    return {url: await this.spotify.handleCallback(code, state)};
   }
 
   @Delete('spotify')

@@ -1,11 +1,11 @@
-import { ask } from '../shared/messages';
+import {ask} from '../shared/messages';
 import {
   ENGAGEMENT_IDLE_MS,
   ENGAGEMENT_REPORT_MS,
   readingMilliseconds,
   scrollDepth,
 } from '../shared/engagement';
-import { knowledgeMetadata } from './knowledge-meta';
+import {knowledgeMetadata} from './knowledge-meta';
 
 /** Counts only. Event payloads, selection, clipboard and field values are never read. */
 export function setupEngagement(): void {
@@ -20,7 +20,8 @@ export function setupEngagement(): void {
   let pending = false;
   let generation = 0;
   let url = location.href;
-  const foreground = () => document.visibilityState === 'visible' && document.hasFocus();
+  const foreground = () =>
+    document.visibilityState === 'visible' && document.hasFocus();
   const clear = () => {
     lease = undefined;
     reading = depth = copies = 0;
@@ -30,7 +31,9 @@ export function setupEngagement(): void {
   };
   const editable = (target: EventTarget | null) =>
     target instanceof Element &&
-    !!target.closest('input, textarea, select, [contenteditable], [role="textbox"]');
+    !!target.closest(
+      'input, textarea, select, [contenteditable], [role="textbox"]',
+    );
   const activity = (event: Event) => {
     if (!lease || !event.isTrusted || !foreground()) return;
     const now = performance.now();
@@ -43,12 +46,18 @@ export function setupEngagement(): void {
     previous = now;
     lastActivity = now;
   };
-  for (const name of ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart']) {
-    document.addEventListener(name, activity, { passive: true, capture: true });
+  for (const name of [
+    'pointerdown',
+    'pointermove',
+    'keydown',
+    'wheel',
+    'touchstart',
+  ]) {
+    document.addEventListener(name, activity, {passive: true, capture: true});
   }
   document.addEventListener(
     'copy',
-    (event) => {
+    event => {
       activity(event);
       if (
         lease &&
@@ -64,7 +73,7 @@ export function setupEngagement(): void {
   window.addEventListener('blur', clear);
   window.addEventListener('pagehide', clear);
   document.addEventListener('visibilitychange', clear);
-  chrome.runtime.onMessage.addListener((message) => {
+  chrome.runtime.onMessage.addListener(message => {
     if (message?.type === 'telemetry-reset') clear();
   });
   setInterval(() => {
@@ -82,7 +91,11 @@ export function setupEngagement(): void {
       if (now - lastActivity < ENGAGEMENT_IDLE_MS) {
         depth = Math.max(
           depth,
-          scrollDepth(window.scrollY, document.documentElement.scrollHeight, window.innerHeight),
+          scrollDepth(
+            window.scrollY,
+            document.documentElement.scrollHeight,
+            window.innerHeight,
+          ),
         );
       }
     }
@@ -96,13 +109,14 @@ export function setupEngagement(): void {
       readingSeconds: reading / 1000,
       scrollDepthPercent: depth,
       copyCount: copies,
-      ...(lease ? { metadata: knowledgeMetadata(document) } : {}),
+      ...(lease ? {metadata: knowledgeMetadata(document)} : {}),
     };
     lease = undefined;
     reading = depth = copies = 0;
-    void ask<{ lease: string } | null>({ type: 'telemetry-engagement', report })
-      .then((answer) => {
-        if (sentGeneration === generation && foreground()) lease = answer?.lease;
+    void ask<{lease: string} | null>({type: 'telemetry-engagement', report})
+      .then(answer => {
+        if (sentGeneration === generation && foreground())
+          lease = answer?.lease;
         previous = performance.now();
         if (!lease) lastActivity = -Infinity;
       })

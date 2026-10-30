@@ -1,20 +1,20 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { AiAttachment } from '@pd/contracts';
-import { coreMessages } from '../i18n/core.messages';
+import {Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {AiAttachment} from '@pd/contracts';
+import {coreMessages} from '../i18n/core.messages';
 import {
   BotDocument,
   BotReply,
   BotTranscription,
   BotVoice,
 } from '../notifications/telegram/bot-command';
-import { TelegramBotService } from '../notifications/telegram/telegram-bot.service';
-import { UserRow } from '../users/users.schema';
-import { AiConnectionsService } from './ai-connections.service';
-import { AiConversationsService } from './ai-conversations.service';
-import { AiService } from './ai.service';
-import { AttachmentError, attachmentText } from './attachment-text';
-import { transcribe } from './openai-compatible.client';
-import { AiLimitException } from './ai.service';
+import {TelegramBotService} from '../notifications/telegram/telegram-bot.service';
+import {UserRow} from '../users/users.schema';
+import {AiConnectionsService} from './ai-connections.service';
+import {AiConversationsService} from './ai-conversations.service';
+import {AiService} from './ai.service';
+import {AttachmentError, attachmentText} from './attachment-text';
+import {transcribe} from './openai-compatible.client';
+import {AiLimitException} from './ai.service';
 
 /** The buttons under a question to confirm: `aic:y` / `aic:n`. */
 const CONFIRM_ACTION = 'aic';
@@ -39,7 +39,9 @@ export class AiTelegramAssistant implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    const both = (key: 'askDescription' | 'newChatDescription' | 'modelDescription') => ({
+    const both = (
+      key: 'askDescription' | 'newChatDescription' | 'modelDescription',
+    ) => ({
       en: coreMessages('en')[key],
       ru: coreMessages('ru')[key],
     });
@@ -51,7 +53,7 @@ export class AiTelegramAssistant implements OnModuleInit {
     this.telegram.registerCommand({
       command: 'new',
       description: both('newChatDescription'),
-      handler: async (user) => {
+      handler: async user => {
         await this.conversations.start(user.id);
         return coreMessages(user.locale).newChatDone;
       },
@@ -77,7 +79,9 @@ export class AiTelegramAssistant implements OnModuleInit {
     this.telegram.registerDocumentHandler((user, document) =>
       this.assistWithDocument(user, document),
     );
-    this.telegram.registerVoiceTranscriber((user, voice) => this.transcribe(user, voice));
+    this.telegram.registerVoiceTranscriber((user, voice) =>
+      this.transcribe(user, voice),
+    );
   }
 
   private async askOnce(user: UserRow, question: string): Promise<string> {
@@ -88,9 +92,13 @@ export class AiTelegramAssistant implements OnModuleInit {
     if (!(await this.ai.isConfigured(user.id))) {
       return text.askNotConfigured;
     }
-    const { reply } = await this.ai.ask(user.id, [{ role: 'user', content: question }], {
-      plainText: true,
-    });
+    const {reply} = await this.ai.ask(
+      user.id,
+      [{role: 'user', content: question}],
+      {
+        plainText: true,
+      },
+    );
     // A long one is split into several messages by the bot.
     return reply;
   }
@@ -98,14 +106,16 @@ export class AiTelegramAssistant implements OnModuleInit {
   /** `/model` lists the connections, `/model 2` makes the second one active. */
   private async switchModel(user: UserRow, args: string): Promise<string> {
     const text = coreMessages(user.locale);
-    const { connections: list, activeConnectionId } = await this.connections.settings(user.id);
+    const {connections: list, activeConnectionId} =
+      await this.connections.settings(user.id);
     if (list.length === 0) {
       return text.askNotConfigured;
     }
     if (!args) {
       return text.modelList(
         list.map(
-          (c, i) => `${i + 1}. ${c.name} · ${c.model}${c.id === activeConnectionId ? ' ✅' : ''}`,
+          (c, i) =>
+            `${i + 1}. ${c.name} · ${c.model}${c.id === activeConnectionId ? ' ✅' : ''}`,
         ),
       );
     }
@@ -118,22 +128,29 @@ export class AiTelegramAssistant implements OnModuleInit {
   }
 
   /** A voice message → text, through the speech connection chosen in the AI settings. */
-  private async transcribe(user: UserRow, voice: BotVoice): Promise<BotTranscription> {
+  private async transcribe(
+    user: UserRow,
+    voice: BotVoice,
+  ): Promise<BotTranscription> {
     const messages = coreMessages(user.locale);
     const connection = await this.connections.speech(user.id);
     if (!connection) {
-      return { reply: messages.voiceNotConfigured };
+      return {reply: messages.voiceNotConfigured};
     }
     try {
       const text = await transcribe(
         connection,
-        { data: await voice.download(), fileName: voice.fileName, mimeType: voice.mimeType },
+        {
+          data: await voice.download(),
+          fileName: voice.fileName,
+          mimeType: voice.mimeType,
+        },
         user.locale,
       );
-      return text ? { text } : { reply: messages.voiceEmpty };
+      return text ? {text} : {reply: messages.voiceEmpty};
     } catch (error) {
       this.logger.warn(`Voice recognition failed for ${user.id}: ${error}`);
-      return { reply: messages.voiceFailed };
+      return {reply: messages.voiceFailed};
     }
   }
 
@@ -141,16 +158,21 @@ export class AiTelegramAssistant implements OnModuleInit {
    * A document from the chat (a picture sent as a file too): its text goes to the assistant
    * together with the caption.
    */
-  private async assistWithDocument(user: UserRow, document: BotDocument): Promise<string> {
+  private async assistWithDocument(
+    user: UserRow,
+    document: BotDocument,
+  ): Promise<string> {
     const messages = coreMessages(user.locale);
     if (!(await this.ai.isConfigured(user.id))) {
       return messages.askNotConfigured;
     }
     try {
       const attachment = await attachmentText(
-        { name: document.fileName, data: await document.download() },
+        {name: document.fileName, data: await document.download()},
         (instruction, image) =>
-          this.ai.completeWithImage(user.id, instruction, image, undefined, { keepLanguage: true }),
+          this.ai.completeWithImage(user.id, instruction, image, undefined, {
+            keepLanguage: true,
+          }),
       );
       const reply = await this.assist(user, document.caption, [attachment]);
       return typeof reply === 'string' ? reply : reply.text;
@@ -162,7 +184,9 @@ export class AiTelegramAssistant implements OnModuleInit {
           'no-vision': messages.attachmentNoVision,
         }[error.reason];
       }
-      this.logger.warn(`Could not read a Telegram document for ${user.id}: ${error}`);
+      this.logger.warn(
+        `Could not read a Telegram document for ${user.id}: ${error}`,
+      );
       return messages.attachmentFailed;
     }
   }
@@ -182,18 +206,18 @@ export class AiTelegramAssistant implements OnModuleInit {
     }
     try {
       // The file text is saved with the message: a follow-up ("yes, add them") needs it.
-      const { reply, awaitsConfirmation } = await this.conversations.ask(
+      const {reply, awaitsConfirmation} = await this.conversations.ask(
         user.id,
-        { content: text, attachments },
-        { plainText: true, allowWrites: true },
+        {content: text, attachments},
+        {plainText: true, allowWrites: true},
       );
       const answer = reply || '🤷';
       return awaitsConfirmation
         ? {
             text: answer,
             buttons: [
-              { label: messages.confirmYes, action: `${CONFIRM_ACTION}:y` },
-              { label: messages.confirmNo, action: `${CONFIRM_ACTION}:n` },
+              {label: messages.confirmYes, action: `${CONFIRM_ACTION}:y`},
+              {label: messages.confirmNo, action: `${CONFIRM_ACTION}:n`},
             ],
           }
         : answer;

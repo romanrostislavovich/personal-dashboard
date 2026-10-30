@@ -9,7 +9,7 @@ import {
   WowCredentialsInput,
   WowToken,
 } from '@pd/contracts';
-import { ApiClient, apiRequest } from '../api-client';
+import {ApiClient, apiRequest} from '../api-client';
 
 const BASE = '/api/games';
 
@@ -17,8 +17,10 @@ const BASE = '/api/games';
 export const GAMES_READS = {
   accounts: () => apiRequest(`${BASE}/accounts`),
   /** One Dota account, or `null` — all of them together. */
-  dotaOverview: (accountId: string | null) => apiRequest(`${BASE}/dota/overview`, { accountId }),
-  dotaMatches: (query: Partial<DotaMatchesQuery>) => apiRequest(`${BASE}/dota/matches`, query),
+  dotaOverview: (accountId: string | null) =>
+    apiRequest(`${BASE}/dota/overview`, {accountId}),
+  dotaMatches: (query: Partial<DotaMatchesQuery>) =>
+    apiRequest(`${BASE}/dota/matches`, query),
   settings: () => apiRequest(`${BASE}/settings`),
   /** The price of the WoW Token with its history, per region. */
   wowTokens: () => apiRequest(`${BASE}/wow/tokens`),
@@ -39,10 +41,12 @@ export function gamesApi(api: ApiClient) {
     syncAll: () => api.post<void>(`${BASE}/sync`, {}),
     remove: (id: string) => api.delete(`${BASE}/accounts/${id}`),
     /** The Steam Web API key: it is checked and every account is refreshed with it. */
-    saveSteamKey: (apiKey: string) => api.put<void>(`${BASE}/steam/key`, { apiKey }),
+    saveSteamKey: (apiKey: string) =>
+      api.put<void>(`${BASE}/steam/key`, {apiKey}),
     removeSteamKey: () => api.delete(`${BASE}/steam/key`),
     /** The OpenXBL key is checked against Xbox before it is kept. */
-    saveXboxKey: (apiKey: string) => api.put<void>(`${BASE}/xbox/key`, { apiKey }),
+    saveXboxKey: (apiKey: string) =>
+      api.put<void>(`${BASE}/xbox/key`, {apiKey}),
     removeXboxKey: () => api.delete(`${BASE}/xbox/key`),
     saveWowCredentials: (input: WowCredentialsInput) =>
       api.put<void>(`${BASE}/wow/credentials`, input),
@@ -52,7 +56,7 @@ export function gamesApi(api: ApiClient) {
       api.patch<void>(`${BASE}/wow/${accountId}`, update),
     /** The key of one Dota account: it is checked and the account is refreshed with it. */
     saveOpenDotaKey: (accountId: string, apiKey: string) =>
-      api.put<void>(`${BASE}/accounts/${accountId}/opendota-key`, { apiKey }),
+      api.put<void>(`${BASE}/accounts/${accountId}/opendota-key`, {apiKey}),
     removeOpenDotaKey: (accountId: string) =>
       api.delete(`${BASE}/accounts/${accountId}/opendota-key`),
   };

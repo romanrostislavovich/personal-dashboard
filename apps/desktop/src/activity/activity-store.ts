@@ -1,9 +1,9 @@
-import { app, safeStorage } from 'electron';
-import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { FocusSession, FocusSettings } from './focus-timer';
-import { Outage } from './outages';
-import { Span } from './span-builder';
+import {app, safeStorage} from 'electron';
+import {existsSync, readFileSync, renameSync, writeFileSync} from 'node:fs';
+import {join} from 'node:path';
+import {FocusSession, FocusSettings} from './focus-timer';
+import {Outage} from './outages';
+import {Span} from './span-builder';
 
 /** What the server tells the tracker (ActivityDeviceConfig in contracts). */
 export interface TrackerConfig {
@@ -24,7 +24,7 @@ export interface TrackerConfig {
 
 interface StoredState {
   /** The device this computer is registered as; the token is encrypted by the system. */
-  device: { id: string; token: string; encrypted: boolean } | null;
+  device: {id: string; token: string; encrypted: boolean} | null;
   config: TrackerConfig;
   /** Spans not sent yet. */
   queue: Span[];
@@ -100,11 +100,13 @@ export class ActivityStore {
     }
   }
 
-  setDevice(device: { id: string; token: string } | null): void {
+  setDevice(device: {id: string; token: string} | null): void {
     const encrypted = safeStorage.isEncryptionAvailable();
     this.state.device = device && {
       id: device.id,
-      token: encrypted ? safeStorage.encryptString(device.token).toString('base64') : device.token,
+      token: encrypted
+        ? safeStorage.encryptString(device.token).toString('base64')
+        : device.token,
       encrypted,
     };
     // Kept in a file of its own as well: a broken state file must not unregister the computer.
@@ -151,7 +153,9 @@ export class ActivityStore {
 
   /** Drops the sessions that have reached the server. */
   dequeueFocus(ids: ReadonlySet<string>): void {
-    this.state.focusQueue = this.state.focusQueue.filter((session) => !ids.has(session.id));
+    this.state.focusQueue = this.state.focusQueue.filter(
+      session => !ids.has(session.id),
+    );
     this.save();
   }
 
@@ -166,7 +170,9 @@ export class ActivityStore {
   }
 
   dequeueOutages(ids: ReadonlySet<string>): void {
-    this.state.outageQueue = this.state.outageQueue.filter((outage) => !ids.has(outage.id));
+    this.state.outageQueue = this.state.outageQueue.filter(
+      outage => !ids.has(outage.id),
+    );
     this.save();
   }
 
@@ -205,14 +211,14 @@ export class ActivityStore {
     // The device file outlives a broken state file (and a state file of an older version).
     const device = readJson<StoredState['device']>(this.devicePath());
     if (!stored) {
-      return { ...DEFAULTS, device: device ?? null };
+      return {...DEFAULTS, device: device ?? null};
     }
     // A config saved by an older version lacks the newer fields.
     return {
       ...DEFAULTS,
       ...stored,
       device: stored.device ?? device ?? null,
-      config: { ...DEFAULTS.config, ...stored.config },
+      config: {...DEFAULTS.config, ...stored.config},
     };
   }
 

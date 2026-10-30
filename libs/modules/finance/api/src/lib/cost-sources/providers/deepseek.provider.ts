@@ -1,7 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { fetchWithTimeout } from '@pd/api-core';
-import { CostMeasurement, CostProviderAdapter, CostProviderAuthError } from '../cost-provider';
-import { consumptionBetween, DeepseekBalanceInfo, pickBalance } from './deepseek-balance';
+import {Injectable} from '@nestjs/common';
+import {fetchWithTimeout} from '@pd/api-core';
+import {
+  CostMeasurement,
+  CostProviderAdapter,
+  CostProviderAuthError,
+} from '../cost-provider';
+import {
+  consumptionBetween,
+  DeepseekBalanceInfo,
+  pickBalance,
+} from './deepseek-balance';
 
 /**
  * DeepSeek. The API has no spending history — only the current balance (GET /user/balance),
@@ -16,28 +24,39 @@ export class DeepseekCostProvider implements CostProviderAdapter {
     await this.fetchBalance(token);
   }
 
-  async measure(token: string, state: Record<string, unknown>): Promise<CostMeasurement> {
-    const { currency, balance } = pickBalance(await this.fetchBalance(token));
-    const previous = typeof state['lastBalance'] === 'number' ? state['lastBalance'] : null;
+  async measure(
+    token: string,
+    state: Record<string, unknown>,
+  ): Promise<CostMeasurement> {
+    const {currency, balance} = pickBalance(await this.fetchBalance(token));
+    const previous =
+      typeof state['lastBalance'] === 'number' ? state['lastBalance'] : null;
     return {
       kind: 'increment',
       // If the account currency changes, start counting again.
-      amount: state['currency'] === currency ? consumptionBetween(previous, balance) : 0,
+      amount:
+        state['currency'] === currency
+          ? consumptionBetween(previous, balance)
+          : 0,
       currency,
-      state: { lastBalance: balance, currency },
+      state: {lastBalance: balance, currency},
     };
   }
 
   private async fetchBalance(token: string): Promise<DeepseekBalanceInfo[]> {
-    const response = await fetchWithTimeout('https://api.deepseek.com/user/balance', {
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-    });
+    const response = await fetchWithTimeout(
+      'https://api.deepseek.com/user/balance',
+      {
+        headers: {Authorization: `Bearer ${token}`, Accept: 'application/json'},
+      },
+    );
     if (response.status === 401) {
       throw new CostProviderAuthError('DeepSeek API key is invalid');
     }
     if (!response.ok) {
       throw new Error(`DeepSeek API ${response.status}`);
     }
-    return ((await response.json()) as { balance_infos: DeepseekBalanceInfo[] }).balance_infos;
+    return ((await response.json()) as {balance_infos: DeepseekBalanceInfo[]})
+      .balance_infos;
   }
 }

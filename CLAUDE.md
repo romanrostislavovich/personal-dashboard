@@ -17,7 +17,22 @@ Architecture and rules: `docs/architecture.md`. Quick start: `README.md`. Contri
 - UI texts go through Transloco (`i18n/en.json` + `i18n/ru.json` of the module, keys must match);
   server texts go to `*.messages.ts` with `en` and `ru` (`pickMessages`).
 - Frontend: standalone components, `OnPush`, signals, `httpResource` for reads, Material 3 `matButton` API.
+- After every change, check whether `README.md` needs updating (sections, integrations, features)
+  and update it in the same change.
+- When a module or a tab is added or changed, update its achievements (`*.achievements.ts`): new
+  ones for what it now counts, and none left that can no longer be reached.
 - After adding a new library, restart `npm run dev` (path aliases are read only on start).
+
+## Skills and hooks (`.claude/`)
+
+- Skills: `/deploy`, `/new-module`, `/new-tab`, `/architecture-review`, `/migration`,
+  `/verify-ui`, `/phone`, `/bug` — the project's checklists; use them instead of doing these from
+  memory.
+- Hooks (`.claude/settings.json`): every edited file is formatted by prettier and fixed by eslint
+  (what eslint cannot fix comes back as an error); `git commit` is blocked while the staged files
+  fail lint.
+- Style: Google's TypeScript style (gts) — its prettier settings (80 columns, no bracket spacing,
+  trailing commas, arrows without parentheses) and rules (`===` only, no floating promises).
 
 ## Nx
 

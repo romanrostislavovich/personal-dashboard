@@ -1,7 +1,13 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { LabPoint, LabSeries } from '@pd/contracts';
+import {DatePipe, DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {LabPoint, LabSeries} from '@pd/contracts';
 
 const WIDTH = 600;
 const HEIGHT = 180;
@@ -28,7 +34,9 @@ interface PlacedPoint extends LabPoint {
       <div class="chart">
         <div class="y-axis" aria-hidden="true">
           @for (tick of g.ticks; track tick.value) {
-            <span [style.top.%]="tick.y">{{ tick.value | number: '1.0-2' }}</span>
+            <span [style.top.%]="tick.y">{{
+              tick.value | number: '1.0-2'
+            }}</span>
           }
         </div>
         <div
@@ -56,12 +64,24 @@ interface PlacedPoint extends LabPoint {
               <path class="band" [attr.d]="g.band" />
             }
             @if (g.high) {
-              <path class="bound" [attr.d]="g.high" vector-effect="non-scaling-stroke" />
+              <path
+                class="bound"
+                [attr.d]="g.high"
+                vector-effect="non-scaling-stroke"
+              />
             }
             @if (g.low) {
-              <path class="bound" [attr.d]="g.low" vector-effect="non-scaling-stroke" />
+              <path
+                class="bound"
+                [attr.d]="g.low"
+                vector-effect="non-scaling-stroke"
+              />
             }
-            <path class="line" [attr.d]="g.line" vector-effect="non-scaling-stroke" />
+            <path
+              class="line"
+              [attr.d]="g.line"
+              vector-effect="non-scaling-stroke"
+            />
           </svg>
           @for (point of g.points; track $index) {
             <span
@@ -73,7 +93,11 @@ interface PlacedPoint extends LabPoint {
             ></span>
           }
           @if (hoveredPoint(); as p) {
-            <span class="pd-chart-tooltip tooltip" [class.right]="p.x > 60" [style.left.%]="p.x">
+            <span
+              class="pd-chart-tooltip tooltip"
+              [class.right]="p.x > 60"
+              [style.left.%]="p.x"
+            >
               <span>{{ p.day | date: 'd MMM y' }}</span>
               <b>{{ p.value | number: '1.0-3' }} {{ series().unit }}</b>
               @if (p.flag) {
@@ -81,7 +105,9 @@ interface PlacedPoint extends LabPoint {
               }
               @if (p.low !== null || p.high !== null) {
                 <span>
-                  {{ 'health.labs.range' | transloco }}: {{ p.low ?? '…' }}–{{ p.high ?? '…' }}
+                  {{ 'health.labs.range' | transloco }}: {{ p.low ?? '…' }}–{{
+                    p.high ?? '…'
+                  }}
                 </span>
               }
               @if (p.laboratory) {
@@ -192,7 +218,9 @@ export class LabChartComponent {
   protected readonly height = HEIGHT;
   protected readonly hovered = signal<number | null>(null);
 
-  protected readonly geometry = computed(() => chartGeometry(this.series().points));
+  protected readonly geometry = computed(() =>
+    chartGeometry(this.series().points),
+  );
 
   protected readonly hoveredPoint = computed(() => {
     const index = this.hovered();
@@ -218,15 +246,18 @@ function chartGeometry(points: readonly LabPoint[]) {
   if (!points.length) {
     return null;
   }
-  const times = points.map((point) => Date.parse(point.day));
+  const times = points.map(point => Date.parse(point.day));
   const first = Math.min(...times);
   const last = Math.max(...times);
-  const values = points.flatMap((point) =>
-    [point.value, point.low, point.high].filter((value): value is number => value !== null),
+  const values = points.flatMap(point =>
+    [point.value, point.low, point.high].filter(
+      (value): value is number => value !== null,
+    ),
   );
   const [min, max] = paddedRange(Math.min(...values), Math.max(...values));
   // A single day is put in the middle; a few days apart still spread over the width.
-  const xOf = (time: number) => (last === first ? 50 : ((time - first) / (last - first)) * 100);
+  const xOf = (time: number) =>
+    last === first ? 50 : ((time - first) / (last - first)) * 100;
   const yOf = (value: number) => (1 - (value - min) / (max - min)) * 100;
   const placed: PlacedPoint[] = points.map((point, index) => ({
     ...point,
@@ -235,24 +266,36 @@ function chartGeometry(points: readonly LabPoint[]) {
   }));
   const toPath = (coords: [number, number][]) =>
     coords
-      .map(([x, y], index) => `${index ? 'L' : 'M'}${(x * WIDTH) / 100},${(y * HEIGHT) / 100}`)
+      .map(
+        ([x, y], index) =>
+          `${index ? 'L' : 'M'}${(x * WIDTH) / 100},${(y * HEIGHT) / 100}`,
+      )
       .join(' ');
   const bound = (pick: (point: PlacedPoint) => number | null) => {
     const coords = placed
-      .filter((point) => pick(point) !== null)
-      .map((point) => [point.x, yOf(pick(point) as number)] as [number, number]);
+      .filter(point => pick(point) !== null)
+      .map(point => [point.x, yOf(pick(point) as number)] as [number, number]);
     return coords.length ? toPath(widen(coords)) : null;
   };
-  const both = placed.filter((point) => point.low !== null && point.high !== null);
-  const upper = widen(both.map((p) => [p.x, yOf(p.high as number)] as [number, number]));
-  const lower = widen(both.map((p) => [p.x, yOf(p.low as number)] as [number, number]));
+  const both = placed.filter(
+    point => point.low !== null && point.high !== null,
+  );
+  const upper = widen(
+    both.map(p => [p.x, yOf(p.high as number)] as [number, number]),
+  );
+  const lower = widen(
+    both.map(p => [p.x, yOf(p.low as number)] as [number, number]),
+  );
   return {
     points: placed,
-    line: toPath(placed.map((point) => [point.x, point.y])),
+    line: toPath(placed.map(point => [point.x, point.y])),
     band: both.length ? `${toPath([...upper, ...lower.reverse()])} Z` : null,
-    high: bound((point) => point.high),
-    low: bound((point) => point.low),
-    ticks: [max, (min + max) / 2, min].map((value) => ({ value: round(value), y: yOf(value) })),
+    high: bound(point => point.high),
+    low: bound(point => point.low),
+    ticks: [max, (min + max) / 2, min].map(value => ({
+      value: round(value),
+      y: yOf(value),
+    })),
     from: new Date(first).toISOString().slice(0, 10),
     to: new Date(last).toISOString().slice(0, 10),
   };

@@ -1,8 +1,8 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { DotaListedMatch } from '@pd/contracts';
-import { TimeAgoPipe } from '../time-ago.pipe';
+import {DecimalPipe} from '@angular/common';
+import {ChangeDetectionStrategy, Component, input} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {DotaListedMatch} from '@pd/contracts';
+import {TimeAgoPipe} from '../time-ago.pipe';
 
 /**
  * Matches as rows, like the match list on Dotabuff: hero, result and when, mode and duration,
@@ -48,9 +48,14 @@ import { TimeAgoPipe } from '../time-ago.pipe';
           </span>
           <span class="main">
             @if (m.kills !== null && m.deaths !== null && m.assists !== null) {
-              <span class="kda">{{ m.kills }} / {{ m.deaths }} / {{ m.assists }}</span>
+              <span class="kda"
+                >{{ m.kills }} / {{ m.deaths }} / {{ m.assists }}</span
+              >
               <span class="muted"
-                >KDA {{ (m.kills + m.assists) / (m.deaths || 1) | number: '1.1-1' }}</span
+                >KDA
+                {{
+                  (m.kills + m.assists) / (m.deaths || 1) | number: '1.1-1'
+                }}</span
               >
             } @else {
               <span class="muted">—</span>

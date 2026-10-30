@@ -1,18 +1,24 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { THERMAL_FEELS, ThermalFeel, WeatherLocation } from '@pd/contracts';
-import { ClothingAdviceComponent } from './clothing-advice.component';
-import { LocationPickerComponent } from './location-picker.component';
-import { WeatherApi } from './weather.api';
-import { WeatherLocator } from './weather-locator';
-import { conditionEmoji, isDaytime } from './weather-emoji';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSelectModule} from '@angular/material/select';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {THERMAL_FEELS, ThermalFeel, WeatherLocation} from '@pd/contracts';
+import {ClothingAdviceComponent} from './clothing-advice.component';
+import {LocationPickerComponent} from './location-picker.component';
+import {WeatherApi} from './weather.api';
+import {WeatherLocator} from './weather-locator';
+import {conditionEmoji, isDaytime} from './weather-emoji';
 
 @Component({
   selector: 'pd-weather-page',
@@ -34,8 +40,14 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
       <h1 class="page-title">{{ 'weather.title' | transloco }}</h1>
       <div class="where">
         <pd-location-picker (chosen)="setLocation($event)" />
-        <button matButton type="button" [disabled]="locating()" (click)="useMyLocation()">
-          <mat-icon>my_location</mat-icon> {{ 'weather.myLocation' | transloco }}
+        <button
+          matButton
+          type="button"
+          [disabled]="locating()"
+          (click)="useMyLocation()"
+        >
+          <mat-icon>my_location</mat-icon>
+          {{ 'weather.myLocation' | transloco }}
         </button>
       </div>
     </header>
@@ -49,22 +61,32 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
           <mat-card-content>
             <p class="place">📍 {{ weather.location.name }}</p>
             <div class="current">
-              <span class="icon">{{ emoji(weather.now.condition, weather.now.isDay) }}</span>
+              <span class="icon">{{
+                emoji(weather.now.condition, weather.now.isDay)
+              }}</span>
               <span class="temperature">{{ weather.now.temperature }}°</span>
             </div>
             <p>
               {{ 'weather.condition.' + weather.now.condition | transloco }} ·
-              {{ 'weather.feelsLike' | transloco: { value: weather.now.apparentTemperature } }}
+              {{
+                'weather.feelsLike'
+                  | transloco: {value: weather.now.apparentTemperature}
+              }}
             </p>
             <p class="range">
-              {{ 'weather.range' | transloco: { min: weather.today.min, max: weather.today.max } }}
+              {{
+                'weather.range'
+                  | transloco: {min: weather.today.min, max: weather.today.max}
+              }}
             </p>
           </mat-card-content>
         </mat-card>
 
         <mat-card appearance="outlined">
           <mat-card-header>
-            <mat-card-title>{{ 'weather.whatToWear' | transloco }}</mat-card-title>
+            <mat-card-title>{{
+              'weather.whatToWear' | transloco
+            }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             <pd-clothing-advice [advice]="weather.clothing" />
@@ -90,7 +112,8 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
         <div class="stat">
           <span class="label">{{ 'weather.precipitation' | transloco }}</span>
           <span class="value">
-            {{ weather.today.precipitationProbability }}% · {{ weather.today.precipitation }}
+            {{ weather.today.precipitationProbability }}% ·
+            {{ weather.today.precipitation }}
             {{ 'weather.mm' | transloco }}
           </span>
         </div>
@@ -106,7 +129,10 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
         </div>
         <div class="stat">
           <span class="label">{{ 'weather.sun' | transloco }}</span>
-          <span class="value">🌅 {{ weather.today.sunrise }} · 🌇 {{ weather.today.sunset }}</span>
+          <span class="value"
+            >🌅 {{ weather.today.sunrise }} · 🌇
+            {{ weather.today.sunset }}</span
+          >
         </div>
       </div>
 
@@ -117,7 +143,10 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
             <span class="time">{{ hour.time }}</span>
             <span class="icon">
               {{
-                emoji(hour.condition, day(hour.time, weather.today.sunrise, weather.today.sunset))
+                emoji(
+                  hour.condition,
+                  day(hour.time, weather.today.sunrise, weather.today.sunset)
+                )
               }}
             </span>
             <span class="value">{{ hour.temperature }}°</span>
@@ -137,7 +166,10 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
                   : (d.date | date: 'EEE, d MMM')
               }}
             </span>
-            <span class="icon" [matTooltip]="'weather.condition.' + d.condition | transloco">
+            <span
+              class="icon"
+              [matTooltip]="'weather.condition.' + d.condition | transloco"
+            >
               {{ emoji(d.condition, true) }}
             </span>
             <span class="value"
@@ -149,7 +181,10 @@ import { conditionEmoji, isDaytime } from './weather-emoji';
                 · {{ d.precipitation }} {{ 'weather.mm' | transloco }}
               }
             </span>
-            <span class="wear" [matTooltip]="'weather.outfit.' + d.clothing.outfit | transloco">
+            <span
+              class="wear"
+              [matTooltip]="'weather.outfit.' + d.clothing.outfit | transloco"
+            >
               👕 {{ 'weather.outfitShort.' + d.clothing.outfit | transloco }}
             </span>
           </div>
@@ -308,8 +343,13 @@ export class WeatherPage {
   constructor() {
     // No city yet: take the browser's location (once per browser, the browser asks first).
     effect(() => {
-      if (this.forecast.status() === 'resolved' && this.forecast.value() === null) {
-        void this.locator.detectOnce().then((place) => place && this.forecast.reload());
+      if (
+        this.forecast.status() === 'resolved' &&
+        this.forecast.value() === null
+      ) {
+        void this.locator
+          .detectOnce()
+          .then(place => place && this.forecast.reload());
       }
     });
   }
@@ -321,7 +361,9 @@ export class WeatherPage {
 
   /** The advice of every day is recomputed for the new scale. */
   protected setThermalFeel(thermalFeel: ThermalFeel): void {
-    this.api.setPreferences({ thermalFeel }).subscribe(() => this.forecast.reload());
+    this.api
+      .setPreferences({thermalFeel})
+      .subscribe(() => this.forecast.reload());
   }
 
   protected async useMyLocation(): Promise<void> {

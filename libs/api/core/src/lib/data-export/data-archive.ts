@@ -1,7 +1,7 @@
-import { Unzip, UnzipInflate, Zip, ZipDeflate } from 'fflate';
-import { once } from 'node:events';
-import { createReadStream } from 'node:fs';
-import { Writable } from 'node:stream';
+import {Unzip, UnzipInflate, Zip, ZipDeflate} from 'fflate';
+import {once} from 'node:events';
+import {createReadStream} from 'node:fs';
+import {Writable} from 'node:stream';
 
 /**
  * The layout of an archive of one's data (a ZIP):
@@ -50,7 +50,9 @@ export function binaryPath(
   column: string,
   row: Record<string, unknown>,
 ): string {
-  const key = primaryKey.map((name) => String(row[name]).replace(/[^\w-]/g, '_')).join('_');
+  const key = primaryKey
+    .map(name => String(row[name]).replace(/[^\w-]/g, '_'))
+    .join('_');
   const extension = EXTENSIONS[String(row['mime_type'] ?? '')] ?? '.bin';
   return `${FILES_DIR}${table}/${key}.${column}${extension}`;
 }
@@ -59,7 +61,7 @@ export function binaryPath(
 export function csvLine(values: unknown[]): string {
   return (
     values
-      .map((value) => {
+      .map(value => {
         const text = value === null || value === undefined ? '' : String(value);
         return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
       })
@@ -83,13 +85,15 @@ export class ArchiveWriter {
   /** One file of the archive; `write` hands its content over piece by piece. */
   async file(
     path: string,
-    write: (push: (content: string | Uint8Array) => Promise<void>) => Promise<void>,
+    write: (
+      push: (content: string | Uint8Array) => Promise<void>,
+    ) => Promise<void>,
     // Photos are compressed already: only text is worth the work.
-    { compress = true } = {},
+    {compress = true} = {},
   ): Promise<void> {
-    const entry = new ZipDeflate(path, { level: compress ? 6 : 0 });
+    const entry = new ZipDeflate(path, {level: compress ? 6 : 0});
     this.zip.add(entry);
-    await write(async (content) => {
+    await write(async content => {
       entry.push(typeof content === 'string' ? Buffer.from(content) : content);
       await this.drained();
     });
@@ -116,9 +120,9 @@ export class ArchiveWriter {
 /** What reading an archive gives, in the order of the archive. */
 export type ArchiveEvent =
   /** A line of a `data/*.jsonl` file. */
-  | { kind: 'line'; path: string; line: string }
+  | {kind: 'line'; path: string; line: string}
   /** A whole file: the manifest or a binary one. */
-  | { kind: 'file'; path: string; content: Buffer };
+  | {kind: 'file'; path: string; content: Buffer};
 
 /**
  * Reads an archive from the disk without holding it in memory: the lines of the tables one by
@@ -127,7 +131,7 @@ export type ArchiveEvent =
 export async function* readArchive(file: string): AsyncGenerator<ArchiveEvent> {
   let events: ArchiveEvent[] = [];
   let failure: Error | null = null;
-  const unzip = new Unzip((entry) => {
+  const unzip = new Unzip(entry => {
     const path = entry.name;
     const lines = tableOfPath(path) !== null;
     if (!lines && path !== MANIFEST_PATH && !isBinaryPath(path)) {
@@ -144,16 +148,16 @@ export async function* readArchive(file: string): AsyncGenerator<ArchiveEvent> {
       if (!lines) {
         chunks.push(chunk);
         if (final) {
-          events.push({ kind: 'file', path, content: Buffer.concat(chunks) });
+          events.push({kind: 'file', path, content: Buffer.concat(chunks)});
         }
         return;
       }
-      text += decoder.decode(chunk, { stream: !final });
+      text += decoder.decode(chunk, {stream: !final});
       const complete = text.split('\n');
       text = final ? '' : (complete.pop() ?? '');
       for (const line of complete) {
         if (line.trim()) {
-          events.push({ kind: 'line', path, line });
+          events.push({kind: 'line', path, line});
         }
       }
     };

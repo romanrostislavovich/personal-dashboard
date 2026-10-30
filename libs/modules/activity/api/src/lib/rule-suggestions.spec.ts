@@ -1,4 +1,4 @@
-import { projectTime, WorkPiece } from './project-context';
+import {projectTime, WorkPiece} from './project-context';
 import {
   parseSuggestions,
   patternShare,
@@ -39,7 +39,13 @@ const time = projectTime(pieces, 'p', []);
 describe('suggestionCandidates', () => {
   it('offers what is mostly next to the project, not what is open everywhere', () => {
     expect(suggestionCandidates(pieces, time)).toEqual([
-      { kind: 'site', app: null, label: 'localhost:4200', nearSeconds: 960, totalSeconds: 960 },
+      {
+        kind: 'site',
+        app: null,
+        label: 'localhost:4200',
+        nearSeconds: 960,
+        totalSeconds: 960,
+      },
     ]);
   });
 });
@@ -62,10 +68,12 @@ describe('sureSuggestions', () => {
         totalSeconds: 600,
       },
     ];
-    expect(sureSuggestions(candidates, new Set()).map((item) => item.pattern)).toEqual([
-      'localhost:4200',
-    ]);
-    expect(sureSuggestions(candidates, new Set(['localhost:4200']))).toEqual([]);
+    expect(
+      sureSuggestions(candidates, new Set()).map(item => item.pattern),
+    ).toEqual(['localhost:4200']);
+    expect(sureSuggestions(candidates, new Set(['localhost:4200']))).toEqual(
+      [],
+    );
   });
 });
 
@@ -77,24 +85,33 @@ describe('parseSuggestions', () => {
     const answer =
       'Sure: {"suggestions":[{"label":"localhost:4200","pattern":"localhost:4200","reason":"The app being written"}]}';
     expect(parseSuggestions(answer, candidates, new Set(), share)).toEqual([
-      { pattern: 'localhost:4200', kind: 'site', seconds: 960, reason: 'The app being written' },
+      {
+        pattern: 'localhost:4200',
+        kind: 'site',
+        seconds: 960,
+        reason: 'The app being written',
+      },
     ]);
   });
 
   it('turns away a made-up pattern, a taken one, and one that matches too much', () => {
     const answer = JSON.stringify({
       suggestions: [
-        { label: 'localhost:4200', pattern: 'dashboard-app' },
-        { label: 'nothing.com', pattern: 'nothing' },
+        {label: 'localhost:4200', pattern: 'dashboard-app'},
+        {label: 'nothing.com', pattern: 'nothing'},
         // "localhost" is also the other app, far from the project.
-        { label: 'localhost:4200', pattern: 'localhost' },
+        {label: 'localhost:4200', pattern: 'localhost'},
       ],
     });
     expect(parseSuggestions(answer, candidates, new Set(), share)).toEqual([]);
     const taken = JSON.stringify({
-      suggestions: [{ label: 'localhost:4200', pattern: 'localhost:4200' }],
+      suggestions: [{label: 'localhost:4200', pattern: 'localhost:4200'}],
     });
-    expect(parseSuggestions(taken, candidates, new Set(['localhost:4200']), share)).toEqual([]);
-    expect(parseSuggestions('no json', candidates, new Set(), share)).toBeNull();
+    expect(
+      parseSuggestions(taken, candidates, new Set(['localhost:4200']), share),
+    ).toEqual([]);
+    expect(
+      parseSuggestions('no json', candidates, new Set(), share),
+    ).toBeNull();
   });
 });

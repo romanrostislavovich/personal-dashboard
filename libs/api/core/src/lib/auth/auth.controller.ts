@@ -39,8 +39,8 @@ import {
   TwoFactorSetup,
   TwoFactorStatus,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { ZodValidationPipe } from '../validation/zod-validation.pipe';
+import {z} from 'zod';
+import {ZodValidationPipe} from '../validation/zod-validation.pipe';
 import {
   AuthRequest,
   AuthResponse,
@@ -49,12 +49,12 @@ import {
   refreshTokenOf,
   setRefreshCookie,
 } from './auth-http';
-import { AuthService, IssuedSession } from './auth.service';
-import { AuthUser, CurrentUser } from './current-user.decorator';
-import { Public } from './public.decorator';
-import { SessionsService } from './sessions.service';
-import { TwoFactorService } from './two-factor.service';
-import { RateLimit } from '../system/rate-limit';
+import {AuthService, IssuedSession} from './auth.service';
+import {AuthUser, CurrentUser} from './current-user.decorator';
+import {Public} from './public.decorator';
+import {SessionsService} from './sessions.service';
+import {TwoFactorService} from './two-factor.service';
+import {RateLimit} from '../system/rate-limit';
 
 @Controller('auth')
 export class AuthController {
@@ -75,11 +75,15 @@ export class AuthController {
   @Post('login')
   @HttpCode(200)
   async login(
-    @Body(new ZodValidationPipe(loginSchema)) input: z.output<typeof loginSchema>,
+    @Body(new ZodValidationPipe(loginSchema))
+    input: z.output<typeof loginSchema>,
     @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: AuthResponse,
+    @Res({passthrough: true}) response: AuthResponse,
   ): Promise<LoginResult> {
-    const { result, refreshToken } = await this.auth.login(input, clientMeta(request));
+    const {result, refreshToken} = await this.auth.login(
+      input,
+      clientMeta(request),
+    );
     if (refreshToken && input.client === 'web') {
       setRefreshCookie(request, response, refreshToken);
     }
@@ -93,7 +97,7 @@ export class AuthController {
   async loginWithCode(
     @Body(new ZodValidationPipe(twoFactorLoginSchema)) input: TwoFactorLogin,
     @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: AuthResponse,
+    @Res({passthrough: true}) response: AuthResponse,
   ): Promise<LoginResponse> {
     return this.started(
       await this.auth.loginWithCode(input, clientMeta(request)),
@@ -107,11 +111,16 @@ export class AuthController {
   @RateLimit(5, 3600)
   @Post('register')
   async register(
-    @Body(new ZodValidationPipe(registerSchema)) input: z.output<typeof registerSchema>,
+    @Body(new ZodValidationPipe(registerSchema))
+    input: z.output<typeof registerSchema>,
     @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: AuthResponse,
+    @Res({passthrough: true}) response: AuthResponse,
   ): Promise<LoginResponse> {
-    const issued = await this.auth.register(input, input.client, clientMeta(request));
+    const issued = await this.auth.register(
+      input,
+      input.client,
+      clientMeta(request),
+    );
     return this.started(issued, request, response);
   }
 
@@ -121,9 +130,10 @@ export class AuthController {
   @Post('demo')
   @HttpCode(200)
   async demo(
-    @Body(new ZodValidationPipe(demoLoginSchema)) input: z.output<typeof demoLoginSchema>,
+    @Body(new ZodValidationPipe(demoLoginSchema))
+    input: z.output<typeof demoLoginSchema>,
     @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: AuthResponse,
+    @Res({passthrough: true}) response: AuthResponse,
   ): Promise<LoginResponse> {
     return this.started(
       await this.auth.startDemo(input.client, clientMeta(request)),
@@ -139,7 +149,7 @@ export class AuthController {
   async refresh(
     @Body(new ZodValidationPipe(refreshSchema)) body: RefreshRequest,
     @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: AuthResponse,
+    @Res({passthrough: true}) response: AuthResponse,
   ): Promise<LoginResponse> {
     const token = refreshTokenOf(request, body.refreshToken);
     if (!token) {
@@ -150,10 +160,13 @@ export class AuthController {
     // desktop app's second window, another tab), wiped the new session's cookie too, and the
     // owner was signed out a few seconds after signing in. A dead cookie harms nothing — the next
     // refresh is refused again —; signing out (`logout`) still clears it.
-    const { response: result, refreshToken } = await this.auth.refresh(token, clientMeta(request));
+    const {response: result, refreshToken} = await this.auth.refresh(
+      token,
+      clientMeta(request),
+    );
     if (refreshToken) {
       if (body.refreshToken) {
-        return { ...result, refreshToken };
+        return {...result, refreshToken};
       }
       setRefreshCookie(request, response, refreshToken);
     }
@@ -166,7 +179,7 @@ export class AuthController {
   async logout(
     @Body(new ZodValidationPipe(refreshSchema)) body: RefreshRequest,
     @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: AuthResponse,
+    @Res({passthrough: true}) response: AuthResponse,
   ): Promise<void> {
     const token = refreshTokenOf(request, body.refreshToken);
     if (token) {
@@ -207,7 +220,10 @@ export class AuthController {
 
   @Delete('sessions/:id')
   @HttpCode(204)
-  revokeSession(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  revokeSession(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.sessions.revoke(user.id, id);
   }
 
@@ -235,7 +251,7 @@ export class AuthController {
   @HttpCode(200)
   async enableTwoFactor(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(twoFactorCodeSchema)) { code }: TwoFactorCode,
+    @Body(new ZodValidationPipe(twoFactorCodeSchema)) {code}: TwoFactorCode,
   ): Promise<RecoveryCodes> {
     const codes = await this.twoFactor.enable(user.id, code);
     if (!codes) {
@@ -249,7 +265,8 @@ export class AuthController {
   @HttpCode(204)
   async disableTwoFactor(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(twoFactorDisableSchema)) { password, code }: TwoFactorDisable,
+    @Body(new ZodValidationPipe(twoFactorDisableSchema))
+    {password, code}: TwoFactorDisable,
   ): Promise<void> {
     await this.auth.checkPassword(user.id, password);
     if (!(await this.twoFactor.verify(user.id, code))) {
@@ -259,7 +276,7 @@ export class AuthController {
   }
 
   private started(
-    { response: result, refreshToken }: IssuedSession,
+    {response: result, refreshToken}: IssuedSession,
     request: AuthRequest,
     response: AuthResponse,
   ): LoginResponse {

@@ -1,5 +1,5 @@
-import { Wish } from '@pd/contracts';
-import { round } from '../currency/conversion';
+import {Wish} from '@pd/contracts';
+import {round} from '../currency/conversion';
 
 /**
  * What buying a wish leaves of the month's budget of all expenses: `price` is the wish's price
@@ -7,11 +7,15 @@ import { round } from '../currency/conversion';
  */
 export function againstBudget(
   price: number | null | undefined,
-  budget: { limit: number; spent: number; currency: string } | undefined,
+  budget: {limit: number; spent: number; currency: string} | undefined,
 ): Wish['budget'] {
-  if (price == null || !budget) {
+  if (price === null || price === undefined || !budget) {
     return null;
   }
   const left = budget.limit - budget.spent;
-  return { left: round(left), afterBuying: round(left - price), currency: budget.currency };
+  return {
+    left: round(left),
+    afterBuying: round(left - price),
+    currency: budget.currency,
+  };
 }

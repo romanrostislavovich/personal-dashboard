@@ -11,7 +11,13 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, RateLimit, ServerActions, ZodValidationPipe } from '@pd/api-core';
+import {
+  AuthUser,
+  CurrentUser,
+  RateLimit,
+  ServerActions,
+  ZodValidationPipe,
+} from '@pd/api-core';
 import {
   MovieAdd,
   movieAddSchema,
@@ -33,12 +39,14 @@ import {
   WatchIngest,
   watchIngestSchema,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { MoviesMatchService } from './movies-match.service';
-import { MOVIES_ACTIONS } from './movies.server-actions';
-import { MoviesService } from './movies.service';
+import {z} from 'zod';
+import {MoviesMatchService} from './movies-match.service';
+import {MOVIES_ACTIONS} from './movies.server-actions';
+import {MoviesService} from './movies.service';
 
-const listSchema = z.object({ list: z.enum(['history', 'want']).default('history') });
+const listSchema = z.object({
+  list: z.enum(['history', 'want']).default('history'),
+});
 
 /** Movies and TV shows: `/api/movies`. */
 @Controller('movies')
@@ -83,14 +91,18 @@ export class MoviesController {
   update(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(movieTitleUpdateSchema)) patch: MovieTitleUpdate,
+    @Body(new ZodValidationPipe(movieTitleUpdateSchema))
+    patch: MovieTitleUpdate,
   ): Promise<MovieTitle> {
     return this.movies.update(user.id, id, patch);
   }
 
   @Delete('titles/:id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     return this.movies.remove(user.id, id);
   }
 
@@ -109,13 +121,19 @@ export class MoviesController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(movieAssignSchema)) input: MovieAssign,
   ): Promise<MovieTitle> {
-    return this.actions.run(user.id, MOVIES_ACTIONS.assign, { viewId: id, ...input });
+    return this.actions.run(user.id, MOVIES_ACTIONS.assign, {
+      viewId: id,
+      ...input,
+    });
   }
 
   /** "Not a film". */
   @Post('views/:id/dismiss')
   @HttpCode(204)
-  dismiss(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  dismiss(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     return this.movies.dismiss(user.id, id);
   }
 
@@ -123,7 +141,7 @@ export class MoviesController {
   @RateLimit(30, 60)
   search(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(movieSearchQuerySchema)) query: { q: string },
+    @Query(new ZodValidationPipe(movieSearchQuerySchema)) query: {q: string},
   ): Promise<MovieSearchResult[]> {
     return this.actions.run(user.id, MOVIES_ACTIONS.search, query);
   }
@@ -140,8 +158,12 @@ export class MoviesController {
   @Post('settings/ignore-site')
   ignoreSite(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(z.object({ site: z.string().trim().min(1).max(253) })))
-    input: { site: string },
+    @Body(
+      new ZodValidationPipe(
+        z.object({site: z.string().trim().min(1).max(253)}),
+      ),
+    )
+    input: {site: string},
   ): Promise<MovieSettings> {
     return this.movies.ignoreSite(user.id, input.site);
   }
@@ -151,7 +173,7 @@ export class MoviesController {
   @RateLimit(10, 60)
   setKey(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(tmdbKeySchema)) input: { key: string },
+    @Body(new ZodValidationPipe(tmdbKeySchema)) input: {key: string},
   ): Promise<void> {
     return this.actions.run(user.id, MOVIES_ACTIONS.setKey, input);
   }

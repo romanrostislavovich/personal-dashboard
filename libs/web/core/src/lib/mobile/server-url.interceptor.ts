@@ -1,5 +1,5 @@
-import { HttpInterceptorFn } from '@angular/common/http';
-import { apiBaseUrl } from './mobile-app';
+import {HttpInterceptorFn} from '@angular/common/http';
+import {apiBaseUrl} from './mobile-app';
 
 /**
  * Reads through `HttpClient` (`httpResource`) ask for `/api/…`: in the Android app that is the
@@ -9,6 +9,6 @@ import { apiBaseUrl } from './mobile-app';
 export const serverUrlInterceptor: HttpInterceptorFn = (request, next) => {
   const base = apiBaseUrl();
   return base && request.url.startsWith('/api/')
-    ? next(request.clone({ url: `${base}${request.url}` }))
+    ? next(request.clone({url: `${base}${request.url}`}))
     : next(request);
 };

@@ -1,6 +1,15 @@
-import { inject, Injectable, signal } from '@angular/core';
-import { ScreenshotIndex, screenshotsApi, syncScreenshots } from '@pd/client-core';
-import { AuthService, DASHBOARD_CLIENT, DesktopScreenshots, desktopBridge } from '@pd/web-core';
+import {inject, Injectable, signal} from '@angular/core';
+import {
+  ScreenshotIndex,
+  screenshotsApi,
+  syncScreenshots,
+} from '@pd/client-core';
+import {
+  AuthService,
+  DASHBOARD_CLIENT,
+  DesktopScreenshots,
+  desktopBridge,
+} from '@pd/web-core';
 
 /** How often the folder and the server are compared when nothing tells of a change. */
 const EVERY_MS = 2 * 60_000;
@@ -12,12 +21,13 @@ const AFTER_CHANGE_MS = 3_000;
  * shows: the app only reads and writes files, the page holds the session. What the last sync
  * left each file as is kept in this browser's storage, by the user and the folder.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class ScreenshotSyncService {
   private readonly auth = inject(AuthService);
   private readonly api = screenshotsApi(inject(DASHBOARD_CLIENT).api);
   /** `null` — not the desktop app (or an older one): nothing to sync. */
-  readonly folder: DesktopScreenshots | null = desktopBridge()?.screenshots ?? null;
+  readonly folder: DesktopScreenshots | null =
+    desktopBridge()?.screenshots ?? null;
 
   readonly busy = signal(false);
   readonly lastSync = signal<Date | null>(null);
@@ -55,13 +65,16 @@ export class ScreenshotSyncService {
     try {
       // By the folder too: another folder starts afresh — its emptiness is not a deletion.
       const place = `${userId}.${(await folder.status()).folder}`;
-      const { steps } = await syncScreenshots(folder, this.api, this.index(place), (index) =>
-        this.saveIndex(place, index),
+      const {steps} = await syncScreenshots(
+        folder,
+        this.api,
+        this.index(place),
+        index => this.saveIndex(place, index),
       );
       this.lastSync.set(new Date());
       this.error.set(null);
       if (steps) {
-        this.changes.update((value) => value + 1);
+        this.changes.update(value => value + 1);
       }
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : String(error));
@@ -83,7 +96,9 @@ export class ScreenshotSyncService {
 
   private index(place: string): ScreenshotIndex {
     try {
-      return JSON.parse(localStorage.getItem(key(place)) ?? '{}') as ScreenshotIndex;
+      return JSON.parse(
+        localStorage.getItem(key(place)) ?? '{}',
+      ) as ScreenshotIndex;
     } catch {
       return {};
     }

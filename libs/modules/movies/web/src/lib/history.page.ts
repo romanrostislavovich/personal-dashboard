@@ -1,21 +1,33 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { MovieTitle } from '@pd/contracts';
-import { DurationPipe, EmptyStateComponent } from '@pd/web-core';
-import { MoviesApi } from './movies.api';
-import { TitleCardComponent } from './title-card.component';
-import { TitleDialog } from './title.dialog';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatDialog} from '@angular/material/dialog';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {MovieTitle} from '@pd/contracts';
+import {DurationPipe, EmptyStateComponent} from '@pd/web-core';
+import {MoviesApi} from './movies.api';
+import {TitleCardComponent} from './title-card.component';
+import {TitleDialog} from './title.dialog';
 
 /** Movies → History: every film and show watched, the newest first. */
 @Component({
   selector: 'pd-movies-history',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, DurationPipe, EmptyStateComponent, TitleCardComponent],
+  imports: [
+    TranslocoPipe,
+    DurationPipe,
+    EmptyStateComponent,
+    TitleCardComponent,
+  ],
   template: `
     @if (titles.value().length) {
       <p class="summary">
-        {{ 'movies.history.summary' | transloco: { films: films(), shows: shows() } }}
+        {{
+          'movies.history.summary' | transloco: {films: films(), shows: shows()}
+        }}
         · {{ seconds() | pdDuration }}
       </p>
       <div class="grid">
@@ -47,10 +59,10 @@ export class HistoryPage {
   protected readonly titles = inject(MoviesApi).titles('history');
 
   protected readonly films = computed(
-    () => this.titles.value().filter((title) => title.kind === 'movie').length,
+    () => this.titles.value().filter(title => title.kind === 'movie').length,
   );
   protected readonly shows = computed(
-    () => this.titles.value().filter((title) => title.kind === 'tv').length,
+    () => this.titles.value().filter(title => title.kind === 'tv').length,
   );
   protected readonly seconds = computed(() =>
     this.titles.value().reduce((sum, title) => sum + title.watchedSeconds, 0),
@@ -58,7 +70,7 @@ export class HistoryPage {
 
   open(title: MovieTitle): void {
     this.dialog
-      .open(TitleDialog, { data: title, width: '520px', maxWidth: '95vw' })
+      .open(TitleDialog, {data: title, width: '520px', maxWidth: '95vw'})
       .afterClosed()
       .subscribe(() => this.titles.reload());
   }

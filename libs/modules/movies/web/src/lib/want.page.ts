@@ -1,26 +1,31 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { MovieSearchResult, MovieTitle } from '@pd/contracts';
-import { EmptyStateComponent } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { MovieSearchComponent } from './movie-search.component';
-import { MoviesApi } from './movies.api';
-import { TitleCardComponent } from './title-card.component';
-import { TitleDialog } from './title.dialog';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {MatDialog} from '@angular/material/dialog';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {ActivatedRoute} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {MovieSearchResult, MovieTitle} from '@pd/contracts';
+import {EmptyStateComponent} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {MovieSearchComponent} from './movie-search.component';
+import {MoviesApi} from './movies.api';
+import {TitleCardComponent} from './title-card.component';
+import {TitleDialog} from './title.dialog';
 
 const ACTIONS = [
-  { id: 'want', icon: 'bookmark_add', labelKey: 'movies.want.add' },
-  { id: 'seen', icon: 'check', labelKey: 'movies.want.seen' },
+  {id: 'want', icon: 'bookmark_add', labelKey: 'movies.want.add'},
+  {id: 'seen', icon: 'check', labelKey: 'movies.want.seen'},
 ];
 
 /** Movies → To watch: a search in TMDB, and the list. */
 @Component({
   selector: 'pd-movies-want',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, EmptyStateComponent, MovieSearchComponent, TitleCardComponent],
+  imports: [
+    TranslocoPipe,
+    EmptyStateComponent,
+    MovieSearchComponent,
+    TitleCardComponent,
+  ],
   template: `
     @if (status.value()?.tmdb) {
       <pd-movie-search
@@ -63,7 +68,8 @@ export class WantPage {
   private readonly snackBar = inject(MatSnackBar);
   private readonly transloco = inject(TranslocoService);
   /** A film shared from another app (`?q=`, movies.commands.ts): searched at once. */
-  protected readonly initial = inject(ActivatedRoute).snapshot.queryParamMap.get('q') ?? '';
+  protected readonly initial =
+    inject(ActivatedRoute).snapshot.queryParamMap.get('q') ?? '';
 
   protected readonly actions = ACTIONS;
   protected readonly status = this.api.status();
@@ -72,23 +78,36 @@ export class WantPage {
   async add(result: MovieSearchResult, action: string): Promise<void> {
     try {
       const title = await firstValueFrom(
-        this.api.add({ tmdbId: result.tmdbId, kind: result.kind, wanted: action === 'want' }),
+        this.api.add({
+          tmdbId: result.tmdbId,
+          kind: result.kind,
+          wanted: action === 'want',
+        }),
       );
-      const key = action === 'want' ? 'movies.want.added' : 'movies.want.markedSeen';
-      this.snackBar.open(this.transloco.translate(key, { title: title.title }), 'OK', {
-        duration: 4000,
-      });
+      const key =
+        action === 'want' ? 'movies.want.added' : 'movies.want.markedSeen';
+      this.snackBar.open(
+        this.transloco.translate(key, {title: title.title}),
+        'OK',
+        {
+          duration: 4000,
+        },
+      );
       this.titles.reload();
     } catch {
-      this.snackBar.open(this.transloco.translate('movies.errors.generic'), 'OK', {
-        duration: 6000,
-      });
+      this.snackBar.open(
+        this.transloco.translate('movies.errors.generic'),
+        'OK',
+        {
+          duration: 6000,
+        },
+      );
     }
   }
 
   open(title: MovieTitle): void {
     this.dialog
-      .open(TitleDialog, { data: title, width: '520px', maxWidth: '95vw' })
+      .open(TitleDialog, {data: title, width: '520px', maxWidth: '95vw'})
       .afterClosed()
       .subscribe(() => this.titles.reload());
   }

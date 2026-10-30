@@ -1,9 +1,9 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, IntegrationsService } from '@pd/api-core';
-import { eq } from 'drizzle-orm';
-import { musicSettings } from './music.schema';
-import { soundcloudAccounts } from './soundcloud/soundcloud.schema';
-import { SpotifyService } from './spotify.service';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, IntegrationsService} from '@pd/api-core';
+import {eq} from 'drizzle-orm';
+import {musicSettings} from './music.schema';
+import {soundcloudAccounts} from './soundcloud/soundcloud.schema';
+import {SpotifyService} from './spotify.service';
 
 /** Last.fm is asked every quarter of an hour, SoundCloud every hour. */
 const STALE_HOURS = 12;
@@ -23,7 +23,7 @@ export class MusicIntegrations implements OnModuleInit {
       name: 'Last.fm',
       module: 'music',
       staleHours: STALE_HOURS,
-      reports: async (userId) => {
+      reports: async userId => {
         const [settings] = await this.db
           .select()
           .from(musicSettings)
@@ -46,8 +46,8 @@ export class MusicIntegrations implements OnModuleInit {
       name: 'Spotify',
       module: 'music',
       // "Now playing" is asked when the page is open: there is no refresh to be late.
-      reports: async (userId) =>
-        (await this.spotify.isConnected(userId)) ? [{ name: 'Spotify' }] : [],
+      reports: async userId =>
+        (await this.spotify.isConnected(userId)) ? [{name: 'Spotify'}] : [],
     });
 
     this.integrations.register({
@@ -55,7 +55,7 @@ export class MusicIntegrations implements OnModuleInit {
       name: 'SoundCloud',
       module: 'music',
       staleHours: STALE_HOURS,
-      reports: async (userId) => {
+      reports: async userId => {
         const [account] = await this.db
           .select()
           .from(soundcloudAccounts)

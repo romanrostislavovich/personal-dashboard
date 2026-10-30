@@ -1,6 +1,8 @@
 /** The names a project goes by: its own and its aliases, lower case. */
-export function namesOf(project: { name: string; aliases: string[] }): string[] {
-  return [project.name, ...project.aliases].map((name) => name.trim().toLowerCase());
+export function namesOf(project: {name: string; aliases: string[]}): string[] {
+  return [project.name, ...project.aliases].map(name =>
+    name.trim().toLowerCase(),
+  );
 }
 
 /**
@@ -10,5 +12,5 @@ export function namesOf(project: { name: string; aliases: string[] }): string[] 
 export function belongsTo(candidate: string, names: string[]): boolean {
   const full = candidate.trim().toLowerCase();
   const short = full.split('/').pop() ?? full;
-  return names.some((name) => name === full || name === short);
+  return names.some(name => name === full || name === short);
 }

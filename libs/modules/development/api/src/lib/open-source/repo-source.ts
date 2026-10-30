@@ -1,4 +1,4 @@
-import { RepoProvider, RepoRelation } from '@pd/contracts';
+import {RepoProvider, RepoRelation} from '@pd/contracts';
 
 /** A repository as its service sees it now. */
 export interface RepoSnapshot {
@@ -19,7 +19,7 @@ export interface RepoSnapshot {
   openIssues: number;
   openPulls: number;
   pushedAt: string | null;
-  latestRelease: { tag: string; publishedAt: string; htmlUrl: string } | null;
+  latestRelease: {tag: string; publishedAt: string; htmlUrl: string} | null;
   /** The `name` of package.json in the root, unless the package is private. */
   packageName: string | null;
 }

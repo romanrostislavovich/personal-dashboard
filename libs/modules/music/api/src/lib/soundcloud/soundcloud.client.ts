@@ -58,9 +58,13 @@ export class SoundcloudClient {
 
   /** The profile behind the name of its address. */
   async resolveUser(username: string): Promise<SoundcloudUser> {
-    const user = await this.get<RawUser>('/resolve', { url: `${SITE}/${username}` });
+    const user = await this.get<RawUser>('/resolve', {
+      url: `${SITE}/${username}`,
+    });
     if (!user || user.kind !== 'user') {
-      throw new SoundcloudNotFoundError(`SoundCloud profile ${username} not found`);
+      throw new SoundcloudNotFoundError(
+        `SoundCloud profile ${username} not found`,
+      );
     }
     return toUser(user);
   }
@@ -95,7 +99,10 @@ export class SoundcloudClient {
     return tracks;
   }
 
-  private get<T>(path: string, params: Record<string, string> = {}): Promise<T | null> {
+  private get<T>(
+    path: string,
+    params: Record<string, string> = {},
+  ): Promise<T | null> {
     const query = new URLSearchParams(params).toString();
     return this.request<T>(`${API}${path}${query ? `?${query}` : ''}`);
   }
@@ -107,7 +114,7 @@ export class SoundcloudClient {
   private async request<T>(address: string): Promise<T | null> {
     let response = await this.fetch(address, await clientId());
     if ((response.status === 401 || response.status === 403) && !this.token) {
-      response = await this.fetch(address, await clientId({ fresh: true }));
+      response = await this.fetch(address, await clientId({fresh: true}));
     }
     if (response.ok) {
       return (await response.json()) as T;
@@ -129,7 +136,7 @@ export class SoundcloudClient {
       headers: {
         'User-Agent': USER_AGENT,
         Accept: 'application/json',
-        ...(this.token ? { Authorization: `OAuth ${this.token}` } : {}),
+        ...(this.token ? {Authorization: `OAuth ${this.token}`} : {}),
       },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
@@ -137,7 +144,7 @@ export class SoundcloudClient {
 }
 
 /** The client id of the SoundCloud site, read from its scripts. */
-async function clientId({ fresh = false } = {}): Promise<string> {
+async function clientId({fresh = false} = {}): Promise<string> {
   if (siteClientId && !fresh) {
     return siteClientId;
   }
@@ -150,7 +157,9 @@ async function clientId({ fresh = false } = {}): Promise<string> {
       return found;
     }
   }
-  throw new Error('SoundCloud changed its site: the client id was not found in its scripts');
+  throw new Error(
+    'SoundCloud changed its site: the client id was not found in its scripts',
+  );
 }
 
 export function findClientId(script: string): string | null {
@@ -159,11 +168,13 @@ export function findClientId(script: string): string | null {
 
 async function text(address: string): Promise<string> {
   const response = await fetch(address, {
-    headers: { 'User-Agent': USER_AGENT },
+    headers: {'User-Agent': USER_AGENT},
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   if (!response.ok) {
-    throw new Error(`SoundCloud ${response.status}: ${new URL(address).pathname}`);
+    throw new Error(
+      `SoundCloud ${response.status}: ${new URL(address).pathname}`,
+    );
   }
   return response.text();
 }

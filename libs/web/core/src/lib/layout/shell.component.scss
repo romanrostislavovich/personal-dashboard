@@ -9,7 +9,11 @@
   box-sizing: border-box;
   border-right: 1px solid var(--pd-border);
   border-radius: 0;
-  background: color-mix(in srgb, var(--mat-sys-surface-container-lowest) 82%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--mat-sys-surface-container-lowest) 82%,
+    transparent
+  );
   backdrop-filter: blur(12px);
 }
 

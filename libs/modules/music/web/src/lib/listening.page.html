@@ -9,7 +9,9 @@
           <span class="label">{{ 'music.now.last' | transloco }}</span>
           <p class="last">
             <b>{{ last.track }}</b> — {{ last.artist }}
-            <span class="muted">· {{ last.playedAt | date: 'd MMM, HH:mm' }}</span>
+            <span class="muted"
+              >· {{ last.playedAt | date: 'd MMM, HH:mm' }}</span
+            >
           </p>
         } @else {
           <p class="muted">{{ 'music.now.nothing' | transloco }}</p>
@@ -64,7 +66,11 @@
       <mat-card-content class="tops-grid">
         @if (tops.value(); as t) {
           <pd-top-list titleKey="music.tops.artists" [items]="t.artists" />
-          <pd-top-list titleKey="music.tops.tracks" [items]="t.tracks" [songs]="true" />
+          <pd-top-list
+            titleKey="music.tops.tracks"
+            [items]="t.tracks"
+            [songs]="true"
+          />
           <pd-top-list titleKey="music.tops.albums" [items]="t.albums" />
         }
       </mat-card-content>

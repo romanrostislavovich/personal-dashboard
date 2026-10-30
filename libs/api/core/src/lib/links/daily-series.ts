@@ -1,4 +1,10 @@
-import { addDays, DailyMetric, LocalDate, parseLocalDate, toLocalDate } from '@pd/contracts';
+import {
+  addDays,
+  DailyMetric,
+  LocalDate,
+  parseLocalDate,
+  toLocalDate,
+} from '@pd/contracts';
 
 /*
  * A daily number as a series of days, as the links engine and "before and after" read it: a
@@ -7,7 +13,12 @@ import { addDays, DailyMetric, LocalDate, parseLocalDate, toLocalDate } from '@p
  */
 
 /** A day a reading does not have is left out; a quantity's empty day is a zero. */
-export const READINGS: DailyMetric['unit'][] = ['degrees', 'clock', 'score', 'percent'];
+export const READINGS: DailyMetric['unit'][] = [
+  'degrees',
+  'clock',
+  'score',
+  'percent',
+];
 
 /**
  * Sections of what happens around the person (the weather, the calendar), not the person's
@@ -19,7 +30,7 @@ export type Series = Map<LocalDate, number>;
 
 /** The values of a number on the days of a period, in order. */
 export function seriesOf(metric: DailyMetric, days: LocalDate[]): Series {
-  const given = new Map(metric.days.map((day) => [day.day, day.value]));
+  const given = new Map(metric.days.map(day => [day.day, day.value]));
   const series: Series = new Map();
   if (metric.missing === 'absent' || READINGS.includes(metric.unit)) {
     for (const day of days) {
@@ -30,7 +41,7 @@ export function seriesOf(metric: DailyMetric, days: LocalDate[]): Series {
     return series;
   }
   // A quantity counts from its first day to its last: before it the section was not used.
-  const known = days.filter((day) => given.has(day));
+  const known = days.filter(day => given.has(day));
   const [first, last] = [known[0], known[known.length - 1]];
   for (const day of days) {
     if (first && day >= first && day <= last) {
@@ -41,7 +52,13 @@ export function seriesOf(metric: DailyMetric, days: LocalDate[]): Series {
 }
 
 /** Every day of a period (ten years at most). */
-export function daysOf({ from, to }: { from: LocalDate; to: LocalDate }): LocalDate[] {
+export function daysOf({
+  from,
+  to,
+}: {
+  from: LocalDate;
+  to: LocalDate;
+}): LocalDate[] {
   const days: LocalDate[] = [];
   for (let day = from; day <= to && days.length < 3700; day = shift(day, 1)) {
     days.push(day);

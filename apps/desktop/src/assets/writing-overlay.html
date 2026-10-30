@@ -27,9 +27,9 @@
     <script>
       // A transparent window over the screen that lets every click through: only the marks
       // under the mistakes of the field the user types in (writing/desktop-writing.ts).
-      window.desktop.writingOverlay.onMarks((marks) => {
+      window.desktop.writingOverlay.onMarks(marks => {
         document.body.replaceChildren(
-          ...marks.map(({ x, y, width, colour }) => {
+          ...marks.map(({x, y, width, colour}) => {
             const mark = document.createElement('div');
             mark.className = 'mark';
             Object.assign(mark.style, {

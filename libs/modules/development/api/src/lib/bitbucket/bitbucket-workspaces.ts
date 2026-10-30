@@ -1,15 +1,23 @@
-import { AccountAuthError } from '../accounts/account-source';
-import { BitbucketClient, RawBitbucketRepo, RawBitbucketUser } from './bitbucket.client';
+import {AccountAuthError} from '../accounts/account-source';
+import {
+  BitbucketClient,
+  RawBitbucketRepo,
+  RawBitbucketUser,
+} from './bitbucket.client';
 
 /**
  * Bitbucket moved the list of the user's workspaces more than once; the addresses are tried from
  * the newest to the oldest, and the first one that answers is used.
  */
-const WORKSPACE_LISTS = ['/user/workspaces', '/user/permissions/workspaces', '/workspaces'];
+const WORKSPACE_LISTS = [
+  '/user/workspaces',
+  '/user/permissions/workspaces',
+  '/workspaces',
+];
 
 interface RawWorkspaceRow {
   slug?: string;
-  workspace?: { slug?: string };
+  workspace?: {slug?: string};
 }
 
 /** The user behind the credentials and every repository they can see, workspace by workspace. */
@@ -20,7 +28,7 @@ export class BitbucketWorkspaces {
   constructor(private readonly bitbucket: BitbucketClient) {}
 
   me(): Promise<RawBitbucketUser> {
-    this.user ??= this.bitbucket.get<RawBitbucketUser>('/user').then((user) => {
+    this.user ??= this.bitbucket.get<RawBitbucketUser>('/user').then(user => {
       if (!user) {
         throw new Error('Bitbucket did not return the account of the token');
       }
@@ -38,7 +46,11 @@ export class BitbucketWorkspaces {
   private async readRepos(): Promise<RawBitbucketRepo[]> {
     const repos: RawBitbucketRepo[] = [];
     for (const slug of await this.workspaces()) {
-      repos.push(...(await this.bitbucket.all<RawBitbucketRepo>(`/repositories/${slug}`)));
+      repos.push(
+        ...(await this.bitbucket.all<RawBitbucketRepo>(
+          `/repositories/${slug}`,
+        )),
+      );
     }
     return repos;
   }
@@ -48,7 +60,9 @@ export class BitbucketWorkspaces {
     for (const path of WORKSPACE_LISTS) {
       try {
         const rows = await this.bitbucket.all<RawWorkspaceRow>(path);
-        const slugs = rows.flatMap((row) => row.workspace?.slug ?? row.slug ?? []);
+        const slugs = rows.flatMap(
+          row => row.workspace?.slug ?? row.slug ?? [],
+        );
         if (slugs.length > 0) {
           return [...new Set(slugs)];
         }

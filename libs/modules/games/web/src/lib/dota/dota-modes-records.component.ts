@@ -1,8 +1,8 @@
-import { DatePipe, DecimalPipe, PercentPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { DotaOverview, DotaRecord } from '@pd/contracts';
+import {DatePipe, DecimalPipe, PercentPipe} from '@angular/common';
+import {ChangeDetectionStrategy, Component, input} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {DotaOverview, DotaRecord} from '@pd/contracts';
 
 const RECORD_ICONS: Record<DotaRecord['kind'], string> = {
   kills: 'swords',

@@ -1,6 +1,6 @@
-import { InjectionToken, Injector, Provider, Type } from '@angular/core';
-import { Routes } from '@angular/router';
-import { Translation } from '@jsverse/transloco';
+import {InjectionToken, Injector, Provider, Type} from '@angular/core';
+import {Routes} from '@angular/router';
+import {Translation} from '@jsverse/transloco';
 
 /**
  * Contract of a dashboard module's web part. Each module (birthdays, finance, …)
@@ -19,11 +19,11 @@ export interface WebDashboardModule {
    * it in a group of the menu (none — at the top level), `menu: false` keeps it out of the menu
    * (reached from its widget and the command palette).
    */
-  nav: { labelKey: string; icon: string; group?: NavGroupId; menu?: false };
+  nav: {labelKey: string; icon: string; group?: NavGroupId; menu?: false};
   /** Module pages, loaded lazily. */
   loadRoutes: () => Promise<Routes>;
   /** Module translations per language: `{ ru: () => import('./i18n/ru.json') }`. */
-  translations: Record<string, () => Promise<{ default: Translation }>>;
+  translations: Record<string, () => Promise<{default: Translation}>>;
   /** Widgets for the home page. */
   widgets?: DashboardWidget[];
   /** What the command palette (Ctrl+K) offers besides the section itself. */
@@ -49,7 +49,14 @@ export interface WebDashboardModule {
  * The groups of the side menu, in their order of the menu: a group shows where its first
  * section is. `bottom` is not a group: the sections next to Settings.
  */
-export const NAV_GROUPS = ['things', 'me', 'work', 'leisure', 'safety', 'bottom'] as const;
+export const NAV_GROUPS = [
+  'things',
+  'me',
+  'work',
+  'leisure',
+  'safety',
+  'bottom',
+] as const;
 export type NavGroupId = (typeof NAV_GROUPS)[number];
 
 /**
@@ -63,9 +70,13 @@ export interface DashboardCommand {
   icon: string;
   url?: string;
   /** Loaded when first used; does its work with the text and the app's injector. */
-  loadAction?: () => Promise<(text: string, injector: Injector) => Promise<void>>;
+  loadAction?: () => Promise<
+    (text: string, injector: Injector) => Promise<void>
+  >;
   /** The same for a picture (a screenshot captured by the desktop app). */
-  loadImageAction?: () => Promise<(image: File, injector: Injector) => Promise<void>>;
+  loadImageAction?: () => Promise<
+    (image: File, injector: Injector) => Promise<void>
+  >;
 }
 
 /** A self-contained card (or a few) that connects a module to an outside service. */
@@ -75,7 +86,10 @@ export interface DashboardIntegration {
 }
 
 /** Where the integrations are: module pages link here when something is not connected yet. */
-export const INTEGRATIONS_LINK = { path: '/settings', queryParams: { tab: 'integrations' } };
+export const INTEGRATIONS_LINK = {
+  path: '/settings',
+  queryParams: {tab: 'integrations'},
+};
 
 export interface DashboardWidget {
   id: string;
@@ -84,8 +98,12 @@ export interface DashboardWidget {
   loadComponent: () => Promise<Type<unknown>>;
 }
 
-export const DASHBOARD_MODULES = new InjectionToken<WebDashboardModule[]>('DASHBOARD_MODULES');
+export const DASHBOARD_MODULES = new InjectionToken<WebDashboardModule[]>(
+  'DASHBOARD_MODULES',
+);
 
-export function provideDashboardModules(modules: WebDashboardModule[]): Provider {
-  return { provide: DASHBOARD_MODULES, useValue: modules };
+export function provideDashboardModules(
+  modules: WebDashboardModule[],
+): Provider {
+  return {provide: DASHBOARD_MODULES, useValue: modules};
 }

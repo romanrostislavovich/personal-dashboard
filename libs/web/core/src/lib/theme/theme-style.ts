@@ -1,5 +1,5 @@
-import { Theme, ThemeFont } from '@pd/contracts';
-import { ThemePalette } from './theme-palette';
+import {Theme, ThemeFont} from '@pd/contracts';
+import {ThemePalette} from './theme-palette';
 
 /** What a theme does to `<html>`: variables and classes (see apps/web/src/styles.scss). */
 export interface ThemeStyle {
@@ -7,19 +7,21 @@ export interface ThemeStyle {
   colorScheme: string;
   /** CSS variables; a `null` value takes the variable off, back to the stylesheet's own. */
   variables: Record<string, string | null>;
-  classes: { 'pd-compact': boolean; 'pd-no-glow': boolean };
+  classes: {'pd-compact': boolean; 'pd-no-glow': boolean};
 }
 
-const FONTS: Record<ThemeFont, { text: string; heading: string } | null> = {
+const FONTS: Record<ThemeFont, {text: string; heading: string} | null> = {
   // The stylesheet's own Inter and Manrope.
   default: null,
   system: stack('system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'),
   serif: stack('Georgia, "Times New Roman", serif'),
-  mono: stack('"JetBrains Mono", "Cascadia Code", Consolas, ui-monospace, monospace'),
+  mono: stack(
+    '"JetBrains Mono", "Cascadia Code", Consolas, ui-monospace, monospace',
+  ),
 };
 
 function stack(family: string) {
-  return { text: family, heading: family };
+  return {text: family, heading: family};
 }
 
 /** The surfaces of the dark mode on an OLED screen: black, a step lighter for each layer. */
@@ -40,7 +42,11 @@ const BLACK_SURFACES: Record<string, string> = {
  * which the stylesheet already has); `dark` — whether the page is dark right now (the black
  * surfaces are set only then: `light-dark()` cannot keep a value it does not know).
  */
-export function themeStyle(theme: Theme, palette: ThemePalette | null, dark: boolean): ThemeStyle {
+export function themeStyle(
+  theme: Theme,
+  palette: ThemePalette | null,
+  dark: boolean,
+): ThemeStyle {
   const variables: Record<string, string | null> = {};
   if (palette) {
     for (const token of Object.keys(palette.light)) {
@@ -64,7 +70,10 @@ export function themeStyle(theme: Theme, palette: ThemePalette | null, dark: boo
   return {
     colorScheme: theme.mode === 'system' ? 'light dark' : theme.mode,
     variables,
-    classes: { 'pd-compact': theme.density === 'compact', 'pd-no-glow': !theme.glow },
+    classes: {
+      'pd-compact': theme.density === 'compact',
+      'pd-no-glow': !theme.glow,
+    },
   };
 }
 

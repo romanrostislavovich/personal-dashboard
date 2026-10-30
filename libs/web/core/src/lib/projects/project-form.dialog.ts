@@ -1,11 +1,19 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Project, ProjectInput } from '@pd/contracts';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {Project, ProjectInput} from '@pd/contracts';
 
 /** Create/edit dialog. Returns a `ProjectInput`, or `undefined` if cancelled. */
 @Component({
@@ -31,7 +39,12 @@ import { Project, ProjectInput } from '@pd/contracts';
         </mat-form-field>
         <mat-form-field>
           <mat-label>{{ 'core.projects.url' | transloco }}</mat-label>
-          <input matInput type="url" formControlName="url" placeholder="https://" />
+          <input
+            matInput
+            type="url"
+            formControlName="url"
+            placeholder="https://"
+          />
         </mat-form-field>
         <mat-form-field>
           <mat-label>{{ 'core.projects.description' | transloco }}</mat-label>
@@ -39,7 +52,11 @@ import { Project, ProjectInput } from '@pd/contracts';
         </mat-form-field>
         <mat-form-field>
           <mat-label>{{ 'core.projects.aliases' | transloco }}</mat-label>
-          <input matInput formControlName="aliases" placeholder="owner/repo, my-app" />
+          <input
+            matInput
+            formControlName="aliases"
+            placeholder="owner/repo, my-app"
+          />
           <mat-hint>{{ 'core.projects.aliasesHint' | transloco }}</mat-hint>
         </mat-form-field>
         <mat-form-field>
@@ -69,7 +86,9 @@ import { Project, ProjectInput } from '@pd/contracts';
 })
 export class ProjectFormDialog {
   protected readonly project = inject<Project | null>(MAT_DIALOG_DATA);
-  private readonly dialogRef = inject(MatDialogRef<ProjectFormDialog, ProjectInput>);
+  private readonly dialogRef = inject(
+    MatDialogRef<ProjectFormDialog, ProjectInput>,
+  );
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     name: [this.project?.name ?? '', Validators.required],
@@ -81,14 +100,14 @@ export class ProjectFormDialog {
   });
 
   save(): void {
-    const { name, url, description, aliases, closedOn } = this.form.getRawValue();
+    const {name, url, description, aliases, closedOn} = this.form.getRawValue();
     this.dialogRef.close({
       name,
       url: url || null,
       description: description || null,
       aliases: aliases
         .split(',')
-        .map((alias) => alias.trim())
+        .map(alias => alias.trim())
         .filter(Boolean),
       closedOn: closedOn || null,
     });

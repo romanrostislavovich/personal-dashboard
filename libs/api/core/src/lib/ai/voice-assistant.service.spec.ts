@@ -1,4 +1,4 @@
-import { VoiceAssistantService } from './voice-assistant.service';
+import {VoiceAssistantService} from './voice-assistant.service';
 
 const transcribe = vi.fn();
 vi.mock('./openai-compatible.client', () => ({
@@ -6,26 +6,39 @@ vi.mock('./openai-compatible.client', () => ({
 }));
 
 describe('VoiceAssistantService', () => {
-  const audio = { data: Buffer.from('RIFF'), fileName: 'voice.wav', mimeType: 'audio/wav' };
+  const audio = {
+    data: Buffer.from('RIFF'),
+    fileName: 'voice.wav',
+    mimeType: 'audio/wav',
+  };
   const ask = vi.fn();
   let speech: object | null;
   const make = () =>
     new VoiceAssistantService(
-      { isConfigured: async () => true } as never,
-      { speech: async () => speech } as never,
-      { ask } as never,
-      { findById: async () => ({ locale: 'ru' }) } as never,
+      {isConfigured: async () => true} as never,
+      {speech: async () => speech} as never,
+      {ask} as never,
+      {findById: async () => ({locale: 'ru'})} as never,
     );
 
   beforeEach(() => {
-    speech = { baseUrl: 'https://api.openai.com/v1', model: 'whisper-1', apiKey: 'k' };
+    speech = {
+      baseUrl: 'https://api.openai.com/v1',
+      model: 'whisper-1',
+      apiKey: 'k',
+    };
     transcribe.mockReset();
     ask.mockReset();
   });
 
   it('asks the assistant what was said, for an answer to be heard', async () => {
-    transcribe.mockResolvedValue(' Люцифер, сколько я сегодня сидел в телефоне? ');
-    ask.mockResolvedValue({ reply: '📱 Три часа десять минут.', awaitsConfirmation: false });
+    transcribe.mockResolvedValue(
+      ' Люцифер, сколько я сегодня сидел в телефоне? ',
+    );
+    ask.mockResolvedValue({
+      reply: '📱 Три часа десять минут.',
+      awaitsConfirmation: false,
+    });
     const answer = await make().answer('user', audio);
     expect(transcribe.mock.calls[0][2]).toBe('ru');
     expect(ask.mock.calls[0][1]).toEqual({
@@ -55,7 +68,7 @@ describe('VoiceAssistantService', () => {
   it('says that nothing was heard instead of asking an empty question', async () => {
     transcribe.mockResolvedValue('  ');
     const answer = await make().answer('user', audio);
-    expect(answer).toMatchObject({ ok: false, question: '' });
+    expect(answer).toMatchObject({ok: false, question: ''});
     expect(answer.answer).not.toMatch(/\p{Extended_Pictographic}/u);
     expect(ask).not.toHaveBeenCalled();
   });
@@ -63,7 +76,7 @@ describe('VoiceAssistantService', () => {
 
 describe('speechModelOf', () => {
   it('keeps a speech model and replaces a chat one typed by mistake', async () => {
-    const { speechModelOf } = await import('./ai-connections.service');
+    const {speechModelOf} = await import('./ai-connections.service');
     expect(speechModelOf('whisper-1')).toBe('whisper-1');
     expect(speechModelOf('gpt-4o-transcribe')).toBe('gpt-4o-transcribe');
     expect(speechModelOf('gpt-6-luna')).toBe('gpt-4o-mini-transcribe');

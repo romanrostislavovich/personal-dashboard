@@ -11,8 +11,8 @@ import {
   Query,
   Res,
 } from '@nestjs/common';
-import type { Response } from 'express';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import type {Response} from 'express';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
 import {
   AssetInput,
   assetInputSchema,
@@ -37,18 +37,18 @@ import {
   CategoryModelState,
   CategorySuggestion,
 } from '@pd/contracts';
-import { BudgetsService } from './budgets/budgets.service';
-import { NetWorthService } from './worth/net-worth.service';
-import { SubscriptionsService } from './recurring/subscriptions.service';
-import { FinanceReportsService } from './reports/finance-reports.service';
-import { ReceiptsService } from './receipts/receipts.service';
-import { FinanceSettingsService } from './currency/finance-settings.service';
+import {BudgetsService} from './budgets/budgets.service';
+import {NetWorthService} from './worth/net-worth.service';
+import {SubscriptionsService} from './recurring/subscriptions.service';
+import {FinanceReportsService} from './reports/finance-reports.service';
+import {ReceiptsService} from './receipts/receipts.service';
+import {FinanceSettingsService} from './currency/finance-settings.service';
 import {
   RecurringPaymentsService,
   ValidRecurringPaymentInput,
 } from './recurring/recurring-payments.service';
-import { TransactionsService } from './transactions/transactions.service';
-import { CategoryModelService } from './categories/category-model.service';
+import {TransactionsService} from './transactions/transactions.service';
+import {CategoryModelService} from './categories/category-model.service';
 
 @Controller('finance')
 export class FinanceController {
@@ -74,7 +74,8 @@ export class FinanceController {
   @Put('settings')
   saveSettings(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(financeSettingsSchema)) input: FinanceSettingsInput,
+    @Body(new ZodValidationPipe(financeSettingsSchema))
+    input: FinanceSettingsInput,
   ) {
     return this.settings.save(user.id, input);
   }
@@ -84,7 +85,8 @@ export class FinanceController {
   @Get('transactions')
   listTransactions(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(transactionQuerySchema)) query: TransactionQuery,
+    @Query(new ZodValidationPipe(transactionQuerySchema))
+    query: TransactionQuery,
   ) {
     return this.transactions.list(user.id, query);
   }
@@ -92,7 +94,8 @@ export class FinanceController {
   @Get('summary')
   summary(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(transactionQuerySchema)) query: TransactionQuery,
+    @Query(new ZodValidationPipe(transactionQuerySchema))
+    query: TransactionQuery,
   ) {
     return this.transactions.summary(user.id, query);
   }
@@ -100,7 +103,8 @@ export class FinanceController {
   @Get('cash-flow')
   cashFlow(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(transactionQuerySchema)) query: TransactionQuery,
+    @Query(new ZodValidationPipe(transactionQuerySchema))
+    query: TransactionQuery,
   ) {
     return this.transactions.cashFlow(user.id, query);
   }
@@ -109,7 +113,8 @@ export class FinanceController {
   @Get('cash-flow/main')
   cashFlowInMain(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(transactionQuerySchema)) query: TransactionQuery,
+    @Query(new ZodValidationPipe(transactionQuerySchema))
+    query: TransactionQuery,
   ) {
     return this.transactions.cashFlowInMain(user.id, query);
   }
@@ -121,7 +126,7 @@ export class FinanceController {
     @Param('id', ParseUUIDPipe) id: string,
     @Res() response: Response,
   ): Promise<void> {
-    const { data, mimeType } = await this.receipts.photo(user.id, id);
+    const {data, mimeType} = await this.receipts.photo(user.id, id);
     response.setHeader('Content-Type', mimeType);
     response.setHeader('Cache-Control', 'private, max-age=86400');
     response.send(data);
@@ -149,7 +154,8 @@ export class FinanceController {
   @Post('transactions')
   createTransaction(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(transactionInputSchema)) input: TransactionInput,
+    @Body(new ZodValidationPipe(transactionInputSchema))
+    input: TransactionInput,
   ) {
     return this.transactions.create(user.id, input);
   }
@@ -158,14 +164,18 @@ export class FinanceController {
   updateTransaction(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(transactionInputSchema)) input: TransactionInput,
+    @Body(new ZodValidationPipe(transactionInputSchema))
+    input: TransactionInput,
   ) {
     return this.transactions.update(user.id, id, input);
   }
 
   @Delete('transactions/:id')
   @HttpCode(204)
-  removeTransaction(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeTransaction(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.transactions.remove(user.id, id);
   }
 
@@ -179,7 +189,8 @@ export class FinanceController {
   @Post('recurring-payments')
   createRecurring(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(recurringPaymentInputSchema)) input: ValidRecurringPaymentInput,
+    @Body(new ZodValidationPipe(recurringPaymentInputSchema))
+    input: ValidRecurringPaymentInput,
   ) {
     return this.recurring.create(user.id, input);
   }
@@ -188,14 +199,18 @@ export class FinanceController {
   updateRecurring(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(recurringPaymentInputSchema)) input: ValidRecurringPaymentInput,
+    @Body(new ZodValidationPipe(recurringPaymentInputSchema))
+    input: ValidRecurringPaymentInput,
   ) {
     return this.recurring.update(user.id, id, input);
   }
 
   @Delete('recurring-payments/:id')
   @HttpCode(204)
-  removeRecurring(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeRecurring(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.recurring.remove(user.id, id);
   }
 
@@ -211,7 +226,8 @@ export class FinanceController {
   contractLetter(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(contractLetterInputSchema)) input: ContractLetterInput,
+    @Body(new ZodValidationPipe(contractLetterInputSchema))
+    input: ContractLetterInput,
   ) {
     return this.subscriptions.letter(user.id, id, input);
   }
@@ -269,7 +285,10 @@ export class FinanceController {
 
   @Delete('assets/:id')
   @HttpCode(204)
-  removeAsset(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeAsset(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.worth.removeAsset(user.id, id);
   }
 
@@ -286,7 +305,8 @@ export class FinanceController {
   @HttpCode(204)
   dismissSubscription(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(subscriptionDismissSchema)) body: SubscriptionDismiss,
+    @Body(new ZodValidationPipe(subscriptionDismissSchema))
+    body: SubscriptionDismiss,
   ) {
     return this.subscriptions.dismiss(user.id, body.key);
   }
@@ -297,17 +317,19 @@ export class FinanceController {
   @Get('reports')
   async report(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(financeReportQuerySchema)) query: FinanceReportQuery,
+    @Query(new ZodValidationPipe(financeReportQuerySchema))
+    query: FinanceReportQuery,
   ) {
-    return { report: await this.reports.get(user.id, query.month) };
+    return {report: await this.reports.get(user.id, query.month)};
   }
 
   /** Writes (or writes again) the review of a month. */
   @Post('reports')
   async writeReport(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(financeReportQuerySchema)) body: FinanceReportQuery,
+    @Body(new ZodValidationPipe(financeReportQuerySchema))
+    body: FinanceReportQuery,
   ) {
-    return { report: await this.reports.generate(user.id, body.month) };
+    return {report: await this.reports.generate(user.id, body.month)};
   }
 }

@@ -1,4 +1,4 @@
-import { Clipboard } from '@angular/cdk/clipboard';
+import {Clipboard} from '@angular/cdk/clipboard';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,12 +11,12 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   applyFix,
   pieces,
@@ -25,9 +25,9 @@ import {
   WritingIssue,
   WritingRewriteMode,
 } from '@pd/contracts';
-import { errorStatus } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { WritingApi } from './writing.api';
+import {errorStatus} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {WritingApi} from './writing.api';
 
 /** A pause in typing this long and the text is checked. */
 const CHECK_AFTER_MS = 800;
@@ -84,7 +84,7 @@ const CHECK_AFTER_MS = 800;
             @if (error(); as key) {
               <span class="error">{{ key | transloco }}</span>
             } @else if (text().trim()) {
-              {{ 'writing.editor.found' | transloco: { count: issues().length } }}
+              {{ 'writing.editor.found' | transloco: {count: issues().length} }}
               @if (language(); as code) {
                 · {{ code }}
               }
@@ -119,7 +119,9 @@ const CHECK_AFTER_MS = 800;
     @if (rewritten(); as proposal) {
       <mat-card appearance="outlined" class="proposal">
         <mat-card-header>
-          <mat-card-title>✨ {{ 'writing.rewrite.title' | transloco }}</mat-card-title>
+          <mat-card-title
+            >✨ {{ 'writing.rewrite.title' | transloco }}</mat-card-title
+          >
         </mat-card-header>
         <mat-card-content>
           <p class="proposal-text">{{ proposal }}</p>
@@ -143,7 +145,10 @@ const CHECK_AFTER_MS = 800;
         <mat-card-content>
           <ul class="issues">
             @for (issue of issues(); track issue.offset + ':' + issue.ruleId) {
-              <li [class.active]="issue === active()" (mouseenter)="active.set(issue)">
+              <li
+                [class.active]="issue === active()"
+                (mouseenter)="active.set(issue)"
+              >
                 <span class="kind" [class]="issue.kind">
                   {{ 'writing.kinds.' + issue.kind | transloco }}
                 </span>
@@ -151,17 +156,31 @@ const CHECK_AFTER_MS = 800;
                   <span class="word">{{ wordOf(issue) }}</span>
                   <span class="message">{{ issue.message }}</span>
                   <span class="fixes">
-                    @for (replacement of issue.replacements; track replacement) {
-                      <button matButton="tonal" (click)="fix(issue, replacement)">
-                        {{ replacement || ('writing.editor.remove' | transloco) }}
+                    @for (
+                      replacement of issue.replacements;
+                      track replacement
+                    ) {
+                      <button
+                        matButton="tonal"
+                        (click)="fix(issue, replacement)"
+                      >
+                        {{
+                          replacement || ('writing.editor.remove' | transloco)
+                        }}
                       </button>
                     }
                     @if (issue.kind === 'spelling') {
-                      <button matButton (click)="ignored.emit({ word: wordOf(issue) })">
+                      <button
+                        matButton
+                        (click)="ignored.emit({word: wordOf(issue)})"
+                      >
                         {{ 'writing.editor.addWord' | transloco }}
                       </button>
                     }
-                    <button matButton (click)="ignored.emit({ ruleId: issue.ruleId })">
+                    <button
+                      matButton
+                      (click)="ignored.emit({ruleId: issue.ruleId})"
+                    >
                       {{ 'writing.editor.neverShow' | transloco }}
                     </button>
                   </span>
@@ -181,10 +200,12 @@ export class WritingEditorComponent {
 
   readonly config = input.required<WritingConfig>();
   /** A word for the dictionary or a rule to switch off: the page saves it and checks again. */
-  readonly ignored = output<{ word: string } | { ruleId: string }>();
+  readonly ignored = output<{word: string} | {ruleId: string}>();
 
-  private readonly field = viewChild.required<ElementRef<HTMLTextAreaElement>>('field');
-  private readonly marksBox = viewChild.required<ElementRef<HTMLDivElement>>('marks');
+  private readonly field =
+    viewChild.required<ElementRef<HTMLTextAreaElement>>('field');
+  private readonly marksBox =
+    viewChild.required<ElementRef<HTMLDivElement>>('marks');
 
   protected readonly modes = WRITING_REWRITE_MODES;
   protected readonly text = signal('');
@@ -196,7 +217,9 @@ export class WritingEditorComponent {
   protected readonly rewritten = signal<string | null>(null);
   /** A translation key. */
   protected readonly error = signal<string | null>(null);
-  protected readonly marked = computed(() => pieces(this.text(), this.issues()));
+  protected readonly marked = computed(() =>
+    pieces(this.text(), this.issues()),
+  );
 
   private timer: ReturnType<typeof setTimeout> | null = null;
   /** Only the answer to the latest check counts. */
@@ -222,7 +245,8 @@ export class WritingEditorComponent {
   }
 
   protected syncScroll(): void {
-    this.marksBox().nativeElement.scrollTop = this.field().nativeElement.scrollTop;
+    this.marksBox().nativeElement.scrollTop =
+      this.field().nativeElement.scrollTop;
   }
 
   /** The mistake under the caret is the one shown in the list. */
@@ -230,7 +254,7 @@ export class WritingEditorComponent {
     const caret = this.field().nativeElement.selectionStart;
     this.active.set(
       this.issues().find(
-        (issue) => caret >= issue.offset && caret <= issue.offset + issue.length,
+        issue => caret >= issue.offset && caret <= issue.offset + issue.length,
       ) ?? null,
     );
   }
@@ -250,7 +274,9 @@ export class WritingEditorComponent {
     this.rewriting.set(true);
     this.error.set(null);
     try {
-      const { text } = await firstValueFrom(this.api.rewrite({ text: this.text(), mode }));
+      const {text} = await firstValueFrom(
+        this.api.rewrite({text: this.text(), mode}),
+      );
       this.rewritten.set(text);
     } catch {
       this.error.set('writing.errors.rewrite');
@@ -273,7 +299,7 @@ export class WritingEditorComponent {
     const number = ++this.checkNumber;
     this.checking.set(true);
     try {
-      const result = await firstValueFrom(this.api.check({ text }));
+      const result = await firstValueFrom(this.api.check({text}));
       if (number === this.checkNumber && text === this.text()) {
         this.issues.set(result.issues);
         this.language.set(result.language);
@@ -282,7 +308,9 @@ export class WritingEditorComponent {
     } catch (error) {
       if (number === this.checkNumber) {
         this.error.set(
-          errorStatus(error) === 429 ? 'writing.errors.tooOften' : 'writing.errors.check',
+          errorStatus(error) === 429
+            ? 'writing.errors.tooOften'
+            : 'writing.errors.check',
         );
       }
     } finally {

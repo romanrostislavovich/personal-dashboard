@@ -10,5 +10,5 @@ export interface TrashItem {
   /** A name, a category, a day… `null` if the row has none. */
   label: string | null;
   rows: number;
-  parts: { table: string; count: number }[];
+  parts: {table: string; count: number}[];
 }

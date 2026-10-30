@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
+import {ChangeDetectionStrategy, Component, input} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
 
 /**
  * A section with nothing in it yet: what it is for and the one thing to do first, instead of a

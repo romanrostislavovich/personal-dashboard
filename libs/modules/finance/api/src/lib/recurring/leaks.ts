@@ -1,5 +1,10 @@
-import { KeyDate, LocalDate, SubscriptionLeak, SubscriptionSuggestion } from '@pd/contracts';
-import { chargeKey, ExpenseRow } from './subscription-rules';
+import {
+  KeyDate,
+  LocalDate,
+  SubscriptionLeak,
+  SubscriptionSuggestion,
+} from '@pd/contracts';
+import {chargeKey, ExpenseRow} from './subscription-rules';
 
 /*
  * Where the money of the subscriptions leaks, from the transactions alone: a price that crept
@@ -8,7 +13,7 @@ import { chargeKey, ExpenseRow } from './subscription-rules';
  * own currency (`yearly`); the service turns that into the main one.
  */
 
-export type FoundLeak = Omit<SubscriptionLeak, 'perYear'> & { yearly: number };
+export type FoundLeak = Omit<SubscriptionLeak, 'perYear'> & {yearly: number};
 
 /** A rise smaller than this is rounding or a currency rate, not a new price. */
 const RISE = 1.02;
@@ -33,7 +38,7 @@ export interface LeakPayment {
   period: 'month' | 'year';
   isActive: boolean;
   /** The earlier prices, the newest first. */
-  priceHistory: { amount: number; changedOn: LocalDate }[];
+  priceHistory: {amount: number; changedOn: LocalDate}[];
 }
 
 export interface LeakInput {
@@ -71,10 +76,16 @@ export function findLeaks(input: LeakInput): FoundLeak[] {
 /** A recorded payment whose price was raised within the year: the history tells by how much. */
 function recordedRises(payments: LeakPayment[], today: LocalDate): FoundLeak[] {
   const yearAgo = monthsBefore(today, RISE_MONTHS);
-  return payments.flatMap((payment) => {
-    const changes = payment.priceHistory.filter((price) => price.changedOn >= yearAgo);
+  return payments.flatMap(payment => {
+    const changes = payment.priceHistory.filter(
+      price => price.changedOn >= yearAgo,
+    );
     const oldest = changes.at(-1);
-    if (!payment.isActive || !oldest || payment.amount <= oldest.amount * RISE) {
+    if (
+      !payment.isActive ||
+      !oldest ||
+      payment.amount <= oldest.amount * RISE
+    ) {
       return [];
     }
     const perCharge = payment.amount - oldest.amount;
@@ -98,13 +109,19 @@ function recordedRises(payments: LeakPayment[], today: LocalDate): FoundLeak[] {
  * A charge taken once a month whose price went up over the year, seen in the transactions (a
  * bank, a statement) and not recorded as a payment: 39.99 in March, 45.99 in October.
  */
-function chargeRises(rows: ExpenseRow[], payments: LeakPayment[], today: LocalDate): FoundLeak[] {
+function chargeRises(
+  rows: ExpenseRow[],
+  payments: LeakPayment[],
+  today: LocalDate,
+): FoundLeak[] {
   const since = monthsBefore(today, RISE_MONTHS);
-  const known = payments.map((payment) => chargeKey(payment.name)).filter(Boolean);
+  const known = payments
+    .map(payment => chargeKey(payment.name))
+    .filter(Boolean);
   const found: FoundLeak[] = [];
-  for (const charges of monthly(rows.filter((row) => row.occurredOn >= since))) {
+  for (const charges of monthly(rows.filter(row => row.occurredOn >= since))) {
     const key = chargeKey(charges[0].note);
-    if (known.some((name) => key.includes(name) || name.includes(key))) {
+    if (known.some(name => key.includes(name) || name.includes(key))) {
       continue;
     }
     const first = charges[0];
@@ -146,16 +163,20 @@ function doubleCharges(rows: ExpenseRow[], today: LocalDate): FoundLeak[] {
       byMonth.set(month, [...(byMonth.get(month) ?? []), charge]);
     }
     const months = [...byMonth.values()];
-    const once = months.filter((month) => month.length === 1);
-    if (once.length < 2 || months.some((month) => month.length > 2)) {
+    const once = months.filter(month => month.length === 1);
+    if (once.length < 2 || months.some(month => month.length > 2)) {
       continue;
     }
-    for (const month of months.filter((one) => one.length === 2)) {
+    for (const month of months.filter(one => one.length === 2)) {
       const [a, b] = month;
-      const close = Math.max(a.amount, b.amount) <= Math.min(a.amount, b.amount) * SAME_AMOUNT;
-      const usual = once.map((one) => one[0].amount);
+      const close =
+        Math.max(a.amount, b.amount) <=
+        Math.min(a.amount, b.amount) * SAME_AMOUNT;
+      const usual = once.map(one => one[0].amount);
       const likeUsual = usual.some(
-        (amount) => Math.max(amount, a.amount) <= Math.min(amount, a.amount) * SAME_AMOUNT,
+        amount =>
+          Math.max(amount, a.amount) <=
+          Math.min(amount, a.amount) * SAME_AMOUNT,
       );
       if (!close || !likeUsual || b.occurredOn < recent) {
         continue;
@@ -177,10 +198,13 @@ function doubleCharges(rows: ExpenseRow[], today: LocalDate): FoundLeak[] {
   return found;
 }
 
-function unusedPayments(payments: LeakPayment[], unused: string[]): FoundLeak[] {
+function unusedPayments(
+  payments: LeakPayment[],
+  unused: string[],
+): FoundLeak[] {
   return payments
-    .filter((payment) => payment.isActive && unused.includes(payment.id))
-    .map((payment) => ({
+    .filter(payment => payment.isActive && unused.includes(payment.id))
+    .map(payment => ({
       kind: 'unused',
       name: payment.name,
       paymentId: payment.id,
@@ -198,11 +222,13 @@ function renewals(dates: KeyDate[], today: LocalDate): FoundLeak[] {
   const until = toDate(Date.parse(today) + RENEWAL_DAYS * 86_400_000);
   return dates
     .filter(
-      (date) =>
-        (date.kind === 'renewal' || date.kind === 'cancel-by' || date.kind === 'price-lock') &&
+      date =>
+        (date.kind === 'renewal' ||
+          date.kind === 'cancel-by' ||
+          date.kind === 'price-lock') &&
         date.date <= until,
     )
-    .map((date) => ({
+    .map(date => ({
       kind: 'renewal',
       name: date.name,
       paymentId: date.paymentId,
@@ -227,15 +253,15 @@ function groups(rows: ExpenseRow[]): ExpenseRow[][] {
     const group = `${key}\u0000${row.currency}`;
     found.set(group, [...(found.get(group) ?? []), row]);
   }
-  return [...found.values()].map((charges) =>
+  return [...found.values()].map(charges =>
     charges.sort((a, b) => a.occurredOn.localeCompare(b.occurredOn)),
   );
 }
 
 /** The groups charged once a month, month after month (a gap of a month at most). */
 function monthly(rows: ExpenseRow[]): ExpenseRow[][] {
-  return groups(rows).filter((charges) => {
-    const months = charges.map((charge) => monthIndex(charge.occurredOn));
+  return groups(rows).filter(charges => {
+    const months = charges.map(charge => monthIndex(charge.occurredOn));
     return (
       new Set(months).size === months.length &&
       months.every((month, i) => i === 0 || month - months[i - 1] <= 2)

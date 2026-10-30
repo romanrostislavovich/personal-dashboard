@@ -1,6 +1,6 @@
-import { WorthItem } from '@pd/contracts';
-import { describe, expect, it } from 'vitest';
-import { burnPeriod, burnRate, monthAgo, runway, totals } from './net-worth';
+import {WorthItem} from '@pd/contracts';
+import {describe, expect, it} from 'vitest';
+import {burnPeriod, burnRate, monthAgo, runway, totals} from './net-worth';
 
 const item = (fields: Partial<WorthItem>): WorthItem => ({
   source: 'manual',
@@ -19,19 +19,25 @@ describe('totals', () => {
   it('takes the debts off the worth but not off the money at hand', () => {
     expect(
       totals([
-        item({ inMain: 5000 }),
-        item({ kind: 'property', inMain: 300_000, liquid: false }),
-        item({ kind: 'debt', inMain: -200_000, liquid: false }),
-        item({ inMain: null }),
+        item({inMain: 5000}),
+        item({kind: 'property', inMain: 300_000, liquid: false}),
+        item({kind: 'debt', inMain: -200_000, liquid: false}),
+        item({inMain: null}),
       ]),
-    ).toEqual({ total: 105_000, liquid: 5000 });
+    ).toEqual({total: 105_000, liquid: 5000});
   });
 });
 
 describe('burnPeriod', () => {
   it('is the three full months before this one', () => {
-    expect(burnPeriod('2026-10-19')).toEqual({ from: '2026-07-01', to: '2026-09-30' });
-    expect(burnPeriod('2026-01-05')).toEqual({ from: '2025-10-01', to: '2025-12-31' });
+    expect(burnPeriod('2026-10-19')).toEqual({
+      from: '2026-07-01',
+      to: '2026-09-30',
+    });
+    expect(burnPeriod('2026-01-05')).toEqual({
+      from: '2025-10-01',
+      to: '2025-12-31',
+    });
   });
 });
 
@@ -42,8 +48,8 @@ describe('burnRate', () => {
       ['2026-08-20', 500],
       ['2026-09-10', 2500],
     ]);
-    expect(burnRate(byDay)).toEqual({ perMonth: 2000, months: 2 });
-    expect(burnRate(new Map())).toEqual({ perMonth: 0, months: 0 });
+    expect(burnRate(byDay)).toEqual({perMonth: 2000, months: 2});
+    expect(burnRate(new Map())).toEqual({perMonth: 0, months: 0});
   });
 });
 
@@ -58,9 +64,9 @@ describe('runway', () => {
 describe('monthAgo', () => {
   it('takes the newest point at least 30 days old', () => {
     const history = [
-      { day: '2026-08-01', total: 1 },
-      { day: '2026-09-18', total: 2 },
-      { day: '2026-10-01', total: 3 },
+      {day: '2026-08-01', total: 1},
+      {day: '2026-09-18', total: 2},
+      {day: '2026-10-01', total: 3},
     ];
     expect(monthAgo(history, '2026-10-19')).toBe(2);
     expect(monthAgo(history.slice(2), '2026-10-19')).toBeNull();

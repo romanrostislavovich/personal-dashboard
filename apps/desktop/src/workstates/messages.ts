@@ -51,7 +51,8 @@ export function workstateMessages(locale: string) {
         project: 'Project folder',
         branch: 'Branch (reference only, no checkout)',
         ide: 'Locally selected IDE',
-        folder: 'No IDE selected: folders will open in File Explorer, not an IDE.',
+        folder:
+          'No IDE selected: folders will open in File Explorer, not an IDE.',
         noText: 'Window titles, typed text and browser tabs are not collected.',
         failed:
           'Action not completed. Check telemetry consent, active tracking and the local path. Pause, lock, private windows or account changes cancel the operation.',

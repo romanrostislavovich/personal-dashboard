@@ -1,5 +1,5 @@
-import { ConsoleLogger } from '@nestjs/common';
-import { SystemLogLevel } from '@pd/contracts';
+import {ConsoleLogger} from '@nestjs/common';
+import {SystemLogLevel} from '@pd/contracts';
 
 export interface LoggedProblem {
   level: SystemLogLevel;
@@ -38,7 +38,9 @@ export class SystemLogger extends ConsoleLogger {
    * always the last string, a stack trace is a string before it.
    */
   private keep(level: SystemLogLevel, message: unknown, rest: unknown[]): void {
-    const strings = rest.filter((item): item is string => typeof item === 'string');
+    const strings = rest.filter(
+      (item): item is string => typeof item === 'string',
+    );
     const source = strings.pop() ?? this.context ?? 'Application';
     const error = message instanceof Error ? message : null;
     try {

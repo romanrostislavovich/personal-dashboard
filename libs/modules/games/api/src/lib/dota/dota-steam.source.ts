@@ -1,11 +1,11 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
-import { and, desc, eq, isNull } from 'drizzle-orm';
-import { dotaMatches, gameAccounts, GameAccountRow } from '../games.schema';
-import { SteamDotaClient, SteamListedMatch } from '../steam/steam-dota.client';
-import { wholeHistory } from '../steam/steam-history';
-import { SteamKeyError, SteamRateLimitError } from '../steam/steam.client';
-import { DotaHeroesService } from './dota-heroes.service';
+import {Inject, Injectable, Logger} from '@nestjs/common';
+import {DB, Database} from '@pd/api-core';
+import {and, desc, eq, isNull} from 'drizzle-orm';
+import {dotaMatches, gameAccounts, GameAccountRow} from '../games.schema';
+import {SteamDotaClient, SteamListedMatch} from '../steam/steam-dota.client';
+import {wholeHistory} from '../steam/steam-history';
+import {SteamKeyError, SteamRateLimitError} from '../steam/steam.client';
+import {DotaHeroesService} from './dota-heroes.service';
 
 /** A pause between the requests of a history walk: Steam asks for no more than one a second. */
 const HISTORY_PAUSE_MS = 1100;
@@ -41,18 +41,18 @@ export class DotaSteamSource {
   async syncList(
     account: GameAccountRow,
     steam: SteamDotaClient,
-    { full = false } = {},
+    {full = false} = {},
   ): Promise<number> {
     const accountId = Number(account.externalId);
     const walkAll = full || !account.steamHistorySyncedAt;
     const matches = walkAll
       ? await wholeHistory(
-          async (query) => {
-            await new Promise((resolve) => setTimeout(resolve, HISTORY_PAUSE_MS));
+          async query => {
+            await new Promise(resolve => setTimeout(resolve, HISTORY_PAUSE_MS));
             return steam.getMatchHistory(accountId, query);
           },
           () => this.heroes.ids(),
-          (part) => this.saveListed(account.id, part),
+          part => this.saveListed(account.id, part),
         )
       : (await steam.getMatchHistory(accountId)).matches;
     if (!walkAll) {
@@ -61,7 +61,7 @@ export class DotaSteamSource {
     if (walkAll) {
       await this.db
         .update(gameAccounts)
-        .set({ steamHistorySyncedAt: new Date() })
+        .set({steamHistorySyncedAt: new Date()})
         .where(eq(gameAccounts.id, account.id));
     }
     return matches.length;
@@ -71,7 +71,10 @@ export class DotaSteamSource {
    * Fills in the result and the numbers of the matches that do not have them yet, the newest
    * first. A match Steam has no details for is marked so it is not asked for again.
    */
-  async fillDetails(account: GameAccountRow, steam: SteamDotaClient): Promise<void> {
+  async fillDetails(
+    account: GameAccountRow,
+    steam: SteamDotaClient,
+  ): Promise<void> {
     if (this.filling.has(account.id)) {
       return;
     }
@@ -79,9 +82,15 @@ export class DotaSteamSource {
     try {
       const m = dotaMatches;
       const pending = await this.db
-        .select({ matchId: m.matchId })
+        .select({matchId: m.matchId})
         .from(m)
-        .where(and(eq(m.accountId, account.id), isNull(m.won), isNull(m.detailsCheckedAt)))
+        .where(
+          and(
+            eq(m.accountId, account.id),
+            isNull(m.won),
+            isNull(m.detailsCheckedAt),
+          ),
+        )
         .orderBy(desc(m.startedAt))
         .limit(DETAILS_PER_RUN);
       let failures = 0;
@@ -93,7 +102,7 @@ export class DotaSteamSource {
         const results = await Promise.allSettled(
           pending
             .slice(i, i + DETAILS_CONCURRENCY)
-            .map(({ matchId }) => this.fillOne(account, steam, matchId)),
+            .map(({matchId}) => this.fillOne(account, steam, matchId)),
         );
         for (const result of results) {
           if (result.status === 'fulfilled') {
@@ -102,7 +111,9 @@ export class DotaSteamSource {
             result.reason instanceof SteamRateLimitError ||
             result.reason instanceof SteamKeyError
           ) {
-            this.logger.warn(`Dota match details paused: ${result.reason.message}`);
+            this.logger.warn(
+              `Dota match details paused: ${result.reason.message}`,
+            );
             return;
           } else {
             failures++;
@@ -120,21 +131,31 @@ export class DotaSteamSource {
     steam: SteamDotaClient,
     matchId: number,
   ): Promise<void> {
-    const details = await steam.getMatchDetails(matchId, Number(account.externalId));
+    const details = await steam.getMatchDetails(
+      matchId,
+      Number(account.externalId),
+    );
     const m = dotaMatches;
     await this.db
       .update(m)
       // Steam answered: with the details, or with "there are none" — either way it was asked.
-      .set({ ...(details ?? {}), detailsCheckedAt: new Date() })
+      .set({...(details ?? {}), detailsCheckedAt: new Date()})
       .where(and(eq(m.accountId, account.id), eq(m.matchId, matchId)));
   }
 
   /** New matches only: a saved one keeps whatever is already known about it. */
-  private async saveListed(accountId: string, matches: SteamListedMatch[]): Promise<void> {
+  private async saveListed(
+    accountId: string,
+    matches: SteamListedMatch[],
+  ): Promise<void> {
     for (let i = 0; i < matches.length; i += INSERT_CHUNK) {
       await this.db
         .insert(dotaMatches)
-        .values(matches.slice(i, i + INSERT_CHUNK).map((match) => ({ accountId, ...match })))
+        .values(
+          matches
+            .slice(i, i + INSERT_CHUNK)
+            .map(match => ({accountId, ...match})),
+        )
         .onConflictDoNothing();
     }
   }

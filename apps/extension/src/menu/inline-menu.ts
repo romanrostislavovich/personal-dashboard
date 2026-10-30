@@ -1,5 +1,5 @@
-import { ask, ErrorCode, ExtensionError, MenuState } from '../shared/messages';
-import { field, h, t } from '../popup/dom';
+import {ask, ErrorCode, ExtensionError, MenuState} from '../shared/messages';
+import {field, h, t} from '../popup/dom';
 
 /*
  * The menu under a login field: a page of the extension in a frame of the web page
@@ -29,9 +29,9 @@ void render();
 async function render(): Promise<void> {
   let state: MenuState;
   try {
-    state = await ask<MenuState>({ type: 'menu-state', token });
+    state = await ask<MenuState>({type: 'menu-state', token});
   } catch (error) {
-    show(h('p', { class: 'error', text: errorText(error) }));
+    show(h('p', {class: 'error', text: errorText(error)}));
     return;
   }
   show(header(state.site), body(state));
@@ -60,9 +60,11 @@ function loginList(state: MenuState): HTMLElement {
   }
   return h(
     'div',
-    { class: 'list' },
-    ...state.logins.map((login) =>
-      row(login.title, login.username, () => ask({ type: 'menu-fill', token, id: login.id })),
+    {class: 'list'},
+    ...state.logins.map(login =>
+      row(login.title, login.username, () =>
+        ask({type: 'menu-fill', token, id: login.id}),
+      ),
     ),
   );
 }
@@ -73,9 +75,9 @@ function suggestionList(suggestions: string[]): HTMLElement {
   }
   return h(
     'div',
-    { class: 'list' },
-    ...suggestions.map((value) =>
-      row(value, '', () => ask({ type: 'menu-fill-text', token, value })),
+    {class: 'list'},
+    ...suggestions.map(value =>
+      row(value, '', () => ask({type: 'menu-fill-text', token, value})),
     ),
   );
 }
@@ -83,9 +85,9 @@ function suggestionList(suggestions: string[]): HTMLElement {
 function strongPassword(): HTMLElement {
   return h(
     'div',
-    { class: 'list' },
+    {class: 'list'},
     row(t('menuStrongPassword'), t('menuStrongPasswordHint'), () =>
-      ask({ type: 'menu-generate', token }),
+      ask({type: 'menu-generate', token}),
     ),
   );
 }
@@ -97,17 +99,21 @@ function unlockForm(): HTMLElement {
     required: true,
     autofocus: true,
   });
-  const error = h('p', { class: 'error' });
-  const submit = h('button', { class: 'button filled', type: 'submit', text: t('unlock') });
+  const error = h('p', {class: 'error'});
+  const submit = h('button', {
+    class: 'button filled',
+    type: 'submit',
+    text: t('unlock'),
+  });
   return h(
     'form',
     {
       class: 'unlock',
-      onSubmit: (event) => {
+      onSubmit: event => {
         event.preventDefault();
         submit.disabled = true;
         error.textContent = '';
-        void ask({ type: 'menu-unlock', token, masterPassword: master.value })
+        void ask({type: 'menu-unlock', token, masterPassword: master.value})
           .then(() => render())
           .catch((failure: unknown) => {
             error.textContent = errorText(failure);
@@ -122,7 +128,11 @@ function unlockForm(): HTMLElement {
   );
 }
 
-function row(title: string, sub: string, action: () => Promise<unknown>): HTMLElement {
+function row(
+  title: string,
+  sub: string,
+  action: () => Promise<unknown>,
+): HTMLElement {
   return h(
     'button',
     {
@@ -134,21 +144,21 @@ function row(title: string, sub: string, action: () => Promise<unknown>): HTMLEl
           return;
         }
         void action().catch((error: unknown) =>
-          show(h('p', { class: 'error', text: errorText(error) })),
+          show(h('p', {class: 'error', text: errorText(error)})),
         );
       },
     },
-    h('span', { class: 'title', text: title }),
-    sub ? h('span', { class: 'sub', text: sub }) : null,
+    h('span', {class: 'title', text: title}),
+    sub ? h('span', {class: 'sub', text: sub}) : null,
   );
 }
 
 function header(site: string): HTMLElement {
-  return h('div', { class: 'header', text: `Personal Dashboard · ${site}` });
+  return h('div', {class: 'header', text: `Personal Dashboard · ${site}`});
 }
 
 function note(text: string, action?: HTMLElement): HTMLElement {
-  return h('div', { class: 'note' }, h('p', { text }), action);
+  return h('div', {class: 'note'}, h('p', {text}), action);
 }
 
 function openExtension(): HTMLElement {
@@ -158,7 +168,7 @@ function openExtension(): HTMLElement {
     text: t('menuOpenExtension'),
     onClick: () => {
       if (pressCounts()) {
-        void ask({ type: 'menu-open-popup' });
+        void ask({type: 'menu-open-popup'});
       } else {
         notCounted();
       }
@@ -171,7 +181,8 @@ function show(...nodes: HTMLElement[]): void {
 }
 
 function errorText(error: unknown): string {
-  const code: ErrorCode = error instanceof ExtensionError ? error.code : 'failed';
+  const code: ErrorCode =
+    error instanceof ExtensionError ? error.code : 'failed';
   return t(`error_${code.replace(/-/g, '_')}`);
 }
 
@@ -179,23 +190,27 @@ function errorText(error: unknown): string {
 function notCounted(): void {
   let hint = app.querySelector<HTMLElement>('.not-counted');
   if (!hint) {
-    hint = h('p', { class: 'error not-counted', text: t('menuPressAgain') });
+    hint = h('p', {class: 'error not-counted', text: t('menuPressAgain')});
     app.append(hint);
   }
 }
 
 /** The menu has been fully visible, uncovered and opaque, long enough. */
 function pressCounts(): boolean {
-  return visibleSince !== null && Date.now() - visibleSince >= VISIBLE_BEFORE_PRESS_MS;
+  return (
+    visibleSince !== null &&
+    Date.now() - visibleSince >= VISIBLE_BEFORE_PRESS_MS
+  );
 }
 
 function watchVisibility(): void {
   const observer = new IntersectionObserver(
-    (entries) => {
+    entries => {
       for (const entry of entries) {
         // A browser without v2 tells only that it is in the viewport; all of it must be.
         const visible =
-          ((entry as IntersectionObserverEntry & { isVisible?: boolean }).isVisible ??
+          ((entry as IntersectionObserverEntry & {isVisible?: boolean})
+            .isVisible ??
             entry.isIntersecting) &&
           entry.intersectionRatio >= FULLY_VISIBLE;
         visibleSince = visible ? (visibleSince ?? Date.now()) : null;
@@ -206,13 +221,18 @@ function watchVisibility(): void {
     },
     // Several steps, not only 1: with a fractional scale the share may stay just under 1, and
     // the browser would never report the menu again.
-    { threshold: [0, 0.5, 0.9, 1], trackVisibility: true, delay: 100 } as IntersectionObserverInit,
+    {
+      threshold: [0, 0.5, 0.9, 1],
+      trackVisibility: true,
+      delay: 100,
+    } as IntersectionObserverInit,
   );
   observer.observe(document.body);
 }
 
 /** The frame around it is sized by the page: it is told the height of the menu, nothing else. */
 function reportHeight(): void {
-  const tell = () => parent.postMessage({ pdMenuHeight: document.body.scrollHeight }, '*');
+  const tell = () =>
+    parent.postMessage({pdMenuHeight: document.body.scrollHeight}, '*');
   new ResizeObserver(tell).observe(document.body);
 }

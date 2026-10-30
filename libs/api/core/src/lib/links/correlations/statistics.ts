@@ -9,11 +9,16 @@ export function mean(values: number[]): number {
 
 /** Ranks from 1; equal values share the average of their ranks. */
 export function ranks(values: number[]): number[] {
-  const order = values.map((value, index) => ({ value, index })).sort((a, b) => a.value - b.value);
+  const order = values
+    .map((value, index) => ({value, index}))
+    .sort((a, b) => a.value - b.value);
   const result = new Array<number>(values.length);
   for (let start = 0; start < order.length;) {
     let end = start;
-    while (end + 1 < order.length && order[end + 1].value === order[start].value) {
+    while (
+      end + 1 < order.length &&
+      order[end + 1].value === order[start].value
+    ) {
       end++;
     }
     const rank = (start + end) / 2 + 1;
@@ -96,10 +101,10 @@ export function tTwoSidedP(t: number, df: number): number {
 
 /** Benjamini–Hochberg: each p-value as the false discovery rate it would take to accept it. */
 export function benjaminiHochberg(ps: number[]): number[] {
-  const order = ps.map((p, index) => ({ p, index })).sort((a, b) => b.p - a.p);
+  const order = ps.map((p, index) => ({p, index})).sort((a, b) => b.p - a.p);
   const q = new Array<number>(ps.length);
   let smallest = 1;
-  order.forEach(({ p, index }, position) => {
+  order.forEach(({p, index}, position) => {
     const rank = ps.length - position;
     smallest = Math.min(smallest, (p * ps.length) / rank);
     q[index] = smallest;
@@ -126,19 +131,23 @@ export function leastSquares(x: number[][], y: number[]): LeastSquares | null {
   if (n <= k + 1) {
     return null;
   }
-  const rows = x.map((row) => [1, ...row]);
+  const rows = x.map(row => [1, ...row]);
   const size = k + 1;
-  const xtx = Array.from({ length: size }, (_, i) =>
-    Array.from({ length: size }, (_, j) => rows.reduce((sum, row) => sum + row[i] * row[j], 0)),
+  const xtx = Array.from({length: size}, (_, i) =>
+    Array.from({length: size}, (_, j) =>
+      rows.reduce((sum, row) => sum + row[i] * row[j], 0),
+    ),
   );
   const inverse = invert(xtx);
   if (!inverse) {
     return null;
   }
-  const xty = Array.from({ length: size }, (_, i) =>
+  const xty = Array.from({length: size}, (_, i) =>
     rows.reduce((sum, row, r) => sum + row[i] * y[r], 0),
   );
-  const beta = inverse.map((row) => row.reduce((sum, value, j) => sum + value * xty[j], 0));
+  const beta = inverse.map(row =>
+    row.reduce((sum, value, j) => sum + value * xty[j], 0),
+  );
   const my = mean(y);
   let rss = 0;
   let tss = 0;
@@ -150,7 +159,9 @@ export function leastSquares(x: number[][], y: number[]): LeastSquares | null {
   const variance = rss / (n - size);
   return {
     coefficients: beta.slice(1),
-    errors: inverse.slice(1).map((row, i) => Math.sqrt(Math.max(0, variance * row[i + 1]))),
+    errors: inverse
+      .slice(1)
+      .map((row, i) => Math.sqrt(Math.max(0, variance * row[i + 1]))),
     r2: tss ? 1 - rss / tss : 0,
   };
 }
@@ -160,7 +171,7 @@ function invert(matrix: number[][]): number[][] | null {
   const size = matrix.length;
   const a = matrix.map((row, i) => [
     ...row,
-    ...Array.from({ length: size }, (_, j) => (i === j ? 1 : 0)),
+    ...Array.from({length: size}, (_, j) => (i === j ? 1 : 0)),
   ]);
   for (let column = 0; column < size; column++) {
     let pivot = column;
@@ -174,7 +185,7 @@ function invert(matrix: number[][]): number[][] | null {
     }
     [a[column], a[pivot]] = [a[pivot], a[column]];
     const divisor = a[column][column];
-    a[column] = a[column].map((value) => value / divisor);
+    a[column] = a[column].map(value => value / divisor);
     for (let row = 0; row < size; row++) {
       if (row !== column) {
         const factor = a[row][column];
@@ -182,7 +193,7 @@ function invert(matrix: number[][]): number[][] | null {
       }
     }
   }
-  return a.map((row) => row.slice(size));
+  return a.map(row => row.slice(size));
 }
 
 /** The regularized incomplete beta function I_x(a, b) (Numerical Recipes, betai). */
@@ -194,7 +205,11 @@ function incompleteBeta(x: number, a: number, b: number): number {
     return 1;
   }
   const front = Math.exp(
-    logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log(1 - x),
+    logGamma(a + b) -
+      logGamma(a) -
+      logGamma(b) +
+      a * Math.log(x) +
+      b * Math.log(1 - x),
   );
   return x < (a + 1) / (a + b + 2)
     ? (front * continuedFraction(x, a, b)) / a
@@ -229,8 +244,8 @@ function continuedFraction(x: number, a: number, b: number): number {
 /** ln Γ(x), Lanczos' approximation. */
 function logGamma(x: number): number {
   const g = [
-    76.1800917294715, -86.5053203294168, 24.0140982408309, -1.23173957245015, 0.120865097386618e-2,
-    -0.5395239384953e-5,
+    76.1800917294715, -86.5053203294168, 24.0140982408309, -1.23173957245015,
+    0.120865097386618e-2, -0.5395239384953e-5,
   ];
   let y = x;
   const tmp = x + 5.5 - (x + 0.5) * Math.log(x + 5.5);

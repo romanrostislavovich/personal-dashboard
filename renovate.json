@@ -15,7 +15,11 @@
     },
     {
       "description": "Angular moves together: the framework, its CLI, Material, the CDK",
-      "matchPackageNames": ["@angular/**", "@angular-devkit/**", "@schematics/angular"],
+      "matchPackageNames": [
+        "@angular/**",
+        "@angular-devkit/**",
+        "@schematics/angular"
+      ],
       "groupName": "Angular"
     },
     {

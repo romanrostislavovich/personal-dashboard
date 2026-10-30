@@ -1,6 +1,6 @@
-import { AppKind } from '@pd/contracts';
-import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from '../users/users.schema';
+import {AppKind} from '@pd/contracts';
+import {index, pgTable, text, timestamp, uuid} from 'drizzle-orm/pg-core';
+import {users} from '../users/users.schema';
 
 /**
  * A device that runs one of the apps (the desktop app, the browser extension), as it last told
@@ -13,14 +13,14 @@ export const appInstalls = pgTable(
     id: uuid().primaryKey(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     kind: text().$type<AppKind>().notNull(),
     name: text().notNull(),
     platform: text().notNull(),
     version: text().notNull(),
-    lastSeenAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId)],
+  table => [index().on(table.userId)],
 );
 
 export type AppInstallRow = typeof appInstalls.$inferSelect;

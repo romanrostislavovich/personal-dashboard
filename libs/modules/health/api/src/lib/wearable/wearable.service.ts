@@ -1,17 +1,23 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database, SecretsService, ServerKeysService } from '@pd/api-core';
-import { WearableDay, WearableDaysQuery, WearableStatus } from '@pd/contracts';
-import { and, eq, gte, lte, sql } from 'drizzle-orm';
-import { randomBytes } from 'node:crypto';
+import {BadRequestException, Inject, Injectable} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {
+  AppConfig,
+  DB,
+  Database,
+  SecretsService,
+  ServerKeysService,
+} from '@pd/api-core';
+import {WearableDay, WearableDaysQuery, WearableStatus} from '@pd/contracts';
+import {and, eq, gte, lte, sql} from 'drizzle-orm';
+import {randomBytes} from 'node:crypto';
 import {
   GoogleHealthAuthError,
   GoogleHealthClient,
   GoogleTokens,
   MAX_RANGE_DAYS,
 } from './google-health.client';
-import { healthBandDays } from './band.schema';
-import { healthWearableAccounts, healthWearableDays } from './wearable.schema';
+import {healthBandDays} from './band.schema';
+import {healthWearableAccounts, healthWearableDays} from './wearable.schema';
 
 const REFRESH_TOKEN_SECRET = 'health.google-health.refresh-token';
 const STATE_TTL_MS = 10 * 60 * 1000;
@@ -60,10 +66,13 @@ const COUNTED = [
  */
 @Injectable()
 export class WearableService {
-  private app: { keys: string; client: GoogleHealthClient } | null = null;
+  private app: {keys: string; client: GoogleHealthClient} | null = null;
   private readonly publicUrl: string;
   // One-time states and access tokens live in memory — enough for a single API instance.
-  private readonly pendingStates = new Map<string, { userId: string; expiresAt: number }>();
+  private readonly pendingStates = new Map<
+    string,
+    {userId: string; expiresAt: number}
+  >();
   private readonly accessTokens = new Map<string, GoogleTokens>();
 
   constructor(
@@ -72,7 +81,9 @@ export class WearableService {
     private readonly secrets: SecretsService,
     private readonly keys: ServerKeysService,
   ) {
-    this.publicUrl = config.get('PUBLIC_URL', { infer: true }).replace(/\/+$/, '');
+    this.publicUrl = config
+      .get('PUBLIC_URL', {infer: true})
+      .replace(/\/+$/, '');
   }
 
   /** The Authorized redirect URI of the app in Google Cloud. */
@@ -86,11 +97,11 @@ export class WearableService {
       .from(healthWearableAccounts)
       .where(eq(healthWearableAccounts.userId, userId));
     const [first] = await this.db
-      .select({ day: sql<string | null>`min(${healthWearableDays.day})` })
+      .select({day: sql<string | null>`min(${healthWearableDays.day})`})
       .from(healthWearableDays)
       .where(eq(healthWearableDays.userId, userId));
     const [firstOfPhone] = await this.db
-      .select({ day: sql<string | null>`min(${healthBandDays.day})` })
+      .select({day: sql<string | null>`min(${healthBandDays.day})`})
       .from(healthBandDays)
       .where(eq(healthBandDays.userId, userId));
     return {
@@ -104,7 +115,8 @@ export class WearableService {
         : null,
       lastSyncedAt: account?.lastSyncedAt?.toISOString() ?? null,
       error: account?.lastError ?? null,
-      firstDay: [first?.day, firstOfPhone?.day].filter(Boolean).sort()[0] ?? null,
+      firstDay:
+        [first?.day, firstOfPhone?.day].filter(Boolean).sort()[0] ?? null,
     };
   }
 
@@ -129,7 +141,14 @@ export class WearableService {
     }
     const keys = `${clientId}:${clientSecret}`;
     if (this.app?.keys !== keys) {
-      this.app = { keys, client: new GoogleHealthClient(clientId, clientSecret, this.redirectUri) };
+      this.app = {
+        keys,
+        client: new GoogleHealthClient(
+          clientId,
+          clientSecret,
+          this.redirectUri,
+        ),
+      };
       this.accessTokens.clear();
     }
     return this.app.client;
@@ -138,15 +157,23 @@ export class WearableService {
   async connectUrl(userId: string): Promise<string> {
     const client = await this.client();
     if (!client) {
-      throw new BadRequestException('Google Health is not configured on the server');
+      throw new BadRequestException(
+        'Google Health is not configured on the server',
+      );
     }
     const state = randomBytes(16).toString('hex');
-    this.pendingStates.set(state, { userId, expiresAt: Date.now() + STATE_TTL_MS });
+    this.pendingStates.set(state, {
+      userId,
+      expiresAt: Date.now() + STATE_TTL_MS,
+    });
     return client.authorizeUrl(state);
   }
 
   /** Where the browser goes after the Google sign-in: back to Settings, with the result. */
-  async handleCallback(code: string | undefined, state: string | undefined): Promise<string> {
+  async handleCallback(
+    code: string | undefined,
+    state: string | undefined,
+  ): Promise<string> {
     const pending = state ? this.pendingStates.get(state) : undefined;
     if (state) {
       this.pendingStates.delete(state);
@@ -165,8 +192,11 @@ export class WearableService {
       await this.saveTokens(pending.userId, tokens);
       await this.db
         .insert(healthWearableAccounts)
-        .values({ userId: pending.userId })
-        .onConflictDoUpdate({ target: healthWearableAccounts.userId, set: { lastError: null } });
+        .values({userId: pending.userId})
+        .onConflictDoUpdate({
+          target: healthWearableAccounts.userId,
+          set: {lastError: null},
+        });
     } catch {
       return back('error');
     }
@@ -178,16 +208,20 @@ export class WearableService {
   async disconnect(userId: string): Promise<void> {
     this.accessTokens.delete(userId);
     await this.secrets.delete(userId, REFRESH_TOKEN_SECRET);
-    await this.db.delete(healthWearableAccounts).where(eq(healthWearableAccounts.userId, userId));
+    await this.db
+      .delete(healthWearableAccounts)
+      .where(eq(healthWearableAccounts.userId, userId));
   }
 
   async connectedUserIds(): Promise<string[]> {
     const rows = await this.db
-      .select({ userId: healthWearableAccounts.userId })
+      .select({userId: healthWearableAccounts.userId})
       .from(healthWearableAccounts);
     const connected = await Promise.all(
-      rows.map(async (row) =>
-        (await this.secrets.has(row.userId, REFRESH_TOKEN_SECRET)) ? row.userId : null,
+      rows.map(async row =>
+        (await this.secrets.has(row.userId, REFRESH_TOKEN_SECRET))
+          ? row.userId
+          : null,
       ),
     );
     return connected.filter((id): id is string => id !== null);
@@ -197,7 +231,10 @@ export class WearableService {
    * Reads the days not read yet (the last FIRST_SYNC_DAYS the first time) and the last
    * RESYNC_DAYS again, in pieces Google allows. The outcome is kept for Settings → Integrations.
    */
-  async sync(userId: string, today = new Date().toISOString().slice(0, 10)): Promise<void> {
+  async sync(
+    userId: string,
+    today = new Date().toISOString().slice(0, 10),
+  ): Promise<void> {
     const client = await this.client();
     if (!client) {
       return;
@@ -208,13 +245,20 @@ export class WearableService {
         return;
       }
       const [last] = await this.db
-        .select({ day: sql<string | null>`max(${healthWearableDays.day})` })
+        .select({day: sql<string | null>`max(${healthWearableDays.day})`})
         .from(healthWearableDays)
         .where(eq(healthWearableDays.userId, userId));
       const from = last?.day
-        ? minDay(addDays(last.day, -RESYNC_DAYS + 1), addDays(today, -RESYNC_DAYS + 1))
+        ? minDay(
+            addDays(last.day, -RESYNC_DAYS + 1),
+            addDays(today, -RESYNC_DAYS + 1),
+          )
         : addDays(today, -FIRST_SYNC_DAYS + 1);
-      for (let start = from; start <= today; start = addDays(start, MAX_RANGE_DAYS)) {
+      for (
+        let start = from;
+        start <= today;
+        start = addDays(start, MAX_RANGE_DAYS)
+      ) {
         const end = minDay(addDays(start, MAX_RANGE_DAYS - 1), today);
         await this.save(userId, await client.days(token, start, end));
       }
@@ -223,7 +267,10 @@ export class WearableService {
       if (error instanceof GoogleHealthAuthError) {
         this.accessTokens.delete(userId);
       }
-      await this.report(userId, error instanceof Error ? error.message : String(error));
+      await this.report(
+        userId,
+        error instanceof Error ? error.message : String(error),
+      );
       throw error;
     }
   }
@@ -240,33 +287,56 @@ export class WearableService {
       this.db
         .select()
         .from(d)
-        .where(and(eq(d.userId, userId), gte(d.day, query.from), lte(d.day, query.to))),
+        .where(
+          and(
+            eq(d.userId, userId),
+            gte(d.day, query.from),
+            lte(d.day, query.to),
+          ),
+        ),
       this.db
         .select()
         .from(b)
-        .where(and(eq(b.userId, userId), gte(b.day, query.from), lte(b.day, query.to))),
-    ]);
-    const byDay = new Map(api.map((row) => [row.day, row]));
-    const phoneByDay = new Map(phone.map((row) => [row.day, row]));
-    return [...new Set([...byDay.keys(), ...phoneByDay.keys()])].sort().map((day) => {
-      const fromApi = byDay.get(day);
-      // The phone has no zone minutes or SpO2: Health Connect is not told them.
-      const fromPhone = phoneByDay.get(day) as Partial<Record<string, unknown>> | undefined;
-      return {
-        day,
-        ...Object.fromEntries(
-          NUMBERS.map((key) => [key, fromApi?.[key] ?? fromPhone?.[key] ?? null]),
+        .where(
+          and(
+            eq(b.userId, userId),
+            gte(b.day, query.from),
+            lte(b.day, query.to),
+          ),
         ),
-        ...Object.fromEntries(COUNTED.map((key) => [key, fromPhone?.[key] ?? null])),
-      } as WearableDay;
-    });
+    ]);
+    const byDay = new Map(api.map(row => [row.day, row]));
+    const phoneByDay = new Map(phone.map(row => [row.day, row]));
+    return [...new Set([...byDay.keys(), ...phoneByDay.keys()])]
+      .sort()
+      .map(day => {
+        const fromApi = byDay.get(day);
+        // The phone has no zone minutes or SpO2: Health Connect is not told them.
+        const fromPhone = phoneByDay.get(day) as
+          Partial<Record<string, unknown>> | undefined;
+        return {
+          day,
+          ...Object.fromEntries(
+            NUMBERS.map(key => [
+              key,
+              fromApi?.[key] ?? fromPhone?.[key] ?? null,
+            ]),
+          ),
+          ...Object.fromEntries(
+            COUNTED.map(key => [key, fromPhone?.[key] ?? null]),
+          ),
+        } as WearableDay;
+      });
   }
 
-  private async save(userId: string, days: Map<string, Partial<WearableDay>>): Promise<void> {
+  private async save(
+    userId: string,
+    days: Map<string, Partial<WearableDay>>,
+  ): Promise<void> {
     const rows = [...days].map(([day, numbers]) => ({
       userId,
       day,
-      ...Object.fromEntries(NUMBERS.map((key) => [key, numbers[key] ?? null])),
+      ...Object.fromEntries(NUMBERS.map(key => [key, numbers[key] ?? null])),
     }));
     if (!rows.length) {
       return;
@@ -276,7 +346,9 @@ export class WearableService {
       .values(rows)
       .onConflictDoUpdate({
         target: [healthWearableDays.userId, healthWearableDays.day],
-        set: Object.fromEntries(NUMBERS.map((key) => [key, sql.raw(`excluded."${snake(key)}"`)])),
+        set: Object.fromEntries(
+          NUMBERS.map(key => [key, sql.raw(`excluded."${snake(key)}"`)]),
+        ),
       });
   }
 
@@ -284,14 +356,22 @@ export class WearableService {
     await this.db
       .update(healthWearableAccounts)
       .set(
-        error ? { lastError: error.slice(0, 500) } : { lastError: null, lastSyncedAt: new Date() },
+        error
+          ? {lastError: error.slice(0, 500)}
+          : {lastError: null, lastSyncedAt: new Date()},
       )
       .where(eq(healthWearableAccounts.userId, userId));
   }
 
-  private async accessToken(userId: string, client: GoogleHealthClient): Promise<string | null> {
+  private async accessToken(
+    userId: string,
+    client: GoogleHealthClient,
+  ): Promise<string | null> {
     const cached = this.accessTokens.get(userId);
-    if (cached && cached.expiresAt.getTime() - TOKEN_EXPIRY_MARGIN_MS > Date.now()) {
+    if (
+      cached &&
+      cached.expiresAt.getTime() - TOKEN_EXPIRY_MARGIN_MS > Date.now()
+    ) {
       return cached.accessToken;
     }
     const refreshToken = await this.secrets.get(userId, REFRESH_TOKEN_SECRET);
@@ -303,7 +383,10 @@ export class WearableService {
     return tokens.accessToken;
   }
 
-  private async saveTokens(userId: string, tokens: GoogleTokens): Promise<void> {
+  private async saveTokens(
+    userId: string,
+    tokens: GoogleTokens,
+  ): Promise<void> {
     this.accessTokens.set(userId, tokens);
     if (tokens.refreshToken) {
       await this.secrets.set(userId, REFRESH_TOKEN_SECRET, tokens.refreshToken);
@@ -318,4 +401,5 @@ export function addDays(day: string, days: number): string {
 }
 
 const minDay = (a: string, b: string) => (a < b ? a : b);
-const snake = (key: string) => key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+const snake = (key: string) =>
+  key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);

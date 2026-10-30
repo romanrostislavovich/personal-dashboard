@@ -1,8 +1,8 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, LinksService, UsersService } from '@pd/api-core';
-import { DailyMetric, LocalDate } from '@pd/contracts';
-import { and, eq, inArray, sql } from 'drizzle-orm';
-import { movieViews } from './movies.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, LinksService, UsersService} from '@pd/api-core';
+import {DailyMetric, LocalDate} from '@pd/contracts';
+import {and, eq, inArray, sql} from 'drizzle-orm';
+import {movieViews} from './movies.schema';
 
 /**
  * What Movies tells Links: the hours of watching every day, the part of them late at night, the
@@ -34,7 +34,7 @@ export class MoviesLinks implements OnModuleInit {
 
   private async metrics(
     userId: string,
-    period: { from: LocalDate; to: LocalDate },
+    period: {from: LocalDate; to: LocalDate},
   ): Promise<DailyMetric[]> {
     const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
     const v = movieViews;
@@ -74,14 +74,14 @@ export class MoviesLinks implements OnModuleInit {
       module: 'movies',
       labelKey: `movies.links.${key}`,
       unit,
-      ...(partOf ? { partOf } : {}),
-      days: rows.map((row) => ({ day: row.day, value: value(row) })),
+      ...(partOf ? {partOf} : {}),
+      days: rows.map(row => ({day: row.day, value: value(row)})),
     });
     return [
-      metric('hours', 'hours', (row) => hours(row.seconds)),
-      metric('lateHours', 'hours', (row) => hours(row.late), 'movies.hours'),
-      metric('videoHours', 'hours', (row) => hours(row.video), 'movies.hours'),
-      metric('episodes', 'count', (row) => row.episodes),
+      metric('hours', 'hours', row => hours(row.seconds)),
+      metric('lateHours', 'hours', row => hours(row.late), 'movies.hours'),
+      metric('videoHours', 'hours', row => hours(row.video), 'movies.hours'),
+      metric('episodes', 'count', row => row.episodes),
     ];
   }
 }

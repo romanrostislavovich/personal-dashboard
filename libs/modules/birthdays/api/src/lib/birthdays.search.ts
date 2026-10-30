@@ -1,8 +1,8 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, SEARCH_LIMIT, SearchService } from '@pd/api-core';
-import { SearchHit } from '@pd/contracts';
-import { asc, eq } from 'drizzle-orm';
-import { birthdays } from './birthdays.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, SEARCH_LIMIT, SearchService} from '@pd/api-core';
+import {SearchHit} from '@pd/contracts';
+import {asc, eq} from 'drizzle-orm';
+import {birthdays} from './birthdays.schema';
 
 /** Birthdays for the command palette: by the name and the note (searched here — it is encrypted). */
 @Injectable()
@@ -28,7 +28,7 @@ export class BirthdaysSearch implements OnModuleInit {
         .where(eq(birthdays.userId, userId))
         .orderBy(asc(birthdays.name))
     )
-      .filter((row) =>
+      .filter(row =>
         `${row.name}
 ${row.note ?? ''}`
           .toLowerCase()
@@ -36,7 +36,7 @@ ${row.note ?? ''}`
       )
       .slice(0, SEARCH_LIMIT);
     const two = (value: number) => String(value).padStart(2, '0');
-    return rows.map((row) => ({
+    return rows.map(row => ({
       module: 'birthdays',
       kind: 'birthday',
       title: row.name,

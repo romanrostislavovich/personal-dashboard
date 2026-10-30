@@ -1,11 +1,26 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DATA_ARCHIVE_FORMAT, DataArchiveManifest } from '@pd/contracts';
-import { sql, SQL } from 'drizzle-orm';
-import { Writable } from 'node:stream';
-import { decryptBytes, decryptedRow, encryptedColumnsOf } from '../crypto/encrypted-columns';
-import { DB, Database } from '../database/database.module';
-import { ArchiveWriter, binaryPath, FileReference, MANIFEST_PATH, tablePath } from './data-archive';
-import { exportable, ExportTable, ownedBy, readExportTables } from './export-catalog';
+import {Inject, Injectable} from '@nestjs/common';
+import {DATA_ARCHIVE_FORMAT, DataArchiveManifest} from '@pd/contracts';
+import {sql, SQL} from 'drizzle-orm';
+import {Writable} from 'node:stream';
+import {
+  decryptBytes,
+  decryptedRow,
+  encryptedColumnsOf,
+} from '../crypto/encrypted-columns';
+import {DB, Database} from '../database/database.module';
+import {
+  ArchiveWriter,
+  binaryPath,
+  FileReference,
+  MANIFEST_PATH,
+  tablePath,
+} from './data-archive';
+import {
+  exportable,
+  ExportTable,
+  ownedBy,
+  readExportTables,
+} from './export-catalog';
 
 /** Rows read from the database at a time; rows with photos — a few, they are large. */
 const ROWS_AT_A_TIME = 2000;
@@ -52,34 +67,42 @@ export class DataExportService {
     const archive = new ArchiveWriter(output);
     // One snapshot: rows that reference each other are exported as they were at one moment.
     await this.db.transaction(
-      async (tx) => {
-        const tables = exportable(await readExportTables(tx)).map(({ table, owned }) => ({
-          table,
-          mine: ownedBy(owned, 't', userId),
-        }));
+      async tx => {
+        const tables = exportable(await readExportTables(tx)).map(
+          ({table, owned}) => ({
+            table,
+            mine: ownedBy(owned, 't', userId),
+          }),
+        );
         const manifest: DataArchiveManifest = {
           format: DATA_ARCHIVE_FORMAT,
           exportedAt: new Date().toISOString(),
           tables: {},
         };
-        for (const { table, mine } of tables) {
-          const { rows } = await tx.execute<{ rows: number }>(
+        for (const {table, mine} of tables) {
+          const {rows} = await tx.execute<{rows: number}>(
             sql`SELECT count(*)::int AS rows FROM ${sql.identifier(table.name)} t WHERE ${mine}`,
           );
           if (rows[0].rows > 0) {
             manifest.tables[table.name] = rows[0].rows;
           }
         }
-        await archive.file(MANIFEST_PATH, (push) => push(JSON.stringify(manifest, null, 2)));
-        for (const { table, mine } of tables.filter(({ table: t }) => manifest.tables[t.name])) {
+        await archive.file(MANIFEST_PATH, push =>
+          push(JSON.stringify(manifest, null, 2)),
+        );
+        for (const {table, mine} of tables.filter(
+          ({table: t}) => manifest.tables[t.name],
+        )) {
           await this.writeTable(tx, archive, table, mine);
         }
       },
-      { isolationLevel: 'repeatable read', accessMode: 'read only' },
+      {isolationLevel: 'repeatable read', accessMode: 'read only'},
     );
     for (const source of this.readable) {
       for await (const file of source.files(userId)) {
-        await archive.file(`${source.module}/${file.path}`, (push) => push(file.content));
+        await archive.file(`${source.module}/${file.path}`, push =>
+          push(file.content),
+        );
       }
     }
     await archive.end();
@@ -97,38 +120,58 @@ export class DataExportService {
     const row = sql`(to_jsonb(t) - ${`{${table.binary.join(',')}}`}::text[])`;
     // `true` where the column has content: only such a row gets the reference.
     const filled = table.binary.map(
-      (column) =>
+      column =>
         sql`|| jsonb_build_object(${column}::text, t.${sql.identifier(column)} IS NOT NULL)`,
     );
-    await archive.file(tablePath(table.name), async (push) => {
+    await archive.file(tablePath(table.name), async push => {
       const select = sql`SELECT (${row} ${sql.join(filled, sql` `)})::text AS row
         FROM ${name} t WHERE ${mine}`;
       // An archive is readable anywhere: encrypted columns go into it decrypted.
       const encrypted = encryptedColumnsOf(table.name);
-      for await (const rows of cursor<{ row: string }>(tx, select, ROWS_AT_A_TIME)) {
+      for await (const rows of cursor<{row: string}>(
+        tx,
+        select,
+        ROWS_AT_A_TIME,
+      )) {
         const lines =
           table.binary.length || encrypted?.text.size
-            ? rows.map((item) =>
+            ? rows.map(item =>
                 JSON.stringify(
-                  withFileReferences(table, decryptedRow(table.name, JSON.parse(item.row))),
+                  withFileReferences(
+                    table,
+                    decryptedRow(table.name, JSON.parse(item.row)),
+                  ),
                 ),
               )
-            : rows.map((item) => item.row);
+            : rows.map(item => item.row);
         await push(lines.join('\n') + '\n');
       }
     });
     for (const column of table.binary) {
       const select = sql`SELECT ${row} AS row, t.${sql.identifier(column)} AS content
         FROM ${name} t WHERE ${mine}`;
-      type BinaryRow = { row: Record<string, unknown>; content: Buffer | null };
+      type BinaryRow = {row: Record<string, unknown>; content: Buffer | null};
       const encrypted = encryptedColumnsOf(table.name)?.bytes.has(column);
-      for await (const rows of cursor<BinaryRow>(tx, select, BINARY_ROWS_AT_A_TIME)) {
-        for (const item of rows.filter((r) => r.content)) {
-          const path = binaryPath(table.name, table.primaryKey, column, item.row);
+      for await (const rows of cursor<BinaryRow>(
+        tx,
+        select,
+        BINARY_ROWS_AT_A_TIME,
+      )) {
+        for (const item of rows.filter(r => r.content)) {
+          const path = binaryPath(
+            table.name,
+            table.primaryKey,
+            column,
+            item.row,
+          );
           const content = item.content as Buffer;
-          await archive.file(path, (push) => push(encrypted ? decryptBytes(content) : content), {
-            compress: false,
-          });
+          await archive.file(
+            path,
+            push => push(encrypted ? decryptBytes(content) : content),
+            {
+              compress: false,
+            },
+          );
         }
       }
     }
@@ -142,10 +185,10 @@ function withFileReferences(
   const references: Record<string, FileReference | null> = {};
   for (const column of table.binary) {
     references[column] = row[column]
-      ? { $file: binaryPath(table.name, table.primaryKey, column, row) }
+      ? {$file: binaryPath(table.name, table.primaryKey, column, row)}
       : null;
   }
-  return { ...row, ...references };
+  return {...row, ...references};
 }
 
 /** The rows of a query a batch at a time, so a large table is never in memory whole. */
@@ -157,7 +200,9 @@ async function* cursor<T extends Record<string, unknown>>(
   await tx.execute(sql`DECLARE export_rows NO SCROLL CURSOR FOR ${select}`);
   try {
     for (;;) {
-      const { rows } = await tx.execute<T>(sql`FETCH ${sql.raw(String(size))} FROM export_rows`);
+      const {rows} = await tx.execute<T>(
+        sql`FETCH ${sql.raw(String(size))} FROM export_rows`,
+      );
       if (!rows.length) {
         return;
       }

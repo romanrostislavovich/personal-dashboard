@@ -1,12 +1,26 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormArray, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  FormArray,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   formatLabRange,
   guessAnalyte,
@@ -17,9 +31,9 @@ import {
   parseLabRange,
   parseLabResult,
 } from '@pd/contracts';
-import { HealthApi } from '../health.api';
-import { orNull, today } from '../health-labels';
-import { CountryFieldComponent } from './country-field.component';
+import {HealthApi} from '../health.api';
+import {orNull, today} from '../health-labels';
+import {CountryFieldComponent} from './country-field.component';
 
 export interface LabPanelDialogData {
   record: HealthRecord;
@@ -71,7 +85,12 @@ export interface LabPanelDialogData {
             <div class="line" [formGroupName]="i">
               <mat-form-field subscriptSizing="dynamic" class="name">
                 <mat-label>{{ 'health.labs.name' | transloco }}</mat-label>
-                <input matInput maxlength="200" formControlName="name" (blur)="recognise(i)" />
+                <input
+                  matInput
+                  maxlength="200"
+                  formControlName="name"
+                  (blur)="recognise(i)"
+                />
               </mat-form-field>
               <mat-form-field subscriptSizing="dynamic" class="short">
                 <mat-label>{{ 'health.labs.result' | transloco }}</mat-label>
@@ -83,7 +102,12 @@ export interface LabPanelDialogData {
               </mat-form-field>
               <mat-form-field subscriptSizing="dynamic" class="short">
                 <mat-label>{{ 'health.labs.range' | transloco }}</mat-label>
-                <input matInput maxlength="200" formControlName="range" placeholder="3,9–5,5" />
+                <input
+                  matInput
+                  maxlength="200"
+                  formControlName="range"
+                  placeholder="3,9–5,5"
+                />
               </mat-form-field>
               <mat-form-field subscriptSizing="dynamic" class="analyte">
                 <mat-label>{{ 'health.labs.analyte' | transloco }}</mat-label>
@@ -118,7 +142,9 @@ export interface LabPanelDialogData {
             <mat-select formControlName="visitId">
               <mat-option [value]="''">—</mat-option>
               @for (visit of data.record.visits; track visit.id) {
-                <mat-option [value]="visit.id">{{ visit.visitedOn }}</mat-option>
+                <mat-option [value]="visit.id">{{
+                  visit.visitedOn
+                }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
@@ -127,24 +153,37 @@ export interface LabPanelDialogData {
             <mat-select formControlName="documentId">
               <mat-option [value]="''">—</mat-option>
               @for (document of data.record.documents; track document.id) {
-                <mat-option [value]="document.id">{{ document.name }}</mat-option>
+                <mat-option [value]="document.id">{{
+                  document.name
+                }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
         </div>
         <mat-form-field>
           <mat-label>{{ 'health.visit.notes' | transloco }}</mat-label>
-          <textarea matInput rows="2" maxlength="5000" formControlName="notes"></textarea>
+          <textarea
+            matInput
+            rows="2"
+            maxlength="5000"
+            formControlName="notes"
+          ></textarea>
         </mat-form-field>
         @if (error()) {
-          <p class="error" role="alert">{{ 'health.errors.save' | transloco }}</p>
+          <p class="error" role="alert">
+            {{ 'health.errors.save' | transloco }}
+          </p>
         }
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>
           {{ 'core.actions.cancel' | transloco }}
         </button>
-        <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+        <button
+          matButton="filled"
+          type="submit"
+          [disabled]="form.invalid || busy()"
+        >
           {{ 'core.actions.save' | transloco }}
         </button>
       </mat-dialog-actions>
@@ -208,14 +247,19 @@ export class LabPanelDialog {
 
   private readonly panel = this.data.panel;
   protected readonly form = this.fb.group({
-    takenOn: [this.panel?.takenOn ?? this.data.day ?? today(), Validators.required],
+    takenOn: [
+      this.panel?.takenOn ?? this.data.day ?? today(),
+      Validators.required,
+    ],
     laboratory: this.panel?.laboratory ?? '',
     country: this.panel?.country ?? '',
     visitId: this.panel?.visitId ?? this.data.visitId ?? '',
     documentId: this.panel?.documentId ?? '',
     notes: this.panel?.notes ?? '',
     lines: this.fb.array(
-      this.panel?.values.length ? this.panel.values.map((v) => this.line(v)) : [this.line()],
+      this.panel?.values.length
+        ? this.panel.values.map(v => this.line(v))
+        : [this.line()],
     ),
   });
 
@@ -227,11 +271,17 @@ export class LabPanelDialog {
     return this.fb.group({
       name: [value?.name ?? '', Validators.required],
       result: [
-        value ? (value.value !== null ? String(value.value) : (value.textValue ?? '')) : '',
+        value
+          ? value.value !== null
+            ? String(value.value)
+            : (value.textValue ?? '')
+          : '',
         Validators.required,
       ],
       unit: value?.unit ?? '',
-      range: value ? formatLabRange(value.refLow, value.refHigh, value.refText) : '',
+      range: value
+        ? formatLabRange(value.refLow, value.refHigh, value.refText)
+        : '',
       analyte: value?.analyte ?? '',
     });
   }
@@ -243,11 +293,12 @@ export class LabPanelDialog {
   /** The analyte from the name, unless one is picked already; its usual unit, if none typed. */
   protected recognise(index: number): void {
     const line = this.lines.at(index);
-    const key = line.controls.analyte.value || guessAnalyte(line.controls.name.value);
+    const key =
+      line.controls.analyte.value || guessAnalyte(line.controls.name.value);
     if (key && !line.controls.analyte.value) {
       line.controls.analyte.setValue(key);
     }
-    const analyte = LAB_ANALYTES.find((candidate) => candidate.key === key);
+    const analyte = LAB_ANALYTES.find(candidate => candidate.key === key);
     if (analyte?.unit && !line.controls.unit.value) {
       line.controls.unit.setValue(analyte.unit);
     }
@@ -266,7 +317,7 @@ export class LabPanelDialog {
           visitId: orNull(value.visitId),
           documentId: orNull(value.documentId),
           notes: orNull(value.notes),
-          values: value.lines.map((line) => ({
+          values: value.lines.map(line => ({
             name: line.name.trim(),
             analyte: line.analyte || guessAnalyte(line.name) || null,
             unit: orNull(line.unit),

@@ -35,14 +35,21 @@ const TOP_TITLES = 30;
  * The project a window title belongs to: the first whose name or rule the title contains,
  * whatever the case. A longer pattern wins, so "dashboard-api" is not taken for "dashboard".
  */
-export function matchProject(title: string, projects: ProjectPatterns[]): string | null {
+export function matchProject(
+  title: string,
+  projects: ProjectPatterns[],
+): string | null {
   const lower = title.toLowerCase();
-  let best: { projectId: string; length: number } | null = null;
+  let best: {projectId: string; length: number} | null = null;
   for (const project of projects) {
     for (const pattern of project.patterns) {
       const wanted = pattern.trim().toLowerCase();
-      if (wanted.length >= 2 && lower.includes(wanted) && wanted.length > (best?.length ?? 0)) {
-        best = { projectId: project.projectId, length: wanted.length };
+      if (
+        wanted.length >= 2 &&
+        lower.includes(wanted) &&
+        wanted.length > (best?.length ?? 0)
+      ) {
+        best = {projectId: project.projectId, length: wanted.length};
       }
     }
   }
@@ -56,13 +63,19 @@ export function categoryOf(
   title = '',
 ): ActivityCategory {
   // A call in a browser or a messenger is a meeting, whatever the program is for.
-  return isMeetingTitle(title) ? 'meetings' : (chosen.get(app) ?? defaultActivityCategory(app));
+  return isMeetingTitle(title)
+    ? 'meetings'
+    : (chosen.get(app) ?? defaultActivityCategory(app));
 }
 
 /** Every day from `from` to `to`, both included. */
 export function daysOf(from: LocalDate, to: LocalDate): LocalDate[] {
   const days: LocalDate[] = [];
-  for (let day = from; day <= to; day = toLocalDate(addDays(parseLocalDate(day), 1))) {
+  for (
+    let day = from;
+    day <= to;
+    day = toLocalDate(addDays(parseLocalDate(day), 1))
+  ) {
     days.push(day);
     if (days.length > 400) {
       break; // A guard against a period typed by mistake.
@@ -75,31 +88,39 @@ function addTo<K>(sums: Map<K, number>, key: K, seconds: number): void {
   sums.set(key, (sums.get(key) ?? 0) + seconds);
 }
 
-const descending = <T extends { seconds: number }>(a: T, b: T) => b.seconds - a.seconds;
+const descending = <T extends {seconds: number}>(a: T, b: T) =>
+  b.seconds - a.seconds;
 
 /** The numbers of a period out of its usage rows. */
 export function buildStats(
   rows: UsageRow[],
-  period: { from: LocalDate; to: LocalDate },
+  period: {from: LocalDate; to: LocalDate},
   context: {
     categories: ReadonlyMap<string, ActivityCategory | null>;
     projects: ProjectPatterns[];
-    devices: { id: string; name: string }[];
+    devices: {id: string; name: string}[];
   },
 ): ActivityStats {
   const byDay = new Map<LocalDate, number>();
-  const byApp = new Map<string, { name: string; seconds: number }>();
+  const byApp = new Map<string, {name: string; seconds: number}>();
   const byCategory = new Map<ActivityCategory, number>();
   const byProject = new Map<string, number>();
   const byProjectDay = new Map<string, Map<LocalDate, number>>();
   const byDevice = new Map<string, number>();
-  const byTitle = new Map<string, { app: string; name: string; title: string; seconds: number }>();
+  const byTitle = new Map<
+    string,
+    {app: string; name: string; title: string; seconds: number}
+  >();
 
   for (const row of rows) {
     addTo(byDay, row.day, row.seconds);
     addTo(byDevice, row.deviceId, row.seconds);
-    addTo(byCategory, categoryOf(row.app, context.categories, row.title), row.seconds);
-    const app = byApp.get(row.app) ?? { name: row.appName, seconds: 0 };
+    addTo(
+      byCategory,
+      categoryOf(row.app, context.categories, row.title),
+      row.seconds,
+    );
+    const app = byApp.get(row.app) ?? {name: row.appName, seconds: 0};
     app.seconds += row.seconds;
     byApp.set(row.app, app);
     const projectId = matchProject(row.title, context.projects);
@@ -122,30 +143,35 @@ export function buildStats(
 
   return {
     totalSeconds: rows.reduce((sum, row) => sum + row.seconds, 0),
-    days: daysOf(period.from, period.to).map((day) => ({ day, seconds: byDay.get(day) ?? 0 })),
+    days: daysOf(period.from, period.to).map(day => ({
+      day,
+      seconds: byDay.get(day) ?? 0,
+    })),
     apps: [...byApp.entries()]
-      .map(([app, { name, seconds }]) => ({
+      .map(([app, {name, seconds}]) => ({
         app,
         name,
         category: categoryOf(app, context.categories),
         seconds,
       }))
       .sort(descending),
-    categories: ACTIVITY_CATEGORIES.flatMap((category) => {
+    categories: ACTIVITY_CATEGORIES.flatMap(category => {
       const seconds = byCategory.get(category);
-      return seconds ? [{ category, seconds }] : [];
+      return seconds ? [{category, seconds}] : [];
     }).sort(descending),
     projects: context.projects
-      .flatMap((project) => {
+      .flatMap(project => {
         const seconds = byProject.get(project.projectId);
         const days = [...(byProjectDay.get(project.projectId) ?? [])]
-          .map(([day, daySeconds]) => ({ day, seconds: daySeconds }))
+          .map(([day, daySeconds]) => ({day, seconds: daySeconds}))
           .sort((a, b) => a.day.localeCompare(b.day));
-        return seconds ? [{ projectId: project.projectId, name: project.name, seconds, days }] : [];
+        return seconds
+          ? [{projectId: project.projectId, name: project.name, seconds, days}]
+          : [];
       })
       .sort(descending),
     devices: context.devices
-      .map((device) => ({ ...device, seconds: byDevice.get(device.id) ?? 0 }))
+      .map(device => ({...device, seconds: byDevice.get(device.id) ?? 0}))
       .sort(descending),
     titles: [...byTitle.values()].sort(descending).slice(0, TOP_TITLES),
     // Added by the service from what other services know (see other-computers.ts).
@@ -210,7 +236,8 @@ export function longestRun(days: LocalDate[]): number {
   let run = 0;
   let previous: LocalDate | null = null;
   for (const day of [...new Set(days)].sort()) {
-    const follows = previous && toLocalDate(addDays(parseLocalDate(previous), 1)) === day;
+    const follows =
+      previous && toLocalDate(addDays(parseLocalDate(previous), 1)) === day;
     run = follows ? run + 1 : 1;
     longest = Math.max(longest, run);
     previous = day;
@@ -223,10 +250,12 @@ export function longestRun(days: LocalDate[]): number {
  * user's or the default one, and the well-known programs of those categories not seen yet.
  */
 export function appsOfCategories(
-  seen: { app: string; category: ActivityCategory | null }[],
+  seen: {app: string; category: ActivityCategory | null}[],
   categories: readonly ActivityCategory[],
 ): string[] {
-  const found = new Set(categories.flatMap((category) => knownActivityApps(category)));
+  const found = new Set(
+    categories.flatMap(category => knownActivityApps(category)),
+  );
   for (const row of seen) {
     if (categories.includes(row.category ?? defaultActivityCategory(row.app))) {
       found.add(row.app);
@@ -238,6 +267,8 @@ export function appsOfCategories(
 }
 
 /** The programs one watches (ActivityDeviceConfig.watchApps): players and browsers. */
-export function watchedApps(seen: { app: string; category: ActivityCategory | null }[]): string[] {
+export function watchedApps(
+  seen: {app: string; category: ActivityCategory | null}[],
+): string[] {
   return appsOfCategories(seen, ACTIVITY_WATCH_CATEGORIES);
 }

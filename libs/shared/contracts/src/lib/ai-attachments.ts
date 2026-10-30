@@ -24,7 +24,13 @@ export const AI_ATTACHMENT_EXTENSIONS = [
  * pictures (Settings → AI) writes down their text and what they show, and the chat model gets
  * that — so any chat model works with them, and the conversation keeps only text.
  */
-export const AI_IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif'] as const;
+export const AI_IMAGE_EXTENSIONS = [
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.webp',
+  '.gif',
+] as const;
 /** The image types a browser puts on the clipboard, with the extension a pasted one is named by. */
 export const AI_IMAGE_TYPES: Record<string, string> = {
   'image/png': '.png',

@@ -1,22 +1,27 @@
-import { Clipboard } from '@angular/cdk/clipboard';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {Clipboard} from '@angular/cdk/clipboard';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MAT_DIALOG_DATA, MatDialogModule} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   CONTRACT_LETTER_KINDS,
   CONTRACT_LETTER_LANGUAGES,
   ContractLetter,
   RecurringPayment,
 } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { FinanceApi } from '../finance.api';
+import {firstValueFrom} from 'rxjs';
+import {FinanceApi} from '../finance.api';
 
 /**
  * A letter about a contract: to end it, or to ask for a better price, in English or Polish.
@@ -37,14 +42,18 @@ import { FinanceApi } from '../finance.api';
     TranslocoPipe,
   ],
   template: `
-    <h2 mat-dialog-title>{{ 'finance.letter.title' | transloco: { name: payment.name } }}</h2>
+    <h2 mat-dialog-title>
+      {{ 'finance.letter.title' | transloco: {name: payment.name} }}
+    </h2>
     <mat-dialog-content class="form">
       <div class="row">
         <mat-form-field>
           <mat-label>{{ 'finance.letter.kind' | transloco }}</mat-label>
           <mat-select [(ngModel)]="kind">
             @for (one of kinds; track one) {
-              <mat-option [value]="one">{{ 'finance.letter.kinds.' + one | transloco }}</mat-option>
+              <mat-option [value]="one">{{
+                'finance.letter.kinds.' + one | transloco
+              }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
@@ -61,7 +70,12 @@ import { FinanceApi } from '../finance.api';
       </div>
       <mat-form-field>
         <mat-label>{{ 'finance.letter.details' | transloco }}</mat-label>
-        <textarea matInput rows="2" maxlength="500" [(ngModel)]="details"></textarea>
+        <textarea
+          matInput
+          rows="2"
+          maxlength="500"
+          [(ngModel)]="details"
+        ></textarea>
         <mat-hint>{{ 'finance.letter.detailsHint' | transloco }}</mat-hint>
       </mat-form-field>
 
@@ -86,7 +100,9 @@ import { FinanceApi } from '../finance.api';
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button matButton mat-dialog-close>{{ 'finance.letter.close' | transloco }}</button>
+      <button matButton mat-dialog-close>
+        {{ 'finance.letter.close' | transloco }}
+      </button>
       @if (letter(); as l) {
         <button matButton (click)="copy(l)">
           <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
@@ -95,7 +111,10 @@ import { FinanceApi } from '../finance.api';
       }
       <button matButton="filled" [disabled]="busy()" (click)="write()">
         <mat-icon>edit_note</mat-icon>
-        {{ (letter() ? 'finance.letter.again' : 'finance.letter.write') | transloco }}
+        {{
+          (letter() ? 'finance.letter.again' : 'finance.letter.write')
+            | transloco
+        }}
       </button>
     </mat-dialog-actions>
   `,

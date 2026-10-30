@@ -1,5 +1,11 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { AiService, DB, Database, OtherComputersService, ProjectsService } from '@pd/api-core';
+import {Inject, Injectable, Logger, NotFoundException} from '@nestjs/common';
+import {
+  AiService,
+  DB,
+  Database,
+  OtherComputersService,
+  ProjectsService,
+} from '@pd/api-core';
 import {
   ActivityRuleSuggestion,
   addDays,
@@ -7,11 +13,15 @@ import {
   parseLocalDate,
   toLocalDate,
 } from '@pd/contracts';
-import { and, eq, gte } from 'drizzle-orm';
-import { activityRuleSuggestions, activitySiteVisits, activitySpans } from './activity.schema';
-import { ActivityService } from './activity.service';
-import { projectTime } from './project-context';
-import { ProjectTimeService } from './project-time.service';
+import {and, eq, gte} from 'drizzle-orm';
+import {
+  activityRuleSuggestions,
+  activitySiteVisits,
+  activitySpans,
+} from './activity.schema';
+import {ActivityService} from './activity.service';
+import {projectTime} from './project-context';
+import {ProjectTimeService} from './project-time.service';
 import {
   NewSuggestion,
   parseSuggestions,
@@ -19,7 +29,7 @@ import {
   suggestionCandidates,
   sureSuggestions,
 } from './rule-suggestions';
-import { dayBounds } from './time-spans';
+import {dayBounds} from './time-spans';
 
 /** The days looked at: enough for a habit, short enough for what the user does now. */
 const DAYS = 14;
@@ -67,8 +77,8 @@ export class RuleSuggestionsService {
     const today = await this.activity.today(userId);
     const open = new Map(
       (await this.projects.list(userId))
-        .filter((project) => !isProjectClosed(project, today))
-        .map((project) => [project.id, project.name]),
+        .filter(project => !isProjectClosed(project, today))
+        .map(project => [project.id, project.name]),
     );
     const s = activityRuleSuggestions;
     const rows = await this.db
@@ -76,8 +86,8 @@ export class RuleSuggestionsService {
       .from(s)
       .where(and(eq(s.userId, userId), eq(s.rejected, false)));
     return rows
-      .filter((row) => open.has(row.projectId))
-      .map((row) => ({
+      .filter(row => open.has(row.projectId))
+      .map(row => ({
         id: row.id,
         projectId: row.projectId,
         projectName: open.get(row.projectId) ?? '',
@@ -92,8 +102,13 @@ export class RuleSuggestionsService {
   /** The offer becomes a rule of its project. */
   async accept(userId: string, id: string): Promise<void> {
     const row = await this.own(userId, id);
-    await this.activity.addRule(userId, { projectId: row.projectId, pattern: row.pattern });
-    await this.db.delete(activityRuleSuggestions).where(eq(activityRuleSuggestions.id, row.id));
+    await this.activity.addRule(userId, {
+      projectId: row.projectId,
+      pattern: row.pattern,
+    });
+    await this.db
+      .delete(activityRuleSuggestions)
+      .where(eq(activityRuleSuggestions.id, row.id));
   }
 
   /** Not this project's: kept, so it is not offered again. */
@@ -101,7 +116,7 @@ export class RuleSuggestionsService {
     const row = await this.own(userId, id);
     await this.db
       .update(activityRuleSuggestions)
-      .set({ rejected: true })
+      .set({rejected: true})
       .where(eq(activityRuleSuggestions.id, row.id));
   }
 
@@ -109,34 +124,40 @@ export class RuleSuggestionsService {
   async activeUserIds(): Promise<string[]> {
     const since = new Date(Date.now() - DAYS * 24 * 60 * 60 * 1000);
     const spans = await this.db
-      .selectDistinct({ userId: activitySpans.userId })
+      .selectDistinct({userId: activitySpans.userId})
       .from(activitySpans)
       .where(gte(activitySpans.startedAt, since));
     const visits = await this.db
-      .selectDistinct({ userId: activitySiteVisits.userId })
+      .selectDistinct({userId: activitySiteVisits.userId})
       .from(activitySiteVisits)
       .where(gte(activitySiteVisits.startedAt, since));
-    return [...new Set([...spans, ...visits].map((row) => row.userId))];
+    return [...new Set([...spans, ...visits].map(row => row.userId))];
   }
 
   /** Looks at the latest days again and saves what is new to offer, for every project going. */
   async refresh(userId: string): Promise<void> {
     const today = await this.activity.today(userId);
     const projects = (await this.projects.list(userId)).filter(
-      (project) => !isProjectClosed(project, today),
+      project => !isProjectClosed(project, today),
     );
     if (!projects.length) {
       return;
     }
     const from = toLocalDate(addDays(parseLocalDate(today), -(DAYS - 1)));
-    const bounds = dayBounds({ from, to: today }, await this.activity.timeZone(userId));
+    const bounds = dayBounds(
+      {from, to: today},
+      await this.activity.timeZone(userId),
+    );
     const start = new Date(bounds[0].start);
     const end = new Date(bounds[bounds.length - 1].end);
     const pieces = await this.projectTimes.pieces(userId, start, end);
     const withAi =
-      (await this.ai.isConfigured(userId)) && (await this.ai.canSee(userId, 'activity'));
+      (await this.ai.isConfigured(userId)) &&
+      (await this.ai.canSee(userId, 'activity'));
     // A rule of any project, or an offer made before (taken or not), is not offered again.
-    const rules = (await this.activity.rules(userId)).map((rule) => rule.pattern.toLowerCase());
+    const rules = (await this.activity.rules(userId)).map(rule =>
+      rule.pattern.toLowerCase(),
+    );
     const offered = await this.db
       .select({
         projectId: activityRuleSuggestions.projectId,
@@ -146,11 +167,19 @@ export class RuleSuggestionsService {
       .where(eq(activityRuleSuggestions.userId, userId));
 
     for (const project of projects) {
-      const coding = await this.others.projectSpans(userId, project, start, end);
+      const coding = await this.others.projectSpans(
+        userId,
+        project,
+        start,
+        end,
+      );
       const time = projectTime(
         pieces,
         project.id,
-        coding.map((span) => ({ start: span.startedAt.getTime(), end: span.endedAt.getTime() })),
+        coding.map(span => ({
+          start: span.startedAt.getTime(),
+          end: span.endedAt.getTime(),
+        })),
       );
       const candidates = suggestionCandidates(pieces, time);
       if (!candidates.length) {
@@ -159,8 +188,8 @@ export class RuleSuggestionsService {
       const taken = new Set([
         ...rules,
         ...offered
-          .filter((item) => item.projectId === project.id)
-          .map((item) => item.pattern.toLowerCase()),
+          .filter(item => item.projectId === project.id)
+          .map(item => item.pattern.toLowerCase()),
       ]);
       let found: NewSuggestion[] | null = null;
       if (withAi) {
@@ -174,7 +203,7 @@ export class RuleSuggestionsService {
                 otherNames: project.aliases,
                 description: project.description,
               },
-              candidates: candidates.map(({ kind, app, label, nearSeconds }) => ({
+              candidates: candidates.map(({kind, app, label, nearSeconds}) => ({
                 kind,
                 program: app,
                 label,
@@ -182,18 +211,27 @@ export class RuleSuggestionsService {
               })),
             }),
             'activity',
-            { light: true },
+            {light: true},
           );
-          found = parseSuggestions(answer, candidates, taken, patternShare(pieces, time));
+          found = parseSuggestions(
+            answer,
+            candidates,
+            taken,
+            patternShare(pieces, time),
+          );
         } catch (error) {
-          this.logger.warn(`Rule suggestions from the AI failed: ${(error as Error).message}`);
+          this.logger.warn(
+            `Rule suggestions from the AI failed: ${(error as Error).message}`,
+          );
         }
       }
       const suggestions = found ?? sureSuggestions(candidates, taken);
       if (suggestions.length) {
         await this.db
           .insert(activityRuleSuggestions)
-          .values(suggestions.map((item) => ({ userId, projectId: project.id, ...item })))
+          .values(
+            suggestions.map(item => ({userId, projectId: project.id, ...item})),
+          )
           .onConflictDoNothing();
       }
     }

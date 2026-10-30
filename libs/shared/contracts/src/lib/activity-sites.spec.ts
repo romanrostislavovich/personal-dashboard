@@ -1,4 +1,9 @@
-import { activitySiteVisitSchema, isSiteOf, siteDomainSchema, siteOf } from './activity-sites';
+import {
+  activitySiteVisitSchema,
+  isSiteOf,
+  siteDomainSchema,
+  siteOf,
+} from './activity-sites';
 
 describe('sites', () => {
   it('counts a page by its host, without www, and nothing else by a site', () => {
@@ -20,7 +25,9 @@ describe('sites', () => {
   });
 
   it('reads a domain as the user types it', () => {
-    expect(siteDomainSchema.parse(' https://www.Reddit.com/r/all ')).toBe('reddit.com');
+    expect(siteDomainSchema.parse(' https://www.Reddit.com/r/all ')).toBe(
+      'reddit.com',
+    );
     expect(siteDomainSchema.parse('twitch.tv')).toBe('twitch.tv');
     expect(siteDomainSchema.safeParse('not a site').success).toBe(false);
   });
@@ -34,7 +41,10 @@ describe('sites', () => {
     };
     expect(activitySiteVisitSchema.safeParse(visit).success).toBe(false);
     expect(
-      activitySiteVisitSchema.safeParse({ ...visit, endedAt: '2026-10-16T10:05:00Z' }).success,
+      activitySiteVisitSchema.safeParse({
+        ...visit,
+        endedAt: '2026-10-16T10:05:00Z',
+      }).success,
     ).toBe(true);
   });
 
@@ -50,8 +60,12 @@ describe('sites', () => {
       'http://[::1]/',
     ]) {
       const site = siteOf(url);
-      expect(activitySiteVisitSchema.safeParse({ ...visit, site }).success).toBe(true);
+      expect(activitySiteVisitSchema.safeParse({...visit, site}).success).toBe(
+        true,
+      );
     }
-    expect(activitySiteVisitSchema.safeParse({ ...visit, site: 'not a site' }).success).toBe(false);
+    expect(
+      activitySiteVisitSchema.safeParse({...visit, site: 'not a site'}).success,
+    ).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { DailyMetric, LocalDate, MoodInsight, MoodInsights } from '@pd/contracts';
+import {DailyMetric, LocalDate, MoodInsight, MoodInsights} from '@pd/contracts';
 
 /** The daily number that is the mood itself (the diary registers it). */
 export const MOOD_METRIC = 'diary.mood';
@@ -16,7 +16,12 @@ const MIN_DIFFERENCE_PERCENT = 15;
  * A day without a quantity (hours, money, plays) is a day of zero; a day without a reading
  * (the temperature, a time of the day) is a day nobody measured, and is left out.
  */
-const READINGS: DailyMetric['unit'][] = ['degrees', 'clock', 'score', 'percent'];
+const READINGS: DailyMetric['unit'][] = [
+  'degrees',
+  'clock',
+  'score',
+  'percent',
+];
 /**
  * A reading is compared by the difference itself — percent of a temperature or of an hour of
  * the day means nothing: this much of it is worth showing.
@@ -28,7 +33,8 @@ const MIN_READING_DIFFERENCE: Partial<Record<DailyMetric['unit'], number>> = {
   percent: 10,
 };
 
-const average = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
+const average = (values: number[]) =>
+  values.reduce((sum, value) => sum + value, 0) / values.length;
 
 /**
  * What goes with a good day and what with a bad one: for every daily number, its average on the
@@ -40,25 +46,28 @@ const average = (values: number[]) => values.reduce((sum, value) => sum + value,
  */
 export function moodInsights(
   metrics: DailyMetric[],
-  period: { from: LocalDate; to: LocalDate },
+  period: {from: LocalDate; to: LocalDate},
 ): MoodInsights {
   const mood = new Map(
-    (metrics.find((metric) => metric.key === MOOD_METRIC)?.days ?? []).map((day) => [
-      day.day,
-      day.value,
-    ]),
+    (metrics.find(metric => metric.key === MOOD_METRIC)?.days ?? []).map(
+      day => [day.day, day.value],
+    ),
   );
-  const good = [...mood].filter(([, value]) => value >= GOOD_FROM).map(([day]) => day);
-  const bad = [...mood].filter(([, value]) => value <= BAD_UP_TO).map(([day]) => day);
+  const good = [...mood]
+    .filter(([, value]) => value >= GOOD_FROM)
+    .map(([day]) => day);
+  const bad = [...mood]
+    .filter(([, value]) => value <= BAD_UP_TO)
+    .map(([day]) => day);
   const enough = good.length >= MIN_DAYS && bad.length >= MIN_DAYS;
 
   const insights: MoodInsight[] = [];
   if (enough) {
-    for (const metric of metrics.filter((item) => item.key !== MOOD_METRIC)) {
-      const values = new Map(metric.days.map((day) => [day.day, day.value]));
+    for (const metric of metrics.filter(item => item.key !== MOOD_METRIC)) {
+      const values = new Map(metric.days.map(day => [day.day, day.value]));
       // One task done on one good day is not "tasks go with good days".
       if (
-        [...good, ...bad].filter((day) =>
+        [...good, ...bad].filter(day =>
           metric.missing === 'absent' ? values.has(day) : values.get(day),
         ).length < MIN_DAYS_WITH_VALUE
       ) {
@@ -67,8 +76,10 @@ export function moodInsights(
       const reading = READINGS.includes(metric.unit);
       const of = (days: LocalDate[]) =>
         reading || metric.missing === 'absent'
-          ? days.flatMap((day) => (values.has(day) ? [values.get(day) as number] : []))
-          : days.map((day) => values.get(day) ?? 0);
+          ? days.flatMap(day =>
+              values.has(day) ? [values.get(day) as number] : [],
+            )
+          : days.map(day => values.get(day) ?? 0);
       const [onGood, onBad] = [of(good), of(bad)];
       if (onGood.length < MIN_DAYS || onBad.length < MIN_DAYS) {
         continue;
@@ -77,7 +88,9 @@ export function moodInsights(
       const onBadDays = average(onBad);
       const difference = onGoodDays - onBadDays;
       const base = Math.max(Math.abs(onGoodDays), Math.abs(onBadDays));
-      const differencePercent = base ? Math.round((difference / base) * 100) : 0;
+      const differencePercent = base
+        ? Math.round((difference / base) * 100)
+        : 0;
       const minimum = MIN_READING_DIFFERENCE[metric.unit];
       const worth = reading
         ? Math.abs(difference) >= (minimum ?? 0)
@@ -87,7 +100,7 @@ export function moodInsights(
           key: metric.key,
           module: metric.module,
           labelKey: metric.labelKey,
-          ...(metric.label ? { label: metric.label } : {}),
+          ...(metric.label ? {label: metric.label} : {}),
           unit: metric.unit,
           currency: metric.currency,
           onGoodDays: Math.round(onGoodDays * 100) / 100,

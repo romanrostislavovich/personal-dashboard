@@ -21,11 +21,13 @@ export function parseDotaAccountId(input: string): number | null {
  * Rank medal: `rank_tier` = medal × 10 + stars.
  * 1 Herald, 2 Guardian, 3 Crusader, 4 Archon, 5 Legend, 6 Ancient, 7 Divine, 8 Immortal.
  */
-export function splitRankTier(rankTier: number | null): { medal: number; stars: number } | null {
+export function splitRankTier(
+  rankTier: number | null,
+): {medal: number; stars: number} | null {
   if (!rankTier) {
     return null;
   }
-  return { medal: Math.floor(rankTier / 10), stars: rankTier % 10 };
+  return {medal: Math.floor(rankTier / 10), stars: rankTier % 10};
 }
 
 /**
@@ -35,10 +37,10 @@ export function splitRankTier(rankTier: number | null): { medal: number; stars: 
 export function medalChange(
   previousTier: number | null,
   currentTier: number | null,
-): { from: number; to: number } | null {
+): {from: number; to: number} | null {
   const before = splitRankTier(previousTier);
   const after = splitRankTier(currentTier);
   return before && after && before.medal !== after.medal
-    ? { from: previousTier as number, to: currentTier as number }
+    ? {from: previousTier as number, to: currentTier as number}
     : null;
 }

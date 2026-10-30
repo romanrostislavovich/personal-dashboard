@@ -1,4 +1,4 @@
-import { consumptionBetween, pickBalance } from './deepseek-balance';
+import {consumptionBetween, pickBalance} from './deepseek-balance';
 
 describe('consumptionBetween', () => {
   it('knows nothing on the first measurement', () => {
@@ -18,14 +18,14 @@ describe('pickBalance', () => {
   it('prefers USD when several currencies are present', () => {
     expect(
       pickBalance([
-        { currency: 'CNY', total_balance: '100.00' },
-        { currency: 'USD', total_balance: '12.50' },
+        {currency: 'CNY', total_balance: '100.00'},
+        {currency: 'USD', total_balance: '12.50'},
       ]),
-    ).toEqual({ currency: 'USD', balance: 12.5 });
+    ).toEqual({currency: 'USD', balance: 12.5});
   });
 
   it('falls back to the only currency', () => {
-    expect(pickBalance([{ currency: 'CNY', total_balance: '7' }])).toEqual({
+    expect(pickBalance([{currency: 'CNY', total_balance: '7'}])).toEqual({
       currency: 'CNY',
       balance: 7,
     });

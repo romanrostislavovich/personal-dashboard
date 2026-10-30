@@ -1,8 +1,11 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AutomationsService } from '@pd/api-core';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AutomationsService} from '@pd/api-core';
 
 /** "Only this site": a part of its name or address; empty — any site. */
-const siteMatches = (params: Record<string, string>, vars: Record<string, string>) => {
+const siteMatches = (
+  params: Record<string, string>,
+  vars: Record<string, string>,
+) => {
   const site = (params['site'] ?? '').trim().toLowerCase();
   return !site || `${vars['site']} ${vars['url']}`.toLowerCase().includes(site);
 };

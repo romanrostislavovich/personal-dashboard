@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /**
  * The band's data through the Google Health API (docs/proposals/mobile-app.md, stage 3): the
@@ -61,7 +61,7 @@ export interface WearableStatus {
   available: boolean;
   connected: boolean;
   /** For the owner: which app it is and the redirect URI to put into it. */
-  app: { clientId: string | null; redirectUri: string } | null;
+  app: {clientId: string | null; redirectUri: string} | null;
   lastSyncedAt: string | null;
   error: string | null;
   /** The first day of the band in the dashboard. */

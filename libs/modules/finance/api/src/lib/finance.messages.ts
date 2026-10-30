@@ -1,13 +1,15 @@
-import { pickMessages } from '@pd/api-core';
-import { KeyDateKind, RecurringPayment } from '@pd/contracts';
-import { ReadReceipt } from './receipts/receipt-parse';
+import {pickMessages} from '@pd/api-core';
+import {KeyDateKind, RecurringPayment} from '@pd/contracts';
+import {ReadReceipt} from './receipts/receipt-parse';
 
 /** Text from a receipt goes into an HTML message of the bot. */
 const html = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 const list = (payments: RecurringPayment[]) =>
-  payments.map((p) => `• ${p.name}: ${p.amount.toFixed(2)} ${p.currency}`).join('\n');
+  payments
+    .map(p => `• ${p.name}: ${p.amount.toFixed(2)} ${p.currency}`)
+    .join('\n');
 
 /** "1899.00 → 1699.00 PLN (−10.5%)". */
 const priceChange = (was: number, now: number, currency: string) => {
@@ -19,7 +21,8 @@ const priceChange = (was: number, now: number, currency: string) => {
 const messages = {
   en: {
     chargedTitle: '💸 Recurring payments',
-    chargedBody: (payments: RecurringPayment[]) => `Charged:\n${list(payments)}`,
+    chargedBody: (payments: RecurringPayment[]) =>
+      `Charged:\n${list(payments)}`,
     budgetTotal: 'all expenses',
     budgetWarnTitle: (name: string) => `⚠️ Budget "${name}": 80% spent`,
     budgetExceededTitle: (name: string) => `🚫 Budget "${name}" is spent`,
@@ -50,7 +53,12 @@ const messages = {
         trial: `⏳ The free trial of ${name} ends soon`,
         renewal: `📅 ${name} renews soon`,
       })[kind],
-    keyDateBody: (kind: KeyDateKind, date: string, amount: number, currency: string) =>
+    keyDateBody: (
+      kind: KeyDateKind,
+      date: string,
+      amount: number,
+      currency: string,
+    ) =>
       ({
         'cancel-by': `Give notice by ${date} if you want to leave or to ask for a better price: otherwise the contract runs another term. Finance → Recurring drafts the letter.`,
         'term-end': `The term ends on ${date}. Renew it or look for another offer.`,
@@ -61,7 +69,13 @@ const messages = {
     reportNote: (summary: string) => `💰 Money: ${summary}`,
     wishCheaperTitle: (name: string) => `📉 Cheaper: ${name}`,
     wishPricierTitle: (name: string) => `📈 More expensive: ${name}`,
-    wishPriceBody: (was: number, now: number, currency: string, isLowest: boolean, url: string) =>
+    wishPriceBody: (
+      was: number,
+      now: number,
+      currency: string,
+      isLowest: boolean,
+      url: string,
+    ) =>
       `${priceChange(was, now, currency)}\n` +
       (isLowest ? 'The lowest price since you added it.\n' : '') +
       url,
@@ -73,7 +87,8 @@ const messages = {
   },
   ru: {
     chargedTitle: '💸 Регулярные платежи',
-    chargedBody: (payments: RecurringPayment[]) => `Проведены списания:\n${list(payments)}`,
+    chargedBody: (payments: RecurringPayment[]) =>
+      `Проведены списания:\n${list(payments)}`,
     budgetTotal: 'все траты',
     budgetWarnTitle: (name: string) => `⚠️ Бюджет «${name}»: потрачено 80%`,
     budgetExceededTitle: (name: string) => `🚫 Бюджет «${name}» исчерпан`,
@@ -104,7 +119,12 @@ const messages = {
         trial: `⏳ Скоро кончится пробный период ${name}`,
         renewal: `📅 ${name} скоро продлится`,
       })[kind],
-    keyDateBody: (kind: KeyDateKind, date: string, amount: number, currency: string) =>
+    keyDateBody: (
+      kind: KeyDateKind,
+      date: string,
+      amount: number,
+      currency: string,
+    ) =>
       ({
         'cancel-by': `Сообщите до ${date}, если хотите уйти или попросить цену ниже, — иначе договор продлится ещё на срок. Письмо можно составить в Финансы → Регулярные.`,
         'term-end': `Срок заканчивается ${date}. Продлите его или поищите другое предложение.`,
@@ -115,12 +135,19 @@ const messages = {
     reportNote: (summary: string) => `💰 Деньги: ${summary}`,
     wishCheaperTitle: (name: string) => `📉 Подешевело: ${name}`,
     wishPricierTitle: (name: string) => `📈 Подорожало: ${name}`,
-    wishPriceBody: (was: number, now: number, currency: string, isLowest: boolean, url: string) =>
+    wishPriceBody: (
+      was: number,
+      now: number,
+      currency: string,
+      isLowest: boolean,
+      url: string,
+    ) =>
       `${priceChange(was, now, currency)}\n` +
       (isLowest ? 'Самая низкая цена с момента добавления.\n' : '') +
       url,
     uncategorized: 'Без категории',
-    bankExpiringTitle: (bank: string) => `🏦 ${bank}: подтвердите доступ заново`,
+    bankExpiringTitle: (bank: string) =>
+      `🏦 ${bank}: подтвердите доступ заново`,
     bankExpiringBody: (date: string, url: string) =>
       `Согласие банка заканчивается ${date}: после этого транзакции перестанут приходить. ` +
       `Настройки → Интеграции → Банк → Подтвердить заново.\n${url}`,

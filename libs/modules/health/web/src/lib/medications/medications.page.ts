@@ -1,14 +1,19 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthIntake, HealthMedication, HealthRecord } from '@pd/contracts';
-import { HealthDialogs } from '../dialogs/health-dialogs.service';
-import { HealthApi } from '../health.api';
-import { today } from '../health-labels';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {HealthIntake, HealthMedication, HealthRecord} from '@pd/contracts';
+import {HealthDialogs} from '../dialogs/health-dialogs.service';
+import {HealthApi} from '../health.api';
+import {today} from '../health-labels';
 
 /** What is taken now, and what was taken before: when, how much, why it was stopped. */
 /** How far back "taken N of M" counts. */
@@ -72,10 +77,13 @@ const ADHERENCE_DAYS = 14;
                   </span>
                   @if (medication.stopReason) {
                     <span class="hint">
-                      {{ 'health.medication.stopReason' | transloco }}: {{ medication.stopReason }}
+                      {{ 'health.medication.stopReason' | transloco }}:
+                      {{ medication.stopReason }}
                     </span>
                   }
-                  @if (medication.reminderTimes.length && !medication.stoppedOn) {
+                  @if (
+                    medication.reminderTimes.length && !medication.stoppedOn
+                  ) {
                     <span class="hint reminders">
                       <mat-icon>notifications</mat-icon>
                       {{ medication.reminderTimes.join(', ') }}
@@ -83,10 +91,19 @@ const ADHERENCE_DAYS = 14;
                         · {{ 'health.medication.adherence' | transloco: taken }}
                       }
                     </span>
-                    @for (intake of pending(data, medication); track intake.id) {
+                    @for (
+                      intake of pending(data, medication);
+                      track intake.id
+                    ) {
                       <span class="intake">
-                        {{ 'health.medication.due' | transloco: { time: intake.time } }}
-                        <button matButton="tonal" (click)="answer(intake, 'taken')">
+                        {{
+                          'health.medication.due'
+                            | transloco: {time: intake.time}
+                        }}
+                        <button
+                          matButton="tonal"
+                          (click)="answer(intake, 'taken')"
+                        >
                           {{ 'health.medication.taken' | transloco }}
                         </button>
                         <button matButton (click)="answer(intake, 'skipped')">
@@ -190,10 +207,16 @@ export class MedicationsPage {
   );
   /** The server sorts them: still taken first. */
   /** Today's reminders not answered yet: "taken" or "skipped" from the page too. */
-  protected pending(data: HealthRecord, medication: HealthMedication): HealthIntake[] {
+  protected pending(
+    data: HealthRecord,
+    medication: HealthMedication,
+  ): HealthIntake[] {
     const day = today();
     return data.intakes.filter(
-      (i) => i.medicationId === medication.id && i.day === day && i.status === 'pending',
+      i =>
+        i.medicationId === medication.id &&
+        i.day === day &&
+        i.status === 'pending',
     );
   }
 
@@ -201,36 +224,55 @@ export class MedicationsPage {
   protected adherence(
     data: HealthRecord,
     medication: HealthMedication,
-  ): { taken: number; of: number } | null {
-    const since = new Date(Date.now() - ADHERENCE_DAYS * 86_400_000).toISOString().slice(0, 10);
-    const intakes = data.intakes.filter((i) => i.medicationId === medication.id && i.day >= since);
+  ): {taken: number; of: number} | null {
+    const since = new Date(Date.now() - ADHERENCE_DAYS * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    const intakes = data.intakes.filter(
+      i => i.medicationId === medication.id && i.day >= since,
+    );
     return intakes.length
-      ? { taken: intakes.filter((i) => i.status === 'taken').length, of: intakes.length }
+      ? {
+          taken: intakes.filter(i => i.status === 'taken').length,
+          of: intakes.length,
+        }
       : null;
   }
 
-  protected async answer(intake: HealthIntake, status: 'taken' | 'skipped'): Promise<void> {
-    await this.api.client.answerIntake(intake.id, { status });
+  protected async answer(
+    intake: HealthIntake,
+    status: 'taken' | 'skipped',
+  ): Promise<void> {
+    await this.api.client.answerIntake(intake.id, {status});
     this.record.reload();
   }
 
   protected readonly groups = computed(() => {
     const medications = this.data()?.medications ?? [];
     return [
-      { key: 'health.medication.current', items: medications.filter((m) => !m.stoppedOn) },
-      { key: 'health.medication.past', items: medications.filter((m) => m.stoppedOn) },
+      {
+        key: 'health.medication.current',
+        items: medications.filter(m => !m.stoppedOn),
+      },
+      {
+        key: 'health.medication.past',
+        items: medications.filter(m => m.stoppedOn),
+      },
     ];
   });
 
   protected async add(): Promise<void> {
     const record = this.data();
-    if (record && (await this.dialogs.medication({ record }))) {
+    if (record && (await this.dialogs.medication({record}))) {
       this.record.reload();
     }
   }
 
-  protected async edit(record: HealthRecord, medication: HealthMedication): Promise<void> {
-    if (await this.dialogs.medication({ record, medication })) {
+  protected async edit(
+    record: HealthRecord,
+    medication: HealthMedication,
+  ): Promise<void> {
+    if (await this.dialogs.medication({record, medication})) {
       this.record.reload();
     }
   }

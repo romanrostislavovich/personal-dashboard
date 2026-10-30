@@ -14,13 +14,14 @@ import {
   PsychologySettings,
   PsychologySettingsInput,
 } from '@pd/contracts';
-import { ApiClient, apiRequest } from '../api-client';
+import {ApiClient, apiRequest} from '../api-client';
 
 const BASE = '/api/psychology';
 
 export const PSYCHOLOGY_READS = {
   /** The mood over a period: by weekday, by week, low runs, during the events. */
-  patterns: (from: string, to: string) => apiRequest(`${BASE}/patterns`, { from, to }),
+  patterns: (from: string, to: string) =>
+    apiRequest(`${BASE}/patterns`, {from, to}),
   events: () => apiRequest(`${BASE}/events`),
   /** Every filled-in questionnaire, the latest first. */
   assessments: () => apiRequest(`${BASE}/assessments`),
@@ -28,7 +29,7 @@ export const PSYCHOLOGY_READS = {
   /** The library of small steps of a gentle day. */
   gentleSteps: () => apiRequest(`${BASE}/gentle/steps`),
   /** The plan of a gentle day; `on` `false` — the mode is off that day. */
-  gentleDay: (date: string) => apiRequest(`${BASE}/gentle/day`, { date }),
+  gentleDay: (date: string) => apiRequest(`${BASE}/gentle/day`, {date}),
   briefs: () => apiRequest(`${BASE}/briefs`),
 };
 
@@ -45,11 +46,16 @@ export function psychologyApi(api: ApiClient) {
     removeEvent: (id: string) => api.delete(`${BASE}/events/${id}`),
     /** The events that touch the period as an Excel workbook or a Word document. */
     exportEvents: (format: EventExportFormat, from?: string, to?: string) => {
-      const query = new URLSearchParams({ format, ...(from && { from }), ...(to && { to }) });
+      const query = new URLSearchParams({
+        format,
+        ...(from && {from}),
+        ...(to && {to}),
+      });
       return api.blob(`${BASE}/events/export?${query}`);
     },
 
-    assessments: () => api.read<PsychologyAssessment[]>(PSYCHOLOGY_READS.assessments()),
+    assessments: () =>
+      api.read<PsychologyAssessment[]>(PSYCHOLOGY_READS.assessments()),
     addAssessment: (input: PsychologyAssessmentInput) =>
       api.post<PsychologyAssessment>(`${BASE}/assessments`, input),
     removeAssessment: (id: string) => api.delete(`${BASE}/assessments/${id}`),
@@ -64,9 +70,11 @@ export function psychologyApi(api: ApiClient) {
         ? api.put<GentleStep>(`${BASE}/gentle/steps/${id}`, input)
         : api.post<GentleStep>(`${BASE}/gentle/steps`, input),
     removeGentleStep: (id: string) => api.delete(`${BASE}/gentle/steps/${id}`),
-    gentleDay: (date: string) => api.read<GentleDay>(PSYCHOLOGY_READS.gentleDay(date)),
+    gentleDay: (date: string) =>
+      api.read<GentleDay>(PSYCHOLOGY_READS.gentleDay(date)),
     /** Turns the mode on for the day, or changes its steps. */
-    saveGentleDay: (input: GentleDayInput) => api.put<GentleDay>(`${BASE}/gentle/day`, input),
+    saveGentleDay: (input: GentleDayInput) =>
+      api.put<GentleDay>(`${BASE}/gentle/day`, input),
     leaveGentleDay: (date: string) => api.delete(`${BASE}/gentle/day/${date}`),
 
     briefs: () => api.read<AppointmentBrief[]>(PSYCHOLOGY_READS.briefs()),

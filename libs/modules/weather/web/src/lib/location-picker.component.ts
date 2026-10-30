@@ -1,13 +1,19 @@
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { WeatherLocation } from '@pd/contracts';
-import { debounceTime } from 'rxjs';
-import { WeatherApi } from './weather.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  output,
+  signal,
+} from '@angular/core';
+import {toObservable, toSignal} from '@angular/core/rxjs-interop';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {WeatherLocation} from '@pd/contracts';
+import {debounceTime} from 'rxjs';
+import {WeatherApi} from './weather.api';
 
 /** Pause after typing before searching, ms. */
 const SEARCH_DEBOUNCE_MS = 300;
@@ -63,7 +69,7 @@ export class LocationPickerComponent {
   protected readonly query = signal('');
   private readonly debouncedQuery = toSignal(
     toObservable(this.query).pipe(debounceTime(SEARCH_DEBOUNCE_MS)),
-    { initialValue: '' },
+    {initialValue: ''},
   );
   protected readonly results = inject(WeatherApi).places(this.debouncedQuery);
 

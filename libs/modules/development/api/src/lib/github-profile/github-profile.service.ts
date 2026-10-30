@@ -1,6 +1,11 @@
-import { BadRequestException, HttpException, Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database } from '@pd/api-core';
+import {
+  BadRequestException,
+  HttpException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, DB, Database} from '@pd/api-core';
 import {
   addDays,
   DateParts,
@@ -10,9 +15,9 @@ import {
   todayIn,
   toLocalDate,
 } from '@pd/contracts';
-import { and, asc, between, desc, eq, gte, sql } from 'drizzle-orm';
-import { GithubTokenService } from '../github/github-token.service';
-import { contributionStats, yearsToSync } from './contribution-stats';
+import {and, asc, between, desc, eq, gte, sql} from 'drizzle-orm';
+import {GithubTokenService} from '../github/github-token.service';
+import {contributionStats, yearsToSync} from './contribution-stats';
 import {
   GithubGraphqlClient,
   GithubViewer,
@@ -60,12 +65,18 @@ export class GithubProfileService {
       .where(eq(githubContributionYears.userId, userId))
       .orderBy(desc(githubContributionYears.year));
     const followersHistory = await this.db
-      .select({ day: githubProfileDailyStats.day, followers: githubProfileDailyStats.followers })
+      .select({
+        day: githubProfileDailyStats.day,
+        followers: githubProfileDailyStats.followers,
+      })
       .from(githubProfileDailyStats)
       .where(
         and(
           eq(githubProfileDailyStats.userId, userId),
-          gte(githubProfileDailyStats.day, toLocalDate(addDays(today, -FOLLOWERS_HISTORY_DAYS))),
+          gte(
+            githubProfileDailyStats.day,
+            toLocalDate(addDays(today, -FOLLOWERS_HISTORY_DAYS)),
+          ),
         ),
       )
       .orderBy(asc(githubProfileDailyStats.day));
@@ -80,9 +91,12 @@ export class GithubProfileService {
       following: row.following,
       repos: row.repos,
       totalStars: row.totalStars,
-      totalContributions: years.reduce((sum, year) => sum + year.contributions, 0),
+      totalContributions: years.reduce(
+        (sum, year) => sum + year.contributions,
+        0,
+      ),
       ...contributionStats(await this.allDays(userId), today),
-      years: years.map(({ userId: _userId, ...year }) => year),
+      years: years.map(({userId: _userId, ...year}) => year),
       languages: row.languages,
       topRepos: row.topRepos,
       followersHistory,
@@ -92,9 +106,16 @@ export class GithubProfileService {
   }
 
   /** The calendar of a period, zero days included. */
-  contributions(userId: string, from: LocalDate, to: LocalDate): Promise<GithubContributionDay[]> {
+  contributions(
+    userId: string,
+    from: LocalDate,
+    to: LocalDate,
+  ): Promise<GithubContributionDay[]> {
     return this.db
-      .select({ day: githubContributionDays.day, count: githubContributionDays.count })
+      .select({
+        day: githubContributionDays.day,
+        count: githubContributionDays.count,
+      })
       .from(githubContributionDays)
       .where(
         and(
@@ -133,7 +154,7 @@ export class GithubProfileService {
 
   async followers(userId: string): Promise<number> {
     const [row] = await this.db
-      .select({ followers: githubProfiles.followers })
+      .select({followers: githubProfiles.followers})
       .from(githubProfiles)
       .where(eq(githubProfiles.userId, userId));
     return row?.followers ?? 0;
@@ -154,18 +175,24 @@ export class GithubProfileService {
       const today = this.today();
       const years: FetchedYear[] = [];
       const joinedYear = new Date(viewer.joinedAt).getUTCFullYear();
-      for (const year of yearsToSync(joinedYear, today.year, await this.savedYears(userId))) {
-        years.push({ year, ...(await github.getYear(year)) });
+      for (const year of yearsToSync(
+        joinedYear,
+        today.year,
+        await this.savedYears(userId),
+      )) {
+        years.push({year, ...(await github.getYear(year))});
       }
       await this.save(userId, viewer, years, today);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       await this.db
         .update(githubProfiles)
-        .set({ syncError: message })
+        .set({syncError: message})
         .where(eq(githubProfiles.userId, userId));
       // The page shows GitHub's own explanation (an invalid token, a missing permission).
-      throw error instanceof HttpException ? error : new BadRequestException(message);
+      throw error instanceof HttpException
+        ? error
+        : new BadRequestException(message);
     }
   }
 
@@ -198,37 +225,42 @@ export class GithubProfileService {
     };
     // The rest of the current year has not happened yet.
     const days = years
-      .flatMap((year) => year.days)
-      .filter((day) => day.day <= todayDate || day.count > 0);
+      .flatMap(year => year.days)
+      .filter(day => day.day <= todayDate || day.count > 0);
 
-    await this.db.transaction(async (tx) => {
+    await this.db.transaction(async tx => {
       await tx
         .insert(githubProfiles)
-        .values({ userId, ...profile })
-        .onConflictDoUpdate({ target: githubProfiles.userId, set: profile });
+        .values({userId, ...profile})
+        .onConflictDoUpdate({target: githubProfiles.userId, set: profile});
       await tx
         .insert(githubProfileDailyStats)
-        .values({ userId, day: todayDate, ...daily })
+        .values({userId, day: todayDate, ...daily})
         .onConflictDoUpdate({
           target: [githubProfileDailyStats.userId, githubProfileDailyStats.day],
           set: daily,
         });
-      for (const { year, days: _days, ...totals } of years) {
+      for (const {year, days: _days, ...totals} of years) {
         await tx
           .insert(githubContributionYears)
-          .values({ userId, year, ...totals })
+          .values({userId, year, ...totals})
           .onConflictDoUpdate({
-            target: [githubContributionYears.userId, githubContributionYears.year],
+            target: [
+              githubContributionYears.userId,
+              githubContributionYears.year,
+            ],
             set: totals,
           });
       }
       for (let i = 0; i < days.length; i += INSERT_CHUNK) {
         await tx
           .insert(githubContributionDays)
-          .values(days.slice(i, i + INSERT_CHUNK).map((day) => ({ userId, ...day })))
+          .values(
+            days.slice(i, i + INSERT_CHUNK).map(day => ({userId, ...day})),
+          )
           .onConflictDoUpdate({
             target: [githubContributionDays.userId, githubContributionDays.day],
-            set: { count: sql`excluded.count` },
+            set: {count: sql`excluded.count`},
             // Two years are re-read every hour: rows that did not change stay untouched,
             // otherwise each of them would be sent again by the sync between instances.
             setWhere: sql`${githubContributionDays.count} <> excluded.count`,
@@ -239,13 +271,13 @@ export class GithubProfileService {
 
   private async savedYears(userId: string): Promise<number[]> {
     const rows = await this.db
-      .select({ year: githubContributionYears.year })
+      .select({year: githubContributionYears.year})
       .from(githubContributionYears)
       .where(eq(githubContributionYears.userId, userId));
-    return rows.map((row) => row.year);
+    return rows.map(row => row.year);
   }
 
   today(): DateParts {
-    return todayIn(this.config.get('APP_TIMEZONE', { infer: true }));
+    return todayIn(this.config.get('APP_TIMEZONE', {infer: true}));
   }
 }

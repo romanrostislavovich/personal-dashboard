@@ -1,6 +1,6 @@
-import { sql, SQL } from 'drizzle-orm';
-import { Database } from '../database/database.module';
-import { SyncTable } from './sync-catalog';
+import {sql, SQL} from 'drizzle-orm';
+import {Database} from '../database/database.module';
+import {SyncTable} from './sync-catalog';
 
 /** Set for the transaction that applies changes from the other side: they are not re-logged. */
 export const APPLYING_SETTING = 'pd.sync_applying';
@@ -38,22 +38,27 @@ END $$;
  * and a version for each existing row, dated at the epoch: any real change wins over it.
  * Both happen in one transaction, so no concurrent write slips between them.
  */
-export async function installSyncTriggers(db: Database, tables: SyncTable[]): Promise<string[]> {
+export async function installSyncTriggers(
+  db: Database,
+  tables: SyncTable[],
+): Promise<string[]> {
   const installed: string[] = [];
-  await db.transaction(async (tx) => {
+  await db.transaction(async tx => {
     // Two instances starting against one database must not install twice.
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('pd.sync.install'))`);
+    await tx.execute(
+      sql`SELECT pg_advisory_xact_lock(hashtext('pd.sync.install'))`,
+    );
     await tx.execute(TRACK_FUNCTION);
-    const { rows } = await tx.execute<{ table: string }>(sql`
+    const {rows} = await tx.execute<{table: string}>(sql`
       SELECT c.relname AS table FROM pg_trigger t
       JOIN pg_class c ON c.oid = t.tgrelid
       JOIN pg_namespace n ON n.oid = c.relnamespace
       WHERE n.nspname = 'public' AND t.tgname = ${TRIGGER_NAME}
     `);
-    const tracked = new Set(rows.map((row) => row.table));
-    for (const table of tables.filter((t) => !tracked.has(t.name))) {
+    const tracked = new Set(rows.map(row => row.table));
+    for (const table of tables.filter(t => !tracked.has(t.name))) {
       const name = sql.identifier(table.name);
-      const args = sql.raw(table.primaryKey.map((col) => `'${col}'`).join(', '));
+      const args = sql.raw(table.primaryKey.map(col => `'${col}'`).join(', '));
       await tx.execute(sql`
         CREATE TRIGGER ${sql.identifier(TRIGGER_NAME)} AFTER INSERT OR UPDATE OR DELETE ON ${name}
         FOR EACH ROW EXECUTE FUNCTION sync.track_change(${args})
@@ -73,6 +78,8 @@ export async function installSyncTriggers(db: Database, tables: SyncTable[]): Pr
 
 /** `{"col": value, …}` of the primary key, built exactly like the trigger does. */
 export function pkObject(table: SyncTable, row: SQL): SQL {
-  const parts = table.primaryKey.map((col) => sql`${col}::text, ${row} -> ${col}::text`);
+  const parts = table.primaryKey.map(
+    col => sql`${col}::text, ${row} -> ${col}::text`,
+  );
   return sql`jsonb_build_object(${sql.join(parts, sql`, `)})`;
 }

@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MorningDigestService } from '@pd/api-core';
-import { MusicTopItem } from '@pd/contracts';
-import { LastfmService } from './lastfm.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {MorningDigestService} from '@pd/api-core';
+import {MusicTopItem} from '@pd/contracts';
+import {LastfmService} from './lastfm.service';
 
 /** Scrobble milestones are counted in these steps. */
 const MILESTONE = 1000;
@@ -12,7 +12,9 @@ const MILESTONE = 1000;
 export const ARTIST_OF_THE_WEEK_MIN_PLAYS = 5;
 
 /** The most played artist of the week, when they were played enough to count. */
-export function artistOfTheWeek(artists: MusicTopItem[] | undefined): string | null {
+export function artistOfTheWeek(
+  artists: MusicTopItem[] | undefined,
+): string | null {
   const top = artists?.[0];
   return top && top.playcount >= ARTIST_OF_THE_WEEK_MIN_PLAYS ? top.name : null;
 }
@@ -38,7 +40,7 @@ export class MusicDigest implements OnModuleInit {
       module: 'music',
       description: MUSIC_DIGEST_DESCRIPTION,
       // Plays grow every day by themselves, so only milestones and the top artist are compared.
-      collect: async (userId) => {
+      collect: async userId => {
         const total = await this.lastfm.totalScrobbles(userId);
         if (total === null) {
           return null; // Last.fm is not connected.

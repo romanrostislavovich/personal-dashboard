@@ -1,26 +1,32 @@
-import { markSelection, parseDiaryMarks, splitMarkEmoji, unmarkAt } from './diary-marks';
+import {
+  markSelection,
+  parseDiaryMarks,
+  splitMarkEmoji,
+  unmarkAt,
+} from './diary-marks';
 
 describe('parseDiaryMarks', () => {
   it('finds emoji marks, including emoji with a variation selector', () => {
-    const text = 'Утро. ==🔥 Закончил релиз== и ==❤️ ужин с семьёй==. ==просто выделение==';
+    const text =
+      'Утро. ==🔥 Закончил релиз== и ==❤️ ужин с семьёй==. ==просто выделение==';
     expect(parseDiaryMarks(text)).toEqual([
-      { emoji: '🔥', text: 'Закончил релиз' },
-      { emoji: '❤️', text: 'ужин с семьёй' },
+      {emoji: '🔥', text: 'Закончил релиз'},
+      {emoji: '❤️', text: 'ужин с семьёй'},
     ]);
   });
 
   it('does not cross blank lines', () => {
     expect(parseDiaryMarks('==🔥 first\n\nsecond==')).toEqual([]);
     expect(parseDiaryMarks('==🔥 line one\nline two==')).toEqual([
-      { emoji: '🔥', text: 'line one\nline two' },
+      {emoji: '🔥', text: 'line one\nline two'},
     ]);
   });
 });
 
 describe('splitMarkEmoji', () => {
   it('separates the leading emoji', () => {
-    expect(splitMarkEmoji('💡 idea')).toEqual({ emoji: '💡', text: 'idea' });
-    expect(splitMarkEmoji('plain')).toEqual({ emoji: null, text: 'plain' });
+    expect(splitMarkEmoji('💡 idea')).toEqual({emoji: '💡', text: 'idea'});
+    expect(splitMarkEmoji('plain')).toEqual({emoji: null, text: 'plain'});
   });
 });
 
@@ -33,8 +39,15 @@ describe('markSelection', () => {
 
   it('marks the paragraph under the cursor when nothing is selected', () => {
     const content = 'First paragraph.\n\nSecond one here.\n\nThird.';
-    const edit = markSelection(content, content.indexOf('one'), content.indexOf('one'), '💡');
-    expect(edit.content).toBe('First paragraph.\n\n==💡 Second one here.==\n\nThird.');
+    const edit = markSelection(
+      content,
+      content.indexOf('one'),
+      content.indexOf('one'),
+      '💡',
+    );
+    expect(edit.content).toBe(
+      'First paragraph.\n\n==💡 Second one here.==\n\nThird.',
+    );
   });
 
   it('marks each paragraph of a multi-paragraph selection', () => {

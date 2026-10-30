@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 export const lifelogDaySchema = z.iso.date();
 export const lifelogQuerySchema = z
@@ -7,16 +7,18 @@ export const lifelogQuerySchema = z
     to: lifelogDaySchema,
   })
   .strict()
-  .refine(({ from, to }) => {
+  .refine(({from, to}) => {
     const days = (Date.parse(to) - Date.parse(from)) / 86_400_000;
     return days >= 0 && days <= 30;
   }, 'Choose at most 31 days');
 export type LifelogQuery = z.infer<typeof lifelogQuerySchema>;
 
-export const lifelogNoteSchema = z.object({ note: z.string().trim().max(2000) }).strict();
+export const lifelogNoteSchema = z
+  .object({note: z.string().trim().max(2000)})
+  .strict();
 export type LifelogNote = z.infer<typeof lifelogNoteSchema>;
 
-export const lifelogSettingsSchema = z.object({ enabled: z.boolean() }).strict();
+export const lifelogSettingsSchema = z.object({enabled: z.boolean()}).strict();
 export type LifelogSettings = z.infer<typeof lifelogSettingsSchema>;
 export const lifelogAiResultSchema = z
   .object({
@@ -29,7 +31,7 @@ export const lifelogSourceSchema = z
   .object({
     module: z.string().min(1).max(80),
     key: z.string().min(1).max(160),
-    at: z.iso.datetime({ offset: true }).nullable(),
+    at: z.iso.datetime({offset: true}).nullable(),
   })
   .strict();
 export const lifelogGeneratedSchema = z

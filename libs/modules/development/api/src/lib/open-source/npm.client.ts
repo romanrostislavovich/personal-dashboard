@@ -1,8 +1,10 @@
-import { fetchWithTimeout } from '@pd/api-core';
-import { npmPackageName } from '@pd/contracts';
+import {fetchWithTimeout} from '@pd/api-core';
+import {npmPackageName} from '@pd/contracts';
 
 /** npm package downloads for the last 7 days. `null` if the package is not found. */
-export async function fetchNpmWeeklyDownloads(packageName: string): Promise<number | null> {
+export async function fetchNpmWeeklyDownloads(
+  packageName: string,
+): Promise<number | null> {
   // Scoped packages (@scope/name) are passed in the URL as is. Repositories added before links
   // were accepted may hold the package's npmjs.com page instead of its name.
   const name = npmPackageName(packageName);
@@ -15,24 +17,30 @@ export async function fetchNpmWeeklyDownloads(packageName: string): Promise<numb
   if (!response.ok) {
     throw new Error(`npm API ${response.status} for ${name}`);
   }
-  return ((await response.json()) as { downloads: number }).downloads;
+  return ((await response.json()) as {downloads: number}).downloads;
 }
 
 /**
  * The GitHub repository a package says it is published from (`owner/name`, lower case);
  * `null` — the package is not on npm, names no repository or lives somewhere else.
  */
-export async function fetchNpmPackageRepo(packageName: string): Promise<string | null> {
+export async function fetchNpmPackageRepo(
+  packageName: string,
+): Promise<string | null> {
   // A scoped name keeps its `@` and has the slash encoded: `@scope%2Fname`.
   const name = packageName.replace('/', '%2F');
-  const response = await fetchWithTimeout(`https://registry.npmjs.org/${name}/latest`);
+  const response = await fetchWithTimeout(
+    `https://registry.npmjs.org/${name}/latest`,
+  );
   if (response.status === 404) {
     return null;
   }
   if (!response.ok) {
     throw new Error(`npm registry ${response.status} for ${packageName}`);
   }
-  return githubRepoOf(((await response.json()) as { repository?: unknown }).repository);
+  return githubRepoOf(
+    ((await response.json()) as {repository?: unknown}).repository,
+  );
 }
 
 /**
@@ -45,8 +53,8 @@ export function githubRepoOf(repository: unknown): string | null {
   const value =
     typeof repository === 'string'
       ? repository
-      : typeof (repository as { url?: unknown } | null)?.url === 'string'
-        ? (repository as { url: string }).url
+      : typeof (repository as {url?: unknown} | null)?.url === 'string'
+        ? (repository as {url: string}).url
         : null;
   if (!value) {
     return null;

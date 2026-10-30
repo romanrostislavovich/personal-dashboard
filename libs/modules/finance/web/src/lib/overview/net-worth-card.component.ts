@@ -1,15 +1,20 @@
-import { CurrencyPipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { SparklineComponent } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { FinanceApi } from '../finance.api';
-import { AssetsDialog } from './assets.dialog';
+import {CurrencyPipe, DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatDialog} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {SparklineComponent} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {FinanceApi} from '../finance.api';
+import {AssetsDialog} from './assets.dialog';
 
 /** A runway shorter than this many months is a warning; longer than the second is calm. */
 const RUNWAY_LOW = 3;
@@ -37,27 +42,38 @@ const RUNWAY_GOOD = 6;
     @if (worth.value(); as w) {
       <mat-card appearance="outlined">
         <mat-card-header>
-          <mat-card-title>{{ 'finance.worth.title' | transloco }}</mat-card-title>
-          <mat-card-subtitle>{{ 'finance.worth.subtitle' | transloco }}</mat-card-subtitle>
+          <mat-card-title>{{
+            'finance.worth.title' | transloco
+          }}</mat-card-title>
+          <mat-card-subtitle>{{
+            'finance.worth.subtitle' | transloco
+          }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           @if (w.items.length) {
             <div class="numbers">
               <div class="figure">
-                <span class="label">{{ 'finance.worth.total' | transloco }}</span>
+                <span class="label">{{
+                  'finance.worth.total' | transloco
+                }}</span>
                 <span class="big" [class.negative]="w.total < 0">{{
                   w.total | currency: w.currency : 'symbol' : '1.0-0'
                 }}</span>
                 @if (change(); as c) {
                   <span class="change" [class.up]="c > 0" [class.down]="c < 0">
-                    <mat-icon inline>{{ c >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
-                    {{ c > 0 ? '+' : '' }}{{ c | currency: w.currency : 'symbol' : '1.0-0' }}
+                    <mat-icon inline>{{
+                      c >= 0 ? 'trending_up' : 'trending_down'
+                    }}</mat-icon>
+                    {{ c > 0 ? '+' : ''
+                    }}{{ c | currency: w.currency : 'symbol' : '1.0-0' }}
                     {{ 'finance.worth.over30' | transloco }}
                   </span>
                 }
               </div>
               <div class="figure">
-                <span class="label">{{ 'finance.worth.runway' | transloco }}</span>
+                <span class="label">{{
+                  'finance.worth.runway' | transloco
+                }}</span>
                 @if (w.runwayMonths !== null) {
                   <span
                     class="big"
@@ -65,20 +81,29 @@ const RUNWAY_GOOD = 6;
                     [class.good]="w.runwayMonths >= good"
                     >{{
                       'finance.worth.months'
-                        | transloco: { count: (w.runwayMonths | number: '1.0-1') }
+                        | transloco: {count: (w.runwayMonths | number: '1.0-1')}
                     }}</span
                   >
                   <span class="note">{{
-                    (w.burnMonths ? 'finance.worth.runwayHint' : 'finance.worth.runwayHint30')
+                    (w.burnMonths
+                      ? 'finance.worth.runwayHint'
+                      : 'finance.worth.runwayHint30'
+                    )
                       | transloco
                         : {
-                            liquid: (w.liquid | currency: w.currency : 'symbol' : '1.0-0'),
-                            burn: (w.burnPerMonth | currency: w.currency : 'symbol' : '1.0-0'),
+                            liquid:
+                              (w.liquid
+                              | currency: w.currency : 'symbol' : '1.0-0'),
+                            burn:
+                              (w.burnPerMonth
+                              | currency: w.currency : 'symbol' : '1.0-0'),
                             months: w.burnMonths,
                           }
                   }}</span>
                 } @else {
-                  <span class="note">{{ 'finance.worth.noBurn' | transloco }}</span>
+                  <span class="note">{{
+                    'finance.worth.noBurn' | transloco
+                  }}</span>
                 }
               </div>
             </div>
@@ -94,19 +119,31 @@ const RUNWAY_GOOD = 6;
             <ul class="items">
               @for (item of w.items; track item.source + item.id) {
                 <li>
-                  <mat-icon aria-hidden="true">{{ icon(item.kind, item.source) }}</mat-icon>
+                  <mat-icon aria-hidden="true">{{
+                    icon(item.kind, item.source)
+                  }}</mat-icon>
                   <span class="name">{{ item.name }}</span>
-                  <span class="kind">{{ 'finance.assets.kinds.' + item.kind | transloco }}</span>
-                  <span class="amount" [class.negative]="(item.inMain ?? 0) < 0">
+                  <span class="kind">{{
+                    'finance.assets.kinds.' + item.kind | transloco
+                  }}</span>
+                  <span
+                    class="amount"
+                    [class.negative]="(item.inMain ?? 0) < 0"
+                  >
                     {{ item.kind === 'debt' ? '−' : ''
-                    }}{{ item.amount | currency: item.currency : 'symbol' : '1.0-0' }}
+                    }}{{
+                      item.amount | currency: item.currency : 'symbol' : '1.0-0'
+                    }}
                   </span>
                 </li>
               }
             </ul>
             @if (w.missing.length) {
               <p class="note">
-                {{ 'finance.worth.missing' | transloco: { currencies: w.missing.join(', ') } }}
+                {{
+                  'finance.worth.missing'
+                    | transloco: {currencies: w.missing.join(', ')}
+                }}
               </p>
             }
           } @else {
@@ -203,12 +240,17 @@ export class NetWorthCardComponent {
   protected readonly good = RUNWAY_GOOD;
 
   protected readonly points = computed(() =>
-    (this.worth.value()?.history ?? []).map((point) => ({ at: point.day, value: point.total })),
+    (this.worth.value()?.history ?? []).map(point => ({
+      at: point.day,
+      value: point.total,
+    })),
   );
 
   protected readonly change = computed(() => {
     const worth = this.worth.value();
-    return worth && worth.monthAgo !== null ? Math.round(worth.total - worth.monthAgo) : null;
+    return worth && worth.monthAgo !== null
+      ? Math.round(worth.total - worth.monthAgo)
+      : null;
   });
 
   protected icon(kind: string, source: 'bank' | 'manual'): string {
@@ -229,7 +271,9 @@ export class NetWorthCardComponent {
 
   async edit(): Promise<void> {
     await firstValueFrom(
-      this.dialog.open(AssetsDialog, { data: this.worth.value()?.currency ?? 'EUR' }).afterClosed(),
+      this.dialog
+        .open(AssetsDialog, {data: this.worth.value()?.currency ?? 'EUR'})
+        .afterClosed(),
     );
     this.worth.reload();
   }

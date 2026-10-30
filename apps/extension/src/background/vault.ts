@@ -7,10 +7,10 @@ import {
   VaultKey,
   WrongVaultPasswordError,
 } from '@pd/client-core';
-import { OpenVaultItem, VaultItem } from '@pd/contracts';
-import { ExtensionError, VaultStatus } from '../shared/messages';
-import { signedInClient } from './account';
-import { chromeStore } from './storage';
+import {OpenVaultItem, VaultItem} from '@pd/contracts';
+import {ExtensionError, VaultStatus} from '../shared/messages';
+import {signedInClient} from './account';
+import {chromeStore} from './storage';
 
 /** The open vault key, in session storage (memory, never disk): see restoreVaultKey. */
 const KEY = 'vaultKey';
@@ -22,7 +22,7 @@ const session = chromeStore(chrome.storage.session);
 
 /** The open key and the items opened with it, while this service worker is awake. */
 let open: VaultKey | null = null;
-let opened: { items: OpenVaultItem[]; unreadable: number } | null = null;
+let opened: {items: OpenVaultItem[]; unreadable: number} | null = null;
 
 async function api() {
   return vaultApi((await signedInClient()).api);
@@ -32,20 +32,22 @@ export async function vaultStatus(): Promise<VaultStatus> {
   if (await openKey()) {
     return 'unlocked';
   }
-  const { keys } = await api().then((vault) => vault.keys());
+  const {keys} = await api().then(vault => vault.keys());
   return keys ? 'locked' : 'none';
 }
 
 /** Throws `wrong-master` for a wrong master password. */
 export async function unlock(masterPassword: string): Promise<void> {
-  const { keys } = await (await api()).keys();
+  const {keys} = await (await api()).keys();
   if (!keys) {
     throw new ExtensionError('no-vault');
   }
   try {
     open = await unlockVault(keys, masterPassword);
   } catch (error) {
-    throw error instanceof WrongVaultPasswordError ? new ExtensionError('wrong-master') : error;
+    throw error instanceof WrongVaultPasswordError
+      ? new ExtensionError('wrong-master')
+      : error;
   }
   opened = null;
   await session.set(KEY, toBase64(open.raw));
@@ -65,7 +67,7 @@ export async function lock(): Promise<void> {
  * changed on the dashboard). `use` — the user did something, the automatic lock waits again;
  * the badge counting the logins of a page is not that.
  */
-export async function vaultItems({ fresh = false, use = true } = {}): Promise<{
+export async function vaultItems({fresh = false, use = true} = {}): Promise<{
   items: OpenVaultItem[];
   unreadable: number;
 }> {
@@ -80,7 +82,9 @@ export async function vaultItems({ fresh = false, use = true } = {}): Promise<{
 }
 
 export async function vaultItem(id: string): Promise<OpenVaultItem> {
-  const item = (await vaultItems()).items.find((candidate) => candidate.id === id);
+  const item = (await vaultItems()).items.find(
+    candidate => candidate.id === id,
+  );
   if (!item) {
     throw new ExtensionError('failed');
   }
@@ -115,11 +119,20 @@ async function requireOpen(): Promise<VaultKey> {
 }
 
 function touch(): void {
-  void chrome.alarms.create(LOCK_ALARM, { delayInMinutes: AUTO_LOCK_MINUTES });
+  void chrome.alarms.create(LOCK_ALARM, {delayInMinutes: AUTO_LOCK_MINUTES});
 }
 
 /** The fields an item is saved with: what it holds, without its record (id, dates). */
 export function itemFields(item: OpenVaultItem): VaultItem {
-  const { kind, title, urls, username, password, notes, favorite, source } = item;
-  return { kind, title, urls, username, password, notes, favorite, ...(source ? { source } : {}) };
+  const {kind, title, urls, username, password, notes, favorite, source} = item;
+  return {
+    kind,
+    title,
+    urls,
+    username,
+    password,
+    notes,
+    favorite,
+    ...(source ? {source} : {}),
+  };
 }

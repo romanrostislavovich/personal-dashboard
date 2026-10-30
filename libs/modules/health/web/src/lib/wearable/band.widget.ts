@@ -1,21 +1,34 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthApi } from '../health.api';
-import { addDays, levelOf, today } from './band-format';
+import {DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {HealthApi} from '../health.api';
+import {addDays, levelOf, today} from './band-format';
 
 /** Home widget: last night, the stress of today, steps and resilience — from the band. */
 @Component({
   selector: 'pd-band-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, MatButtonModule, MatCardModule, RouterLink, TranslocoPipe],
+  imports: [
+    DecimalPipe,
+    MatButtonModule,
+    MatCardModule,
+    RouterLink,
+    TranslocoPipe,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>⌚ {{ 'health.band.widget.title' | transloco }}</mat-card-title>
+        <mat-card-title
+          >⌚ {{ 'health.band.widget.title' | transloco }}</mat-card-title
+        >
       </mat-card-header>
       <mat-card-content>
         @if (day(); as d) {
@@ -24,7 +37,8 @@ import { addDays, levelOf, today } from './band-format';
               <div>
                 <dt>{{ 'health.band.widget.night' | transloco }}</dt>
                 <dd>
-                  {{ d.sleepMinutes / 60 | number: '1.1-1' }} {{ 'health.band.h' | transloco }}
+                  {{ d.sleepMinutes / 60 | number: '1.1-1' }}
+                  {{ 'health.band.h' | transloco }}
                   @if (d.sleepScore !== null) {
                     · {{ d.sleepScore }}/100
                   }
@@ -58,7 +72,9 @@ import { addDays, levelOf, today } from './band-format';
         }
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/health/band">{{ 'health.band.widget.open' | transloco }}</a>
+        <a matButton routerLink="/health/band">{{
+          'health.band.widget.open' | transloco
+        }}</a>
       </mat-card-actions>
     </mat-card>
   `,
@@ -86,10 +102,10 @@ export class BandWidget {
 
   /** Today, or yesterday early in the morning when today has nothing yet. */
   private readonly days = this.api.wearableDays(
-    computed(() => ({ from: addDays(today(), -1), to: today() })),
+    computed(() => ({from: addDays(today(), -1), to: today()})),
   );
   protected readonly day = computed(() => {
     const days = this.days.value();
-    return days.find((d) => d.day === today()) ?? days[days.length - 1] ?? null;
+    return days.find(d => d.day === today()) ?? days[days.length - 1] ?? null;
   });
 }

@@ -1,14 +1,32 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { HealthMedication, HealthRecord, parseReminderTimes } from '@pd/contracts';
-import { HealthApi } from '../health.api';
-import { orNull } from '../health-labels';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {
+  HealthMedication,
+  HealthRecord,
+  parseReminderTimes,
+} from '@pd/contracts';
+import {withDefaults} from '@pd/web-core';
+import {HealthApi} from '../health.api';
+import {orNull} from '../health-labels';
 
 export interface MedicationDialogData {
   record: HealthRecord;
@@ -33,7 +51,10 @@ export interface MedicationDialogData {
   ],
   template: `
     <h2 mat-dialog-title>
-      {{ (data.medication ? 'health.medication.edit' : 'health.medication.add') | transloco }}
+      {{
+        (data.medication ? 'health.medication.edit' : 'health.medication.add')
+          | transloco
+      }}
     </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
@@ -43,9 +64,13 @@ export interface MedicationDialogData {
             <input matInput maxlength="200" formControlName="name" required />
           </mat-form-field>
           <mat-form-field>
-            <mat-label>{{ 'health.medication.substance' | transloco }}</mat-label>
+            <mat-label>{{
+              'health.medication.substance' | transloco
+            }}</mat-label>
             <input matInput maxlength="200" formControlName="substance" />
-            <mat-hint>{{ 'health.medication.substanceHint' | transloco }}</mat-hint>
+            <mat-hint>{{
+              'health.medication.substanceHint' | transloco
+            }}</mat-hint>
           </mat-form-field>
         </div>
         <div class="row">
@@ -54,39 +79,58 @@ export interface MedicationDialogData {
             <input matInput maxlength="200" formControlName="dose" />
           </mat-form-field>
           <mat-form-field>
-            <mat-label>{{ 'health.medication.schedule' | transloco }}</mat-label>
+            <mat-label>{{
+              'health.medication.schedule' | transloco
+            }}</mat-label>
             <input matInput maxlength="500" formControlName="schedule" />
           </mat-form-field>
         </div>
         <div class="row">
           <mat-form-field>
-            <mat-label>{{ 'health.medication.startedOn' | transloco }}</mat-label>
+            <mat-label>{{
+              'health.medication.startedOn' | transloco
+            }}</mat-label>
             <input matInput type="date" formControlName="startedOn" />
           </mat-form-field>
           <mat-form-field>
-            <mat-label>{{ 'health.medication.stoppedOn' | transloco }}</mat-label>
+            <mat-label>{{
+              'health.medication.stoppedOn' | transloco
+            }}</mat-label>
             <input
               matInput
               type="date"
               formControlName="stoppedOn"
               [min]="form.controls.startedOn.value"
             />
-            <mat-hint>{{ 'health.medication.stoppedHint' | transloco }}</mat-hint>
+            <mat-hint>{{
+              'health.medication.stoppedHint' | transloco
+            }}</mat-hint>
           </mat-form-field>
         </div>
         @if (form.controls.stoppedOn.value) {
           <mat-form-field>
-            <mat-label>{{ 'health.medication.stopReason' | transloco }}</mat-label>
+            <mat-label>{{
+              'health.medication.stopReason' | transloco
+            }}</mat-label>
             <input matInput maxlength="1000" formControlName="stopReason" />
           </mat-form-field>
         }
         <mat-form-field>
           <mat-label>{{ 'health.medication.reminders' | transloco }}</mat-label>
-          <input matInput maxlength="100" formControlName="reminders" placeholder="08:00, 20:00" />
-          <mat-hint>{{ 'health.medication.remindersHint' | transloco }}</mat-hint>
+          <input
+            matInput
+            maxlength="100"
+            formControlName="reminders"
+            placeholder="08:00, 20:00"
+          />
+          <mat-hint>{{
+            'health.medication.remindersHint' | transloco
+          }}</mat-hint>
         </mat-form-field>
         <mat-form-field>
-          <mat-label>{{ 'health.medication.prescribedAt' | transloco }}</mat-label>
+          <mat-label>{{
+            'health.medication.prescribedAt' | transloco
+          }}</mat-label>
           <mat-select formControlName="visitId">
             <mat-option [value]="''">—</mat-option>
             @for (visit of data.record.visits; track visit.id) {
@@ -96,17 +140,28 @@ export interface MedicationDialogData {
         </mat-form-field>
         <mat-form-field>
           <mat-label>{{ 'health.visit.notes' | transloco }}</mat-label>
-          <textarea matInput rows="2" maxlength="5000" formControlName="notes"></textarea>
+          <textarea
+            matInput
+            rows="2"
+            maxlength="5000"
+            formControlName="notes"
+          ></textarea>
         </mat-form-field>
         @if (error()) {
-          <p class="error" role="alert">{{ 'health.errors.save' | transloco }}</p>
+          <p class="error" role="alert">
+            {{ 'health.errors.save' | transloco }}
+          </p>
         }
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>
           {{ 'core.actions.cancel' | transloco }}
         </button>
-        <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+        <button
+          matButton="filled"
+          type="submit"
+          [disabled]="form.invalid || busy()"
+        >
           {{ 'core.actions.save' | transloco }}
         </button>
       </mat-dialog-actions>
@@ -141,16 +196,28 @@ export class MedicationDialog {
   protected readonly error = signal(false);
 
   private readonly medication = this.data.medication;
+  /** The medication being edited, else what the dialog was opened with (a day, a visit). */
+  private readonly initial = withDefaults(this.medication, {
+    name: '',
+    substance: '',
+    dose: '',
+    schedule: '',
+    startedOn: this.data.day ?? '',
+    stoppedOn: '',
+    stopReason: '',
+    visitId: this.data.visitId ?? '',
+    notes: '',
+  });
   protected readonly form = inject(NonNullableFormBuilder).group({
-    name: [this.medication?.name ?? '', Validators.required],
-    substance: this.medication?.substance ?? '',
-    dose: this.medication?.dose ?? '',
-    schedule: this.medication?.schedule ?? '',
-    startedOn: this.medication?.startedOn ?? this.data.day ?? '',
-    stoppedOn: this.medication?.stoppedOn ?? '',
-    stopReason: this.medication?.stopReason ?? '',
-    visitId: this.medication?.visitId ?? this.data.visitId ?? '',
-    notes: this.medication?.notes ?? '',
+    name: [this.initial.name, Validators.required],
+    substance: this.initial.substance,
+    dose: this.initial.dose,
+    schedule: this.initial.schedule,
+    startedOn: this.initial.startedOn,
+    stoppedOn: this.initial.stoppedOn,
+    stopReason: this.initial.stopReason,
+    visitId: this.initial.visitId,
+    notes: this.initial.notes,
     reminders: this.medication?.reminderTimes.join(', ') ?? '',
   });
 
@@ -171,7 +238,9 @@ export class MedicationDialog {
           visitId: orNull(value.visitId),
           notes: orNull(value.notes),
           // Reminders only while it is taken.
-          reminderTimes: value.stoppedOn ? [] : parseReminderTimes(value.reminders),
+          reminderTimes: value.stoppedOn
+            ? []
+            : parseReminderTimes(value.reminders),
         },
         this.medication?.id,
       );

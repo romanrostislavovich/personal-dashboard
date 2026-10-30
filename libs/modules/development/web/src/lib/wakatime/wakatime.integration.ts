@@ -1,16 +1,25 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { IntegrationGuideComponent, errorStatus } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { WakatimeApi } from './wakatime.api';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {IntegrationGuideComponent, errorStatus} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {WakatimeApi} from './wakatime.api';
 
 /** The WakaTime API key, in Settings → Integrations (see `integrations` in development.module.ts). */
 @Component({
@@ -32,14 +41,19 @@ import { WakatimeApi } from './wakatime.api';
       <mat-card-header>
         <mat-icon mat-card-avatar>timer</mat-icon>
         <mat-card-title>WakaTime</mat-card-title>
-        <mat-card-subtitle>{{ 'development.wakatime.key.title' | transloco }}</mat-card-subtitle>
+        <mat-card-subtitle>{{
+          'development.wakatime.key.title' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @if (settings.value(); as s) {
           @if (s.connected) {
             <p class="ok">
               <mat-icon>check_circle</mat-icon>
-              {{ 'development.wakatime.key.connected' | transloco: { username: s.username } }}
+              {{
+                'development.wakatime.key.connected'
+                  | transloco: {username: s.username}
+              }}
             </p>
             @if (s.lastSyncedAt) {
               <p class="hint">
@@ -54,13 +68,26 @@ import { WakatimeApi } from './wakatime.api';
               {{ 'development.wakatime.key.disconnect' | transloco }}
             </button>
           } @else {
-            <p class="hint">{{ 'development.wakatime.key.hint' | transloco }}</p>
+            <p class="hint">
+              {{ 'development.wakatime.key.hint' | transloco }}
+            </p>
             <form class="form" [formGroup]="form" (ngSubmit)="connect()">
               <mat-form-field subscriptSizing="dynamic">
-                <mat-label>{{ 'development.wakatime.key.label' | transloco }}</mat-label>
-                <input matInput type="password" formControlName="apiKey" autocomplete="off" />
+                <mat-label>{{
+                  'development.wakatime.key.label' | transloco
+                }}</mat-label>
+                <input
+                  matInput
+                  type="password"
+                  formControlName="apiKey"
+                  autocomplete="off"
+                />
               </mat-form-field>
-              <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+              <button
+                matButton="filled"
+                type="submit"
+                [disabled]="form.invalid || busy()"
+              >
                 {{ 'core.actions.save' | transloco }}
               </button>
             </form>
@@ -121,7 +148,7 @@ export class WakatimeIntegration {
         errorStatus(error) === 400
           ? 'development.wakatime.key.invalid'
           : 'development.errors.generic';
-      this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 6000 });
+      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 6000});
     } finally {
       this.busy.set(false);
     }

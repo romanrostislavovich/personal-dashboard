@@ -17,15 +17,21 @@
   <p class="stale hint">
     <mat-icon inline>sync_disabled</mat-icon>
     {{ 'development.oss.noTokenStale' | transloco }}
-    <a [routerLink]="integrations.path" [queryParams]="integrations.queryParams">{{
-      'core.settings.openIntegrations' | transloco
-    }}</a>
+    <a
+      [routerLink]="integrations.path"
+      [queryParams]="integrations.queryParams"
+      >{{ 'core.settings.openIntegrations' | transloco }}</a
+    >
   </p>
 } @else if (tokenMissing()) {
   <section class="setup">
     <h3>{{ 'development.oss.noTokenTitle' | transloco }}</h3>
     <p class="hint">{{ 'development.oss.noTokenHint' | transloco }}</p>
-    <a matButton="filled" [routerLink]="integrations.path" [queryParams]="integrations.queryParams">
+    <a
+      matButton="filled"
+      [routerLink]="integrations.path"
+      [queryParams]="integrations.queryParams"
+    >
       {{ 'core.settings.openIntegrations' | transloco }}
     </a>
   </section>
@@ -40,15 +46,21 @@
         <span class="value">{{ totals().repos | number }}</span>
         @if (totals().repos < repos.value().length) {
           <span class="sub">
-            {{ 'development.oss.ofTotal' | transloco: { count: repos.value().length } }}
+            {{
+              'development.oss.ofTotal'
+                | transloco: {count: repos.value().length}
+            }}
           </span>
         }
       </div>
       <div class="stat">
-        <span class="label">{{ 'development.oss.totalStars' | transloco }}</span>
+        <span class="label">{{
+          'development.oss.totalStars' | transloco
+        }}</span>
         <span class="value">{{ totals().stars | number }}</span>
         <span class="sub">
-          +{{ totals().starsWeek | number }} {{ 'development.oss.perWeek' | transloco }}
+          +{{ totals().starsWeek | number }}
+          {{ 'development.oss.perWeek' | transloco }}
         </span>
       </div>
       <div class="stat">
@@ -73,16 +85,18 @@
         matInput
         type="search"
         [value]="filter().search"
-        (input)="setFilter({ search: $any($event.target).value })"
+        (input)="setFilter({search: $any($event.target).value})"
       />
     </mat-form-field>
     <mat-form-field subscriptSizing="dynamic">
       <mat-label>{{ 'development.oss.source' | transloco }}</mat-label>
       <mat-select
         [value]="filter().relation"
-        (selectionChange)="setFilter({ relation: $event.value })"
+        (selectionChange)="setFilter({relation: $event.value})"
       >
-        <mat-option [value]="null">{{ 'development.oss.all' | transloco }}</mat-option>
+        <mat-option [value]="null">{{
+          'development.oss.all' | transloco
+        }}</mat-option>
         @for (relation of relations; track relation) {
           <mat-option [value]="relation">
             {{ 'development.oss.relations.' + relation | transloco }}
@@ -94,9 +108,11 @@
       <mat-label>{{ 'development.oss.visibility' | transloco }}</mat-label>
       <mat-select
         [value]="filter().visibility"
-        (selectionChange)="setFilter({ visibility: $event.value })"
+        (selectionChange)="setFilter({visibility: $event.value})"
       >
-        <mat-option [value]="null">{{ 'development.oss.all' | transloco }}</mat-option>
+        <mat-option [value]="null">{{
+          'development.oss.all' | transloco
+        }}</mat-option>
         @for (visibility of visibilities; track visibility) {
           <mat-option [value]="visibility">
             {{ 'development.oss.visibilities.' + visibility | transloco }}
@@ -109,11 +125,15 @@
         <mat-label>{{ 'development.oss.service' | transloco }}</mat-label>
         <mat-select
           [value]="filter().provider"
-          (selectionChange)="setFilter({ provider: $event.value })"
+          (selectionChange)="setFilter({provider: $event.value})"
         >
-          <mat-option [value]="null">{{ 'development.oss.all' | transloco }}</mat-option>
+          <mat-option [value]="null">{{
+            'development.oss.all' | transloco
+          }}</mat-option>
           @for (provider of providers(); track provider) {
-            <mat-option [value]="provider">{{ providerNames[provider] }}</mat-option>
+            <mat-option [value]="provider">{{
+              providerNames[provider]
+            }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
@@ -122,9 +142,11 @@
       <mat-label>{{ 'development.oss.language' | transloco }}</mat-label>
       <mat-select
         [value]="filter().language"
-        (selectionChange)="setFilter({ language: $event.value })"
+        (selectionChange)="setFilter({language: $event.value})"
       >
-        <mat-option [value]="null">{{ 'development.oss.all' | transloco }}</mat-option>
+        <mat-option [value]="null">{{
+          'development.oss.all' | transloco
+        }}</mat-option>
         @for (language of languages(); track language) {
           <mat-option [value]="language">{{ language }}</mat-option>
         }
@@ -135,7 +157,7 @@
       multiple
       [value]="filter().kinds"
       [attr.aria-label]="'development.oss.show' | transloco"
-      (change)="setFilter({ kinds: $event.value })"
+      (change)="setFilter({kinds: $event.value})"
     >
       @for (kind of kinds; track kind) {
         <mat-chip-option [value]="kind">
@@ -152,14 +174,21 @@
           <th class="name" [attr.aria-sort]="ariaSort('fullName')">
             <button type="button" class="sort" (click)="sortBy('fullName')">
               {{ 'development.oss.repository' | transloco }}
-              <ng-container *ngTemplateOutlet="arrow; context: { column: 'fullName' }" />
+              <ng-container
+                *ngTemplateOutlet="arrow; context: {column: 'fullName'}"
+              />
             </button>
           </th>
           @for (c of columns; track c.column) {
-            <th [class.numeric]="c.numeric" [attr.aria-sort]="ariaSort(c.column)">
+            <th
+              [class.numeric]="c.numeric"
+              [attr.aria-sort]="ariaSort(c.column)"
+            >
               <button type="button" class="sort" (click)="sortBy(c.column)">
                 {{ c.labelKey | transloco }}
-                <ng-container *ngTemplateOutlet="arrow; context: { column: c.column }" />
+                <ng-container
+                  *ngTemplateOutlet="arrow; context: {column: c.column}"
+                />
               </button>
             </th>
           }
@@ -170,7 +199,12 @@
         @for (repo of rows(); track repo.id) {
           @let open = expanded() === repo.id;
           @let short = shortName(repo);
-          <tr class="row" [class.open]="open" [class.muted]="repo.hidden" (click)="toggle(repo)">
+          <tr
+            class="row"
+            [class.open]="open"
+            [class.muted]="repo.hidden"
+            (click)="toggle(repo)"
+          >
             <td class="name">
               <button
                 type="button"
@@ -178,35 +212,52 @@
                 [attr.aria-expanded]="open"
                 (click)="toggle(repo); $event.stopPropagation()"
               >
-                <mat-icon>{{ open ? 'expand_more' : 'chevron_right' }}</mat-icon>
+                <mat-icon>{{
+                  open ? 'expand_more' : 'chevron_right'
+                }}</mat-icon>
                 <span>
-                  <span class="owner">{{ short.owner }}/</span><b>{{ short.name }}</b>
+                  <span class="owner">{{ short.owner }}/</span
+                  ><b>{{ short.name }}</b>
                 </span>
               </button>
               @if (providers().length > 1) {
                 <span class="badge">{{ providerNames[repo.provider] }}</span>
               }
               @if (repo.isPrivate) {
-                <mat-icon class="mark" [matTooltip]="'development.oss.badges.private' | transloco">
+                <mat-icon
+                  class="mark"
+                  [matTooltip]="'development.oss.badges.private' | transloco"
+                >
                   lock
                 </mat-icon>
               }
               @if (repo.isFork) {
-                <span class="badge">{{ 'development.oss.badges.fork' | transloco }}</span>
+                <span class="badge">{{
+                  'development.oss.badges.fork' | transloco
+                }}</span>
               }
               @if (repo.isArchived) {
-                <span class="badge">{{ 'development.oss.badges.archived' | transloco }}</span>
+                <span class="badge">{{
+                  'development.oss.badges.archived' | transloco
+                }}</span>
               }
               @if (repo.hidden) {
-                <span class="badge">{{ 'development.oss.badges.hidden' | transloco }}</span>
+                <span class="badge">{{
+                  'development.oss.badges.hidden' | transloco
+                }}</span>
               }
               @if (repo.notify) {
-                <mat-icon class="mark" [matTooltip]="'development.oss.notifyOn' | transloco">
+                <mat-icon
+                  class="mark"
+                  [matTooltip]="'development.oss.notifyOn' | transloco"
+                >
                   notifications_active
                 </mat-icon>
               }
               @if (repo.syncError) {
-                <mat-icon class="mark error" [matTooltip]="repo.syncError">warning</mat-icon>
+                <mat-icon class="mark error" [matTooltip]="repo.syncError"
+                  >warning</mat-icon
+                >
               }
             </td>
             <td>{{ repo.language ?? '—' }}</td>
@@ -218,7 +269,11 @@
             <td class="numeric">{{ repo.openIssues | number }}</td>
             <td class="numeric">{{ repo.openPulls | number }}</td>
             <td class="numeric">
-              {{ repo.npmWeeklyDownloads === null ? '—' : (repo.npmWeeklyDownloads | number) }}
+              {{
+                repo.npmWeeklyDownloads === null
+                  ? '—'
+                  : (repo.npmWeeklyDownloads | number)
+              }}
             </td>
             <td class="numeric nowrap">
               {{ repo.pushedAt ? (repo.pushedAt | date: 'd MMM y') : '—' }}
@@ -265,6 +320,8 @@
 
 <ng-template #arrow let-column="column">
   @if (sort().column === column) {
-    <mat-icon class="arrow">{{ sort().descending ? 'arrow_downward' : 'arrow_upward' }}</mat-icon>
+    <mat-icon class="arrow">{{
+      sort().descending ? 'arrow_downward' : 'arrow_upward'
+    }}</mat-icon>
   }
 </ng-template>

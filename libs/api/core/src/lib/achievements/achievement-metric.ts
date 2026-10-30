@@ -1,7 +1,7 @@
-import { AchievementRarity } from '@pd/contracts';
-import { LocalizedText } from '../i18n/locale';
+import {AchievementRarity} from '@pd/contracts';
+import {LocalizedText} from '../i18n/locale';
 
-export type { LocalizedText };
+export type {LocalizedText};
 
 export interface AchievementTier {
   /** Metric threshold at which the achievement unlocks. */
@@ -55,7 +55,7 @@ export function achievementTier(
   description: LocalizedText,
   rarity?: AchievementRarity,
 ): AchievementTier {
-  return { goal, icon, title, description, rarity };
+  return {goal, icon, title, description, rarity};
 }
 
 export type AchievementTierTuple = [
@@ -67,8 +67,10 @@ export type AchievementTierTuple = [
 ];
 
 /** Many tiers in one line each: `achievementTiers([10, '🎮', {...}, {...}], [100, ...])`. */
-export function achievementTiers(...tiers: AchievementTierTuple[]): AchievementTier[] {
-  return tiers.map((tier) => achievementTier(...tier));
+export function achievementTiers(
+  ...tiers: AchievementTierTuple[]
+): AchievementTier[] {
+  return tiers.map(tier => achievementTier(...tier));
 }
 
 /**
@@ -76,7 +78,10 @@ export function achievementTiers(...tiers: AchievementTierTuple[]): AchievementT
  * (only when a metric has 4+ tiers), then epic, then rare; the rest are common.
  * A single-tier metric is rare.
  */
-export function tierRarity(metric: AchievementMetric, index: number): AchievementRarity {
+export function tierRarity(
+  metric: AchievementMetric,
+  index: number,
+): AchievementRarity {
   const explicit = metric.tiers[index]?.rarity;
   if (explicit) {
     return explicit;

@@ -1,5 +1,5 @@
-import { ActivityOtherComputer, ActivityStats, LocalDate } from '@pd/contracts';
-import { mergeSpans, secondsByDay, subtractSpans, TimeSpan } from './time-spans';
+import {ActivityOtherComputer, ActivityStats, LocalDate} from '@pd/contracts';
+import {mergeSpans, secondsByDay, subtractSpans, TimeSpan} from './time-spans';
 
 /** The browser extension as a "computer": its time is the browser wherever it runs. */
 export const BROWSER_COMPUTER = 'browser';
@@ -18,7 +18,8 @@ export interface OtherComputerTime {
   category?: 'games' | 'browsing';
 }
 
-const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+const same = (a: string, b: string) =>
+  a.trim().toLowerCase() === b.trim().toLowerCase();
 
 /**
  * The computers other services know, each with whether its time is added to Activity. A
@@ -32,15 +33,15 @@ export function otherComputers(
   skipped: string[],
 ): ActivityOtherComputer[] {
   const byComputer = new Map<string, ActivityOtherComputer>();
-  for (const { computer, source, seconds } of times) {
+  for (const {computer, source, seconds} of times) {
     const key = `${source}:${computer.toLowerCase()}`;
     const known = byComputer.get(key);
     if (known) {
       known.seconds += seconds;
       continue;
     }
-    const tracked = trackedNames.some((name) => same(name, computer));
-    const off = skipped.some((name) => same(name, computer));
+    const tracked = trackedNames.some(name => same(name, computer));
+    const off = skipped.some(name => same(name, computer));
     byComputer.set(key, {
       computer,
       source,
@@ -69,15 +70,18 @@ export function newTime(
     }
   }
   return counted
-    .map((time) => {
+    .map(time => {
       if (time.category !== 'games') {
         return time;
       }
       const all = gamesOfDay.get(time.day) ?? 0;
       const over = Math.max(0, all - (trackedGames.get(time.day) ?? 0));
-      return { ...time, seconds: all ? Math.round((time.seconds * over) / all) : 0 };
+      return {
+        ...time,
+        seconds: all ? Math.round((time.seconds * over) / all) : 0,
+      };
     })
-    .filter((time) => time.seconds > 0);
+    .filter(time => time.seconds > 0);
 }
 
 /**
@@ -94,16 +98,22 @@ export function withOtherComputers(
 ): ActivityStats {
   const isCounted = (time: OtherComputerTime) =>
     computers.some(
-      (item) => item.counted && item.source === time.source && same(item.computer, time.computer),
+      item =>
+        item.counted &&
+        item.source === time.source &&
+        same(item.computer, time.computer),
     );
   const counted = newTime(times.filter(isCounted), trackedGames);
   const added = counted.reduce((total, time) => total + time.seconds, 0);
   if (added === 0) {
-    return { ...stats, otherComputers: [] };
+    return {...stats, otherComputers: []};
   }
   const perDay = new Map<LocalDate, number>();
   const perCategory = new Map<'games' | 'development' | 'browsing', number>();
-  const perComputer = new Map<string, { computer: string; source: string; seconds: number }>();
+  const perComputer = new Map<
+    string,
+    {computer: string; source: string; seconds: number}
+  >();
   for (const time of counted) {
     perDay.set(time.day, (perDay.get(time.day) ?? 0) + time.seconds);
     const category = time.category ?? 'development';
@@ -117,24 +127,26 @@ export function withOtherComputers(
     computer.seconds += time.seconds;
     perComputer.set(key, computer);
   }
-  const categories = stats.categories.map((item) => ({ ...item }));
+  const categories = stats.categories.map(item => ({...item}));
   for (const [category, seconds] of perCategory) {
-    const known = categories.find((item) => item.category === category);
+    const known = categories.find(item => item.category === category);
     if (known) {
       known.seconds += seconds;
     } else {
-      categories.push({ category, seconds });
+      categories.push({category, seconds});
     }
   }
   return {
     ...stats,
     totalSeconds: stats.totalSeconds + added,
-    days: stats.days.map((day) => ({
+    days: stats.days.map(day => ({
       ...day,
       seconds: day.seconds + (perDay.get(day.day) ?? 0),
     })),
     categories: categories.sort((a, b) => b.seconds - a.seconds),
-    otherComputers: [...perComputer.values()].sort((a, b) => b.seconds - a.seconds),
+    otherComputers: [...perComputer.values()].sort(
+      (a, b) => b.seconds - a.seconds,
+    ),
   };
 }
 
@@ -146,9 +158,13 @@ export function withOtherComputers(
  */
 export function timeByClock(input: {
   tracker: readonly TimeSpan[];
-  computers: readonly { computer: string; source: string; spans: readonly TimeSpan[] }[];
+  computers: readonly {
+    computer: string;
+    source: string;
+    spans: readonly TimeSpan[];
+  }[];
   browser: readonly TimeSpan[];
-  days: readonly { day: LocalDate; start: number; end: number }[];
+  days: readonly {day: LocalDate; start: number; end: number}[];
 }): OtherComputerTime[] {
   let covered = mergeSpans(input.tracker);
   const times: OtherComputerTime[] = [];
@@ -161,10 +177,16 @@ export function timeByClock(input: {
     const added = subtractSpans(spans, covered);
     covered = mergeSpans([...covered, ...added]);
     for (const [day, seconds] of secondsByDay(added, input.days)) {
-      times.push({ computer, source, day, seconds, ...(category ? { category } : {}) });
+      times.push({
+        computer,
+        source,
+        day,
+        seconds,
+        ...(category ? {category} : {}),
+      });
     }
   };
-  for (const { computer, source, spans } of input.computers) {
+  for (const {computer, source, spans} of input.computers) {
     add(computer, source, spans);
   }
   add(BROWSER_COMPUTER, BROWSER_SOURCE, input.browser, 'browsing');

@@ -15,8 +15,8 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import {FileInterceptor} from '@nestjs/platform-express';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
 import {
   DIARY_PHOTO_MAX_BYTES,
   diaryCalendarQuerySchema,
@@ -32,10 +32,10 @@ import {
   DiarySummaryRequest,
   diarySummaryRequestSchema,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { DiaryPhotosService } from './diary-photos.service';
-import { DiarySummaryService } from './diary-summary.service';
-import { DiaryService } from './diary.service';
+import {z} from 'zod';
+import {DiaryPhotosService} from './diary-photos.service';
+import {DiarySummaryService} from './diary-summary.service';
+import {DiaryService} from './diary.service';
 
 /** `:day` is the entry date `YYYY-MM-DD`. */
 const dayPipe = new ZodValidationPipe(z.iso.date());
@@ -93,7 +93,7 @@ export class DiaryController {
   @Get('search')
   search(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(diarySearchQuerySchema)) { q }: { q: string },
+    @Query(new ZodValidationPipe(diarySearchQuerySchema)) {q}: {q: string},
   ) {
     return this.diary.search(user.id, q);
   }
@@ -102,7 +102,8 @@ export class DiaryController {
   @Get('marks')
   marks(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(diaryMarksQuerySchema)) { emoji }: { emoji: string },
+    @Query(new ZodValidationPipe(diaryMarksQuerySchema))
+    {emoji}: {emoji: string},
   ) {
     return this.diary.marks(user.id, emoji);
   }
@@ -110,7 +111,8 @@ export class DiaryController {
   @Get('calendar')
   calendar(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(diaryCalendarQuerySchema)) { year }: { year: number },
+    @Query(new ZodValidationPipe(diaryCalendarQuerySchema))
+    {year}: {year: number},
   ) {
     return this.diary.calendar(user.id, year);
   }
@@ -129,12 +131,17 @@ export class DiaryController {
   // --- Photos ---
 
   @Get('entries/:day/photos')
-  listPhotos(@CurrentUser() user: AuthUser, @Param('day', dayPipe) day: string) {
+  listPhotos(
+    @CurrentUser() user: AuthUser,
+    @Param('day', dayPipe) day: string,
+  ) {
     return this.photos.list(user.id, day);
   }
 
   @Post('entries/:day/photos')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: DIARY_PHOTO_MAX_BYTES } }))
+  @UseInterceptors(
+    FileInterceptor('file', {limits: {fileSize: DIARY_PHOTO_MAX_BYTES}}),
+  )
   addPhoto(
     @CurrentUser() user: AuthUser,
     @Param('day', dayPipe) day: string,
@@ -143,20 +150,29 @@ export class DiaryController {
     if (!file) {
       throw new BadRequestException('Expected an image in the "file" field');
     }
-    return this.photos.add(user.id, day, { data: file.buffer, mimeType: file.mimetype });
+    return this.photos.add(user.id, day, {
+      data: file.buffer,
+      mimeType: file.mimetype,
+    });
   }
 
   /** The image itself. The browser loads it with the auth header, so it is fetched as a blob. */
   @Get('photos/:id')
   @Header('Cache-Control', 'private, max-age=86400')
-  async photo(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    const { data, mimeType } = await this.photos.file(user.id, id);
-    return new StreamableFile(data, { type: mimeType });
+  async photo(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    const {data, mimeType} = await this.photos.file(user.id, id);
+    return new StreamableFile(data, {type: mimeType});
   }
 
   @Delete('photos/:id')
   @HttpCode(204)
-  removePhoto(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removePhoto(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.photos.remove(user.id, id);
   }
 
@@ -166,9 +182,10 @@ export class DiaryController {
   @Post('summary')
   async summary(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(diarySummaryRequestSchema)) period: DiarySummaryRequest,
+    @Body(new ZodValidationPipe(diarySummaryRequestSchema))
+    period: DiarySummaryRequest,
   ): Promise<DiarySummary> {
-    return { summary: await this.summaries.summarize(user.id, period) };
+    return {summary: await this.summaries.summarize(user.id, period)};
   }
 
   @Get('stats')

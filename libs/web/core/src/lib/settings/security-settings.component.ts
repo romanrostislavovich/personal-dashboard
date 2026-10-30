@@ -1,16 +1,21 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { SessionInfo, TwoFactorSetup, TwoFactorStatus } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { errorStatus } from '../client/core-requests';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {SessionInfo, TwoFactorSetup, TwoFactorStatus} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {errorStatus} from '../client/core-requests';
 
 /** Checked in order: Edge and the desktop app also say "Chrome". */
 const BROWSERS: [RegExp, string][] = [
@@ -48,10 +53,14 @@ const SYSTEMS: [RegExp, string][] = [
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>{{ 'core.settings.security.title' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'core.settings.security.title' | transloco
+        }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <h3 class="section">🔐 {{ 'core.settings.security.twoFactor' | transloco }}</h3>
+        <h3 class="section">
+          🔐 {{ 'core.settings.security.twoFactor' | transloco }}
+        </h3>
         @if (status(); as s) {
           @if (recoveryCodes(); as codes) {
             <!-- Shown once, right after enabling -->
@@ -62,7 +71,8 @@ const SYSTEMS: [RegExp, string][] = [
               }
             </ul>
             <button matButton="tonal" (click)="copyCodes(codes)">
-              <mat-icon>content_copy</mat-icon> {{ 'core.settings.security.copy' | transloco }}
+              <mat-icon>content_copy</mat-icon>
+              {{ 'core.settings.security.copy' | transloco }}
             </button>
             <button matButton (click)="recoveryCodes.set(null)">
               {{ 'core.settings.security.saved' | transloco }}
@@ -70,12 +80,17 @@ const SYSTEMS: [RegExp, string][] = [
           } @else if (s.enabled) {
             <p class="state on">
               <mat-icon inline>verified_user</mat-icon>
-              {{ 'core.settings.security.on' | transloco: { left: s.recoveryCodesLeft } }}
+              {{
+                'core.settings.security.on'
+                  | transloco: {left: s.recoveryCodesLeft}
+              }}
             </p>
             @if (disabling()) {
               <div class="inline-form">
                 <mat-form-field subscriptSizing="dynamic">
-                  <mat-label>{{ 'core.settings.password.current' | transloco }}</mat-label>
+                  <mat-label>{{
+                    'core.settings.password.current' | transloco
+                  }}</mat-label>
                   <input
                     matInput
                     type="password"
@@ -94,7 +109,11 @@ const SYSTEMS: [RegExp, string][] = [
                     (input)="code.set($any($event.target).value)"
                   />
                 </mat-form-field>
-                <button matButton="filled" [disabled]="busy()" (click)="disable()">
+                <button
+                  matButton="filled"
+                  [disabled]="busy()"
+                  (click)="disable()"
+                >
                   {{ 'core.settings.security.disable' | transloco }}
                 </button>
               </div>
@@ -108,7 +127,9 @@ const SYSTEMS: [RegExp, string][] = [
             <div class="setup">
               <img class="qr" [src]="setup.qrCode" alt="QR" />
               <div>
-                <p class="secret-label">{{ 'core.settings.security.manual' | transloco }}</p>
+                <p class="secret-label">
+                  {{ 'core.settings.security.manual' | transloco }}
+                </p>
                 <code class="secret">{{ setup.secret }}</code>
                 <div class="inline-form">
                   <mat-form-field subscriptSizing="dynamic">
@@ -121,7 +142,11 @@ const SYSTEMS: [RegExp, string][] = [
                       (input)="code.set($any($event.target).value)"
                     />
                   </mat-form-field>
-                  <button matButton="filled" [disabled]="busy()" (click)="enable()">
+                  <button
+                    matButton="filled"
+                    [disabled]="busy()"
+                    (click)="enable()"
+                  >
                     {{ 'core.settings.security.enable' | transloco }}
                   </button>
                 </div>
@@ -129,13 +154,19 @@ const SYSTEMS: [RegExp, string][] = [
             </div>
           } @else {
             <p class="state">{{ 'core.settings.security.off' | transloco }}</p>
-            <button matButton="filled" [disabled]="busy()" (click)="startSetup()">
+            <button
+              matButton="filled"
+              [disabled]="busy()"
+              (click)="startSetup()"
+            >
               {{ 'core.settings.security.turnOn' | transloco }}
             </button>
           }
         }
 
-        <h3 class="section">💻 {{ 'core.settings.security.devices' | transloco }}</h3>
+        <h3 class="section">
+          💻 {{ 'core.settings.security.devices' | transloco }}
+        </h3>
         @for (session of sessions(); track session.id) {
           <div class="device" [class.current]="session.current">
             <mat-icon>{{ deviceIcon(session) }}</mat-icon>
@@ -143,7 +174,9 @@ const SYSTEMS: [RegExp, string][] = [
               <span class="device-name">
                 {{ deviceName(session) }}
                 @if (session.current) {
-                  <span class="badge">{{ 'core.settings.security.thisDevice' | transloco }}</span>
+                  <span class="badge">{{
+                    'core.settings.security.thisDevice' | transloco
+                  }}</span>
                 }
               </span>
               <span class="device-meta">
@@ -268,12 +301,14 @@ export class SecuritySettingsComponent {
   }
 
   protected async startSetup(): Promise<void> {
-    await this.run(async () => this.setup.set(await this.auth.setupTwoFactor()));
+    await this.run(async () =>
+      this.setup.set(await this.auth.setupTwoFactor()),
+    );
   }
 
   protected async enable(): Promise<void> {
     await this.run(async () => {
-      const { recoveryCodes } = await this.auth.enableTwoFactor(this.code());
+      const {recoveryCodes} = await this.auth.enableTwoFactor(this.code());
       this.setup.set(null);
       this.code.set('');
       this.recoveryCodes.set(recoveryCodes);
@@ -283,7 +318,10 @@ export class SecuritySettingsComponent {
 
   protected async disable(): Promise<void> {
     await this.run(async () => {
-      await this.auth.disableTwoFactor({ password: this.password(), code: this.code() });
+      await this.auth.disableTwoFactor({
+        password: this.password(),
+        code: this.code(),
+      });
       this.disabling.set(false);
       this.password.set('');
       this.code.set('');
@@ -310,13 +348,17 @@ export class SecuritySettingsComponent {
   /** A short name from the browser's user agent: "Chrome · Windows". */
   protected deviceName(session: SessionInfo): string {
     const agent = session.userAgent ?? '';
-    const browser = BROWSERS.find(([pattern]) => pattern.test(agent))?.[1] ?? (agent ? 'App' : '—');
+    const browser =
+      BROWSERS.find(([pattern]) => pattern.test(agent))?.[1] ??
+      (agent ? 'App' : '—');
     const system = SYSTEMS.find(([pattern]) => pattern.test(agent))?.[1];
     return system ? `${browser} · ${system}` : browser;
   }
 
   protected deviceIcon(session: SessionInfo): string {
-    return /Android|iPhone|iPad|Mobile/.test(session.userAgent ?? '') ? 'smartphone' : 'computer';
+    return /Android|iPhone|iPad|Mobile/.test(session.userAgent ?? '')
+      ? 'smartphone'
+      : 'computer';
   }
 
   private async load(): Promise<void> {
@@ -346,6 +388,6 @@ export class SecuritySettingsComponent {
   }
 
   private notify(key: string): void {
-    this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 4000 });
+    this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 4000});
   }
 }

@@ -12,7 +12,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, Public, ZodValidationPipe } from '@pd/api-core';
+import {AuthUser, CurrentUser, Public, ZodValidationPipe} from '@pd/api-core';
 import {
   ActivityBrowserConfig,
   ActivitySiteTime,
@@ -56,14 +56,14 @@ import {
   ActivityStats,
   ActivityTimelineEntry,
 } from '@pd/contracts';
-import { ActivityLinks } from './activity.links';
-import { ActivityService } from './activity.service';
-import { DevicesService } from './devices.service';
-import { DiskAdviceService } from './disk/disk-advice.service';
-import { ProjectTimeService } from './project-time.service';
-import { RuleSuggestionsService } from './rule-suggestions.service';
-import { SitesService } from './sites.service';
-import { WellbeingService } from './wellbeing.service';
+import {ActivityLinks} from './activity.links';
+import {ActivityService} from './activity.service';
+import {DevicesService} from './devices.service';
+import {DiskAdviceService} from './disk/disk-advice.service';
+import {ProjectTimeService} from './project-time.service';
+import {RuleSuggestionsService} from './rule-suggestions.service';
+import {SitesService} from './sites.service';
+import {WellbeingService} from './wellbeing.service';
 
 /**
  * Time at the computer. Two kinds of callers:
@@ -95,7 +95,7 @@ export class ActivityController {
   async ingest(
     @Headers('authorization') authorization: string | undefined,
     @Body(new ZodValidationPipe(activityIngestSchema)) body: ActivityIngest,
-  ): Promise<ActivityDeviceConfig & { saved: number }> {
+  ): Promise<ActivityDeviceConfig & {saved: number}> {
     const device = await this.devices.authenticate(authorization);
     const saved = await this.activity.ingest(device, body.spans);
     await this.wellbeing.saveFocus(device, body.focus ?? []);
@@ -109,7 +109,7 @@ export class ActivityController {
     if (saved > 0) {
       await this.wellbeing.checkLimits(device.userId);
     }
-    return { saved, ...(await this.activity.config(device.userId)) };
+    return {saved, ...(await this.activity.config(device.userId))};
   }
 
   // --- The browser extension (the user's own session) ---
@@ -121,10 +121,11 @@ export class ActivityController {
   @Post('sites')
   async recordSites(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(activitySiteVisitsSchema)) body: ActivitySiteVisits,
-  ): Promise<ActivityBrowserConfig & { saved: number }> {
+    @Body(new ZodValidationPipe(activitySiteVisitsSchema))
+    body: ActivitySiteVisits,
+  ): Promise<ActivityBrowserConfig & {saved: number}> {
     const saved = await this.sites.record(user.id, body.visits);
-    return { saved, ...(await this.sites.browserConfig(user.id)) };
+    return {saved, ...(await this.sites.browserConfig(user.id))};
   }
 
   /** The time of each site in a period, the most visited first. */
@@ -177,7 +178,8 @@ export class ActivityController {
   @Post('devices')
   registerDevice(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(activityDeviceInputSchema)) input: ActivityDeviceInput,
+    @Body(new ZodValidationPipe(activityDeviceInputSchema))
+    input: ActivityDeviceInput,
   ): Promise<ActivityDeviceCreated> {
     return this.devices.register(user.id, input);
   }
@@ -187,7 +189,8 @@ export class ActivityController {
   renameDevice(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(activityDeviceUpdateSchema)) update: ActivityDeviceUpdate,
+    @Body(new ZodValidationPipe(activityDeviceUpdateSchema))
+    update: ActivityDeviceUpdate,
   ): Promise<void> {
     return this.devices.rename(user.id, id, update.name);
   }
@@ -198,7 +201,8 @@ export class ActivityController {
   mergeDevice(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(activityDeviceMergeSchema)) merge: ActivityDeviceMerge,
+    @Body(new ZodValidationPipe(activityDeviceMergeSchema))
+    merge: ActivityDeviceMerge,
   ): Promise<void> {
     return this.devices.merge(user.id, id, merge.into);
   }
@@ -222,7 +226,8 @@ export class ActivityController {
   @HttpCode(204)
   saveSettings(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(activitySettingsUpdateSchema)) settings: ActivitySettingsUpdate,
+    @Body(new ZodValidationPipe(activitySettingsUpdateSchema))
+    settings: ActivitySettingsUpdate,
   ): Promise<void> {
     return this.activity.saveSettings(user.id, settings);
   }
@@ -239,7 +244,8 @@ export class ActivityController {
   updateApp(
     @CurrentUser() user: AuthUser,
     @Param('app') app: string,
-    @Body(new ZodValidationPipe(activityAppUpdateSchema)) update: ActivityAppUpdate,
+    @Body(new ZodValidationPipe(activityAppUpdateSchema))
+    update: ActivityAppUpdate,
   ): Promise<void> {
     return this.activity.updateApp(user.id, app, update);
   }
@@ -253,7 +259,8 @@ export class ActivityController {
   @HttpCode(204)
   addRule(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(activityProjectRuleInputSchema)) input: ActivityProjectRuleInput,
+    @Body(new ZodValidationPipe(activityProjectRuleInputSchema))
+    input: ActivityProjectRuleInput,
   ): Promise<void> {
     return this.activity.addRule(user.id, input);
   }
@@ -321,7 +328,9 @@ export class ActivityController {
 
   /** Rules offered for the projects (windows and sites around work on them). */
   @Get('rule-suggestions')
-  ruleSuggestions(@CurrentUser() user: AuthUser): Promise<ActivityRuleSuggestion[]> {
+  ruleSuggestions(
+    @CurrentUser() user: AuthUser,
+  ): Promise<ActivityRuleSuggestion[]> {
     return this.suggestions.list(user.id);
   }
 
@@ -352,7 +361,10 @@ export class ActivityController {
 
   @Delete('rules/:id')
   @HttpCode(204)
-  removeRule(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  removeRule(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     return this.activity.removeRule(user.id, id);
   }
 }

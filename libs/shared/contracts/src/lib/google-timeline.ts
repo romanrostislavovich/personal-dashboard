@@ -1,4 +1,4 @@
-import { PhoneLocationInput } from './activity-places';
+import {PhoneLocationInput} from './activity-places';
 
 /** A place Google named in its timeline: kept as the found name of that place. */
 export interface TimelinePlaceName {
@@ -28,22 +28,32 @@ function num(value: unknown): number | null {
 }
 
 /** `"52.2297°, 21.0122°"`, `"geo:52.2297,21.0122"` → the point. */
-function pointOfText(text: unknown): { latitude: number; longitude: number } | null {
+function pointOfText(
+  text: unknown,
+): {latitude: number; longitude: number} | null {
   if (typeof text !== 'string') {
     return null;
   }
-  const match = text.replace('geo:', '').match(/(-?\d+(?:\.\d+)?)°?\s*,\s*(-?\d+(?:\.\d+)?)/);
-  return match ? { latitude: Number(match[1]), longitude: Number(match[2]) } : null;
+  const match = text
+    .replace('geo:', '')
+    .match(/(-?\d+(?:\.\d+)?)°?\s*,\s*(-?\d+(?:\.\d+)?)/);
+  return match
+    ? {latitude: Number(match[1]), longitude: Number(match[2])}
+    : null;
 }
 
 /** `{ latitudeE7, longitudeE7 }` or `{ latE7, lngE7 }` → the point. */
-function pointOfE7(value: unknown): { latitude: number; longitude: number } | null {
+function pointOfE7(
+  value: unknown,
+): {latitude: number; longitude: number} | null {
   if (!isObject(value)) {
     return null;
   }
   const lat = num(value['latitudeE7'] ?? value['latE7']);
   const lon = num(value['longitudeE7'] ?? value['lngE7']);
-  return lat === null || lon === null ? null : { latitude: lat / 1e7, longitude: lon / 1e7 };
+  return lat === null || lon === null
+    ? null
+    : {latitude: lat / 1e7, longitude: lon / 1e7};
 }
 
 function timeOf(value: unknown): number | null {
@@ -58,15 +68,24 @@ class Collector {
   readonly locations: PhoneLocationInput[] = [];
   readonly names: TimelinePlaceName[] = [];
 
-  fix(point: { latitude: number; longitude: number } | null, at: number | null, accuracy: number) {
-    if (!point || at === null || Math.abs(point.latitude) > 90 || Math.abs(point.longitude) > 180) {
+  fix(
+    point: {latitude: number; longitude: number} | null,
+    at: number | null,
+    accuracy: number,
+  ) {
+    if (
+      !point ||
+      at === null ||
+      Math.abs(point.latitude) > 90 ||
+      Math.abs(point.longitude) > 180
+    ) {
       return;
     }
-    this.locations.push({ at: new Date(at).toISOString(), ...point, accuracy });
+    this.locations.push({at: new Date(at).toISOString(), ...point, accuracy});
   }
 
   visit(
-    point: { latitude: number; longitude: number } | null,
+    point: {latitude: number; longitude: number} | null,
     start: number | null,
     end: number | null,
     name?: unknown,
@@ -79,7 +98,7 @@ class Collector {
     }
     this.fix(point, end, VISIT_ACCURACY_M);
     if (typeof name === 'string' && name.trim()) {
-      this.names.push({ ...point, name: name.trim() });
+      this.names.push({...point, name: name.trim()});
     }
   }
 }
@@ -108,14 +127,22 @@ function semantic(json: Json, out: Collector): void {
       const location = isObject(visit['location']) ? visit['location'] : {};
       out.visit(
         pointOfE7(location),
-        timeOf(visit['duration']['startTimestamp'] ?? visit['duration']['startTimestampMs']),
-        timeOf(visit['duration']['endTimestamp'] ?? visit['duration']['endTimestampMs']),
+        timeOf(
+          visit['duration']['startTimestamp'] ??
+            visit['duration']['startTimestampMs'],
+        ),
+        timeOf(
+          visit['duration']['endTimestamp'] ??
+            visit['duration']['endTimestampMs'],
+        ),
         location['name'],
       );
     }
     const segment = item['activitySegment'];
     if (isObject(segment)) {
-      const raw = isObject(segment['simplifiedRawPath']) ? segment['simplifiedRawPath'] : {};
+      const raw = isObject(segment['simplifiedRawPath'])
+        ? segment['simplifiedRawPath']
+        : {};
       for (const point of (raw['points'] as unknown[]) ?? []) {
         if (isObject(point)) {
           out.fix(
@@ -140,7 +167,11 @@ function segments(items: unknown[], out: Collector): void {
     const visit = item['visit'];
     if (isObject(visit) && isObject(visit['topCandidate'])) {
       const place = visit['topCandidate']['placeLocation'];
-      out.visit(pointOfText(isObject(place) ? place['latLng'] : place), start, end);
+      out.visit(
+        pointOfText(isObject(place) ? place['latLng'] : place),
+        start,
+        end,
+      );
     }
     for (const step of (item['timelinePath'] as unknown[]) ?? []) {
       if (!isObject(step)) {

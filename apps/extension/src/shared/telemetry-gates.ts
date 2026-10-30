@@ -1,5 +1,9 @@
-import { sanitizeTelemetryUrl, TelemetryBucket, telemetryBucketSchema } from '@pd/contracts';
-import { isPrivateSite } from './site-rules';
+import {
+  sanitizeTelemetryUrl,
+  TelemetryBucket,
+  telemetryBucketSchema,
+} from '@pd/contracts';
+import {isPrivateSite} from './site-rules';
 
 export const TELEMETRY_MAX_QUEUE = 100;
 export const TELEMETRY_MAX_AGE = 24 * 60 * 60_000;
@@ -13,7 +17,8 @@ export function telemetrySettingsSenderAllowed(
     sender.id === extensionId &&
     sender.url === popupUrl &&
     !sender.tab?.incognito &&
-    (sender.tab === undefined || (sender.frameId === 0 && sender.tab.url === popupUrl))
+    (sender.tab === undefined ||
+      (sender.frameId === 0 && sender.tab.url === popupUrl))
   );
 }
 
@@ -27,7 +32,7 @@ export function allowedTelemetryUrl(
   const host = new URL(safe).hostname;
   if (
     isPrivateSite(host, privateWords) ||
-    excluded.some((site) => host === site || host.endsWith(`.${site}`))
+    excluded.some(site => host === site || host.endsWith(`.${site}`))
   )
     return null;
   return safe;
@@ -63,10 +68,13 @@ export function telemetrySenderAllowed(
   }
 }
 
-export function boundedTelemetryQueue(value: unknown, now: number): TelemetryBucket[] {
+export function boundedTelemetryQueue(
+  value: unknown,
+  now: number,
+): TelemetryBucket[] {
   if (!Array.isArray(value)) return [];
   const seen = new Set<string>();
-  return value.slice(-TELEMETRY_MAX_QUEUE).flatMap((entry) => {
+  return value.slice(-TELEMETRY_MAX_QUEUE).flatMap(entry => {
     const parsed = telemetryBucketSchema.safeParse(entry);
     if (
       !parsed.success ||

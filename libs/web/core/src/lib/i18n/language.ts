@@ -1,5 +1,5 @@
-import { resolveLocale, toSupportedLocale } from '@pd/client-core';
-import { Locale } from '@pd/contracts';
+import {resolveLocale, toSupportedLocale} from '@pd/client-core';
+import {Locale} from '@pd/contracts';
 
 const STORAGE_KEY = 'pd.lang';
 

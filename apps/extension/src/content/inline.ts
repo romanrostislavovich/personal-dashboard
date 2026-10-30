@@ -1,5 +1,5 @@
-import { ask, FieldKind } from '../shared/messages';
-import { classifyField } from './forms';
+import {ask, FieldKind} from '../shared/messages';
+import {classifyField} from './forms';
 
 /*
  * The key icon in a login field and the menu under it. The icon and the frame of the menu are in
@@ -29,11 +29,19 @@ let currentKind: FieldKind | null = null;
 let placing = 0;
 
 export function setupInline(): void {
-  document.addEventListener('focusin', (event) => void onFocus(event.target), true);
-  document.addEventListener('focusout', () => setTimeout(onFocusLeft, 150), true);
+  document.addEventListener(
+    'focusin',
+    event => void onFocus(event.target),
+    true,
+  );
+  document.addEventListener(
+    'focusout',
+    () => setTimeout(onFocusLeft, 150),
+    true,
+  );
   document.addEventListener(
     'keydown',
-    (event) => {
+    event => {
       if (event.key === 'Escape' && frame) {
         closeMenu();
       }
@@ -44,7 +52,7 @@ export function setupInline(): void {
   // form's button under the field. A fill of ours sends untrusted events and keeps it.
   document.addEventListener(
     'input',
-    (event) => {
+    event => {
       if (frame && event.isTrusted && event.target === current) {
         closeMenu();
       }
@@ -53,7 +61,7 @@ export function setupInline(): void {
   );
   document.addEventListener(
     'pointerdown',
-    (event) => {
+    event => {
       if (frame && event.target !== host && event.target !== current) {
         closeMenu();
       }
@@ -63,9 +71,11 @@ export function setupInline(): void {
   window.addEventListener('scroll', place, true);
   window.addEventListener('resize', place);
   // The menu's page tells how tall it is; nothing else is read from a message.
-  window.addEventListener('message', (event) => {
+  window.addEventListener('message', event => {
     if (frame && event.source === frame.contentWindow) {
-      const height = Number((event.data as { pdMenuHeight?: unknown } | null)?.pdMenuHeight);
+      const height = Number(
+        (event.data as {pdMenuHeight?: unknown} | null)?.pdMenuHeight,
+      );
       if (height > 0 && height < 600) {
         frame.style.height = `${Math.ceil(height)}px`;
         // Taller now: placed again, so it does not run past the bottom of the window.
@@ -103,7 +113,11 @@ async function onFocus(target: EventTarget | null): Promise<void> {
 /** Focus went away from the field, and not into the menu: both go. */
 function onFocusLeft(): void {
   const active = document.activeElement;
-  if (active === current || active === host || (active && host?.contains(active))) {
+  if (
+    active === current ||
+    active === host ||
+    (active && host?.contains(active))
+  ) {
     return;
   }
   closeMenu();
@@ -170,8 +184,10 @@ function showIcon(): void {
       placeItems: 'center',
     });
     // Not a focus change: the field keeps the focus, the menu toggles.
-    icon.addEventListener('pointerdown', (event) => event.preventDefault());
-    icon.addEventListener('click', () => (frame ? closeMenu() : void openMenu(true)));
+    icon.addEventListener('pointerdown', event => event.preventDefault());
+    icon.addEventListener('click', () =>
+      frame ? closeMenu() : void openMenu(true),
+    );
     shadow().append(icon);
   }
   place();
@@ -202,7 +218,7 @@ function shadow(): ShadowRoot {
   if (!host || !root || !host.isConnected) {
     host = document.createElement('pd-vault-inline');
     host.style.all = 'initial';
-    root = host.attachShadow({ mode: 'closed' });
+    root = host.attachShadow({mode: 'closed'});
     document.documentElement.append(host);
   }
   return root;

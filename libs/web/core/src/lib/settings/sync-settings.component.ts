@@ -1,15 +1,20 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { CORE_READS, syncApi } from '@pd/client-core';
-import { SyncStatus } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { SyncConflictsComponent } from './sync-conflicts.component';
+import {DatePipe, DecimalPipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {CORE_READS, syncApi} from '@pd/client-core';
+import {SyncStatus} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {SyncConflictsComponent} from './sync-conflicts.component';
 
 /**
  * Sync between this computer and the server (docs/sync.md): what this instance is, how it syncs,
@@ -31,28 +36,44 @@ import { SyncConflictsComponent } from './sync-conflicts.component';
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>sync</mat-icon>
-        <mat-card-title>{{ 'core.settings.sync.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'core.settings.sync.description' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'core.settings.sync.title' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'core.settings.sync.description' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @if (status.value(); as s) {
-          @let time = s.lastSyncedAt ? (s.lastSyncedAt | date: 'short') : never();
+          @let time =
+            s.lastSyncedAt ? (s.lastSyncedAt | date: 'short') : never();
           @switch (s.mode) {
             @case ('off') {
               <p>{{ 'core.settings.sync.off' | transloco }}</p>
             }
             @case ('server') {
               <p>{{ 'core.settings.sync.server' | transloco }}</p>
-              <p>{{ 'core.settings.sync.lastContact' | transloco: { time } }}</p>
+              <p>{{ 'core.settings.sync.lastContact' | transloco: {time} }}</p>
             }
             @case ('client') {
-              <p>{{ 'core.settings.sync.client' | transloco: { url: s.serverUrl } }}</p>
-              <p>{{ 'core.settings.sync.lastSynced' | transloco: { time } }}</p>
+              <p>
+                {{
+                  'core.settings.sync.client' | transloco: {url: s.serverUrl}
+                }}
+              </p>
+              <p>{{ 'core.settings.sync.lastSynced' | transloco: {time} }}</p>
               @if (s.lastError) {
-                <p class="error"><mat-icon>cloud_off</mat-icon>{{ s.lastError }}</p>
+                <p class="error">
+                  <mat-icon>cloud_off</mat-icon>{{ s.lastError }}
+                </p>
               }
               @if (s.pendingChanges) {
-                <p>{{ 'core.settings.sync.pending' | transloco: { count: s.pendingChanges } }}</p>
+                <p>
+                  {{
+                    'core.settings.sync.pending'
+                      | transloco: {count: s.pendingChanges}
+                  }}
+                </p>
               }
               @if (s.reconcile; as r) {
                 @if (r.mismatches.length) {
@@ -67,7 +88,10 @@ import { SyncConflictsComponent } from './sync-conflicts.component';
                             {{
                               'core.settings.sync.mismatchRows'
                                 | transloco
-                                  : { local: m.localRows ?? '—', server: m.serverRows ?? '—' }
+                                  : {
+                                      local: m.localRows ?? '—',
+                                      server: m.serverRows ?? '—',
+                                    }
                             }}
                           </li>
                         }
@@ -79,7 +103,7 @@ import { SyncConflictsComponent } from './sync-conflicts.component';
                     <mat-icon>verified</mat-icon>
                     {{
                       'core.settings.sync.matches'
-                        | transloco: { time: (r.checkedAt | date: 'short') }
+                        | transloco: {time: (r.checkedAt | date: 'short')}
                     }}
                   </p>
                 }
@@ -89,15 +113,20 @@ import { SyncConflictsComponent } from './sync-conflicts.component';
           @if (s.parked || s.conflicts) {
             <p class="hint">
               @if (s.conflicts) {
-                {{ 'core.settings.sync.conflicts' | transloco: { count: s.conflicts } }}
+                {{
+                  'core.settings.sync.conflicts'
+                    | transloco: {count: s.conflicts}
+                }}
               }
               @if (s.parked) {
-                {{ 'core.settings.sync.parked' | transloco: { count: s.parked } }}
+                {{ 'core.settings.sync.parked' | transloco: {count: s.parked} }}
               }
               <button matButton (click)="showSetAside.set(!showSetAside())">
                 {{
-                  (showSetAside() ? 'core.settings.sync.hide' : 'core.settings.sync.show')
-                    | transloco
+                  (showSetAside()
+                    ? 'core.settings.sync.hide'
+                    : 'core.settings.sync.show'
+                  ) | transloco
                 }}
               </button>
             </p>
@@ -125,7 +154,10 @@ import { SyncConflictsComponent } from './sync-conflicts.component';
               </p>
             }
             <p class="hint">
-              {{ 'core.settings.sync.backup.folder' | transloco: { folder: b.folder } }}
+              {{
+                'core.settings.sync.backup.folder'
+                  | transloco: {folder: b.folder}
+              }}
             </p>
             @if (b.restoreCheck; as check) {
               @if (check.ok) {
@@ -144,24 +176,34 @@ import { SyncConflictsComponent } from './sync-conflicts.component';
               } @else if (check.error) {
                 <p class="error">
                   <mat-icon>error</mat-icon>
-                  {{ 'core.settings.sync.backup.restoreError' | transloco: { error: check.error } }}
+                  {{
+                    'core.settings.sync.backup.restoreError'
+                      | transloco: {error: check.error}
+                  }}
                 </p>
               }
               @for (m of check.mismatches; track m.table) {
                 <p class="error">
                   <mat-icon>error</mat-icon>
-                  {{ 'core.settings.sync.backup.restoreMismatch' | transloco: m }}
+                  {{
+                    'core.settings.sync.backup.restoreMismatch' | transloco: m
+                  }}
                 </p>
               }
             }
             @for (problem of b.problems; track problem) {
               <p class="error">
                 <mat-icon>warning</mat-icon>
-                {{ 'core.settings.sync.backup.problems.' + s.mode + '.' + problem | transloco }}
+                {{
+                  'core.settings.sync.backup.problems.' + s.mode + '.' + problem
+                    | transloco
+                }}
               </p>
             }
             @if (b.lastError) {
-              <p class="error"><mat-icon>cloud_off</mat-icon>{{ b.lastError }}</p>
+              <p class="error">
+                <mat-icon>cloud_off</mat-icon>{{ b.lastError }}
+              </p>
             }
           }
         }
@@ -214,7 +256,9 @@ export class SyncSettingsComponent {
   private readonly snackBar = inject(MatSnackBar);
   private readonly transloco = inject(TranslocoService);
 
-  protected readonly status = httpResource<SyncStatus>(() => CORE_READS.syncStatus());
+  protected readonly status = httpResource<SyncStatus>(() =>
+    CORE_READS.syncStatus(),
+  );
   protected readonly busy = signal(false);
   protected readonly showSetAside = signal(false);
 
@@ -227,24 +271,37 @@ export class SyncSettingsComponent {
   }
 
   protected copyBackup(): Promise<void> {
-    return this.run(() => this.sync.copyBackup(), 'core.settings.sync.backup.copied');
+    return this.run(
+      () => this.sync.copyBackup(),
+      'core.settings.sync.backup.copied',
+    );
   }
 
   protected resync(): Promise<void> {
-    if (!confirm(this.transloco.translate('core.settings.sync.confirmResync'))) {
+    if (
+      !confirm(this.transloco.translate('core.settings.sync.confirmResync'))
+    ) {
       return Promise.resolve();
     }
-    return this.run(() => this.sync.resyncEverything(), 'core.settings.sync.synced');
+    return this.run(
+      () => this.sync.resyncEverything(),
+      'core.settings.sync.synced',
+    );
   }
 
   /** Runs an action that answers with the new status; a failure shows up in the status. */
-  private async run(action: () => Promise<SyncStatus>, done: string): Promise<void> {
+  private async run(
+    action: () => Promise<SyncStatus>,
+    done: string,
+  ): Promise<void> {
     this.busy.set(true);
     try {
       const status = await action();
       this.status.set(status);
       if (!status.lastError && !status.backup?.lastError) {
-        this.snackBar.open(this.transloco.translate(done), 'OK', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate(done), 'OK', {
+          duration: 3000,
+        });
       }
     } finally {
       this.busy.set(false);

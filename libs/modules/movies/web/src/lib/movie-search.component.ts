@@ -7,15 +7,22 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { MovieSearchResult } from '@pd/contracts';
-import { catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
-import { MoviesApi } from './movies.api';
+import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {MovieSearchResult} from '@pd/contracts';
+import {
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  of,
+  switchMap,
+  tap,
+} from 'rxjs';
+import {MoviesApi} from './movies.api';
 
 /** Waits this long after the last key before asking TMDB. */
 const DEBOUNCE_MS = 400;
@@ -27,7 +34,13 @@ const DEBOUNCE_MS = 400;
 @Component({
   selector: 'pd-movie-search',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatFormFieldModule, MatIconModule, MatInputModule, MatProgressBarModule, TranslocoPipe],
+  imports: [
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatProgressBarModule,
+    TranslocoPipe,
+  ],
   template: `
     <mat-form-field class="field" subscriptSizing="dynamic">
       <mat-icon matPrefix>search</mat-icon>
@@ -49,7 +62,12 @@ const DEBOUNCE_MS = 400;
       @for (result of results(); track result.kind + result.tmdbId) {
         <li class="result">
           @if (result.posterUrl) {
-            <img class="poster" [src]="result.posterUrl" alt="" loading="lazy" />
+            <img
+              class="poster"
+              [src]="result.posterUrl"
+              alt=""
+              loading="lazy"
+            />
           } @else {
             <div class="poster">
               <mat-icon>{{ result.kind === 'tv' ? 'tv' : 'movie' }}</mat-icon>
@@ -59,7 +77,11 @@ const DEBOUNCE_MS = 400;
             <span class="name">{{ result.title }}</span>
             <span class="line">
               {{ result.year ?? '' }}
-              · {{ (result.kind === 'tv' ? 'movies.show' : 'movies.film') | transloco }}
+              ·
+              {{
+                (result.kind === 'tv' ? 'movies.show' : 'movies.film')
+                  | transloco
+              }}
               @if (result.originalTitle) {
                 · {{ result.originalTitle }}
               }
@@ -72,7 +94,7 @@ const DEBOUNCE_MS = 400;
                 class="action"
                 [attr.aria-label]="action.labelKey | transloco"
                 [title]="action.labelKey | transloco"
-                (click)="picked.emit({ result, action: action.id })"
+                (click)="picked.emit({result, action: action.id})"
               >
                 <mat-icon>{{ action.icon }}</mat-icon>
               </button>
@@ -141,10 +163,11 @@ export class MovieSearchComponent implements OnInit {
   private readonly api = inject(MoviesApi);
 
   /** The buttons of each result. */
-  readonly actions = input.required<{ id: string; icon: string; labelKey: string }[]>();
+  readonly actions =
+    input.required<{id: string; icon: string; labelKey: string}[]>();
   /** Text to search for at once (the name a page gave). */
   readonly initial = input('');
-  readonly picked = output<{ result: MovieSearchResult; action: string }>();
+  readonly picked = output<{result: MovieSearchResult; action: string}>();
 
   protected readonly query = signal('');
   protected readonly results = signal<MovieSearchResult[]>([]);
@@ -157,7 +180,7 @@ export class MovieSearchComponent implements OnInit {
         debounceTime(DEBOUNCE_MS),
         distinctUntilChanged(),
         tap(() => this.failed.set(false)),
-        switchMap((text) => {
+        switchMap(text => {
           if (text.trim().length < 2) {
             return of([]);
           }
@@ -171,7 +194,7 @@ export class MovieSearchComponent implements OnInit {
         }),
         takeUntilDestroyed(),
       )
-      .subscribe((results) => {
+      .subscribe(results => {
         this.busy.set(false);
         this.results.set(results);
       });

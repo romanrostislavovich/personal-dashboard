@@ -1,7 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { AiService, UsersService } from '@pd/api-core';
-import { DiskAction, DiskAdvice, DiskReport, DiskSafety, DiskSuggestion } from '@pd/contracts';
-import { fixOf, mustNotTrash, reportPaths, ruleAdvice } from './disk-rules';
+import {Injectable, Logger} from '@nestjs/common';
+import {AiService, UsersService} from '@pd/api-core';
+import {
+  DiskAction,
+  DiskAdvice,
+  DiskReport,
+  DiskSafety,
+  DiskSuggestion,
+} from '@pd/contracts';
+import {fixOf, mustNotTrash, reportPaths, ruleAdvice} from './disk-rules';
 
 const ACTIONS: DiskAction[] = ['trash', 'command', 'tool', 'review'];
 const SAFETIES: DiskSafety[] = ['safe', 'check', 'risky'];
@@ -61,29 +67,37 @@ export class DiskAdviceService {
       summary: summaryOf(report, rules, locale),
       byAi: false,
     };
-    if (!(await this.ai.isConfigured(userId)) || !(await this.ai.canSee(userId, 'activity'))) {
+    if (
+      !(await this.ai.isConfigured(userId)) ||
+      !(await this.ai.canSee(userId, 'activity'))
+    ) {
       return fallback;
     }
     try {
       const answer = await this.ai.complete(
         userId,
         INSTRUCTION,
-        JSON.stringify({ ...report, rules }),
+        JSON.stringify({...report, rules}),
         'activity',
       );
       const advice = parseAdvice(answer, report);
       return advice ?? fallback;
     } catch (error) {
-      this.logger.warn(`Disk advice from the AI failed: ${(error as Error).message}`);
+      this.logger.warn(
+        `Disk advice from the AI failed: ${(error as Error).message}`,
+      );
       return fallback;
     }
   }
 }
 
 /** The AI's answer, checked against the report; `null` when it is not usable. */
-export function parseAdvice(answer: string, report: DiskReport): DiskAdvice | null {
+export function parseAdvice(
+  answer: string,
+  report: DiskReport,
+): DiskAdvice | null {
   const json = answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1);
-  let raw: { summary?: unknown; suggestions?: unknown };
+  let raw: {summary?: unknown; suggestions?: unknown};
   try {
     raw = JSON.parse(json);
   } catch {
@@ -94,45 +108,56 @@ export function parseAdvice(answer: string, report: DiskReport): DiskAdvice | nu
   }
   const sizes = reportPaths(report);
   const seen = new Set<string>();
-  const suggestions = raw.suggestions.flatMap((item: Record<string, unknown>): DiskSuggestion[] => {
-    const path = typeof item['path'] === 'string' ? item['path'] : '';
-    const bytes = sizes.get(path);
-    if (bytes === undefined || seen.has(path)) {
-      return [];
-    }
-    seen.add(path);
-    let action = ACTIONS.includes(item['action'] as DiskAction)
-      ? (item['action'] as DiskAction)
-      : 'review';
-    const safety = SAFETIES.includes(item['safety'] as DiskSafety)
-      ? (item['safety'] as DiskSafety)
-      : 'check';
-    if (action === 'trash' && mustNotTrash(path)) {
-      action = 'review';
-    }
-    return [
-      {
-        path,
-        bytes,
-        action,
-        safety,
-        reason: String(item['reason'] ?? '').slice(0, 500),
-        how: typeof item['how'] === 'string' && item['how'] ? item['how'].slice(0, 300) : null,
-        fix: fixOf(report, path),
-      },
-    ];
-  });
+  const suggestions = raw.suggestions.flatMap(
+    (item: Record<string, unknown>): DiskSuggestion[] => {
+      const path = typeof item['path'] === 'string' ? item['path'] : '';
+      const bytes = sizes.get(path);
+      if (bytes === undefined || seen.has(path)) {
+        return [];
+      }
+      seen.add(path);
+      let action = ACTIONS.includes(item['action'] as DiskAction)
+        ? (item['action'] as DiskAction)
+        : 'review';
+      const safety = SAFETIES.includes(item['safety'] as DiskSafety)
+        ? (item['safety'] as DiskSafety)
+        : 'check';
+      if (action === 'trash' && mustNotTrash(path)) {
+        action = 'review';
+      }
+      return [
+        {
+          path,
+          bytes,
+          action,
+          safety,
+          reason: String(item['reason'] ?? '').slice(0, 500),
+          how:
+            typeof item['how'] === 'string' && item['how']
+              ? item['how'].slice(0, 300)
+              : null,
+          fix: fixOf(report, path),
+        },
+      ];
+    },
+  );
   return {
-    suggestions: suggestions.sort((a, b) => b.bytes - a.bytes).slice(0, MAX_SUGGESTIONS),
+    suggestions: suggestions
+      .sort((a, b) => b.bytes - a.bytes)
+      .slice(0, MAX_SUGGESTIONS),
     summary: typeof raw.summary === 'string' ? raw.summary.slice(0, 600) : '',
     byAi: true,
   };
 }
 
-function summaryOf(report: DiskReport, rules: DiskSuggestion[], locale: string): string {
+function summaryOf(
+  report: DiskReport,
+  rules: DiskSuggestion[],
+  locale: string,
+): string {
   const gb = (bytes: number) => (bytes / GB).toFixed(1);
   const freeable = rules
-    .filter((rule) => rule.safety === 'safe')
+    .filter(rule => rule.safety === 'safe')
     .reduce((sum, rule) => sum + rule.bytes, 0);
   return locale === 'ru'
     ? `Диск ${report.mount} — свободно ${gb(report.free)} из ${gb(report.total)} ГБ. Известные кэши и временные файлы: безопасно можно освободить около ${gb(freeable)} ГБ.`

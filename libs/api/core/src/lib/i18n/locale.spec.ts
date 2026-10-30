@@ -1,4 +1,4 @@
-import { pickMessages, toLocale } from './locale';
+import {pickMessages, toLocale} from './locale';
 
 describe('toLocale', () => {
   it('maps language tags to supported locales', () => {
@@ -15,7 +15,7 @@ describe('toLocale', () => {
 
 describe('pickMessages', () => {
   it('returns the texts for the user language', () => {
-    const messages = { en: { hi: 'Hello' }, ru: { hi: 'Привет' } };
+    const messages = {en: {hi: 'Hello'}, ru: {hi: 'Привет'}};
     expect(pickMessages(messages, 'ru').hi).toBe('Привет');
     expect(pickMessages(messages, 'fr').hi).toBe('Hello');
   });

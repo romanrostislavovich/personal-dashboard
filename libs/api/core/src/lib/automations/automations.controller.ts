@@ -14,10 +14,10 @@ import {
   automationDraftRequestSchema,
   automationRuleInputSchema,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { ZodValidationPipe } from '../validation/zod-validation.pipe';
-import { AutomationsService } from './automations.service';
+import {z} from 'zod';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {ZodValidationPipe} from '../validation/zod-validation.pipe';
+import {AutomationsService} from './automations.service';
 
 type ValidRuleInput = z.output<typeof automationRuleInputSchema>;
 
@@ -40,7 +40,8 @@ export class AutomationsController {
   @Post()
   create(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(automationRuleInputSchema)) input: ValidRuleInput,
+    @Body(new ZodValidationPipe(automationRuleInputSchema))
+    input: ValidRuleInput,
   ) {
     return this.automations.create(user.id, input);
   }
@@ -49,14 +50,18 @@ export class AutomationsController {
   update(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(automationRuleInputSchema)) input: ValidRuleInput,
+    @Body(new ZodValidationPipe(automationRuleInputSchema))
+    input: ValidRuleInput,
   ) {
     return this.automations.update(user.id, id, input);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.automations.remove(user.id, id);
   }
 
@@ -64,7 +69,8 @@ export class AutomationsController {
   @Post('draft')
   draft(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(automationDraftRequestSchema)) body: AutomationDraftRequest,
+    @Body(new ZodValidationPipe(automationDraftRequestSchema))
+    body: AutomationDraftRequest,
   ) {
     return this.automations.draft(user.id, body.text);
   }

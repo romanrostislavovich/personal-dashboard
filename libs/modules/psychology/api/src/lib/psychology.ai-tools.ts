@@ -1,8 +1,17 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, findById, idParameters, NO_PARAMETERS, PERIOD_PARAMETERS } from '@pd/api-core';
-import { psychologyEventInputSchema, psychologyPatternsQuerySchema } from '@pd/contracts';
-import { PsychologyService } from './psychology.service';
-import { psychologyEvents } from './psychology.schema';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  AiService,
+  findById,
+  idParameters,
+  NO_PARAMETERS,
+  PERIOD_PARAMETERS,
+} from '@pd/api-core';
+import {
+  psychologyEventInputSchema,
+  psychologyPatternsQuerySchema,
+} from '@pd/contracts';
+import {PsychologyService} from './psychology.service';
+import {psychologyEvents} from './psychology.schema';
 
 /**
  * The assistant's access to Psychology: the patterns of the mood, events and check-ups;
@@ -35,7 +44,10 @@ export class PsychologyAiTools implements OnModuleInit {
         );
         // A section hidden from the assistant (or with its own AI) keeps its periods away.
         const hidden = new Set(await this.ai.hiddenFromShared(userId));
-        return { ...patterns, periods: patterns.periods.filter((p) => !hidden.has(p.module)) };
+        return {
+          ...patterns,
+          periods: patterns.periods.filter(p => !hidden.has(p.module)),
+        };
       },
     });
 
@@ -49,7 +61,7 @@ export class PsychologyAiTools implements OnModuleInit {
         'years, e.g. 3; ageTo null — within one year of life) and startedOn null. ' +
         'Useful for "what happened in spring", "when did I change jobs". The latest first.',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.psychology.events(userId),
+      handler: userId => this.psychology.events(userId),
     });
 
     this.ai.registerTool({
@@ -65,18 +77,30 @@ export class PsychologyAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          title: { type: 'string' },
-          description: { type: 'string' },
-          startedOn: { type: 'string', description: 'YYYY-MM-DD' },
-          endedOn: { type: 'string', description: 'YYYY-MM-DD' },
-          ageFrom: { type: 'number', description: 'Age in full years, instead of the dates' },
-          ageTo: { type: 'number', description: 'The last age, for several years' },
-          feeling: { type: 'number', description: '-2 very hard … 2 very good, 0 neutral' },
+          title: {type: 'string'},
+          description: {type: 'string'},
+          startedOn: {type: 'string', description: 'YYYY-MM-DD'},
+          endedOn: {type: 'string', description: 'YYYY-MM-DD'},
+          ageFrom: {
+            type: 'number',
+            description: 'Age in full years, instead of the dates',
+          },
+          ageTo: {
+            type: 'number',
+            description: 'The last age, for several years',
+          },
+          feeling: {
+            type: 'number',
+            description: '-2 very hard … 2 very good, 0 neutral',
+          },
         },
         required: ['title'],
       },
       handler: (userId, args) =>
-        this.psychology.addEvent(userId, psychologyEventInputSchema.parse(args)),
+        this.psychology.addEvent(
+          userId,
+          psychologyEventInputSchema.parse(args),
+        ),
     });
 
     const findEvent = async (userId: string, args: Record<string, unknown>) =>
@@ -87,13 +111,21 @@ export class PsychologyAiTools implements OnModuleInit {
       writes: true,
       undoTables: [psychologyEvents],
       confirm: async (userId, args) => {
-        const { title, startedOn, endedOn, ageFrom, ageTo } = await findEvent(userId, args);
-        return startedOn ? { title, startedOn, endedOn } : { title, ageFrom, ageTo };
+        const {title, startedOn, endedOn, ageFrom, ageTo} = await findEvent(
+          userId,
+          args,
+        );
+        return startedOn
+          ? {title, startedOn, endedOn}
+          : {title, ageFrom, ageTo};
       },
       description: "Deletes an event of the user's life.",
       parameters: idParameters('Event id from psychology_events'),
       handler: async (userId, args) => {
-        await this.psychology.removeEvent(userId, (await findEvent(userId, args)).id);
+        await this.psychology.removeEvent(
+          userId,
+          (await findEvent(userId, args)).id,
+        );
       },
     });
 
@@ -107,13 +139,15 @@ export class PsychologyAiTools implements OnModuleInit {
         'describe the change over time, never name a condition, and if the user seems to be ' +
         'struggling, gently suggest talking to a professional or someone they trust.',
       parameters: NO_PARAMETERS,
-      handler: async (userId) =>
-        (await this.psychology.assessments(userId)).map(({ test, takenOn, score, band }) => ({
-          test,
-          takenOn,
-          score,
-          band,
-        })),
+      handler: async userId =>
+        (await this.psychology.assessments(userId)).map(
+          ({test, takenOn, score, band}) => ({
+            test,
+            takenOn,
+            score,
+            band,
+          }),
+        ),
     });
   }
 }

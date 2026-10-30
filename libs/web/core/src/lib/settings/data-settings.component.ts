@@ -1,15 +1,21 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { dataApi } from '@pd/client-core';
-import { DataImportReport } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { errorStatus } from '../client/core-requests';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {dataApi} from '@pd/client-core';
+import {DataImportReport} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {errorStatus} from '../client/core-requests';
 
 /**
  * One's data as a file: everything is exported as one ZIP, and an archive is brought back — into
@@ -30,19 +36,39 @@ import { errorStatus } from '../client/core-requests';
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>📦 {{ 'core.settings.data.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'core.settings.data.subtitle' | transloco }}</mat-card-subtitle>
+        <mat-card-title
+          >📦 {{ 'core.settings.data.title' | transloco }}</mat-card-title
+        >
+        <mat-card-subtitle>{{
+          'core.settings.data.subtitle' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <p class="hint">{{ 'core.settings.data.exportHint' | transloco }}</p>
         <div class="actions">
-          <button matButton="filled" (click)="export()" [disabled]="busy() !== null">
-            <mat-icon>download</mat-icon> {{ 'core.settings.data.export' | transloco }}
+          <button
+            matButton="filled"
+            (click)="export()"
+            [disabled]="busy() !== null"
+          >
+            <mat-icon>download</mat-icon>
+            {{ 'core.settings.data.export' | transloco }}
           </button>
-          <button matButton="outlined" (click)="file.click()" [disabled]="busy() !== null">
-            <mat-icon>upload</mat-icon> {{ 'core.settings.data.import' | transloco }}
+          <button
+            matButton="outlined"
+            (click)="file.click()"
+            [disabled]="busy() !== null"
+          >
+            <mat-icon>upload</mat-icon>
+            {{ 'core.settings.data.import' | transloco }}
           </button>
-          <input #file type="file" accept=".zip,application/zip" hidden (change)="pick(file)" />
+          <input
+            #file
+            type="file"
+            accept=".zip,application/zip"
+            hidden
+            (change)="pick(file)"
+          />
         </div>
         @if (busy(); as step) {
           <p class="hint">{{ 'core.settings.data.' + step | transloco }}</p>
@@ -53,7 +79,10 @@ import { errorStatus } from '../client/core-requests';
           <div class="report">
             <p>
               {{
-                (applied() ? 'core.settings.data.applied' : 'core.settings.data.preview')
+                (applied()
+                  ? 'core.settings.data.applied'
+                  : 'core.settings.data.preview'
+                )
                   | transloco
                     : {
                         added: added(),
@@ -73,7 +102,8 @@ import { errorStatus } from '../client/core-requests';
             @if (r.unknownTables.length) {
               <p class="hint">
                 {{
-                  'core.settings.data.unknown' | transloco: { tables: r.unknownTables.join(', ') }
+                  'core.settings.data.unknown'
+                    | transloco: {tables: r.unknownTables.join(', ')}
                 }}
               </p>
             }
@@ -86,7 +116,11 @@ import { errorStatus } from '../client/core-requests';
                 >
                   {{ 'core.settings.data.apply' | transloco }}
                 </button>
-                <button matButton (click)="cancel(r)" [disabled]="busy() !== null">
+                <button
+                  matButton
+                  (click)="cancel(r)"
+                  [disabled]="busy() !== null"
+                >
                   {{ 'core.actions.cancel' | transloco }}
                 </button>
               </div>
@@ -137,21 +171,28 @@ export class DataSettingsComponent {
   private readonly snackBar = inject(MatSnackBar);
 
   /** What is going on: the key of its text (`exporting`, `reading`, `importing`). */
-  protected readonly busy = signal<'exporting' | 'reading' | 'importing' | null>(null);
+  protected readonly busy = signal<
+    'exporting' | 'reading' | 'importing' | null
+  >(null);
   /** The uploaded archive: what it would add, or — once applied — what it added. */
   protected readonly report = signal<DataImportReport | null>(null);
   protected readonly applied = signal(false);
 
   protected readonly changed = computed(() =>
-    (this.report()?.tables ?? []).filter((table) => table.added > 0),
+    (this.report()?.tables ?? []).filter(table => table.added > 0),
   );
   protected readonly added = computed(() =>
-    (this.report()?.tables ?? []).reduce((total, table) => total + table.added, 0),
+    (this.report()?.tables ?? []).reduce(
+      (total, table) => total + table.added,
+      0,
+    ),
   );
   protected readonly existing = computed(
     () =>
-      (this.report()?.tables ?? []).reduce((total, table) => total + table.inArchive, 0) -
-      this.added(),
+      (this.report()?.tables ?? []).reduce(
+        (total, table) => total + table.inArchive,
+        0,
+      ) - this.added(),
   );
 
   /** A known table by its name ("Transaction", as the trash calls it), any other as it is. */
@@ -184,7 +225,9 @@ export class DataSettingsComponent {
     }
     this.report.set(null);
     this.applied.set(false);
-    await this.run('reading', async () => this.report.set(await this.data.previewImport(file)));
+    await this.run('reading', async () =>
+      this.report.set(await this.data.previewImport(file)),
+    );
   }
 
   protected async apply(report: DataImportReport): Promise<void> {
@@ -199,7 +242,10 @@ export class DataSettingsComponent {
     await this.data.discardImport(report.id).catch(() => undefined);
   }
 
-  private async run(step: 'exporting' | 'reading' | 'importing', work: () => Promise<void>) {
+  private async run(
+    step: 'exporting' | 'reading' | 'importing',
+    work: () => Promise<void>,
+  ) {
     this.busy.set(step);
     try {
       await work();
@@ -213,7 +259,7 @@ export class DataSettingsComponent {
             : status === 404
               ? 'core.settings.data.gone'
               : 'core.settings.data.failed';
-      this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 8000 });
+      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 8000});
     } finally {
       this.busy.set(null);
     }

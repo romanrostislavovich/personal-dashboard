@@ -1,7 +1,11 @@
-import { AppointmentBrief, PsychologyAssessment, PsychologyEvent } from '@pd/contracts';
-import { briefBlocks } from './brief-document';
-import { toDocxDocument } from './brief-export';
-import { psychologyMessages } from './psychology.messages';
+import {
+  AppointmentBrief,
+  PsychologyAssessment,
+  PsychologyEvent,
+} from '@pd/contracts';
+import {briefBlocks} from './brief-document';
+import {toDocxDocument} from './brief-export';
+import {psychologyMessages} from './psychology.messages';
 
 const brief: AppointmentBrief = {
   id: 'b1',
@@ -18,7 +22,11 @@ const brief: AppointmentBrief = {
   updatedAt: '',
 };
 
-function assessment(id: string, takenOn: string, answers: number[]): PsychologyAssessment {
+function assessment(
+  id: string,
+  takenOn: string,
+  answers: number[],
+): PsychologyAssessment {
   const sum = answers.reduce((a, b) => a + b, 0);
   return {
     id,
@@ -74,7 +82,11 @@ describe('the brief for an appointment', () => {
 
   it('leaves out an empty section and ends with whose words these are', () => {
     expect(all).not.toContain(text.brief.notes);
-    expect(blocks.at(-1)).toEqual({ kind: 'paragraph', text: text.brief.footer, muted: true });
+    expect(blocks.at(-1)).toEqual({
+      kind: 'paragraph',
+      text: text.brief.footer,
+      muted: true,
+    });
   });
 
   it('makes a Word file', () => {

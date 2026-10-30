@@ -1,5 +1,5 @@
-import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
-import { AiService, DB, Database, UsersService } from '@pd/api-core';
+import {BadRequestException, Inject, Injectable, Logger} from '@nestjs/common';
+import {AiService, DB, Database, UsersService} from '@pd/api-core';
 import {
   addDays,
   BankResortResult,
@@ -9,10 +9,10 @@ import {
   TransactionKind,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, desc, eq, gte, inArray, isNotNull, isNull, lte } from 'drizzle-orm';
-import { financeMessages } from '../finance.messages';
-import { transactions } from '../finance.schema';
-import { TransactionsService } from '../transactions/transactions.service';
+import {and, desc, eq, gte, inArray, isNotNull, isNull, lte} from 'drizzle-orm';
+import {financeMessages} from '../finance.messages';
+import {transactions} from '../finance.schema';
+import {TransactionsService} from '../transactions/transactions.service';
 import {
   balanceOf,
   BankOperation,
@@ -24,10 +24,13 @@ import {
   normalizeIban,
   operationsOf,
 } from './bank-operations';
-import { BankAccountRow, bankAccounts, BankConnectionRow } from './bank.schema';
-import { OWN_ACCOUNT, parsePkoStatement, Statement } from './pko-statement';
-import { EnableBankingClient } from './enable-banking.client';
-import { CategoryModelService, textOf } from '../categories/category-model.service';
+import {BankAccountRow, bankAccounts, BankConnectionRow} from './bank.schema';
+import {OWN_ACCOUNT, parsePkoStatement, Statement} from './pko-statement';
+import {EnableBankingClient} from './enable-banking.client';
+import {
+  CategoryModelService,
+  textOf,
+} from '../categories/category-model.service';
 
 /** A first import asks for this much history; the bank gives what it keeps (often 90 days). */
 const HISTORY_DAYS = 730;
@@ -83,13 +86,13 @@ export class BankImportService {
       .where(eq(bankAccounts.connectionId, connection.id));
     // Every account of the user's banks, enabled or not: a transfer to any of them is their own.
     const own = await this.db
-      .select({ iban: bankAccounts.iban })
+      .select({iban: bankAccounts.iban})
       .from(bankAccounts)
       .where(eq(bankAccounts.userId, connection.userId));
-    const ownIbans = new Set(own.flatMap((row) => normalizeIban(row.iban) ?? []));
+    const ownIbans = new Set(own.flatMap(row => normalizeIban(row.iban) ?? []));
     const today = await this.today(connection.userId);
-    const total: BankSyncResult = { added: 0, matched: 0 };
-    for (const account of accounts.filter((item) => item.enabled)) {
+    const total: BankSyncResult = {added: 0, matched: 0};
+    for (const account of accounts.filter(item => item.enabled)) {
       const result = await this.importAccount(account, client, ownIbans, today);
       total.added += result.added;
       total.matched += result.matched;
@@ -99,7 +102,10 @@ export class BankImportService {
   }
 
   /** The account's balance as the bank says it now; a bank that does not answer keeps the old. */
-  private async refreshBalance(account: BankAccountRow, client: EnableBankingClient) {
+  private async refreshBalance(
+    account: BankAccountRow,
+    client: EnableBankingClient,
+  ) {
     try {
       const balance = balanceOf(await client.balances(account.uid));
       if (balance) {
@@ -113,7 +119,9 @@ export class BankImportService {
           .where(eq(bankAccounts.id, account.id));
       }
     } catch (error) {
-      this.logger.warn(`The bank gave no balance of an account: ${String(error)}`);
+      this.logger.warn(
+        `The bank gave no balance of an account: ${String(error)}`,
+      );
     }
   }
 
@@ -133,15 +141,22 @@ export class BankImportService {
           ? Promise.reject(error)
           : client.transactions(account.uid, shift(today, -SHORT_HISTORY_DAYS)),
       );
-    const operations = operationsOf(fetched).filter((op) => !isOwnTransfer(op, ownIbans));
-    const result = await this.save(account.userId, account.id, operations, today);
+    const operations = operationsOf(fetched).filter(
+      op => !isOwnTransfer(op, ownIbans),
+    );
+    const result = await this.save(
+      account.userId,
+      account.id,
+      operations,
+      today,
+    );
     const lastBooked = operations.reduce<string | null>(
       (latest, op) => (!latest || op.bookedOn > latest ? op.bookedOn : latest),
       account.lastBookedOn,
     );
     await this.db
       .update(bankAccounts)
-      .set({ lastBookedOn: lastBooked, lastSyncedAt: new Date() })
+      .set({lastBookedOn: lastBooked, lastSyncedAt: new Date()})
       .where(eq(bankAccounts.id, account.id));
     return result;
   }
@@ -156,18 +171,22 @@ export class BankImportService {
     try {
       statement = parsePkoStatement(file);
     } catch (error) {
-      throw new BadRequestException(String(error instanceof Error ? error.message : error));
+      throw new BadRequestException(
+        String(error instanceof Error ? error.message : error),
+      );
     }
     const own = await this.db
-      .select({ iban: bankAccounts.iban })
+      .select({iban: bankAccounts.iban})
       .from(bankAccounts)
       .where(eq(bankAccounts.userId, userId));
     const ownIbans = new Set([
       OWN_ACCOUNT,
-      ...own.flatMap((row) => normalizeIban(row.iban) ?? []),
+      ...own.flatMap(row => normalizeIban(row.iban) ?? []),
       ...(statement.account ? [statement.account] : []),
     ]);
-    const operations = statement.operations.filter((op) => !isOwnTransfer(op, ownIbans));
+    const operations = statement.operations.filter(
+      op => !isOwnTransfer(op, ownIbans),
+    );
     return this.save(userId, null, operations, await this.today(userId));
   }
 
@@ -178,30 +197,30 @@ export class BankImportService {
     today: string,
   ): Promise<BankSyncResult> {
     if (!operations.length) {
-      return { added: 0, matched: 0 };
+      return {added: 0, matched: 0};
     }
     const known = new Set(
       (
         await this.db
-          .select({ id: transactions.bankEntryId })
+          .select({id: transactions.bankEntryId})
           .from(transactions)
           .where(
             and(
               eq(transactions.userId, userId),
               inArray(
                 transactions.bankEntryId,
-                operations.map((op) => op.entryId),
+                operations.map(op => op.entryId),
               ),
             ),
           )
-      ).map((row) => row.id),
+      ).map(row => row.id),
     );
-    const fresh = operations.filter((op) => !known.has(op.entryId));
+    const fresh = operations.filter(op => !known.has(op.entryId));
     if (!fresh.length) {
-      return { added: 0, matched: 0 };
+      return {added: 0, matched: 0};
     }
     // Typed by hand (or from a statement) within the days of the operations, not tied yet.
-    const days = fresh.map((op) => op.bookedOn).sort();
+    const days = fresh.map(op => op.bookedOn).sort();
     const candidates: MatchCandidate[] = await this.db
       .select({
         id: transactions.id,
@@ -239,7 +258,7 @@ export class BankImportService {
     const categories = await this.categories(userId, toAdd);
     const added = await this.transactions.importFromBank(
       userId,
-      toAdd.map((op) => ({
+      toAdd.map(op => ({
         kind: op.kind,
         amount: op.amount,
         currency: op.currency,
@@ -253,7 +272,7 @@ export class BankImportService {
       })),
       shift(today, -RECENT_DAYS),
     );
-    return { added, matched };
+    return {added, matched};
   }
 
   /**
@@ -284,7 +303,7 @@ export class BankImportService {
         ),
       )
       .limit(RESORT_MAX);
-    const operations = rows.map((row) => {
+    const operations = rows.map(row => {
       const op: BankOperation = {
         entryId: row.id,
         kind: row.kind,
@@ -295,21 +314,21 @@ export class BankImportService {
         counterpartyIban: null,
         note: row.note,
       };
-      return { id: row.id, op };
+      return {id: row.id, op};
     });
     const categories = await this.categories(
       userId,
-      operations.map(({ op }) => op),
+      operations.map(({op}) => op),
     );
     const sorted = operations
-      .map(({ id, op }) => ({
+      .map(({id, op}) => ({
         id,
         category: categories.get(op) ?? fallback,
         counterparty: op.counterparty,
       }))
-      .filter((update) => update.category !== fallback);
+      .filter(update => update.category !== fallback);
     await this.transactions.sortFromBank(userId, sorted);
-    return { sorted: sorted.length, left: rows.length - sorted.length };
+    return {sorted: sorted.length, left: rows.length - sorted.length};
   }
 
   /** The category of every operation: by its counterparty's history, the AI, or none. */
@@ -328,7 +347,12 @@ export class BankImportService {
         counterparty: transactions.counterparty,
       })
       .from(transactions)
-      .where(and(eq(transactions.userId, userId), isNotNull(transactions.counterparty)))
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          isNotNull(transactions.counterparty),
+        ),
+      )
       .orderBy(desc(transactions.createdAt))
       .limit(5000);
     // The latest first: a category corrected by hand wins over the older ones.
@@ -341,12 +365,19 @@ export class BankImportService {
     }
     const unknown: BankOperation[] = [];
     for (const op of operations) {
-      const category = known.get(`${op.kind}|${counterpartyKey(op.counterparty)}`);
+      const category = known.get(
+        `${op.kind}|${counterpartyKey(op.counterparty)}`,
+      );
       // A new counterparty: the user's own model first (free, offline), the AI after it.
       const learned =
         category && op.counterparty
           ? null
-          : await this.model.sure(userId, op.kind, textOf(op.counterparty, op.note), op.amount);
+          : await this.model.sure(
+              userId,
+              op.kind,
+              textOf(op.counterparty, op.note),
+              op.amount,
+            );
       if (category && op.counterparty) {
         result.set(op, category);
       } else if (learned) {
@@ -359,7 +390,11 @@ export class BankImportService {
     const user = await this.users.findById(userId);
     const fallback = financeMessages(user?.locale ?? 'en').uncategorized;
     for (const op of unknown) {
-      result.set(op, guessed.get(`${op.kind}|${counterpartyKey(op.counterparty)}`) ?? fallback);
+      result.set(
+        op,
+        guessed.get(`${op.kind}|${counterpartyKey(op.counterparty)}`) ??
+          fallback,
+      );
     }
     return result;
   }
@@ -368,9 +403,12 @@ export class BankImportService {
    * The AI's category for each new counterparty, among the user's own categories only; empty
    * when the AI is not set up, is not allowed to see Finance, or fails — the import goes on.
    */
-  private async guess(userId: string, operations: BankOperation[]): Promise<Map<string, string>> {
+  private async guess(
+    userId: string,
+    operations: BankOperation[],
+  ): Promise<Map<string, string>> {
     const guessed = new Map<string, string>();
-    const named = operations.filter((op) => counterpartyKey(op.counterparty));
+    const named = operations.filter(op => counterpartyKey(op.counterparty));
     if (
       !named.length ||
       !(await this.ai.isConfigured(userId)) ||
@@ -379,11 +417,17 @@ export class BankImportService {
       return guessed;
     }
     const own = await this.db
-      .selectDistinct({ kind: transactions.kind, category: transactions.category })
+      .selectDistinct({
+        kind: transactions.kind,
+        category: transactions.category,
+      })
       .from(transactions)
       .where(eq(transactions.userId, userId));
-    const categories: Record<TransactionKind, string[]> = { income: [], expense: [] };
-    own.forEach((row) => categories[row.kind].push(row.category));
+    const categories: Record<TransactionKind, string[]> = {
+      income: [],
+      expense: [],
+    };
+    own.forEach(row => categories[row.kind].push(row.category));
     if (!categories.expense.length && !categories.income.length) {
       return guessed;
     }
@@ -408,17 +452,22 @@ export class BankImportService {
           }),
           'finance',
           // Sorting into categories: a local model does it for free when one is chosen.
-          { light: true },
+          {light: true},
         );
         const answer = parseJsonObject(reply);
         for (const [key, op] of batch) {
           const category = answer[op.counterparty as string];
-          if (typeof category === 'string' && categories[op.kind].includes(category)) {
+          if (
+            typeof category === 'string' &&
+            categories[op.kind].includes(category)
+          ) {
             guessed.set(key, category);
           }
         }
       } catch (error) {
-        this.logger.warn(`The AI did not sort the bank's operations: ${String(error)}`);
+        this.logger.warn(
+          `The AI did not sort the bank's operations: ${String(error)}`,
+        );
         break;
       }
     }
@@ -440,7 +489,9 @@ export function parseJsonObject(reply: string): Record<string, unknown> {
   }
   try {
     const value: unknown = JSON.parse(reply.slice(start, end + 1));
-    return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+    return value && typeof value === 'object'
+      ? (value as Record<string, unknown>)
+      : {};
   } catch {
     return {};
   }

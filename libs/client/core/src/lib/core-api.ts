@@ -47,7 +47,7 @@ import {
   TwoFactorStatus,
   SearchHit,
 } from '@pd/contracts';
-import { ApiClient, apiRequest } from './api-client';
+import {ApiClient, apiRequest} from './api-client';
 
 /**
  * Paths of the core API, in one place for every client. A client that reads through its own
@@ -104,15 +104,15 @@ export const CORE_READS = {
   projects: () => apiRequest(API_PATHS.projects),
   /** A project across the sections: its hours, money, tasks, sites and latest changes. */
   projectOverview: (id: string, from: string, to: string) =>
-    apiRequest(`${API_PATHS.project(id)}/overview`, { from, to }),
+    apiRequest(`${API_PATHS.project(id)}/overview`, {from, to}),
   /** Search across all modules (the command palette). */
-  search: (q: string) => apiRequest(API_PATHS.search, { q }),
+  search: (q: string) => apiRequest(API_PATHS.search, {q}),
   achievements: () => apiRequest(API_PATHS.achievements),
   notificationSettings: () => apiRequest(API_PATHS.notificationSettings),
   /** What became of the latest notifications (sent, tried again, failed). */
   notificationLog: () => apiRequest(API_PATHS.notificationLog),
   /** The bell: the newest first; `questions` — only the ones waiting for an answer. */
-  inbox: (query: InboxQuery = {}) => apiRequest(API_PATHS.inbox, { ...query }),
+  inbox: (query: InboxQuery = {}) => apiRequest(API_PATHS.inbox, {...query}),
   inboxSummary: () => apiRequest(`${API_PATHS.inbox}/summary`),
   inboxItem: (id: string) => apiRequest(`${API_PATHS.inbox}/${id}`),
   /** Where an MCP client connects, and the access tokens. */
@@ -123,23 +123,29 @@ export const CORE_READS = {
   /** Background jobs and the log of errors; only the owner may read it. */
   systemStatus: () => apiRequest(API_PATHS.systemStatus),
   /** A day across every module (the life timeline). */
-  lifeDay: (day: string) => apiRequest('/api/life/day', { day }),
+  lifeDay: (day: string) => apiRequest('/api/life/day', {day}),
   /** The numbers of every module for a period (a month, a year). */
-  lifeSummary: (from: string, to: string) => apiRequest('/api/life/summary', { from, to }),
+  lifeSummary: (from: string, to: string) =>
+    apiRequest('/api/life/summary', {from, to}),
   /** A project month by month: its hours and its money. */
   projectMonths: (id: string, months: number) =>
-    apiRequest(`${API_PATHS.project(id)}/months`, { months }),
+    apiRequest(`${API_PATHS.project(id)}/months`, {months}),
   /** What goes with the days of a good mood and of a bad one, across the sections. */
-  moodInsights: (from: string, to: string) => apiRequest('/api/life/mood-insights', { from, to }),
+  moodInsights: (from: string, to: string) =>
+    apiRequest('/api/life/mood-insights', {from, to}),
   /** Today's mood forecast from yesterday's numbers, by the user's own model. */
   moodForecast: () => apiRequest('/api/life/forecast'),
   /** How every daily number goes with every other; the regression explains `target`. */
   correlations: (from: string, to: string, target?: string) =>
-    apiRequest('/api/life/correlations', { from, to, ...(target ? { target } : {}) }),
+    apiRequest('/api/life/correlations', {
+      from,
+      to,
+      ...(target ? {target} : {}),
+    }),
   /** Every daily number before and after the start or the end of a period of Health. */
-  beforeAfter: (weeks: number) => apiRequest('/api/life/before-after', { weeks }),
+  beforeAfter: (weeks: number) => apiRequest('/api/life/before-after', {weeks}),
   /** The AI's kept story of `YYYY-MM` or `YYYY`: `{ story: null }` — not written yet. */
-  lifeStory: (period: string) => apiRequest('/api/life/story', { period }),
+  lifeStory: (period: string) => apiRequest('/api/life/story', {period}),
   /** Every connection to an outside service with its state. */
   integrations: () => apiRequest('/api/integrations'),
   /** Settings → Apps: what can be installed, and the devices that run it. */
@@ -156,27 +162,34 @@ export function authApi(api: ApiClient) {
   return {
     /** Public server settings: whether sign-up is open. */
     config: () => api.get<AuthConfig>(API_PATHS.authConfig),
-    login: (credentials: LoginRequest) => api.post<LoginResult>(API_PATHS.login, credentials),
+    login: (credentials: LoginRequest) =>
+      api.post<LoginResult>(API_PATHS.login, credentials),
     loginWithCode: (input: TwoFactorLogin) =>
       api.post<LoginResponse>(API_PATHS.loginWithCode, input),
-    register: (input: RegisterRequest) => api.post<LoginResponse>(API_PATHS.register, input),
+    register: (input: RegisterRequest) =>
+      api.post<LoginResponse>(API_PATHS.register, input),
     /** A demo instance: a session of the shared demo user, without a password. */
-    demo: (client: AuthClientKind) => api.post<LoginResponse>(API_PATHS.demo, { client }),
+    demo: (client: AuthClientKind) =>
+      api.post<LoginResponse>(API_PATHS.demo, {client}),
     me: () => api.get<CurrentUser>(API_PATHS.me),
-    updateProfile: (changes: ProfileUpdate) => api.patch<CurrentUser>(API_PATHS.me, changes),
+    updateProfile: (changes: ProfileUpdate) =>
+      api.patch<CurrentUser>(API_PATHS.me, changes),
     /** Also signs every other device out. */
-    changePassword: (input: PasswordChange) => api.put<void>(API_PATHS.password, input),
+    changePassword: (input: PasswordChange) =>
+      api.put<void>(API_PATHS.password, input),
 
     /** Devices and browsers signed in. */
     sessions: () => api.get<SessionInfo[]>(API_PATHS.sessions),
     revokeSession: (id: string) => api.delete(API_PATHS.session(id)),
-    revokeOtherSessions: () => api.post<void>(API_PATHS.revokeOtherSessions, {}),
+    revokeOtherSessions: () =>
+      api.post<void>(API_PATHS.revokeOtherSessions, {}),
 
     /** Two-factor sign-in: set up (a QR code), enable with the first code, disable. */
     twoFactorStatus: () => api.get<TwoFactorStatus>(API_PATHS.twoFactor),
-    setupTwoFactor: () => api.post<TwoFactorSetup>(`${API_PATHS.twoFactor}/setup`, {}),
+    setupTwoFactor: () =>
+      api.post<TwoFactorSetup>(`${API_PATHS.twoFactor}/setup`, {}),
     enableTwoFactor: (code: string) =>
-      api.post<RecoveryCodes>(`${API_PATHS.twoFactor}/enable`, { code }),
+      api.post<RecoveryCodes>(`${API_PATHS.twoFactor}/enable`, {code}),
     disableTwoFactor: (input: TwoFactorDisable) =>
       api.post<void>(`${API_PATHS.twoFactor}/disable`, input),
   };
@@ -191,7 +204,8 @@ export function automationsApi(api: ApiClient) {
         : api.post<AutomationRule>('/api/automations', input),
     remove: (id: string) => api.delete(`/api/automations/${id}`),
     /** A sentence → a rule filled in by the AI, to check and save (not saved). */
-    draft: (text: string) => api.post<AutomationRuleInput>('/api/automations/draft', { text }),
+    draft: (text: string) =>
+      api.post<AutomationRuleInput>('/api/automations/draft', {text}),
   };
 }
 
@@ -200,7 +214,7 @@ export function lifeApi(api: ApiClient) {
   return {
     /** Writes (or writes again) the AI's story of `YYYY-MM` or `YYYY`. */
     writeStory: (period: string) =>
-      api.post<{ story: LifeStory | null }>('/api/life/story', { period }),
+      api.post<{story: LifeStory | null}>('/api/life/story', {period}),
   };
 }
 
@@ -215,8 +229,10 @@ export function searchApi(api: ApiClient) {
 export function projectsApi(api: ApiClient) {
   return {
     list: () => api.read<Project[]>(CORE_READS.projects()),
-    create: (input: ProjectInput) => api.post<Project>(API_PATHS.projects, input),
-    update: (id: string, input: ProjectInput) => api.put<Project>(API_PATHS.project(id), input),
+    create: (input: ProjectInput) =>
+      api.post<Project>(API_PATHS.projects, input),
+    update: (id: string, input: ProjectInput) =>
+      api.put<Project>(API_PATHS.project(id), input),
     remove: (id: string) => api.delete(API_PATHS.project(id)),
   };
 }
@@ -239,7 +255,7 @@ export function pushApi(api: ApiClient) {
       api.put<void>(`/api/push/devices/${id}`, input),
     remove: (id: string) => api.delete(`/api/push/devices/${id}`),
     /** To every phone now: whether the chain works. */
-    test: () => api.post<{ sent: number }>('/api/push/test'),
+    test: () => api.post<{sent: number}>('/api/push/test'),
     /** The owner: the server's Firebase key (the service account's JSON). */
     setKey: (key: PushKey) => api.put<void>('/api/push/key', key),
     removeKey: () => api.delete('/api/push/key'),
@@ -251,7 +267,8 @@ export function appsApi(api: ApiClient) {
   return {
     overview: () => api.read<AppsOverview>(CORE_READS.apps()),
     /** An app says it runs on this device, and which version. */
-    report: (report: AppInstallReport) => api.post<void>('/api/apps/installs', report),
+    report: (report: AppInstallReport) =>
+      api.post<void>('/api/apps/installs', report),
     forget: (id: string) => api.delete(`/api/apps/installs/${id}`),
   };
 }
@@ -267,18 +284,23 @@ export function systemApi(api: ApiClient) {
 /** Where notifications go: Telegram linking and a test message. */
 export function notificationsApi(api: ApiClient) {
   return {
-    settings: () => api.read<NotificationSettings>(CORE_READS.notificationSettings()),
+    settings: () =>
+      api.read<NotificationSettings>(CORE_READS.notificationSettings()),
     /** A one-time `t.me/…?start=` link that links the chat to this account. */
-    linkTelegram: () => api.post<TelegramLinkResponse>(API_PATHS.telegramLink, {}),
+    linkTelegram: () =>
+      api.post<TelegramLinkResponse>(API_PATHS.telegramLink, {}),
     unlinkTelegram: () => api.delete(API_PATHS.telegram),
     /** The owner sets the server's bot (its token from @BotFather). */
-    setBot: (input: TelegramBotInput) => api.put<void>(API_PATHS.telegramBot, input),
+    setBot: (input: TelegramBotInput) =>
+      api.put<void>(API_PATHS.telegramBot, input),
     removeBot: () => api.delete(API_PATHS.telegramBot),
     sendTest: () => api.post<void>(API_PATHS.testNotification, {}),
-    inbox: (query?: InboxQuery) => api.read<InboxItem[]>(CORE_READS.inbox(query)),
+    inbox: (query?: InboxQuery) =>
+      api.read<InboxItem[]>(CORE_READS.inbox(query)),
     inboxSummary: () => api.read<InboxSummary>(CORE_READS.inboxSummary()),
     inboxItem: (id: string) => api.read<InboxItem>(CORE_READS.inboxItem(id)),
-    markRead: (id: string) => api.post<void>(`${API_PATHS.inbox}/${id}/read`, {}),
+    markRead: (id: string) =>
+      api.post<void>(`${API_PATHS.inbox}/${id}/read`, {}),
     markAllRead: () => api.post<void>(`${API_PATHS.inbox}/read`, {}),
     /** A button pressed, or the words it asked for. */
     answer: (id: string, input: InboxAnswerInput) =>
@@ -301,7 +323,8 @@ export function accessTokensApi(api: ApiClient) {
 export function trashApi(api: ApiClient) {
   return {
     list: () => api.get<TrashItem[]>(API_PATHS.trash),
-    restore: (id: string) => api.post<void>(`${API_PATHS.trashItem(id)}/restore`, {}),
+    restore: (id: string) =>
+      api.post<void>(`${API_PATHS.trashItem(id)}/restore`, {}),
     remove: (id: string) => api.delete(API_PATHS.trashItem(id)),
   };
 }
@@ -313,15 +336,19 @@ export function securityApi(api: ApiClient) {
     /** The rules look at everything again. */
     scan: () => api.post<SecurityStatus>(`${API_PATHS.security}/scan`, {}),
     /** The AI looks around and writes a report: a minute or two. */
-    investigate: () => api.post<SecurityStatus>(`${API_PATHS.security}/investigate`, {}),
+    investigate: () =>
+      api.post<SecurityStatus>(`${API_PATHS.security}/investigate`, {}),
     saveSettings: (settings: SecuritySettings) =>
       api.put<void>(`${API_PATHS.security}/settings`, settings),
     /** The AI writes a step-by-step guide for the finding: up to a minute. */
     writeGuide: (id: string) =>
-      api.post<SecurityStatus>(`${API_PATHS.security}/findings/${id}/guide`, {}),
+      api.post<SecurityStatus>(
+        `${API_PATHS.security}/findings/${id}/guide`,
+        {},
+      ),
     /** `ignored` — "I know, leave it"; `open` — report it again. */
     setFindingStatus: (id: string, status: 'open' | 'ignored') =>
-      api.put<void>(`${API_PATHS.security}/findings/${id}`, { status }),
+      api.put<void>(`${API_PATHS.security}/findings/${id}`, {status}),
   };
 }
 
@@ -337,7 +364,8 @@ export function dataApi(api: ApiClient) {
       return api.post<DataImportReport>(API_PATHS.dataImport, form);
     },
     /** Adds what the uploaded archive has and the dashboard does not. */
-    applyImport: (id: string) => api.post<DataImportReport>(`${API_PATHS.dataImport}/${id}`, {}),
+    applyImport: (id: string) =>
+      api.post<DataImportReport>(`${API_PATHS.dataImport}/${id}`, {}),
     discardImport: (id: string) => api.delete(`${API_PATHS.dataImport}/${id}`),
   };
 }
@@ -355,14 +383,16 @@ export function syncApi(api: ApiClient) {
     /** Versions of rows that lost a conflict, next to the current rows. */
     conflicts: () => api.read<SyncConflict[]>(CORE_READS.syncConflicts()),
     /** Keep the version that lost instead of the current row. */
-    keepConflict: (id: string) => api.post<void>(`${API_PATHS.syncConflict(id)}/keep`, {}),
+    keepConflict: (id: string) =>
+      api.post<void>(`${API_PATHS.syncConflict(id)}/keep`, {}),
     /** Keep the current row. */
     dismissConflict: (id: string) => api.delete(API_PATHS.syncConflict(id)),
     dismissAllConflicts: () => api.delete(API_PATHS.syncConflicts),
 
     /** Incoming changes that could not be applied yet. */
     parked: () => api.read<SyncParkedChange[]>(CORE_READS.syncParked()),
-    discardParked: (key: SyncParkedKey) => api.post<void>(API_PATHS.syncParkedDiscard, key),
+    discardParked: (key: SyncParkedKey) =>
+      api.post<void>(API_PATHS.syncParkedDiscard, key),
   };
 }
 

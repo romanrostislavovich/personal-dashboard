@@ -1,19 +1,25 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { isProjectClosed, Project, ProjectInput } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { ProjectFormDialog } from './project-form.dialog';
-import { ProjectsApi } from './projects.api';
-import { errorStatus } from '../client/core-requests';
-import { todayLocalDate } from '../utils/month';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatDialog} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {isProjectClosed, Project, ProjectInput} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {ProjectFormDialog} from './project-form.dialog';
+import {ProjectsApi} from './projects.api';
+import {errorStatus} from '../client/core-requests';
+import {todayLocalDate} from '../utils/month';
 
 const FILTERS = ['current', 'closed', 'all'] as const;
 type ProjectFilter = (typeof FILTERS)[number];
@@ -48,7 +54,9 @@ type ProjectFilter = (typeof FILTERS)[number];
     >
       @for (option of filters; track option) {
         <mat-button-toggle [value]="option">
-          {{ 'core.projects.filters.' + option | transloco }} ({{ counts()[option] }})
+          {{ 'core.projects.filters.' + option | transloco }} ({{
+            counts()[option]
+          }})
         </mat-button-toggle>
       }
     </mat-button-toggle-group>
@@ -58,18 +66,24 @@ type ProjectFilter = (typeof FILTERS)[number];
         <mat-card appearance="outlined" [class.closed]="isClosed(project)">
           <mat-card-header>
             <mat-card-title>
-              <a class="name" [routerLink]="['/projects', project.id]">{{ project.name }}</a>
+              <a class="name" [routerLink]="['/projects', project.id]">{{
+                project.name
+              }}</a>
             </mat-card-title>
             @if (project.url) {
               <mat-card-subtitle>
-                <a [href]="project.url" target="_blank" rel="noopener">{{ project.url }}</a>
+                <a [href]="project.url" target="_blank" rel="noopener">{{
+                  project.url
+                }}</a>
               </mat-card-subtitle>
             }
             @if (project.closedOn) {
               <mat-card-subtitle class="closed-on">
                 {{
-                  (isClosed(project) ? 'core.projects.closedAt' : 'core.projects.closesAt')
-                    | transloco: { date: project.closedOn | date: 'd MMM y' }
+                  (isClosed(project)
+                    ? 'core.projects.closedAt'
+                    : 'core.projects.closesAt'
+                  ) | transloco: {date: project.closedOn | date: 'd MMM y'}
                 }}
               </mat-card-subtitle>
             }
@@ -83,15 +97,21 @@ type ProjectFilter = (typeof FILTERS)[number];
             <a matButton [routerLink]="['/projects', project.id]">
               {{ 'core.projects.open' | transloco }}
             </a>
-            <button matIconButton (click)="openForm(project)"><mat-icon>edit</mat-icon></button>
-            <button matIconButton (click)="remove(project)"><mat-icon>delete</mat-icon></button>
+            <button matIconButton (click)="openForm(project)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button matIconButton (click)="remove(project)">
+              <mat-icon>delete</mat-icon>
+            </button>
           </mat-card-actions>
         </mat-card>
       } @empty {
         <p class="empty">
           {{
-            (projects.value().length ? 'core.projects.emptyFilter' : 'core.projects.empty')
-              | transloco
+            (projects.value().length
+              ? 'core.projects.emptyFilter'
+              : 'core.projects.empty'
+            ) | transloco
           }}
         </p>
       }
@@ -136,14 +156,17 @@ export class ProjectsPage {
   private readonly today = todayLocalDate();
   protected readonly counts = computed(() => {
     const all = this.projects.value();
-    const closed = all.filter((project) => this.isClosed(project)).length;
-    return { current: all.length - closed, closed, all: all.length };
+    const closed = all.filter(project => this.isClosed(project)).length;
+    return {current: all.length - closed, closed, all: all.length};
   });
   protected readonly shown = computed(() => {
     const filter = this.filter();
     return this.projects
       .value()
-      .filter((project) => filter === 'all' || this.isClosed(project) === (filter === 'closed'));
+      .filter(
+        project =>
+          filter === 'all' || this.isClosed(project) === (filter === 'closed'),
+      );
   });
 
   protected isClosed(project: Project): boolean {
@@ -153,20 +176,31 @@ export class ProjectsPage {
   async openForm(project?: Project): Promise<void> {
     const input = await firstValueFrom(
       this.dialog
-        .open<ProjectFormDialog, Project | null, ProjectInput>(ProjectFormDialog, {
-          data: project ?? null,
-        })
+        .open<ProjectFormDialog, Project | null, ProjectInput>(
+          ProjectFormDialog,
+          {
+            data: project ?? null,
+          },
+        )
         .afterClosed(),
     );
     if (!input) {
       return;
     }
-    await firstValueFrom(project ? this.api.update(project.id, input) : this.api.create(input));
+    await firstValueFrom(
+      project ? this.api.update(project.id, input) : this.api.create(input),
+    );
     this.projects.reload();
   }
 
   async remove(project: Project): Promise<void> {
-    if (!confirm(this.transloco.translate('core.projects.confirmDelete', { name: project.name }))) {
+    if (
+      !confirm(
+        this.transloco.translate('core.projects.confirmDelete', {
+          name: project.name,
+        }),
+      )
+    ) {
       return;
     }
     try {
@@ -174,9 +208,13 @@ export class ProjectsPage {
       this.projects.reload();
     } catch (error) {
       if (errorStatus(error) === 409) {
-        this.snackBar.open(this.transloco.translate('core.projects.inUse'), 'OK', {
-          duration: 5000,
-        });
+        this.snackBar.open(
+          this.transloco.translate('core.projects.inUse'),
+          'OK',
+          {
+            duration: 5000,
+          },
+        );
         return;
       }
       throw error;

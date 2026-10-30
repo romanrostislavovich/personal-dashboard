@@ -21,7 +21,7 @@ export class BreakReminder {
   tick(
     now: number,
     idleMs: number,
-    options: { away: boolean; breakMinutes: number; quiet: boolean },
+    options: {away: boolean; breakMinutes: number; quiet: boolean},
   ): void {
     if (options.away || idleMs >= BREAK_MS) {
       this.activeSince = null;

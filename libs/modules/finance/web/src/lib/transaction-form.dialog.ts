@@ -1,24 +1,42 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Project, Transaction, TransactionInput, TransactionKind } from '@pd/contracts';
-import { pickableProjects, todayLocalDate } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { FinanceApi } from './finance.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {
+  Project,
+  Transaction,
+  TransactionInput,
+  TransactionKind,
+} from '@pd/contracts';
+import {pickableProjects, todayLocalDate} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {FinanceApi} from './finance.api';
 
 export interface TransactionFormData {
   transaction: Transaction | null;
   projects: Project[];
   /** Already used categories — for autocomplete. */
   categories: string[];
-  defaults: { currency: string; projectId: string | null };
+  defaults: {currency: string; projectId: string | null};
 }
 
 @Component({
@@ -37,7 +55,12 @@ export interface TransactionFormData {
   ],
   template: `
     <h2 mat-dialog-title>
-      {{ (data.transaction ? 'finance.transaction.edit' : 'finance.transaction.add') | transloco }}
+      {{
+        (data.transaction
+          ? 'finance.transaction.edit'
+          : 'finance.transaction.add'
+        ) | transloco
+      }}
     </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
@@ -70,7 +93,11 @@ export interface TransactionFormData {
 
         <mat-form-field>
           <mat-label>{{ 'finance.category' | transloco }}</mat-label>
-          <input matInput formControlName="category" [matAutocomplete]="categoryList" />
+          <input
+            matInput
+            formControlName="category"
+            [matAutocomplete]="categoryList"
+          />
           <mat-autocomplete #categoryList>
             @for (category of data.categories; track category) {
               <mat-option [value]="category">{{ category }}</mat-option>
@@ -78,7 +105,8 @@ export interface TransactionFormData {
           </mat-autocomplete>
           @if (suggested(); as percent) {
             <mat-hint>{{
-              'finance.categoryModel.suggested' | transloco: { probability: percent }
+              'finance.categoryModel.suggested'
+                | transloco: {probability: percent}
             }}</mat-hint>
           }
         </mat-form-field>
@@ -92,7 +120,9 @@ export interface TransactionFormData {
             <mat-label>{{ 'finance.wallet' | transloco }}</mat-label>
             <mat-select formControlName="projectId">
               <!-- "Personal" = empty string: mat-select treats null as no selection. -->
-              <mat-option value="">{{ 'finance.scope.personal' | transloco }}</mat-option>
+              <mat-option value="">{{
+                'finance.scope.personal' | transloco
+              }}</mat-option>
               @for (project of projects; track project.id) {
                 <mat-option [value]="project.id">{{ project.name }}</mat-option>
               }
@@ -138,10 +168,13 @@ export class TransactionFormDialog {
   /** Closed projects are not offered, but the one the record already has stays. */
   protected readonly projects = pickableProjects(
     this.data.projects,
-    (this.data.transaction ? this.data.transaction.projectId : this.data.defaults.projectId) ??
-      null,
+    (this.data.transaction
+      ? this.data.transaction.projectId
+      : this.data.defaults.projectId) ?? null,
   );
-  private readonly dialogRef = inject(MatDialogRef<TransactionFormDialog, TransactionInput>);
+  private readonly dialogRef = inject(
+    MatDialogRef<TransactionFormDialog, TransactionInput>,
+  );
 
   private readonly finance = inject(FinanceApi);
   /** The model filled the category in: how sure it was, in percent. */
@@ -159,14 +192,20 @@ export class TransactionFormDialog {
       [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)],
     ],
     category: [this.initial?.category ?? '', Validators.required],
-    occurredOn: [this.initial?.occurredOn ?? todayLocalDate(), Validators.required],
-    projectId: [(this.initial ? this.initial.projectId : this.data.defaults.projectId) ?? ''],
+    occurredOn: [
+      this.initial?.occurredOn ?? todayLocalDate(),
+      Validators.required,
+    ],
+    projectId: [
+      (this.initial ? this.initial.projectId : this.data.defaults.projectId) ??
+        '',
+    ],
     note: [this.initial?.note ?? ''],
   });
 
   /** The category the user's own model is sure of, while the category is still empty. */
   async suggestCategory(): Promise<void> {
-    const { kind, note, amount, category } = this.form.getRawValue();
+    const {kind, note, amount, category} = this.form.getRawValue();
     if (category.trim() || !note.trim()) {
       return;
     }

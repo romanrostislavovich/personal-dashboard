@@ -6,10 +6,10 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { Public, RateLimit, VoiceAssistantService } from '@pd/api-core';
-import { VoiceAnswer } from '@pd/contracts';
-import { DevicesService } from '../devices.service';
+import {FileInterceptor} from '@nestjs/platform-express';
+import {Public, RateLimit, VoiceAssistantService} from '@pd/api-core';
+import {VoiceAnswer} from '@pd/contracts';
+import {DevicesService} from '../devices.service';
 
 /** A question is a few seconds; this is over a minute of 16 kHz WAV. */
 const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
@@ -34,7 +34,9 @@ export class PhoneVoiceController {
   @Public()
   @RateLimit(60, 3600)
   @Post('voice')
-  @UseInterceptors(FileInterceptor('audio', { limits: { fileSize: MAX_AUDIO_BYTES } }))
+  @UseInterceptors(
+    FileInterceptor('audio', {limits: {fileSize: MAX_AUDIO_BYTES}}),
+  )
   async ask(
     @Headers('authorization') authorization: string | undefined,
     @UploadedFile() audio: UploadedAudio | undefined,

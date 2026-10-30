@@ -1,4 +1,4 @@
-import { CorrelationMetric } from '@pd/contracts';
+import {CorrelationMetric} from '@pd/contracts';
 
 /** A colour of a section, the same for it on every chart of the page. */
 const PALETTE = [
@@ -31,7 +31,7 @@ export function formatValue(
   hours: (value: string) => string,
 ): string {
   const number = (digits: number) =>
-    value.toLocaleString(locale, { maximumFractionDigits: digits });
+    value.toLocaleString(locale, {maximumFractionDigits: digits});
   switch (metric.unit) {
     case 'hours':
       return hours(number(1));

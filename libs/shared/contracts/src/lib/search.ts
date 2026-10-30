@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /** What the command palette searches for: at least two characters. */
 export const searchQuerySchema = z.string().trim().min(2).max(100);

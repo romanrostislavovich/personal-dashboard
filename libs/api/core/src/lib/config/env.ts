@@ -1,6 +1,6 @@
-import { ConfigService } from '@nestjs/config';
-import { SUPPORTED_LOCALES, SYNC_MODES } from '@pd/contracts';
-import { z } from 'zod';
+import {ConfigService} from '@nestjs/config';
+import {SUPPORTED_LOCALES, SYNC_MODES} from '@pd/contracts';
+import {z} from 'zod';
 
 /**
  * All environment variables are described here. If something is missing,
@@ -16,7 +16,7 @@ const secret = (name: string) =>
   z
     .string()
     .min(32, `${name} must be at least 32 characters`)
-    .refine((value) => !PLACEHOLDER.test(value), {
+    .refine(value => !PLACEHOLDER.test(value), {
       message: `${name} is still the placeholder of .env.example: generate a random one`,
     });
 
@@ -66,8 +66,9 @@ const envSchema = z
     ADMIN_PASSWORD: z
       .string()
       .min(8)
-      .refine((value) => !/change[-_ ]?me/i.test(value), {
-        message: 'ADMIN_PASSWORD is still the placeholder of .env.example: choose your own',
+      .refine(value => !/change[-_ ]?me/i.test(value), {
+        message:
+          'ADMIN_PASSWORD is still the placeholder of .env.example: choose your own',
       })
       .optional(),
 
@@ -159,10 +160,14 @@ export type AppConfig = ConfigService<Env, true>;
 
 export function validateEnv(raw: Record<string, unknown>): Env {
   // `SYNC_TOKEN=` in a .env file is "not set", as the examples leave what is optional.
-  const set = Object.fromEntries(Object.entries(raw).filter(([, value]) => value !== ''));
+  const set = Object.fromEntries(
+    Object.entries(raw).filter(([, value]) => value !== ''),
+  );
   const result = envSchema.safeParse(set);
   if (!result.success) {
-    throw new Error(`Invalid environment variables:\n${z.prettifyError(result.error)}`);
+    throw new Error(
+      `Invalid environment variables:\n${z.prettifyError(result.error)}`,
+    );
   }
   return result.data;
 }

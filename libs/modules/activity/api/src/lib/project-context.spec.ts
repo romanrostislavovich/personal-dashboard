@@ -1,13 +1,13 @@
-import { nearProject, projectTime, WorkPiece } from './project-context';
-import { spanSeconds } from './time-spans';
+import {nearProject, projectTime, WorkPiece} from './project-context';
+import {spanSeconds} from './time-spans';
 
 const MIN = 60_000;
-const span = (from: number, to: number) => ({ start: from * MIN, end: to * MIN });
+const span = (from: number, to: number) => ({start: from * MIN, end: to * MIN});
 const piece = (
   from: number,
   to: number,
   projectId: string | null,
-  { leisure = false, label = 'x' } = {},
+  {leisure = false, label = 'x'} = {},
 ): WorkPiece => ({
   ...span(from, to),
   kind: 'window',
@@ -35,8 +35,8 @@ describe('projectTime', () => {
   it('gives the project the browser between two moments of its IDE', () => {
     const time = projectTime(
       [
-        piece(0, 30, 'p', { label: 'main.ts — personal-dashboard' }),
-        piece(30, 36, null, { label: 'localhost:4200' }),
+        piece(0, 30, 'p', {label: 'main.ts — personal-dashboard'}),
+        piece(30, 36, null, {label: 'localhost:4200'}),
         piece(36, 60, 'p'),
       ],
       'p',
@@ -44,14 +44,14 @@ describe('projectTime', () => {
     );
     expect(spanSeconds(time.spans)).toBe(60 * 60);
     expect(spanSeconds(time.fromContext)).toBe(6 * 60);
-    expect(time.context.map((item) => item.label)).toEqual(['localhost:4200']);
+    expect(time.context.map(item => item.label)).toEqual(['localhost:4200']);
   });
 
   it('never takes leisure or another project, however near', () => {
     const time = projectTime(
       [
         piece(0, 30, 'p'),
-        piece(30, 33, null, { leisure: true }),
+        piece(30, 33, null, {leisure: true}),
         piece(33, 36, 'q'),
         piece(36, 60, 'p'),
       ],

@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 /*
  * Movies and TV shows: what was watched — caught by the browser extension on any site that plays
@@ -7,7 +7,7 @@ import { LocalDate } from './local-date';
  * what to watch. A film or a show is found in TMDB (themoviedb.org) by the user's own key.
  */
 
-const moment = z.iso.datetime({ offset: true });
+const moment = z.iso.datetime({offset: true});
 const hint = z.string().trim().max(300).optional();
 
 /** What the page tells about the video playing; the server reads the title out of it. */
@@ -53,7 +53,9 @@ export const watchViewInputSchema = z.object({
 });
 export type WatchViewInput = z.infer<typeof watchViewInputSchema>;
 
-export const watchIngestSchema = z.object({ views: z.array(watchViewInputSchema).max(200) });
+export const watchIngestSchema = z.object({
+  views: z.array(watchViewInputSchema).max(200),
+});
 export type WatchIngest = z.infer<typeof watchIngestSchema>;
 
 /** The answer to the extension: whether to watch at all, and the sites to leave alone. */
@@ -64,7 +66,9 @@ export interface WatchConfig {
 
 export const movieSettingsSchema = z.object({
   track: z.boolean(),
-  ignoredSites: z.array(z.string().trim().toLowerCase().min(1).max(253)).max(200),
+  ignoredSites: z
+    .array(z.string().trim().toLowerCase().min(1).max(253))
+    .max(200),
 });
 export type MovieSettings = z.infer<typeof movieSettingsSchema>;
 
@@ -106,10 +110,15 @@ export interface MovieTitle {
   episodes: number;
   lastWatchedAt: string | null;
   /** The furthest episode seen: "S2E5". */
-  lastEpisode: { season: number; episode: number } | null;
+  lastEpisode: {season: number; episode: number} | null;
 }
 
-export const MOVIE_VIEW_KINDS = ['movie', 'episode', 'video', 'unknown'] as const;
+export const MOVIE_VIEW_KINDS = [
+  'movie',
+  'episode',
+  'video',
+  'unknown',
+] as const;
 export type MovieViewKind = (typeof MOVIE_VIEW_KINDS)[number];
 
 /** One view: a film, an episode, a video (YouTube), or a title not found yet. */
@@ -152,7 +161,9 @@ export const movieAssignSchema = z.object({
 });
 export type MovieAssign = z.infer<typeof movieAssignSchema>;
 
-export const movieSearchQuerySchema = z.object({ q: z.string().trim().min(1).max(200) });
+export const movieSearchQuerySchema = z.object({
+  q: z.string().trim().min(1).max(200),
+});
 
 export const movieViewsQuerySchema = z.object({
   /** `unknown` — the views waiting to be found; `video` — YouTube and the like. */
@@ -172,4 +183,6 @@ export interface MoviesStatus {
   unknown: number;
 }
 
-export const tmdbKeySchema = z.object({ key: z.string().trim().min(20).max(400) });
+export const tmdbKeySchema = z.object({
+  key: z.string().trim().min(20).max(400),
+});

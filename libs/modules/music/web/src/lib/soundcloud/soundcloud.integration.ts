@@ -1,16 +1,25 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { errorBody, errorStatus, IntegrationGuideComponent } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { MusicApi } from '../music.api';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {errorBody, errorStatus, IntegrationGuideComponent} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {MusicApi} from '../music.api';
 
 /**
  * SoundCloud, in Settings → Integrations (see `integrations` in music.module.ts): the link to
@@ -44,7 +53,8 @@ import { MusicApi } from '../music.api';
           @if (s.username) {
             <p class="ok">
               <mat-icon inline>check_circle</mat-icon>
-              {{ 'music.connect.connectedAs' | transloco }} <b>{{ s.username }}</b>
+              {{ 'music.connect.connectedAs' | transloco }}
+              <b>{{ s.username }}</b>
             </p>
             <p class="hint">
               {{
@@ -67,10 +77,14 @@ import { MusicApi } from '../music.api';
               {{ 'music.connect.disconnect' | transloco }}
             </button>
           } @else {
-            <p class="hint">{{ 'music.soundcloud.connect.hint' | transloco }}</p>
+            <p class="hint">
+              {{ 'music.soundcloud.connect.hint' | transloco }}
+            </p>
             <form class="form" [formGroup]="form" (ngSubmit)="connect()">
               <mat-form-field subscriptSizing="dynamic">
-                <mat-label>{{ 'music.soundcloud.connect.profile' | transloco }}</mat-label>
+                <mat-label>{{
+                  'music.soundcloud.connect.profile' | transloco
+                }}</mat-label>
                 <input
                   matInput
                   formControlName="profile"
@@ -79,16 +93,29 @@ import { MusicApi } from '../music.api';
                 />
               </mat-form-field>
               <mat-form-field subscriptSizing="dynamic">
-                <mat-label>{{ 'music.soundcloud.connect.token' | transloco }}</mat-label>
-                <input matInput type="password" formControlName="token" autocomplete="off" />
+                <mat-label>{{
+                  'music.soundcloud.connect.token' | transloco
+                }}</mat-label>
+                <input
+                  matInput
+                  type="password"
+                  formControlName="token"
+                  autocomplete="off"
+                />
               </mat-form-field>
-              <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+              <button
+                matButton="filled"
+                type="submit"
+                [disabled]="form.invalid || busy()"
+              >
                 {{ 'music.connect.connect' | transloco }}
               </button>
             </form>
           }
         }
-        <p class="hint">{{ 'music.soundcloud.connect.unofficial' | transloco }}</p>
+        <p class="hint">
+          {{ 'music.soundcloud.connect.unofficial' | transloco }}
+        </p>
         <pd-integration-guide guide="music.guide.soundcloud" [steps]="4" />
       </mat-card-content>
     </mat-card>
@@ -131,17 +158,21 @@ export class SoundcloudIntegration {
   });
 
   async connect(): Promise<void> {
-    const { profile, token } = this.form.getRawValue();
+    const {profile, token} = this.form.getRawValue();
     this.busy.set(true);
     try {
-      await firstValueFrom(this.api.connectSoundcloud({ profile, token: token.trim() || null }));
+      await firstValueFrom(
+        this.api.connectSoundcloud({profile, token: token.trim() || null}),
+      );
       this.form.reset();
     } catch (error) {
       // SoundCloud's own words for a 400: no such profile, a token of another account.
-      const said = (errorBody(error) as { message?: string } | null)?.message;
+      const said = (errorBody(error) as {message?: string} | null)?.message;
       const message =
-        errorStatus(error) === 400 && said ? said : this.transloco.translate('music.connect.error');
-      this.snackBar.open(message, 'OK', { duration: 8000 });
+        errorStatus(error) === 400 && said
+          ? said
+          : this.transloco.translate('music.connect.error');
+      this.snackBar.open(message, 'OK', {duration: 8000});
     } finally {
       this.settings.reload();
       this.busy.set(false);
@@ -149,7 +180,11 @@ export class SoundcloudIntegration {
   }
 
   async disconnect(): Promise<void> {
-    if (confirm(this.transloco.translate('music.soundcloud.connect.confirmDisconnect'))) {
+    if (
+      confirm(
+        this.transloco.translate('music.soundcloud.connect.confirmDisconnect'),
+      )
+    ) {
       await firstValueFrom(this.api.disconnectSoundcloud());
       this.settings.reload();
     }

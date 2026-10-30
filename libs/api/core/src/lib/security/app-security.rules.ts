@@ -1,9 +1,9 @@
-import { FoundProblem } from './security-source';
-import { SecurityMessages } from './security.messages';
+import {FoundProblem} from './security-source';
+import {SecurityMessages} from './security.messages';
 
 /** What the dashboard knows about its own safety. Nothing here is a secret: the AI reads it. */
 export interface AppFacts {
-  account: { twoFactor: boolean; users: number; registrationOpen: boolean };
+  account: {twoFactor: boolean; users: number; registrationOpen: boolean};
   /**
    * Addresses the owner's own signed-in devices use (see `ownAddresses`): what comes from them
    * is the owner at work, not a stranger.
@@ -13,13 +13,13 @@ export interface AppFacts {
     /** Failed attempts of the last 24 hours, and those of them from addresses not the owner's. */
     failed: number;
     failedForeign: number;
-    failedByAddress: { ip: string; count: number; own: boolean }[];
+    failedByAddress: {ip: string; count: number; own: boolean}[];
     /** A good sign-in right after several bad ones from the same address. */
-    guessed: { ip: string; email: string; at: string; failuresBefore: number }[];
+    guessed: {ip: string; email: string; at: string; failuresBefore: number}[];
     /** Addresses that signed in this week and never in the months before. */
-    newAddresses: { ip: string; userAgent: string | null; at: string }[];
+    newAddresses: {ip: string; userAgent: string | null; at: string}[];
   };
-  sessions: { total: number; idleOverMonth: number };
+  sessions: {total: number; idleOverMonth: number};
   /** The dashboard's public address; `null` — it is a local one, there is nothing to check. */
   site: {
     url: string;
@@ -29,7 +29,7 @@ export interface AppFacts {
     missingHeaders: string[];
     error: string | null;
   } | null;
-  backups: { watched: boolean; latestAt: string | null; problems: string[] };
+  backups: {watched: boolean; latestAt: string | null; problems: string[]};
   /** `npm audit` written into the image when it was built; `null` — run from the sources. */
   dependencies: {
     auditedAt: string;
@@ -47,12 +47,19 @@ const CERTIFICATE_SOON_DAYS = 21;
 const CERTIFICATE_URGENT_DAYS = 7;
 
 /** The rules of the dashboard itself: what in the facts is a problem, and how bad. */
-export function appProblems(facts: AppFacts, text: SecurityMessages): FoundProblem[] {
+export function appProblems(
+  facts: AppFacts,
+  text: SecurityMessages,
+): FoundProblem[] {
   const problems: FoundProblem[] = [];
-  const { account, signIns, sessions, site, backups, dependencies } = facts;
+  const {account, signIns, sessions, site, backups, dependencies} = facts;
 
   if (!account.twoFactor) {
-    problems.push({ key: 'app.two-factor-off', severity: 'medium', ...text.twoFactorOff() });
+    problems.push({
+      key: 'app.two-factor-off',
+      severity: 'medium',
+      ...text.twoFactorOff(),
+    });
   }
   if (account.registrationOpen) {
     problems.push({
@@ -66,7 +73,9 @@ export function appProblems(facts: AppFacts, text: SecurityMessages): FoundProbl
       key: 'app.sign-in-guessed',
       severity: 'critical',
       ...text.signInGuessed(
-        signIns.guessed.map((g) => `${g.email} ← ${g.ip} (${g.failuresBefore}×, ${g.at})`),
+        signIns.guessed.map(
+          g => `${g.email} ← ${g.ip} (${g.failuresBefore}×, ${g.at})`,
+        ),
       ),
     });
   }
@@ -78,9 +87,9 @@ export function appProblems(facts: AppFacts, text: SecurityMessages): FoundProbl
       ...text.signInFailures(
         signIns.failedForeign,
         signIns.failedByAddress
-          .filter((a) => !a.own)
+          .filter(a => !a.own)
           .slice(0, 5)
-          .map((a) => `${a.ip} (${a.count})`),
+          .map(a => `${a.ip} (${a.count})`),
       ),
     });
   }
@@ -88,7 +97,7 @@ export function appProblems(facts: AppFacts, text: SecurityMessages): FoundProbl
     problems.push({
       key: 'app.new-address',
       severity: 'low',
-      ...text.newAddress(signIns.newAddresses.map((a) => `${a.ip} (${a.at})`)),
+      ...text.newAddress(signIns.newAddresses.map(a => `${a.ip} (${a.at})`)),
     });
   }
   if (sessions.idleOverMonth > 0) {
@@ -100,35 +109,15 @@ export function appProblems(facts: AppFacts, text: SecurityMessages): FoundProbl
   }
 
   if (site) {
-    if (!site.https) {
-      problems.push({ key: 'app.no-https', severity: 'high', ...text.noHttps(site.url) });
-    } else if (site.error) {
-      problems.push({
-        key: 'app.site-unreachable',
-        severity: 'medium',
-        ...text.siteUnreachable(site.url, site.error),
-      });
-    } else {
-      const days = site.certificateDaysLeft;
-      if (days !== null && days <= CERTIFICATE_SOON_DAYS) {
-        problems.push({
-          key: 'app.certificate-expiring',
-          severity: days <= CERTIFICATE_URGENT_DAYS ? 'high' : 'medium',
-          ...text.certificateExpiring(days),
-        });
-      }
-      if (site.missingHeaders.length) {
-        problems.push({
-          key: 'app.headers-missing',
-          severity: 'low',
-          ...text.headersMissing(site.missingHeaders),
-        });
-      }
-    }
+    problems.push(...siteProblems(site, text));
   }
 
   if (!backups.watched) {
-    problems.push({ key: 'app.backups-off', severity: 'medium', ...text.backupsOff() });
+    problems.push({
+      key: 'app.backups-off',
+      severity: 'medium',
+      ...text.backupsOff(),
+    });
   } else if (backups.problems.length) {
     problems.push({
       key: 'app.backups-broken',
@@ -137,8 +126,11 @@ export function appProblems(facts: AppFacts, text: SecurityMessages): FoundProbl
     });
   }
 
-  if (dependencies && dependencies.critical + dependencies.high + dependencies.moderate > 0) {
-    const { critical, high, moderate, low, auditedAt } = dependencies;
+  if (
+    dependencies &&
+    dependencies.critical + dependencies.high + dependencies.moderate > 0
+  ) {
+    const {critical, high, moderate, low, auditedAt} = dependencies;
     problems.push({
       key: 'app.dependencies',
       severity: critical ? 'critical' : high ? 'high' : 'low',
@@ -147,6 +139,44 @@ export function appProblems(facts: AppFacts, text: SecurityMessages): FoundProbl
         auditedAt.slice(0, 10),
       ),
     });
+  }
+  return problems;
+}
+
+/** The dashboard's address as the internet sees it: HTTPS, its certificate, its headers. */
+function siteProblems(
+  site: NonNullable<AppFacts['site']>,
+  text: SecurityMessages,
+): FoundProblem[] {
+  const problems: FoundProblem[] = [];
+  if (!site.https) {
+    problems.push({
+      key: 'app.no-https',
+      severity: 'high',
+      ...text.noHttps(site.url),
+    });
+  } else if (site.error) {
+    problems.push({
+      key: 'app.site-unreachable',
+      severity: 'medium',
+      ...text.siteUnreachable(site.url, site.error),
+    });
+  } else {
+    const days = site.certificateDaysLeft;
+    if (days !== null && days <= CERTIFICATE_SOON_DAYS) {
+      problems.push({
+        key: 'app.certificate-expiring',
+        severity: days <= CERTIFICATE_URGENT_DAYS ? 'high' : 'medium',
+        ...text.certificateExpiring(days),
+      });
+    }
+    if (site.missingHeaders.length) {
+      problems.push({
+        key: 'app.headers-missing',
+        severity: 'low',
+        ...text.headersMissing(site.missingHeaders),
+      });
+    }
   }
   return problems;
 }
@@ -199,8 +229,12 @@ function wasOwnAddress(
   }
   const before = at.getTime() - OWN_AFTER_MS;
   return (
-    devices.some((device) => device.ip === ip && device.createdAt.getTime() <= before) ||
-    attempts.some((a) => a.outcome === 'ok' && a.ip === ip && a.at.getTime() <= before)
+    devices.some(
+      device => device.ip === ip && device.createdAt.getTime() <= before,
+    ) ||
+    attempts.some(
+      a => a.outcome === 'ok' && a.ip === ip && a.at.getTime() <= before,
+    )
   );
 }
 
@@ -211,17 +245,18 @@ export function ownAddresses(
   now: Date,
 ): OwnAddress[] {
   const addresses = new Set(
-    [...devices.map((device) => device.ip), ...attempts.map((attempt) => attempt.ip)].filter(
-      (ip): ip is string => wasOwnAddress(ip, now, attempts, devices),
-    ),
+    [
+      ...devices.map(device => device.ip),
+      ...attempts.map(attempt => attempt.ip),
+    ].filter((ip): ip is string => wasOwnAddress(ip, now, attempts, devices)),
   );
-  return [...addresses].map((ip) => ({
+  return [...addresses].map(ip => ({
     ip,
     devices: [
       ...new Set(
         devices
-          .filter((device) => device.ip === ip && device.userAgent)
-          .map((device) => (device.userAgent as string).slice(0, 120)),
+          .filter(device => device.ip === ip && device.userAgent)
+          .map(device => (device.userAgent as string).slice(0, 120)),
       ),
     ],
   }));
@@ -236,9 +271,10 @@ export function summarizeSignIns(
   devices: SignedInDevice[],
   now: Date,
 ): AppFacts['signIns'] {
-  const own = (ip: string | null, at: Date) => wasOwnAddress(ip, at, attempts, devices);
+  const own = (ip: string | null, at: Date) =>
+    wasOwnAddress(ip, at, attempts, devices);
   const failed = attempts.filter(
-    (a) => a.outcome !== 'ok' && now.getTime() - a.at.getTime() <= DAY_MS,
+    a => a.outcome !== 'ok' && now.getTime() - a.at.getTime() <= DAY_MS,
   );
   const byAddress = new Map<string, number>();
   for (const attempt of failed) {
@@ -246,23 +282,23 @@ export function summarizeSignIns(
     byAddress.set(ip, (byAddress.get(ip) ?? 0) + 1);
   }
 
-  const good = attempts.filter((a) => a.outcome === 'ok');
+  const good = attempts.filter(a => a.outcome === 'ok');
   const guessed = good
-    .filter((a) => now.getTime() - a.at.getTime() <= NEW_ADDRESS_DAYS * DAY_MS)
+    .filter(a => now.getTime() - a.at.getTime() <= NEW_ADDRESS_DAYS * DAY_MS)
     // The owner mistyping the password at home is not guessing.
-    .filter((success) => !own(success.ip, success.at))
-    .map((success) => ({
+    .filter(success => !own(success.ip, success.at))
+    .map(success => ({
       success,
       failuresBefore: attempts.filter(
-        (a) =>
+        a =>
           a.outcome !== 'ok' &&
           a.ip === success.ip &&
           a.at < success.at &&
           success.at.getTime() - a.at.getTime() <= GUESS_WINDOW_MS,
       ).length,
     }))
-    .filter(({ failuresBefore }) => failuresBefore >= GUESS_FAILURES)
-    .map(({ success, failuresBefore }) => ({
+    .filter(({failuresBefore}) => failuresBefore >= GUESS_FAILURES)
+    .map(({success, failuresBefore}) => ({
       ip: success.ip ?? 'unknown',
       email: success.email,
       at: success.at.toISOString(),
@@ -270,12 +306,14 @@ export function summarizeSignIns(
     }));
 
   const weekAgo = now.getTime() - NEW_ADDRESS_DAYS * DAY_MS;
-  const before = new Set(good.filter((a) => a.at.getTime() < weekAgo).map((a) => a.ip));
+  const before = new Set(
+    good.filter(a => a.at.getTime() < weekAgo).map(a => a.ip),
+  );
   // Without older sign-ins every address is new: the journal has only just begun.
   const fresh = new Map<string, SignInAttempt>();
   if (before.size) {
     const recent = good.filter(
-      (a) => a.at.getTime() >= weekAgo && !before.has(a.ip) && !own(a.ip, now),
+      a => a.at.getTime() >= weekAgo && !before.has(a.ip) && !own(a.ip, now),
     );
     for (const attempt of recent) {
       fresh.set(attempt.ip ?? 'unknown', attempt);
@@ -284,9 +322,9 @@ export function summarizeSignIns(
 
   return {
     failed: failed.length,
-    failedForeign: failed.filter((a) => !own(a.ip, now)).length,
+    failedForeign: failed.filter(a => !own(a.ip, now)).length,
     failedByAddress: [...byAddress]
-      .map(([ip, count]) => ({ ip, count, own: own(ip, now) }))
+      .map(([ip, count]) => ({ip, count, own: own(ip, now)}))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10),
     guessed,

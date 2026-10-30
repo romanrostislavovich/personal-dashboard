@@ -1,6 +1,6 @@
-import { parseReceipt } from './receipt-parse';
+import {parseReceipt} from './receipt-parse';
 
-const fallback = { currency: 'PLN', today: '2026-10-03' };
+const fallback = {currency: 'PLN', today: '2026-10-03'};
 
 describe('parseReceipt', () => {
   it('reads the answer of the AI, cleaned', () => {
@@ -16,8 +16,15 @@ describe('parseReceipt', () => {
   });
 
   it('takes the main currency and today when the receipt does not tell', () => {
-    const read = parseReceipt('{"total": 12, "currency": "zł", "date": "2031-01-01"}', fallback);
-    expect(read).toMatchObject({ currency: 'PLN', date: '2026-10-03', category: 'Other' });
+    const read = parseReceipt(
+      '{"total": 12, "currency": "zł", "date": "2031-01-01"}',
+      fallback,
+    );
+    expect(read).toMatchObject({
+      currency: 'PLN',
+      date: '2026-10-03',
+      category: 'Other',
+    });
   });
 
   it('refuses a photo that is not a receipt, and an answer that is not JSON', () => {

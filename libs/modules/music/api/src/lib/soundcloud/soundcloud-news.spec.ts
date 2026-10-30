@@ -1,11 +1,13 @@
-import { growth, trackNews } from './soundcloud-news';
-import { findClientId, toTrack } from './soundcloud.client';
+import {growth, trackNews} from './soundcloud-news';
+import {findClientId, toTrack} from './soundcloud.client';
 
-const track = { title: 'Mix', permalinkUrl: 'https://soundcloud.com/me/mix' };
+const track = {title: 'Mix', permalinkUrl: 'https://soundcloud.com/me/mix'};
 
 describe('trackNews', () => {
   it('tells the highest play milestone crossed', () => {
-    expect(trackNews(track, { plays: 480, comments: 2 }, { plays: 1030, comments: 2 })).toEqual({
+    expect(
+      trackNews(track, {plays: 480, comments: 2}, {plays: 1030, comments: 2}),
+    ).toEqual({
       ...track,
       playsMilestone: 1000,
       newComments: 0,
@@ -14,21 +16,23 @@ describe('trackNews', () => {
 
   it('counts new comments', () => {
     expect(
-      trackNews(track, { plays: 120, comments: 1 }, { plays: 130, comments: 4 }),
-    ).toMatchObject({ playsMilestone: null, newComments: 3 });
+      trackNews(track, {plays: 120, comments: 1}, {plays: 130, comments: 4}),
+    ).toMatchObject({playsMilestone: null, newComments: 3});
   });
 
   it('says nothing about ordinary growth or a removed comment', () => {
-    expect(trackNews(track, { plays: 120, comments: 3 }, { plays: 180, comments: 2 })).toBeNull();
+    expect(
+      trackNews(track, {plays: 120, comments: 3}, {plays: 180, comments: 2}),
+    ).toBeNull();
   });
 });
 
 describe('growth', () => {
-  const today = { year: 2026, month: 10, day: 10 };
+  const today = {year: 2026, month: 10, day: 10};
   const history = [
-    { day: '2026-10-01', value: 100 },
-    { day: '2026-10-03', value: 140 },
-    { day: '2026-10-09', value: 190 },
+    {day: '2026-10-01', value: 100},
+    {day: '2026-10-03', value: 140},
+    {day: '2026-10-09', value: 190},
   ];
 
   it('counts from the last point that is old enough', () => {
@@ -43,9 +47,9 @@ describe('growth', () => {
 
 describe('SoundCloud answers', () => {
   it('finds the client id in a script of the site', () => {
-    expect(findClientId('a={client_id:"AbCdEfGhIjKlMnOpQrStUvWx0123",env:"p"}')).toBe(
-      'AbCdEfGhIjKlMnOpQrStUvWx0123',
-    );
+    expect(
+      findClientId('a={client_id:"AbCdEfGhIjKlMnOpQrStUvWx0123",env:"p"}'),
+    ).toBe('AbCdEfGhIjKlMnOpQrStUvWx0123');
     expect(findClientId('nothing here')).toBeNull();
   });
 
@@ -60,6 +64,13 @@ describe('SoundCloud answers', () => {
         playback_count: 12,
         comment_count: null,
       }),
-    ).toMatchObject({ id: '7', isPrivate: true, plays: 12, comments: 0, likes: 0, genre: null });
+    ).toMatchObject({
+      id: '7',
+      isPrivate: true,
+      plays: 12,
+      comments: 0,
+      likes: 0,
+      genre: null,
+    });
   });
 });

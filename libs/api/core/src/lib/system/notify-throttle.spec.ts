@@ -1,4 +1,4 @@
-import { NotifyThrottle } from './notify-throttle';
+import {NotifyThrottle} from './notify-throttle';
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
@@ -14,7 +14,9 @@ describe('NotifyThrottle', () => {
 
   it('lets different problems through, but only five an hour', () => {
     const throttle = new NotifyThrottle();
-    const sent = Array.from({ length: 8 }, (_, i) => throttle.allow(`problem ${i}`, i * MINUTE));
+    const sent = Array.from({length: 8}, (_, i) =>
+      throttle.allow(`problem ${i}`, i * MINUTE),
+    );
     expect(sent).toEqual([true, true, true, true, true, false, false, false]);
     // An hour after the first ones the limit is free again.
     expect(throttle.allow('problem 9', 61 * MINUTE)).toBe(true);

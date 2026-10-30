@@ -1,15 +1,22 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
+import {Inject, Injectable} from '@nestjs/common';
+import {DB, Database} from '@pd/api-core';
 import {
   CategoryModelState,
   CategorySuggestion,
   TRANSACTION_KINDS,
   TransactionKind,
 } from '@pd/contracts';
-import { and, desc, eq, notInArray } from 'drizzle-orm';
-import { transactions } from '../finance.schema';
-import { financeMessages } from '../finance.messages';
-import { evaluate, Example, Model, predict, Quality, train } from './category-model';
+import {and, desc, eq, notInArray} from 'drizzle-orm';
+import {transactions} from '../finance.schema';
+import {financeMessages} from '../finance.messages';
+import {
+  evaluate,
+  Example,
+  Model,
+  predict,
+  Quality,
+  train,
+} from './category-model';
 
 /** A guess this likely or more counts as sure. */
 const SURE = 0.85;
@@ -25,7 +32,7 @@ interface Trained {
   at: Date;
   kinds: Record<
     TransactionKind,
-    { model: Model | null; quality: Quality | null; trusted: boolean }
+    {model: Model | null; quality: Quality | null; trusted: boolean}
   >;
 }
 
@@ -47,13 +54,17 @@ export class CategoryModelService {
     text: string,
     amount: number,
   ): Promise<CategorySuggestion | null> {
-    const { model, trusted } = (await this.state(userId)).kinds[kind];
+    const {model, trusted} = (await this.state(userId)).kinds[kind];
     if (!model || !text.trim()) {
       return null;
     }
     const [best] = predict(model, text, amount);
     return best && best.probability >= SURE
-      ? { category: best.category, probability: Math.round(best.probability * 100) / 100, trusted }
+      ? {
+          category: best.category,
+          probability: Math.round(best.probability * 100) / 100,
+          trusted,
+        }
       : null;
   }
 
@@ -73,7 +84,7 @@ export class CategoryModelService {
     const state = await this.state(userId);
     return {
       trainedAt: state.at.toISOString(),
-      kinds: TRANSACTION_KINDS.map((kind) => ({
+      kinds: TRANSACTION_KINDS.map(kind => ({
         kind,
         ...(state.kinds[kind].quality ?? {
           examples: 0,
@@ -110,38 +121,53 @@ export class CategoryModelService {
         amount: transactions.amount,
       })
       .from(transactions)
-      .where(and(eq(transactions.userId, userId), notInArray(transactions.category, uncategorized)))
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          notInArray(transactions.category, uncategorized),
+        ),
+      )
       .orderBy(desc(transactions.occurredOn))
       .limit(MAX_EXAMPLES);
     const kinds = {} as Trained['kinds'];
     for (const kind of TRANSACTION_KINDS) {
-      const examples: (Example & { counterparty: string })[] = rows
-        .filter((row) => row.kind === kind)
-        .map((row) => ({
+      const examples: (Example & {counterparty: string})[] = rows
+        .filter(row => row.kind === kind)
+        .map(row => ({
           text: textOf(row.counterparty, row.note),
           amount: Number(row.amount),
           category: row.category,
-          counterparty: (row.counterparty ?? row.note ?? '').toLowerCase().trim(),
+          counterparty: (row.counterparty ?? row.note ?? '')
+            .toLowerCase()
+            .trim(),
         }))
-        .filter((example) => example.text.trim());
-      if (examples.length < 2 || new Set(examples.map((e) => e.category)).size < 2) {
-        kinds[kind] = { model: null, quality: null, trusted: false };
+        .filter(example => example.text.trim());
+      if (
+        examples.length < 2 ||
+        new Set(examples.map(e => e.category)).size < 2
+      ) {
+        kinds[kind] = {model: null, quality: null, trusted: false};
         continue;
       }
       const quality = evaluate(examples, SURE);
       kinds[kind] = {
         model: train(examples),
         quality,
-        trusted: quality.examples >= MIN_EXAMPLES && quality.sureAccuracy >= TRUST_ACCURACY,
+        trusted:
+          quality.examples >= MIN_EXAMPLES &&
+          quality.sureAccuracy >= TRUST_ACCURACY,
       };
     }
-    const state = { at: new Date(), kinds };
+    const state = {at: new Date(), kinds};
     this.trained.set(userId, state);
     return state;
   }
 }
 
 /** What the model reads of a transaction: the counterparty and the title. */
-export function textOf(counterparty: string | null, note: string | null): string {
+export function textOf(
+  counterparty: string | null,
+  note: string | null,
+): string {
   return [counterparty, note].filter(Boolean).join(' ');
 }

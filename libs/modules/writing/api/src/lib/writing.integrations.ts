@@ -1,5 +1,5 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { IntegrationsService, ServerKeysService } from '@pd/api-core';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {IntegrationsService, ServerKeysService} from '@pd/api-core';
 
 /** Writing in the list of integrations: the LanguageTool server the owner set. */
 @Injectable()
@@ -16,7 +16,7 @@ export class WritingIntegrations implements OnModuleInit {
       name: 'LanguageTool',
       reports: async () => {
         const url = await this.keys.get('writing.languagetool-url');
-        return url ? [{ name: 'LanguageTool', detail: url }] : [];
+        return url ? [{name: 'LanguageTool', detail: url}] : [];
       },
     });
   }

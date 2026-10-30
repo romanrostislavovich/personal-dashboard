@@ -1,4 +1,4 @@
-import type { ReadCache } from './read-cache';
+import type {ReadCache} from './read-cache';
 
 /**
  * What a client platform provides to the core: a browser, the desktop shell (a browser inside),

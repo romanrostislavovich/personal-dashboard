@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MorningDigestService, UsersService } from '@pd/api-core';
-import { NO_CALM, zonedDateTime } from '@pd/contracts';
-import { TasksService } from './tasks.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {MorningDigestService, UsersService} from '@pd/api-core';
+import {NO_CALM, zonedDateTime} from '@pd/contracts';
+import {TasksService} from './tasks.service';
 
 /**
  * Tasks in the morning digest: what is due today and what is overdue — or only today's, when
@@ -24,13 +24,16 @@ export class TasksDigest implements OnModuleInit {
         "first). List today's tasks and remind about the overdue ones in a line.",
       // The plan of the day is told every morning it exists, changed or not.
       always: true,
-      collect: async (userId) => {
+      collect: async userId => {
         const user = await this.users.findById(userId);
-        const today = zonedDateTime(new Date(), this.users.timeZoneOf(user)).date;
+        const today = zonedDateTime(
+          new Date(),
+          this.users.timeZoneOf(user),
+        ).date;
         const soft = (user?.calm ?? NO_CALM).softOverdue;
         const open = (await this.tasks.list(userId))
           .filter(
-            (task) =>
+            task =>
               !task.completedAt &&
               task.dueDate &&
               (soft ? task.dueDate === today : task.dueDate <= today),
@@ -40,10 +43,12 @@ export class TasksDigest implements OnModuleInit {
           return null;
         }
         return {
-          today: open.filter((task) => task.dueDate === today).map((task) => task.title),
+          today: open
+            .filter(task => task.dueDate === today)
+            .map(task => task.title),
           overdue: open
-            .filter((task) => task.dueDate !== today)
-            .map((task) => ({ title: task.title, dueDate: task.dueDate })),
+            .filter(task => task.dueDate !== today)
+            .map(task => ({title: task.title, dueDate: task.dueDate})),
         };
       },
     });

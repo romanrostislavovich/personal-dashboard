@@ -1,6 +1,11 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
-import { AuthUser } from '../auth/current-user.decorator';
-import { DemoService } from './demo.service';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
+import {AuthUser} from '../auth/current-user.decorator';
+import {DemoService} from './demo.service';
 
 /**
  * What a visitor of a demo may change. Everything can be read; of the writes only those that
@@ -48,7 +53,9 @@ export function allowedInDemo(method: string, path: string): boolean {
   return (
     !FILE_PART.test(clean) &&
     !AI_PART.test(clean) &&
-    ALLOWED_WRITES.some((prefix) => clean === prefix || clean.startsWith(`${prefix}/`))
+    ALLOWED_WRITES.some(
+      prefix => clean === prefix || clean.startsWith(`${prefix}/`),
+    )
   );
 }
 

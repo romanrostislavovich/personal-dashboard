@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 /*
  * Net worth and runway: what one has (the bank accounts by themselves, the rest typed in by
@@ -17,7 +17,11 @@ export const ASSET_KINDS = [
 export type AssetKind = (typeof ASSET_KINDS)[number];
 
 /** Kinds that are money at hand unless said otherwise: they count for the runway. */
-export const LIQUID_ASSET_KINDS: readonly AssetKind[] = ['cash', 'account', 'deposit'];
+export const LIQUID_ASSET_KINDS: readonly AssetKind[] = [
+  'cash',
+  'account',
+  'deposit',
+];
 
 export const assetInputSchema = z.object({
   name: z.string().trim().min(1).max(100),

@@ -8,7 +8,10 @@ const BREAKS = ['\n\n', '\n', '. ', ' '];
  * A long text as several messages, each cut at a paragraph or a line where it can be — never
  * in the middle of an HTML entity (`&amp;`) or of an emoji.
  */
-export function splitMessage(text: string, limit = TELEGRAM_MESSAGE_LIMIT): string[] {
+export function splitMessage(
+  text: string,
+  limit = TELEGRAM_MESSAGE_LIMIT,
+): string[] {
   const parts: string[] = [];
   let rest = text;
   while (rest.length > limit) {

@@ -16,7 +16,7 @@ import {
 export const trashSchema = pgSchema('trash');
 
 /** PostgreSQL `xid8` — a transaction id; read as a string. */
-const xid8 = customType<{ data: string }>({ dataType: () => 'xid8' });
+const xid8 = customType<{data: string}>({dataType: () => 'xid8'});
 
 /**
  * Deleted rows, as they were (filled by a trigger, see trash-triggers.ts). The rows of one
@@ -25,7 +25,7 @@ const xid8 = customType<{ data: string }>({ dataType: () => 'xid8' });
 export const trashRows = trashSchema.table(
   'rows',
   {
-    id: bigserial({ mode: 'number' }).primaryKey(),
+    id: bigserial({mode: 'number'}).primaryKey(),
     /**
      * Whose row it was; `null` for tables without a user (a repository's star history). No
      * foreign key on purpose: deleting a user must not fail on its own trash.
@@ -34,7 +34,7 @@ export const trashRows = trashSchema.table(
     tx: xid8().notNull(),
     tableName: text().notNull(),
     row: jsonb().notNull(),
-    deletedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [index().on(table.tx), index().on(table.userId, table.deletedAt)],
+  table => [index().on(table.tx), index().on(table.userId, table.deletedAt)],
 );

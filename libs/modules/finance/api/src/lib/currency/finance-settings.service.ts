@@ -1,9 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
-import { FinanceSettings, FinanceSettingsInput } from '@pd/contracts';
-import { count, desc, eq } from 'drizzle-orm';
-import { financeSettings, transactions } from '../finance.schema';
-import { ExchangeRatesService } from './exchange-rates.service';
+import {Inject, Injectable} from '@nestjs/common';
+import {DB, Database} from '@pd/api-core';
+import {FinanceSettings, FinanceSettingsInput} from '@pd/contracts';
+import {count, desc, eq} from 'drizzle-orm';
+import {financeSettings, transactions} from '../finance.schema';
+import {ExchangeRatesService} from './exchange-rates.service';
 
 /** Without transactions and a choice, totals are shown in euros. */
 const FALLBACK_CURRENCY = 'EUR';
@@ -28,11 +28,14 @@ export class FinanceSettingsService {
     };
   }
 
-  async save(userId: string, input: FinanceSettingsInput): Promise<FinanceSettings> {
+  async save(
+    userId: string,
+    input: FinanceSettingsInput,
+  ): Promise<FinanceSettings> {
     await this.db
       .insert(financeSettings)
-      .values({ userId, ...input })
-      .onConflictDoUpdate({ target: financeSettings.userId, set: input });
+      .values({userId, ...input})
+      .onConflictDoUpdate({target: financeSettings.userId, set: input});
     return this.get(userId);
   }
 
@@ -42,7 +45,7 @@ export class FinanceSettingsService {
 
   private async mostUsed(userId: string): Promise<string> {
     const [row] = await this.db
-      .select({ currency: transactions.currency, uses: count() })
+      .select({currency: transactions.currency, uses: count()})
       .from(transactions)
       .where(eq(transactions.userId, userId))
       .groupBy(transactions.currency)

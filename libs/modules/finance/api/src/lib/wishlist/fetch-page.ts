@@ -1,4 +1,4 @@
-import { safeFetch } from '@pd/api-core';
+import {safeFetch} from '@pd/api-core';
 
 const TIMEOUT_MS = 15_000;
 /** A product page is rarely over a megabyte; the rest of a huge one is not read. */
@@ -14,7 +14,9 @@ const HEADERS = {
 };
 
 /** The HTML of a page, or why it could not be loaded (`HTTP 403`, `timeout`, `ENOTFOUND`). */
-export async function fetchPage(url: string): Promise<{ html: string } | { error: string }> {
+export async function fetchPage(
+  url: string,
+): Promise<{html: string} | {error: string}> {
   try {
     // The address is the user's: not into the server's own network, on any redirect.
     const response = await safeFetch(url, {
@@ -24,17 +26,22 @@ export async function fetchPage(url: string): Promise<{ html: string } | { error
     });
     if (!response.ok) {
       await response.body?.cancel();
-      return { error: `HTTP ${response.status}` };
+      return {error: `HTTP ${response.status}`};
     }
-    return { html: await readUpTo(response, MAX_LENGTH) };
+    return {html: await readUpTo(response, MAX_LENGTH)};
   } catch (error) {
     if (error instanceof Error && error.name === 'TimeoutError') {
-      return { error: 'timeout' };
+      return {error: 'timeout'};
     }
     // fetch hides the real cause (DNS, connection refused, TLS) in `cause`.
-    const cause = error instanceof Error && error.cause instanceof Error ? error.cause : error;
-    const code = (cause as { code?: string }).code;
-    return { error: code ?? (cause instanceof Error ? cause.message : String(cause)) };
+    const cause =
+      error instanceof Error && error.cause instanceof Error
+        ? error.cause
+        : error;
+    const code = (cause as {code?: string}).code;
+    return {
+      error: code ?? (cause instanceof Error ? cause.message : String(cause)),
+    };
   }
 }
 
@@ -42,7 +49,10 @@ export async function fetchPage(url: string): Promise<{ html: string } | { error
  * The start of a body, `limit` bytes at most: the rest is not downloaded at all (a page of
  * gigabytes would otherwise be read into memory before being cut).
  */
-export async function readUpTo(response: Response, limit: number): Promise<string> {
+export async function readUpTo(
+  response: Response,
+  limit: number,
+): Promise<string> {
   if (!response.body) {
     return '';
   }
@@ -50,7 +60,7 @@ export async function readUpTo(response: Response, limit: number): Promise<strin
   const chunks: Uint8Array[] = [];
   let length = 0;
   while (length < limit) {
-    const { done, value } = await reader.read();
+    const {done, value} = await reader.read();
     if (done) {
       break;
     }

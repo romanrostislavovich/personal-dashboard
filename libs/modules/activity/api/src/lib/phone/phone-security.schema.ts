@@ -1,7 +1,7 @@
-import { users } from '@pd/api-core/schema';
-import { PhoneSecurity } from '@pd/contracts';
-import { jsonb, pgTable, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
-import { activityDevices } from '../activity.schema';
+import {users} from '@pd/api-core/schema';
+import {PhoneSecurity} from '@pd/contracts';
+import {jsonb, pgTable, timestamp, unique, uuid} from 'drizzle-orm/pg-core';
+import {activityDevices} from '../activity.schema';
 
 /**
  * The last security report of each phone (Security → Phone): the phone sends one a day, and only
@@ -14,12 +14,12 @@ export const activityPhoneSecurity = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     deviceId: uuid()
       .notNull()
-      .references(() => activityDevices.id, { onDelete: 'cascade' }),
-    at: timestamp({ withTimezone: true }).notNull(),
+      .references(() => activityDevices.id, {onDelete: 'cascade'}),
+    at: timestamp({withTimezone: true}).notNull(),
     report: jsonb().$type<PhoneSecurity>().notNull(),
   },
-  (table) => [unique().on(table.deviceId)],
+  table => [unique().on(table.deviceId)],
 );

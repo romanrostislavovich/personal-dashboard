@@ -1,10 +1,10 @@
-import { NotFoundException } from '@nestjs/common';
-import { Database } from '@pd/api-core';
-import { and, eq } from 'drizzle-orm';
-import { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
+import {NotFoundException} from '@nestjs/common';
+import {Database} from '@pd/api-core';
+import {and, eq} from 'drizzle-orm';
+import {AnyPgColumn, PgTable} from 'drizzle-orm/pg-core';
 
 /** A table of the module: every one has `id` and `userId`. */
-export type OwnedTable = PgTable & { id: AnyPgColumn; userId: AnyPgColumn };
+export type OwnedTable = PgTable & {id: AnyPgColumn; userId: AnyPgColumn};
 
 export function found<T>(row: T | undefined, what: string): T {
   if (!row) {
@@ -25,7 +25,7 @@ export async function assertOwnedId(
     return;
   }
   const [row] = await db
-    .select({ id: table.id })
+    .select({id: table.id})
     .from(table)
     .where(and(eq(table.id, id), eq(table.userId, userId)));
   found(row, what);
@@ -42,6 +42,6 @@ export async function removeOwned(
   const deleted = await db
     .delete(table)
     .where(and(eq(table.id, id), eq(table.userId, userId)))
-    .returning({ id: table.id });
+    .returning({id: table.id});
   found(deleted[0], what);
 }

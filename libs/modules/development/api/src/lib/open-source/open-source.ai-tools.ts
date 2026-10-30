@@ -1,12 +1,21 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, findById, idParameters, NO_PARAMETERS, ServerActions } from '@pd/api-core';
-import { trackedRepoInputSchema, trackedRepoUpdateSchema } from '@pd/contracts';
-import { z } from 'zod';
-import { ReposService } from './repos.service';
-import { OPEN_SOURCE_ACTIONS } from './open-source.server-actions';
-import { trackedRepos } from './open-source.schema';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  AiService,
+  findById,
+  idParameters,
+  NO_PARAMETERS,
+  ServerActions,
+} from '@pd/api-core';
+import {trackedRepoInputSchema, trackedRepoUpdateSchema} from '@pd/contracts';
+import {z} from 'zod';
+import {ReposService} from './repos.service';
+import {OPEN_SOURCE_ACTIONS} from './open-source.server-actions';
+import {trackedRepos} from './open-source.schema';
 
-const settingsSchema = trackedRepoUpdateSchema.pick({ hidden: true, notify: true });
+const settingsSchema = trackedRepoUpdateSchema.pick({
+  hidden: true,
+  notify: true,
+});
 
 /** AI access to open source statistics; adding, hiding and refreshing repositories (assistant). */
 const repoArgs = z.object({
@@ -40,22 +49,25 @@ export class OpenSourceAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          search: { type: 'string', description: 'A part of the name, description or language' },
-          provider: { type: 'string', enum: ['github', 'gitlab', 'bitbucket'] },
-          relation: { type: 'string', enum: ['owner', 'organization', 'manual'] },
-          limit: { type: 'number', description: '1–150, default 40' },
+          search: {
+            type: 'string',
+            description: 'A part of the name, description or language',
+          },
+          provider: {type: 'string', enum: ['github', 'gitlab', 'bitbucket']},
+          relation: {type: 'string', enum: ['owner', 'organization', 'manual']},
+          limit: {type: 'number', description: '1–150, default 40'},
         },
       },
       handler: async (userId, args) => {
-        const { search, provider, relation, limit } = repoArgs.parse(args);
+        const {search, provider, relation, limit} = repoArgs.parse(args);
         const part = search?.toLowerCase();
         const found = (await this.repos.list(userId))
           .filter(
-            (repo) =>
+            repo =>
               (!provider || repo.provider === provider) &&
               (!relation || repo.relation === relation) &&
               (!part ||
-                [repo.fullName, repo.description, repo.language].some((text) =>
+                [repo.fullName, repo.description, repo.language].some(text =>
                   text?.toLowerCase().includes(part),
                 )),
           )
@@ -64,7 +76,7 @@ export class OpenSourceAiTools implements OnModuleInit {
           total: found.length,
           shown: Math.min(found.length, limit),
           // The chart, the address and what is empty are of no use to the model.
-          repos: found.slice(0, limit).map((repo) => ({
+          repos: found.slice(0, limit).map(repo => ({
             ...repo,
             history: undefined,
             htmlUrl: undefined,
@@ -92,14 +104,17 @@ export class OpenSourceAiTools implements OnModuleInit {
               'A link to the repository on github.com, gitlab.com or bitbucket.org; a bare ' +
               'owner/name means GitHub',
           },
-          npmPackage: { type: 'string', description: 'npm package name, if it is published' },
+          npmPackage: {
+            type: 'string',
+            description: 'npm package name, if it is published',
+          },
         },
         required: ['repo'],
       },
       handler: async (userId, args) => {
         const input = trackedRepoInputSchema.parse(args);
         await this.actions.run(userId, OPEN_SOURCE_ACTIONS.addRepo, input);
-        return { tracking: input.repo };
+        return {tracking: input.repo};
       },
     });
 
@@ -117,17 +132,17 @@ export class OpenSourceAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Repository id from github_repos' },
-          hidden: { type: 'boolean' },
-          notify: { type: 'boolean' },
+          id: {type: 'string', description: 'Repository id from github_repos'},
+          hidden: {type: 'boolean'},
+          notify: {type: 'boolean'},
         },
         required: ['id'],
       },
       handler: async (userId, args) => {
-        const { id, fullName } = await find(userId, args);
+        const {id, fullName} = await find(userId, args);
         const settings = settingsSchema.parse(args);
         await this.repos.update(userId, id, settings);
-        return { fullName, ...settings };
+        return {fullName, ...settings};
       },
     });
 
@@ -137,8 +152,8 @@ export class OpenSourceAiTools implements OnModuleInit {
       writes: true,
       undoTables: [trackedRepos],
       confirm: async (userId, args) => {
-        const { fullName, stars } = await find(userId, args);
-        return { fullName, stars };
+        const {fullName, stars} = await find(userId, args);
+        return {fullName, stars};
       },
       description:
         'Stops tracking a repository added by hand and deletes its collected history. A ' +
@@ -156,9 +171,9 @@ export class OpenSourceAiTools implements OnModuleInit {
       description:
         'Refreshes repository data from GitHub and npm now instead of waiting for the hourly sync.',
       parameters: NO_PARAMETERS,
-      handler: async (userId) => {
+      handler: async userId => {
         await this.actions.run(userId, OPEN_SOURCE_ACTIONS.syncAll);
-        return { refreshed: true };
+        return {refreshed: true};
       },
     });
   }

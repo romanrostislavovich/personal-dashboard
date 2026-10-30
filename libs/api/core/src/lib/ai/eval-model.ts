@@ -1,6 +1,6 @@
-import { DEFAULT_EMBEDDING_MODEL } from '@pd/contracts';
-import { completionSystem } from './ai-prompt';
-import { chatCompletion, embed } from './openai-compatible.client';
+import {DEFAULT_EMBEDDING_MODEL} from '@pd/contracts';
+import {completionSystem} from './ai-prompt';
+import {chatCompletion, embed} from './openai-compatible.client';
 
 /*
  * The model the evals ask (`npm run ai:eval`, files `*.eval.ts`): a job's real instruction and
@@ -21,7 +21,7 @@ export interface EvalOptions {
 export async function evalAnswer(
   instruction: string,
   content: string,
-  { language = 'English' }: EvalOptions = {},
+  {language = 'English'}: EvalOptions = {},
 ): Promise<string> {
   const message = await chatCompletion(
     {
@@ -30,8 +30,8 @@ export async function evalAnswer(
       apiKey: process.env['EVAL_AI_KEY'] ?? null,
     },
     [
-      { role: 'system', content: completionSystem(instruction, language) },
-      { role: 'user', content },
+      {role: 'system', content: completionSystem(instruction, language)},
+      {role: 'user', content},
     ],
   );
   return message.content ?? '';

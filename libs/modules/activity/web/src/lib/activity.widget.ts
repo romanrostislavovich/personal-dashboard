@@ -1,11 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { DurationPipe } from '@pd/web-core';
-import { lastDays } from './activity-period';
-import { ActivityApi } from './activity.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {DurationPipe} from '@pd/web-core';
+import {lastDays} from './activity-period';
+import {ActivityApi} from './activity.api';
 
 const WIDGET_MAX_APPS = 4;
 
@@ -13,14 +18,24 @@ const WIDGET_MAX_APPS = 4;
 @Component({
   selector: 'pd-activity-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatButtonModule, MatCardModule, TranslocoPipe, DurationPipe],
+  imports: [
+    RouterLink,
+    MatButtonModule,
+    MatCardModule,
+    TranslocoPipe,
+    DurationPipe,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>🖥️ {{ 'activity.widget.title' | transloco }}</mat-card-title>
+        <mat-card-title
+          >🖥️ {{ 'activity.widget.title' | transloco }}</mat-card-title
+        >
       </mat-card-header>
       <mat-card-content class="content">
-        <span class="value">{{ stats.value()?.totalSeconds | pdDuration }}</span>
+        <span class="value">{{
+          stats.value()?.totalSeconds | pdDuration
+        }}</span>
         @for (app of apps(); track app.app) {
           <p class="row">
             <span class="name">{{ app.name }}</span>
@@ -33,7 +48,9 @@ const WIDGET_MAX_APPS = 4;
         }
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/activity">{{ 'activity.widget.open' | transloco }}</a>
+        <a matButton routerLink="/activity">{{
+          'activity.widget.open' | transloco
+        }}</a>
       </mat-card-actions>
     </mat-card>
   `,

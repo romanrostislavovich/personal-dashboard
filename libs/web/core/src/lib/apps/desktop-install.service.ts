@@ -1,8 +1,8 @@
-import { inject, Injectable } from '@angular/core';
-import { appsApi } from '@pd/client-core';
-import { AuthService } from '../auth/auth.service';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { desktopBridge } from '../realtime/desktop-bridge';
+import {inject, Injectable} from '@angular/core';
+import {appsApi} from '@pd/client-core';
+import {AuthService} from '../auth/auth.service';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {desktopBridge} from '../realtime/desktop-bridge';
 
 /** Not in the middle of the start. */
 const FIRST_REPORT_MS = 30_000;
@@ -10,14 +10,18 @@ const FIRST_REPORT_MS = 30_000;
 const REPORT_EVERY_MS = 2 * 60 * 60_000;
 
 /** `process.platform` of the desktop app → a word for the list of devices. */
-const PLATFORMS: Record<string, string> = { win32: 'windows', darwin: 'macos', linux: 'linux' };
+const PLATFORMS: Record<string, string> = {
+  win32: 'windows',
+  darwin: 'macos',
+  linux: 'linux',
+};
 
 /**
  * The desktop app tells the server it runs on this computer, and which version — for the list
  * of devices in Settings → Apps. Its own process has no session; the page inside it has, so the
  * page reports for it. A browser tab does nothing here.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class DesktopInstallService {
   private readonly auth = inject(AuthService);
   private readonly apps = appsApi(inject(DASHBOARD_CLIENT).api);

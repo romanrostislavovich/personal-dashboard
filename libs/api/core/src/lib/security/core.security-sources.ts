@@ -1,14 +1,14 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { eq } from 'drizzle-orm';
-import { readFile, stat } from 'node:fs/promises';
-import { join } from 'node:path';
-import { sessions } from '../auth/auth.schema';
-import { TwoFactorService } from '../auth/two-factor.service';
-import { BackupService } from '../backup/backup.service';
-import { AppConfig } from '../config/env';
-import { DB, Database } from '../database/database.module';
-import { UsersService } from '../users/users.service';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {eq} from 'drizzle-orm';
+import {readFile, stat} from 'node:fs/promises';
+import {join} from 'node:path';
+import {sessions} from '../auth/auth.schema';
+import {TwoFactorService} from '../auth/two-factor.service';
+import {BackupService} from '../backup/backup.service';
+import {AppConfig} from '../config/env';
+import {DB, Database} from '../database/database.module';
+import {UsersService} from '../users/users.service';
 import {
   AppFacts,
   appProblems,
@@ -18,12 +18,12 @@ import {
   SignInAttempt,
   summarizeSignIns,
 } from './app-security.rules';
-import { hostProblems, hostReportSchema } from './host-security.rules';
-import { Inspection } from './security-source';
-import { securityMessages } from './security.messages';
-import { SecurityService } from './security.service';
-import { SignInLog } from './sign-in-log.service';
-import { checkSite } from './site-check';
+import {hostProblems, hostReportSchema} from './host-security.rules';
+import {Inspection} from './security-source';
+import {securityMessages} from './security.messages';
+import {SecurityService} from './security.service';
+import {SignInLog} from './sign-in-log.service';
+import {checkSite} from './site-check';
 
 const DAY_MS = 86_400_000;
 /** How far back the journal of sign-ins is read: new addresses are told against it. */
@@ -73,24 +73,26 @@ export class CoreSecuritySources implements OnModuleInit {
 
   private async dashboard(userId: string, locale: string): Promise<Inspection> {
     const now = new Date();
-    const { attempts, devices } = await this.visitors(userId, now);
+    const {attempts, devices} = await this.visitors(userId, now);
     const backups = await this.backups.status();
-    const watched = Boolean(this.config.get('BACKUP_DIR', { infer: true }));
+    const watched = Boolean(this.config.get('BACKUP_DIR', {infer: true}));
     const facts: AppFacts = {
       account: {
         twoFactor: await this.twoFactor.isEnabled(userId),
         users: await this.users.count(),
-        registrationOpen: this.config.get('ALLOW_REGISTRATION', { infer: true }),
+        registrationOpen: this.config.get('ALLOW_REGISTRATION', {infer: true}),
       },
       ownAddresses: ownAddresses(attempts, devices, now),
       signIns: summarizeSignIns(attempts, devices, now),
       sessions: {
         total: devices.length,
         idleOverMonth: devices.filter(
-          (device) => now.getTime() - device.lastUsedAt.getTime() > IDLE_SESSION_DAYS * DAY_MS,
+          device =>
+            now.getTime() - device.lastUsedAt.getTime() >
+            IDLE_SESSION_DAYS * DAY_MS,
         ).length,
       },
-      site: await checkSite(this.config.get('PUBLIC_URL', { infer: true })),
+      site: await checkSite(this.config.get('PUBLIC_URL', {infer: true})),
       backups: {
         watched,
         latestAt: watched ? (backups?.latest?.createdAt ?? null) : null,
@@ -98,16 +100,21 @@ export class CoreSecuritySources implements OnModuleInit {
       },
       dependencies: await readAudit(),
     };
-    return { facts, problems: appProblems(facts, securityMessages(locale)) };
+    return {facts, problems: appProblems(facts, securityMessages(locale))};
   }
 
   /** The journal of sign-ins and the owner's signed-in devices: who comes to the dashboard. */
   private async visitors(
     userId: string,
     now: Date,
-  ): Promise<{ attempts: SignInAttempt[]; devices: (SignedInDevice & { lastUsedAt: Date })[] }> {
+  ): Promise<{
+    attempts: SignInAttempt[];
+    devices: (SignedInDevice & {lastUsedAt: Date})[];
+  }> {
     return {
-      attempts: await this.signIns.since(new Date(now.getTime() - SIGN_IN_DAYS * DAY_MS)),
+      attempts: await this.signIns.since(
+        new Date(now.getTime() - SIGN_IN_DAYS * DAY_MS),
+      ),
       devices: await this.db
         .select({
           ip: sessions.ip,
@@ -121,26 +128,31 @@ export class CoreSecuritySources implements OnModuleInit {
   }
 
   /** `null` — no report: the scan of the server is not set up (a local instance). */
-  private async server(userId: string, locale: string): Promise<Inspection | null> {
-    const folder = this.config.get('SECURITY_DIR', { infer: true });
+  private async server(
+    userId: string,
+    locale: string,
+  ): Promise<Inspection | null> {
+    const folder = this.config.get('SECURITY_DIR', {infer: true});
     if (!folder) {
       return null;
     }
-    const content = await readFile(join(folder, HOST_REPORT), 'utf8').catch(() => null);
+    const content = await readFile(join(folder, HOST_REPORT), 'utf8').catch(
+      () => null,
+    );
     if (content === null) {
       return null;
     }
     const report = hostReportSchema.parse(JSON.parse(content));
     const now = new Date();
-    const { attempts, devices } = await this.visitors(userId, now);
+    const {attempts, devices} = await this.visitors(userId, now);
     const own: OwnAddress[] = ownAddresses(attempts, devices, now);
     // The owner deploys and administers from home: such a sign-in is theirs, and said so.
-    const accepted = report.ssh.accepted.map((login) => ({
+    const accepted = report.ssh.accepted.map(login => ({
       ...login,
-      own: own.some((address) => address.ip === login.ip),
+      own: own.some(address => address.ip === login.ip),
     }));
     return {
-      facts: { ...report, ssh: { ...report.ssh, accepted } },
+      facts: {...report, ssh: {...report.ssh, accepted}},
       problems: hostProblems(report, securityMessages(locale), now),
     };
   }
@@ -150,7 +162,7 @@ async function readAudit(): Promise<AppFacts['dependencies']> {
   const path = join(__dirname, AUDIT_FILE);
   try {
     const audit = JSON.parse(await readFile(path, 'utf8')) as {
-      metadata?: { vulnerabilities?: Record<string, number> };
+      metadata?: {vulnerabilities?: Record<string, number>};
     };
     const found = audit.metadata?.vulnerabilities;
     if (!found) {

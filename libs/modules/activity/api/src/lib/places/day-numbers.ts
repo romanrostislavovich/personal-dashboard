@@ -1,6 +1,6 @@
-import { LocalDate } from '@pd/contracts';
-import { Frequent, gatherPlaces, Named } from './frequent';
-import { Entry, Stay } from './stays';
+import {LocalDate} from '@pd/contracts';
+import {Frequent, gatherPlaces, Named} from './frequent';
+import {Entry, Stay} from './stays';
 
 /** A day of the places, the numbers that go to Links and Life. */
 export interface PlaceDayNumbers {
@@ -25,12 +25,15 @@ const HOUR_MS = 3_600_000;
 /** Where the phone is at this hour of the night most often is home. */
 const NIGHT_HOUR = 3;
 
-function seconds(entry: { start: number; end: number }): number {
+function seconds(entry: {start: number; end: number}): number {
   return Math.round((entry.end - entry.start) / 1000);
 }
 
 /** Home: the place the phone spent 3 am at on the most nights; `null` — no night known. */
-export function homeOf(days: DayOfPlaces[], placeOf: Map<Stay, Frequent>): Frequent | null {
+export function homeOf(
+  days: DayOfPlaces[],
+  placeOf: Map<Stay, Frequent>,
+): Frequent | null {
   const nights = new Map<Frequent, number>();
   for (const day of days) {
     const night = day.start + NIGHT_HOUR * HOUR_MS;
@@ -61,10 +64,12 @@ export function placeDayNumbers(
   named: Named[],
   from: LocalDate,
 ): PlaceDayNumbers[] {
-  const stays = days.flatMap((day) =>
-    day.entries.filter((entry): entry is Entry & { kind: 'stay' } => entry.kind === 'stay'),
+  const stays = days.flatMap(day =>
+    day.entries.filter(
+      (entry): entry is Entry & {kind: 'stay'} => entry.kind === 'stay',
+    ),
   );
-  const { placeOf } = gatherPlaces(stays, named);
+  const {placeOf} = gatherPlaces(stays, named);
   const home = homeOf(days, placeOf);
   const seen = new Set<Frequent>();
   const numbers: PlaceDayNumbers[] = [];

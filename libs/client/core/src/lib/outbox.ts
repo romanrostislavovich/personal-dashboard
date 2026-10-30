@@ -1,4 +1,4 @@
-import { KeyValueStore } from './platform';
+import {KeyValueStore} from './platform';
 
 /** A change made without a connection, waiting to be sent. */
 export interface QueuedWrite {
@@ -42,9 +42,15 @@ const QUEUEABLE = [
   /^\/api\/psychology\/gentle\/day$/,
 ];
 
-export function isQueueable(method: string, path: string, body: unknown): boolean {
+export function isQueueable(
+  method: string,
+  path: string,
+  body: unknown,
+): boolean {
   const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
-  return method !== 'GET' && !isForm && QUEUEABLE.some((pattern) => pattern.test(path));
+  return (
+    method !== 'GET' && !isForm && QUEUEABLE.some(pattern => pattern.test(path))
+  );
 }
 
 /** Sends one queued change; throws `ApiError` for an error status, anything else for no answer. */
@@ -83,7 +89,9 @@ export class Outbox {
     // A PUT replaces the whole record: of several to the same address only the last matters
     // (the diary saves the entry of the day every few seconds).
     const kept =
-      method === 'PUT' ? writes.filter((w) => w.method !== 'PUT' || w.path !== path) : writes;
+      method === 'PUT'
+        ? writes.filter(w => w.method !== 'PUT' || w.path !== path)
+        : writes;
     await this.save([...kept, write].slice(-MAX_QUEUED));
   }
 
@@ -94,20 +102,20 @@ export class Outbox {
   }
 
   private async run(send: QueuedSender): Promise<OutboxResult> {
-    const result: OutboxResult = { sent: 0, refused: [], left: 0 };
+    const result: OutboxResult = {sent: 0, refused: [], left: 0};
     for (const write of [...(await this.load())]) {
       try {
         await send(write);
         result.sent++;
       } catch (error) {
-        const status = (error as { status?: unknown } | null)?.status;
+        const status = (error as {status?: unknown} | null)?.status;
         // No answer or the server's own trouble: this one and the rest wait for the next try.
         if (typeof status !== 'number' || status >= 500 || status === 401) {
           break;
         }
         result.refused.push(write);
       }
-      await this.save((await this.load()).filter((w) => w.id !== write.id));
+      await this.save((await this.load()).filter(w => w.id !== write.id));
     }
     result.left = (await this.load()).length;
     return result;

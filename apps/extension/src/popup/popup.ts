@@ -1,12 +1,12 @@
-import { ask, ErrorCode, ExtensionError, PopupState } from '../shared/messages';
-import { h, t } from './dom';
-import { assistantView } from './assistant.view';
-import { generatorView } from './generator.view';
-import { homeView } from './home.view';
-import { itemsView } from './items.view';
-import { neverSitesView } from './never-sites.view';
-import { signInView } from './sign-in.view';
-import { unlockView } from './unlock.view';
+import {ask, ErrorCode, ExtensionError, PopupState} from '../shared/messages';
+import {h, t} from './dom';
+import {assistantView} from './assistant.view';
+import {generatorView} from './generator.view';
+import {homeView} from './home.view';
+import {itemsView} from './items.view';
+import {neverSitesView} from './never-sites.view';
+import {signInView} from './sign-in.view';
+import {unlockView} from './unlock.view';
 
 /*
  * The popup: one view at a time, chosen by the state the background reports. It keeps nothing
@@ -44,7 +44,7 @@ let place: 'home' | 'vault' = 'home';
 
 const popup: Popup = {
   state: {
-    telemetry: { enabled: false, excluded: false },
+    telemetry: {enabled: false, excluded: false},
     server: null,
     email: null,
     vault: 'signed-out',
@@ -53,12 +53,12 @@ const popup: Popup = {
     writing: null,
     wish: null,
     unlockAsked: false,
-    update: { outdated: false, waitingReload: false },
+    update: {outdated: false, waitingReload: false},
   },
 
   async reload() {
     try {
-      popup.state = await ask<PopupState>({ type: 'state' });
+      popup.state = await ask<PopupState>({type: 'state'});
     } catch (error) {
       popup.show(problemView(popup.errorText(error)));
       return;
@@ -81,20 +81,23 @@ const popup: Popup = {
 
   show(view) {
     app.replaceChildren(
-      ...[updateBanner(popup.state), view].filter((node): node is HTMLElement => !!node),
+      ...[updateBanner(popup.state), view].filter(
+        (node): node is HTMLElement => !!node,
+      ),
     );
   },
 
   toast(text) {
     document.querySelector('.toast')?.remove();
-    const toast = h('div', { class: 'toast', text, attrs: { role: 'status' } });
+    const toast = h('div', {class: 'toast', text, attrs: {role: 'status'}});
     document.body.append(toast);
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toast.remove(), 2500);
   },
 
   errorText(error) {
-    const code: ErrorCode = error instanceof ExtensionError ? error.code : 'failed';
+    const code: ErrorCode =
+      error instanceof ExtensionError ? error.code : 'failed';
     return t(`error_${code.replace(/-/g, '_')}`);
   },
 
@@ -103,18 +106,20 @@ const popup: Popup = {
   },
 
   neverSites(back) {
-    void neverSitesView(popup, back).then((view) => popup.show(view));
+    void neverSitesView(popup, back).then(view => popup.show(view));
   },
 
   assistant(back) {
     void assistantView(popup, back)
-      .then((view) => popup.show(view))
-      .catch((error: unknown) => popup.show(problemView(popup.errorText(error))));
+      .then(view => popup.show(view))
+      .catch((error: unknown) =>
+        popup.show(problemView(popup.errorText(error))),
+      );
   },
 
   openDashboard(path = '') {
     if (popup.state.server) {
-      void chrome.tabs.create({ url: `${popup.state.server}${path}` });
+      void chrome.tabs.create({url: `${popup.state.server}${path}`});
       window.close();
     }
   },
@@ -138,21 +143,21 @@ function updateBanner(state: PopupState): HTMLElement | null {
   if (state.update.waitingReload) {
     return h(
       'div',
-      { class: 'update' },
-      h('span', { text: t('updateReady') }),
+      {class: 'update'},
+      h('span', {text: t('updateReady')}),
       h('button', {
         class: 'button text small',
         type: 'button',
         text: t('updateReload'),
-        onClick: () => void ask({ type: 'reload' }),
+        onClick: () => void ask({type: 'reload'}),
       }),
     );
   }
   if (state.update.outdated) {
     return h(
       'div',
-      { class: 'update' },
-      h('span', { text: t('updateOutdated') }),
+      {class: 'update'},
+      h('span', {text: t('updateOutdated')}),
       h('button', {
         class: 'button text small',
         type: 'button',
@@ -168,8 +173,8 @@ function updateBanner(state: PopupState): HTMLElement | null {
 function problemView(text: string): HTMLElement {
   return h(
     'section',
-    { class: 'view center' },
-    h('p', { class: 'error', text }),
+    {class: 'view center'},
+    h('p', {class: 'error', text}),
     h('button', {
       class: 'button tonal',
       type: 'button',

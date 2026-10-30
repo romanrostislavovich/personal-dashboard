@@ -1,10 +1,16 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { LocalDate, parseLocalDate } from '@pd/contracts';
-import { DiaryApi } from './diary.api';
-import { MOOD_EMOJI } from './mood';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+  output,
+} from '@angular/core';
+import {MatCardModule} from '@angular/material/card';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {LocalDate, parseLocalDate} from '@pd/contracts';
+import {DiaryApi} from './diary.api';
+import {MOOD_EMOJI} from './mood';
 
 /** "On this day": what was written a month ago and on this date in previous years. */
 @Component({
@@ -15,15 +21,21 @@ import { MOOD_EMOJI } from './mood';
     @if (memories.value().length) {
       <mat-card appearance="outlined">
         <mat-card-header>
-          <mat-card-title>🕰️ {{ 'diary.memories.title' | transloco }}</mat-card-title>
+          <mat-card-title
+            >🕰️ {{ 'diary.memories.title' | transloco }}</mat-card-title
+          >
         </mat-card-header>
         <mat-card-content class="list">
           @for (memory of memories.value(); track memory.day) {
-            <button type="button" class="memory" (click)="dayOpen.emit(memory.day)">
+            <button
+              type="button"
+              class="memory"
+              (click)="dayOpen.emit(memory.day)"
+            >
               <span class="when">
                 <span class="ago">
                   @if (yearsAgo(memory.day); as years) {
-                    {{ 'diary.memories.yearsAgo' | transloco: { count: years } }}
+                    {{ 'diary.memories.yearsAgo' | transloco: {count: years} }}
                   } @else {
                     {{ 'diary.memories.monthAgo' | transloco }}
                   }
@@ -61,7 +73,11 @@ import { MOOD_EMOJI } from './mood';
       cursor: pointer;
     }
     .memory:hover {
-      border-color: color-mix(in srgb, var(--mat-sys-primary) 45%, var(--pd-border));
+      border-color: color-mix(
+        in srgb,
+        var(--mat-sys-primary) 45%,
+        var(--pd-border)
+      );
     }
     .when {
       display: flex;
@@ -98,7 +114,8 @@ export class DiaryMemoriesComponent {
   protected yearsAgo(day: LocalDate): number {
     const current = parseLocalDate(this.day());
     const memory = parseLocalDate(day);
-    const sameDate = current.month === memory.month && current.day === memory.day;
+    const sameDate =
+      current.month === memory.month && current.day === memory.day;
     return sameDate ? current.year - memory.year : 0;
   }
 }

@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MorningDigestService } from '@pd/api-core';
-import { Habit, isBuilding } from '@pd/contracts';
-import { HabitsService } from './habits.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {MorningDigestService} from '@pd/api-core';
+import {Habit, isBuilding} from '@pd/contracts';
+import {HabitsService} from './habits.service';
 
 /** The marks of a run worth telling: a new one is news, the count in between is not. */
 const MILESTONES = [7, 30, 90, 180, 365, 1000];
@@ -27,7 +27,7 @@ export class HabitsDigest implements OnModuleInit {
         '(days in a row, weeks for one done a few times a week; 0 — the run is short or ' +
         'started again) and the best run. Congratulate a new milestone warmly; a run started ' +
         'again — gently, without blame.',
-      collect: async (userId) => {
+      collect: async userId => {
         const habits = await this.habits.list(userId);
         return habits.length ? habits.map(fact) : null;
       },
@@ -40,7 +40,9 @@ function fact(habit: Habit) {
   return {
     name: habit.kind === 'custom' ? habit.name : habit.kind,
     toBuild: isBuilding(habit.goal),
-    milestone: [...MILESTONES].reverse().find((goal) => run >= goal) ?? 0,
-    best: [...MILESTONES].reverse().find((goal) => habit.stats.bestStreak >= goal) ?? 0,
+    milestone: [...MILESTONES].reverse().find(goal => run >= goal) ?? 0,
+    best:
+      [...MILESTONES].reverse().find(goal => habit.stats.bestStreak >= goal) ??
+      0,
   };
 }

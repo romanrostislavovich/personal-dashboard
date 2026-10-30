@@ -1,4 +1,4 @@
-import { WeatherLocation } from '@pd/contracts';
+import {WeatherLocation} from '@pd/contracts';
 
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
 const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
@@ -29,7 +29,7 @@ const DAILY = [
 ] as const;
 
 /** Values can be `null` for hours a model does not cover. */
-type Series<Keys extends readonly string[]> = { time: string[] } & {
+type Series<Keys extends readonly string[]> = {time: string[]} & {
   [Key in Keys[number]]: (number | null)[];
 };
 
@@ -46,7 +46,10 @@ export interface RawForecast {
     is_day: number;
   };
   hourly: Series<typeof HOURLY>;
-  daily: Omit<Series<typeof DAILY>, 'sunrise' | 'sunset'> & { sunrise: string[]; sunset: string[] };
+  daily: Omit<Series<typeof DAILY>, 'sunrise' | 'sunset'> & {
+    sunrise: string[];
+    sunset: string[];
+  };
 }
 
 interface RawPlace {
@@ -68,7 +71,8 @@ export class OpenMeteoClient {
       longitude: String(longitude),
       timezone: 'auto',
       forecast_days: String(FORECAST_DAYS),
-      current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day',
+      current:
+        'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day',
       hourly: HOURLY.join(','),
       daily: DAILY.join(','),
     });
@@ -77,9 +81,16 @@ export class OpenMeteoClient {
 
   /** Places by name in the given language (`en`, `ru`…), the most populated first. */
   async search(query: string, language: string): Promise<WeatherLocation[]> {
-    const params = new URLSearchParams({ name: query, count: '8', language, format: 'json' });
-    const { results = [] } = await this.get<{ results?: RawPlace[] }>(`${GEOCODING_URL}?${params}`);
-    return results.map((place) => ({
+    const params = new URLSearchParams({
+      name: query,
+      count: '8',
+      language,
+      format: 'json',
+    });
+    const {results = []} = await this.get<{results?: RawPlace[]}>(
+      `${GEOCODING_URL}?${params}`,
+    );
+    return results.map(place => ({
       name: place.name,
       region: place.admin1 ?? null,
       country: place.country ?? null,
@@ -89,9 +100,13 @@ export class OpenMeteoClient {
   }
 
   private async get<T>(url: string): Promise<T> {
-    const response = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
     if (!response.ok) {
-      throw new Error(`Open-Meteo responded ${response.status}: ${await response.text()}`);
+      throw new Error(
+        `Open-Meteo responded ${response.status}: ${await response.text()}`,
+      );
     }
     return (await response.json()) as T;
   }

@@ -1,20 +1,26 @@
-import { csvRows, icdTable } from './icd-table';
+import {csvRows, icdTable} from './icd-table';
 
 describe('icdTable', () => {
   it('finds the codes and the titles whatever the columns are called', () => {
     // As the Russian dictionary of the Ministry of Health has it: an id, a code, a title, a parent.
     const rows = [
       ['ID', 'MKB_CODE', 'MKB_NAME', 'ID_PARENT', 'ACTUAL'],
-      ['1', 'A00-B99', 'Некоторые инфекционные и паразитарные болезни', '', '1'],
+      [
+        '1',
+        'A00-B99',
+        'Некоторые инфекционные и паразитарные болезни',
+        '',
+        '1',
+      ],
       ['5', 'F41', 'Другие тревожные расстройства', '4', '1'],
       ['6', 'F41.1', 'Генерализованное тревожное расстройство', '5', '1'],
       ['7', 'F41.1', 'Повтор', '5', '1'],
       ['8', 'A17.0†', 'Туберкулезный менингит', '3', '1'],
     ];
     expect(icdTable(rows)).toEqual([
-      { code: 'F41', title: 'Другие тревожные расстройства' },
-      { code: 'F41.1', title: 'Генерализованное тревожное расстройство' },
-      { code: 'A17.0', title: 'Туберкулезный менингит' },
+      {code: 'F41', title: 'Другие тревожные расстройства'},
+      {code: 'F41.1', title: 'Генерализованное тревожное расстройство'},
+      {code: 'A17.0', title: 'Туберкулезный менингит'},
     ]);
   });
 
@@ -25,8 +31,8 @@ describe('icdTable', () => {
         ['6A70.1', 'Single episode depressive disorder, moderate'],
       ]),
     ).toEqual([
-      { code: 'F41.10', title: 'Генералізований тривожний розлад' },
-      { code: '6A70.1', title: 'Single episode depressive disorder, moderate' },
+      {code: 'F41.10', title: 'Генералізований тривожний розлад'},
+      {code: '6A70.1', title: 'Single episode depressive disorder, moderate'},
     ]);
   });
 

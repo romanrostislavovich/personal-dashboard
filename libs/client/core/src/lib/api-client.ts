@@ -1,8 +1,8 @@
-import { LoginResponse } from '@pd/contracts';
-import { isQueueable, Outbox, OutboxResult } from './outbox';
-import { isCacheable } from './read-cache';
-import { ClientPlatform } from './platform';
-import { Session } from './session';
+import {LoginResponse} from '@pd/contracts';
+import {isQueueable, Outbox, OutboxResult} from './outbox';
+import {isCacheable} from './read-cache';
+import {ClientPlatform} from './platform';
+import {Session} from './session';
 
 /** An answer with an error status; `body` is what the server sent (its message, a reason…). */
 export class ApiError extends Error {
@@ -14,12 +14,15 @@ export class ApiError extends Error {
   }
 
   private static describe(status: number, body: unknown): string {
-    const message = (body as { message?: unknown } | null)?.message;
+    const message = (body as {message?: unknown} | null)?.message;
     return `API ${status}: ${typeof message === 'string' ? message : 'request failed'}`;
   }
 }
 
-export type QueryParams = Record<string, string | number | boolean | null | undefined>;
+export type QueryParams = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
 
 export interface RequestOptions {
   /** JSON, or `FormData` for file uploads. */
@@ -48,10 +51,13 @@ export function apiRequest(url: string, params?: QueryParams): ApiRequest {
     ? {
         url,
         params: Object.fromEntries(
-          set.map(([key, value]) => [key, typeof value === 'boolean' ? String(value) : value]),
+          set.map(([key, value]) => [
+            key,
+            typeof value === 'boolean' ? String(value) : value,
+          ]),
         ),
       }
-    : { url };
+    : {url};
 }
 
 /**
@@ -94,12 +100,12 @@ export class ApiClient {
   /** Headers every request carries: the session token. */
   headers(): Record<string, string> {
     const token = this.session.token;
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    return token ? {Authorization: `Bearer ${token}`} : {};
   }
 
   /** A read request described by `{ url, params }` (see ApiRequest). */
   read<T>(request: ApiRequest, signal?: AbortSignal): Promise<T> {
-    return this.get<T>(request.url, { query: request.params, signal });
+    return this.get<T>(request.url, {query: request.params, signal});
   }
 
   /**
@@ -109,8 +115,13 @@ export class ApiClient {
    * `immutable`: the file at this address never changes (a photo by its id), so a kept copy
    * (ReadCache.getFile, the Android app) is shown without asking the server — offline too.
    */
-  async blob(path: string, body?: unknown, { immutable = false } = {}): Promise<Blob> {
-    const cache = immutable && body === undefined ? this.platform.readCache : undefined;
+  async blob(
+    path: string,
+    body?: unknown,
+    {immutable = false} = {},
+  ): Promise<Blob> {
+    const cache =
+      immutable && body === undefined ? this.platform.readCache : undefined;
     const url = this.url(path);
     const kept = await cache?.getFile?.(url).catch(() => null);
     if (kept) {
@@ -119,7 +130,7 @@ export class ApiClient {
     const response = await this.sendAuthorized(
       body === undefined ? 'GET' : 'POST',
       path,
-      { body },
+      {body},
       '*/*',
     );
     if (!response.ok) {
@@ -135,7 +146,9 @@ export class ApiClient {
    * `null` — the session is over and has been ended. Concurrent callers share one request.
    */
   refresh(): Promise<LoginResponse | null> {
-    this.refreshing ??= this.refreshSession().finally(() => (this.refreshing = null));
+    this.refreshing ??= this.refreshSession().finally(
+      () => (this.refreshing = null),
+    );
     return this.refreshing;
   }
 
@@ -144,36 +157,52 @@ export class ApiClient {
   }
 
   post<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
-    return this.request<T>('POST', path, { ...options, body });
+    return this.request<T>('POST', path, {...options, body});
   }
 
   put<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
-    return this.request<T>('PUT', path, { ...options, body });
+    return this.request<T>('PUT', path, {...options, body});
   }
 
   patch<T>(path: string, body?: unknown, options?: RequestOptions): Promise<T> {
-    return this.request<T>('PATCH', path, { ...options, body });
+    return this.request<T>('PATCH', path, {...options, body});
   }
 
   delete<T = void>(path: string, options?: RequestOptions): Promise<T> {
     return this.request<T>('DELETE', path, options);
   }
 
-  async request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
-    const cache = method === 'GET' && isCacheable(path) ? this.platform.readCache : undefined;
+  async request<T>(
+    method: string,
+    path: string,
+    options: RequestOptions = {},
+  ): Promise<T> {
+    const cache =
+      method === 'GET' && isCacheable(path)
+        ? this.platform.readCache
+        : undefined;
     try {
       const body = await this.requestNow<T>(method, path, options);
-      void cache?.put(this.url(path, options.query), body).catch(() => undefined);
+      void cache
+        ?.put(this.url(path, options.query), body)
+        .catch(() => undefined);
       return body;
     } catch (error) {
       // An error status is an answer; anything else means the server was not reached.
-      const unreachable = !(error instanceof ApiError) && !options.signal?.aborted;
-      if (this.outbox && unreachable && isQueueable(method, path, options.body)) {
+      const unreachable =
+        !(error instanceof ApiError) && !options.signal?.aborted;
+      if (
+        this.outbox &&
+        unreachable &&
+        isQueueable(method, path, options.body)
+      ) {
         await this.outbox.add(method, path, options.body);
         return undefined as T;
       }
       // Read before: the last answer instead of an error (see ReadCache).
-      const kept = unreachable ? await cache?.get(this.url(path, options.query)) : null;
+      const kept = unreachable
+        ? await cache?.get(this.url(path, options.query))
+        : null;
       if (kept) {
         return kept.body as T;
       }
@@ -184,15 +213,24 @@ export class ApiClient {
   /** Sends the changes made offline, oldest first (see Outbox). */
   async flushOutbox(): Promise<OutboxResult> {
     if (!this.outbox) {
-      return { sent: 0, refused: [], left: 0 };
+      return {sent: 0, refused: [], left: 0};
     }
-    return this.outbox.flush(async (write) => {
-      await this.requestNow(write.method, write.path, { body: write.body });
+    return this.outbox.flush(async write => {
+      await this.requestNow(write.method, write.path, {body: write.body});
     });
   }
 
-  private async requestNow<T>(method: string, path: string, options: RequestOptions): Promise<T> {
-    const response = await this.sendAuthorized(method, path, options, 'application/json');
+  private async requestNow<T>(
+    method: string,
+    path: string,
+    options: RequestOptions,
+  ): Promise<T> {
+    const response = await this.sendAuthorized(
+      method,
+      path,
+      options,
+      'application/json',
+    );
     const body = await readBody(response);
     if (!response.ok) {
       throw new ApiError(response.status, body);
@@ -211,7 +249,9 @@ export class ApiClient {
     if (response.status !== 401 || isAuthRequest(path)) {
       return response;
     }
-    return (await this.refresh()) ? this.send(method, path, options, accept) : response;
+    return (await this.refresh())
+      ? this.send(method, path, options, accept)
+      : response;
   }
 
   private async refreshSession(): Promise<LoginResponse | null> {
@@ -224,10 +264,14 @@ export class ApiClient {
     const response = await this.send(
       'POST',
       REFRESH_PATH,
-      { body: refreshToken ? { refreshToken } : {} },
+      {body: refreshToken ? {refreshToken} : {}},
       'application/json',
     );
-    if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+    if (
+      response.status >= 400 &&
+      response.status < 500 &&
+      response.status !== 429
+    ) {
       // The server refused the token: the session is over.
       await this.session.end();
       return null;
@@ -235,7 +279,10 @@ export class ApiClient {
     if (!response.ok) {
       // The server is restarting (a deploy: 502/503 from the proxy) or asks to slow down: as
       // good as no answer — the session stays and is tried again, nobody is signed out for it.
-      throw new ApiError(response.status, await readBody(response).catch(() => null));
+      throw new ApiError(
+        response.status,
+        await readBody(response).catch(() => null),
+      );
     }
     const result = (await readBody(response)) as LoginResponse;
     await this.session.start(result.accessToken, result.refreshToken);
@@ -245,7 +292,7 @@ export class ApiClient {
   private send(
     method: string,
     path: string,
-    { body, query, signal }: RequestOptions,
+    {body, query, signal}: RequestOptions,
     accept: string,
   ): Promise<Response> {
     // The browser sets the multipart boundary itself for FormData.
@@ -255,10 +302,14 @@ export class ApiClient {
       method,
       headers: {
         Accept: accept,
-        ...(isJson ? { 'Content-Type': 'application/json' } : {}),
+        ...(isJson ? {'Content-Type': 'application/json'} : {}),
         ...this.headers(),
       },
-      body: isForm ? (body as FormData) : isJson ? JSON.stringify(body) : undefined,
+      body: isForm
+        ? (body as FormData)
+        : isJson
+          ? JSON.stringify(body)
+          : undefined,
       signal,
     });
   }
@@ -282,7 +333,10 @@ const REFRESH_PATH = '/api/auth/refresh';
 
 /** Sign-in, refresh and sign-out: a 401 there is the answer itself, not an expired token. */
 function isAuthRequest(path: string): boolean {
-  return ['/api/auth/login', '/api/auth/register', REFRESH_PATH, '/api/auth/logout'].some(
-    (prefix) => path.startsWith(prefix),
-  );
+  return [
+    '/api/auth/login',
+    '/api/auth/register',
+    REFRESH_PATH,
+    '/api/auth/logout',
+  ].some(prefix => path.startsWith(prefix));
 }

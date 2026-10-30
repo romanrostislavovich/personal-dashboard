@@ -1,10 +1,10 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, IntegrationsService } from '@pd/api-core';
-import { eq } from 'drizzle-orm';
-import { gameAccounts } from './games.schema';
-import { SteamKeyService } from './steam/steam-key.service';
-import { WowService } from './wow/wow.service';
-import { XboxService } from './xbox/xbox.service';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, IntegrationsService} from '@pd/api-core';
+import {eq} from 'drizzle-orm';
+import {gameAccounts} from './games.schema';
+import {SteamKeyService} from './steam/steam-key.service';
+import {WowService} from './wow/wow.service';
+import {XboxService} from './xbox/xbox.service';
 
 /** The accounts are asked every half an hour. */
 const STALE_HOURS = 12;
@@ -35,12 +35,12 @@ export class GamesIntegrations implements OnModuleInit {
       module: 'games',
       name: 'Steam / Dota 2 / World of Warcraft / Xbox',
       staleHours: STALE_HOURS,
-      reports: async (userId) => {
+      reports: async userId => {
         const accounts = await this.db
           .select()
           .from(gameAccounts)
           .where(eq(gameAccounts.userId, userId));
-        return accounts.map((account) => ({
+        return accounts.map(account => ({
           key: account.id,
           name: NAMES[account.game],
           detail: account.displayName,
@@ -53,22 +53,22 @@ export class GamesIntegrations implements OnModuleInit {
       id: 'games.steam-key',
       module: 'games',
       name: 'Steam Web API',
-      reports: async (userId) =>
-        (await this.steamKeys.has(userId)) ? [{ name: 'Steam Web API' }] : [],
+      reports: async userId =>
+        (await this.steamKeys.has(userId)) ? [{name: 'Steam Web API'}] : [],
     });
     this.integrations.register({
       id: 'games.xbox-key',
       module: 'games',
       name: 'Xbox (OpenXBL)',
-      reports: async (userId) =>
-        (await this.xbox.hasKey(userId)) ? [{ name: 'Xbox (OpenXBL)' }] : [],
+      reports: async userId =>
+        (await this.xbox.hasKey(userId)) ? [{name: 'Xbox (OpenXBL)'}] : [],
     });
     this.integrations.register({
       id: 'games.battle-net',
       module: 'games',
       name: 'Battle.net',
-      reports: async (userId) =>
-        (await this.wow.hasCredentials(userId)) ? [{ name: 'Battle.net' }] : [],
+      reports: async userId =>
+        (await this.wow.hasCredentials(userId)) ? [{name: 'Battle.net'}] : [],
     });
   }
 }

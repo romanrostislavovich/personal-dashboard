@@ -1,5 +1,13 @@
-import { Body, Controller, Delete, Get, HttpCode, Put, Query } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Put,
+  Query,
+} from '@nestjs/common';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
 import {
   WeatherCoordinatesQuery,
   weatherCoordinatesQuerySchema,
@@ -10,7 +18,7 @@ import {
   WeatherSearchQuery,
   weatherSearchQuerySchema,
 } from '@pd/contracts';
-import { WeatherService } from './weather.service';
+import {WeatherService} from './weather.service';
 
 @Controller('weather')
 export class WeatherController {
@@ -30,7 +38,8 @@ export class WeatherController {
   @Put('location')
   setLocation(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(weatherLocationSchema)) input: WeatherLocationInput,
+    @Body(new ZodValidationPipe(weatherLocationSchema))
+    input: WeatherLocationInput,
   ) {
     return this.weather.setLocation(user.id, input);
   }
@@ -46,7 +55,8 @@ export class WeatherController {
   @HttpCode(204)
   setPreferences(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(weatherPreferencesSchema)) preferences: WeatherPreferences,
+    @Body(new ZodValidationPipe(weatherPreferencesSchema))
+    preferences: WeatherPreferences,
   ) {
     return this.weather.setThermalFeel(user.id, preferences.thermalFeel);
   }
@@ -56,7 +66,7 @@ export class WeatherController {
   placeAt(
     @CurrentUser() user: AuthUser,
     @Query(new ZodValidationPipe(weatherCoordinatesQuerySchema))
-    { latitude, longitude }: WeatherCoordinatesQuery,
+    {latitude, longitude}: WeatherCoordinatesQuery,
   ) {
     return this.weather.placeAt(user.id, latitude, longitude);
   }
@@ -64,7 +74,8 @@ export class WeatherController {
   @Get('places')
   search(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(weatherSearchQuerySchema)) { q }: WeatherSearchQuery,
+    @Query(new ZodValidationPipe(weatherSearchQuerySchema))
+    {q}: WeatherSearchQuery,
   ) {
     return this.weather.search(user.id, q);
   }

@@ -6,13 +6,13 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { HEALTH_COUNTRIES } from '@pd/contracts';
-import { countryName } from '../health-labels';
+import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {HEALTH_COUNTRIES} from '@pd/contracts';
+import {countryName} from '../health-labels';
 
 /**
  * A country as its two-letter code: Ukraine, Belarus and Poland are offered, any other code may
@@ -21,7 +21,12 @@ import { countryName } from '../health-labels';
 @Component({
   selector: 'pd-health-country-field',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatAutocompleteModule, MatFormFieldModule, MatInputModule, TranslocoPipe],
+  imports: [
+    MatAutocompleteModule,
+    MatFormFieldModule,
+    MatInputModule,
+    TranslocoPipe,
+  ],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -41,7 +46,10 @@ import { countryName } from '../health-labels';
         (input)="change($any($event.target).value)"
         (blur)="touched()"
       />
-      <mat-autocomplete #countries="matAutocomplete" (optionSelected)="change($event.option.value)">
+      <mat-autocomplete
+        #countries="matAutocomplete"
+        (optionSelected)="change($event.option.value)"
+      >
         @for (code of codes; track code) {
           <mat-option [value]="code">{{ code }} · {{ name(code) }}</mat-option>
         }

@@ -1,4 +1,4 @@
-import { strToU8, zipSync } from 'fflate';
+import {strToU8, zipSync} from 'fflate';
 
 /**
  * A table as an Excel workbook or a Word document. Both are ZIP archives of XML: written by
@@ -38,7 +38,11 @@ function column(index: number): string {
 
 export function zip(files: Record<string, string>): Buffer {
   return Buffer.from(
-    zipSync(Object.fromEntries(Object.entries(files).map(([name, text]) => [name, strToU8(text)]))),
+    zipSync(
+      Object.fromEntries(
+        Object.entries(files).map(([name, text]) => [name, strToU8(text)]),
+      ),
+    ),
   );
 }
 
@@ -58,12 +62,14 @@ export function toXlsx(table: ExportTable): Buffer {
   // The first column is dates, the last — a long text.
   const widths = table.headers
     .map((_, index) => {
-      const width = index === table.headers.length - 1 ? 60 : index < 2 ? 14 : 28;
+      const width =
+        index === table.headers.length - 1 ? 60 : index < 2 ? 14 : 28;
       return `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`;
     })
     .join('');
   const main = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
-  const rels = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const rels =
+    'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
   return zip({
     '[Content_Types].xml':
       `${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
@@ -113,11 +119,12 @@ export function toDocx(table: ExportTable): Buffer {
   const paragraphs = (value: string, bold = false) =>
     value
       .split(/\r?\n/)
-      .map((line) => `<w:p>${run(line, bold)}</w:p>`)
+      .map(line => `<w:p>${run(line, bold)}</w:p>`)
       .join('');
-  const cell = (value: string, bold = false) => `<w:tc><w:tcPr/>${paragraphs(value, bold)}</w:tc>`;
+  const cell = (value: string, bold = false) =>
+    `<w:tc><w:tcPr/>${paragraphs(value, bold)}</w:tc>`;
   const row = (values: string[], bold = false) =>
-    `<w:tr>${values.map((value) => cell(value, bold)).join('')}</w:tr>`;
+    `<w:tr>${values.map(value => cell(value, bold)).join('')}</w:tr>`;
   const border = (side: string) =>
     `<w:${side} w:val="single" w:sz="4" w:space="0" w:color="999999"/>`;
   const main = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -137,10 +144,12 @@ export function toDocx(table: ExportTable): Buffer {
       `<w:p>${run(table.title, true, 32)}</w:p>` +
       `<w:p>${run(table.subtitle)}</w:p>` +
       '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>' +
-      ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(border).join('') +
+      ['top', 'left', 'bottom', 'right', 'insideH', 'insideV']
+        .map(border)
+        .join('') +
       '</w:tblBorders></w:tblPr>' +
       row(table.headers, true) +
-      table.rows.map((values) => row(values)).join('') +
+      table.rows.map(values => row(values)).join('') +
       '</w:tbl>' +
       // Landscape: the description needs the width.
       '<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>' +

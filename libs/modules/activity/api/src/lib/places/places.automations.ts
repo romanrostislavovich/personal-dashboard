@@ -1,10 +1,10 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { AutomationsService, DB, Database } from '@pd/api-core';
-import { eq } from 'drizzle-orm';
-import { namedAt } from './frequent';
-import { activityPlacePresence } from './places.schema';
-import { PlacesService } from './places.service';
-import { stayNow } from './stays';
+import {Inject, Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {AutomationsService, DB, Database} from '@pd/api-core';
+import {eq} from 'drizzle-orm';
+import {namedAt} from './frequent';
+import {activityPlacePresence} from './places.schema';
+import {PlacesService} from './places.service';
+import {stayNow} from './stays';
 
 /** The fixes read to tell where the user is now. */
 const RECENT_MS = 3 * 3_600_000;
@@ -33,7 +33,11 @@ export class PlacesAutomations implements OnModuleInit {
 
   onModuleInit(): void {
     const params = [
-      { name: 'place', type: 'text' as const, labelKey: 'activity.automations.place' },
+      {
+        name: 'place',
+        type: 'text' as const,
+        labelKey: 'activity.automations.place',
+      },
     ];
     this.automations.registerTrigger({
       id: 'activity.place.arrive',
@@ -78,21 +82,29 @@ export class PlacesAutomations implements OnModuleInit {
       }
       await this.db
         .insert(activityPlacePresence)
-        .values({ userId, placeId: place?.id ?? null, changedAt: new Date() })
+        .values({userId, placeId: place?.id ?? null, changedAt: new Date()})
         .onConflictDoUpdate({
           target: activityPlacePresence.userId,
-          set: { placeId: place?.id ?? null, changedAt: new Date() },
+          set: {placeId: place?.id ?? null, changedAt: new Date()},
         });
       const time = new Date().toISOString();
-      const left = named.find((one) => one.id === before);
+      const left = named.find(one => one.id === before);
       if (left) {
-        await this.automations.emit(userId, 'activity.place.leave', { place: left.name, time });
+        await this.automations.emit(userId, 'activity.place.leave', {
+          place: left.name,
+          time,
+        });
       }
       if (place) {
-        await this.automations.emit(userId, 'activity.place.arrive', { place: place.name, time });
+        await this.automations.emit(userId, 'activity.place.arrive', {
+          place: place.name,
+          time,
+        });
       }
     } catch (error) {
-      this.logger.warn(`Places were not checked for rules: ${String(error).slice(0, 200)}`);
+      this.logger.warn(
+        `Places were not checked for rules: ${String(error).slice(0, 200)}`,
+      );
     }
   }
 }

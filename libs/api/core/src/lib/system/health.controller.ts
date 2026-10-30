@@ -1,8 +1,13 @@
-import { Controller, Get, Inject, ServiceUnavailableException } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
-import { Public } from '../auth/public.decorator';
-import { DB, Database } from '../database/database.module';
-import { SchedulerService } from '../scheduler/scheduler.service';
+import {
+  Controller,
+  Get,
+  Inject,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import {sql} from 'drizzle-orm';
+import {Public} from '../auth/public.decorator';
+import {DB, Database} from '../database/database.module';
+import {SchedulerService} from '../scheduler/scheduler.service';
 
 const DATABASE_TIMEOUT_MS = 3_000;
 
@@ -27,12 +32,14 @@ export class HealthController {
         () => true,
         () => false,
       ),
-      new Promise<false>((resolve) => setTimeout(() => resolve(false), DATABASE_TIMEOUT_MS)),
+      new Promise<false>(resolve =>
+        setTimeout(() => resolve(false), DATABASE_TIMEOUT_MS),
+      ),
     ]);
     const jobs = this.scheduler.running;
     if (!database || !jobs) {
-      throw new ServiceUnavailableException({ status: 'error', database, jobs });
+      throw new ServiceUnavailableException({status: 'error', database, jobs});
     }
-    return { status: 'ok' };
+    return {status: 'ok'};
   }
 }

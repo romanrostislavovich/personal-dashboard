@@ -9,7 +9,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
 import {
   VaultItemInput,
   vaultItemInputSchema,
@@ -18,7 +18,7 @@ import {
   vaultKeysChangeSchema,
   vaultKeysSchema,
 } from '@pd/contracts';
-import { VaultService } from './vault.service';
+import {VaultService} from './vault.service';
 
 /** The password vault: ciphertext in, ciphertext out (see vault-crypto.ts). */
 @Controller('vault')
@@ -28,7 +28,7 @@ export class VaultController {
   /** `{ keys: null }` — not set up yet. */
   @Get('keys')
   async keys(@CurrentUser() user: AuthUser) {
-    return { keys: await this.vault.keys(user.id) };
+    return {keys: await this.vault.keys(user.id)};
   }
 
   @Post('keys')
@@ -73,7 +73,10 @@ export class VaultController {
 
   @Delete('items/:id')
   @HttpCode(204)
-  removeItem(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeItem(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.vault.removeItem(user.id, id);
   }
 }

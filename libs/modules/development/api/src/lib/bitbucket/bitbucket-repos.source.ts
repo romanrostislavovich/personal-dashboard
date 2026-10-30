@@ -1,14 +1,19 @@
-import { AccountRepo, RepoIssue, RepoSnapshot, RepoSource } from '../open-source/repo-source';
-import { BitbucketClient, RawBitbucketRepo } from './bitbucket.client';
-import { BitbucketWorkspaces } from './bitbucket-workspaces';
+import {
+  AccountRepo,
+  RepoIssue,
+  RepoSnapshot,
+  RepoSource,
+} from '../open-source/repo-source';
+import {BitbucketClient, RawBitbucketRepo} from './bitbucket.client';
+import {BitbucketWorkspaces} from './bitbucket-workspaces';
 
 const NEW_ITEMS = '30';
 
 interface RawItem {
   title: string;
   created_on: string;
-  links?: { html?: { href: string } };
-  author?: { display_name?: string };
+  links?: {html?: {href: string}};
+  author?: {display_name?: string};
 }
 
 /** Bitbucket repositories for the Development section. */
@@ -40,7 +45,9 @@ export class BitbucketRepoSource implements RepoSource {
   async getMany(fullNames: string[]): Promise<(RepoSnapshot | null)[]> {
     const found: (RepoSnapshot | null)[] = [];
     for (const fullName of fullNames) {
-      const repo = await this.bitbucket.get<RawBitbucketRepo>(`/repositories/${fullName}`);
+      const repo = await this.bitbucket.get<RawBitbucketRepo>(
+        `/repositories/${fullName}`,
+      );
       found.push(repo ? await this.snapshot(repo) : null);
     }
     return found;
@@ -48,14 +55,14 @@ export class BitbucketRepoSource implements RepoSource {
 
   /** New pull requests only: Bitbucket retired its issue tracker. */
   async listCreatedSince(fullName: string, since: Date): Promise<RepoIssue[]> {
-    const page = await this.bitbucket.get<{ values?: RawItem[] }>(
+    const page = await this.bitbucket.get<{values?: RawItem[]}>(
       `/repositories/${fullName}/pullrequests`,
       {
         q: `created_on>${since.toISOString()} AND (state="OPEN" OR state="MERGED" OR state="DECLINED")`,
         pagelen: NEW_ITEMS,
       },
     );
-    return (page?.values ?? []).map((raw) => ({
+    return (page?.values ?? []).map(raw => ({
       title: raw.title,
       htmlUrl: raw.links?.html?.href ?? `https://bitbucket.org/${fullName}`,
       author: raw.author?.display_name ?? 'unknown',
@@ -73,12 +80,13 @@ export class BitbucketRepoSource implements RepoSource {
     const [watchers, forks, openPulls] = await Promise.all([
       this.bitbucket.count(`${base}/watchers`),
       this.bitbucket.count(`${base}/forks`),
-      this.bitbucket.count(`${base}/pullrequests`, { state: 'OPEN' }),
+      this.bitbucket.count(`${base}/pullrequests`, {state: 'OPEN'}),
     ]);
     return {
       externalId: repo.uuid,
       fullName: repo.full_name,
-      htmlUrl: repo.links.html?.href ?? `https://bitbucket.org/${repo.full_name}`,
+      htmlUrl:
+        repo.links.html?.href ?? `https://bitbucket.org/${repo.full_name}`,
       description: repo.description || null,
       language: repo.language || null,
       isFork: Boolean(repo.parent),

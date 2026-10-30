@@ -1,7 +1,7 @@
-import { inject, Injectable } from '@angular/core';
-import { writingApi } from '@pd/client-core';
-import { WritingConfig } from '@pd/contracts';
-import { DASHBOARD_CLIENT, desktopBridge } from '@pd/web-core';
+import {inject, Injectable} from '@angular/core';
+import {writingApi} from '@pd/client-core';
+import {WritingConfig} from '@pd/contracts';
+import {DASHBOARD_CLIENT, desktopBridge} from '@pd/web-core';
 
 /** The settings are asked again this often (changed on another device). */
 const REFRESH_MS = 10 * 60_000;
@@ -11,7 +11,7 @@ const REFRESH_MS = 10 * 60_000;
  * the fields of other programs and draws the marks; the page checks their texts with the
  * session it holds, and tells the app the settings.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class DesktopWritingService {
   private readonly api = writingApi(inject(DASHBOARD_CLIENT).api);
   private readonly desktop = desktopBridge()?.writing ?? null;
@@ -23,15 +23,15 @@ export class DesktopWritingService {
       return;
     }
     this.started = true;
-    desktop.onCheck(async (text) => (await this.api.check({ text })).issues);
-    desktop.onIgnore(async (what) => {
+    desktop.onCheck(async text => (await this.api.check({text})).issues);
+    desktop.onIgnore(async what => {
       if (what.word) {
-        this.apply(await this.api.ignore({ word: what.word }));
+        this.apply(await this.api.ignore({word: what.word}));
       } else if (what.ruleId) {
-        this.apply(await this.api.ignore({ ruleId: what.ruleId }));
+        this.apply(await this.api.ignore({ruleId: what.ruleId}));
       }
     });
-    desktop.onAccepted?.(async (count) => {
+    desktop.onAccepted?.(async count => {
       await this.api.accepted(count);
     });
     void this.refresh();

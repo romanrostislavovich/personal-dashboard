@@ -1,17 +1,18 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DB, Database, UsersService } from '@pd/api-core';
-import { AppointmentBrief, appointmentBriefInputSchema } from '@pd/contracts';
-import { and, desc, eq } from 'drizzle-orm';
-import { z } from 'zod';
-import { briefBlocks } from './brief-document';
-import { toDocxDocument } from './brief-export';
-import { feelingText, psychologyMessages } from './psychology.messages';
-import { PsychologyBriefRow, psychologyBriefs } from './psychology.schema';
-import { PsychologyService } from './psychology.service';
+import {Inject, Injectable, NotFoundException} from '@nestjs/common';
+import {DB, Database, UsersService} from '@pd/api-core';
+import {AppointmentBrief, appointmentBriefInputSchema} from '@pd/contracts';
+import {and, desc, eq} from 'drizzle-orm';
+import {z} from 'zod';
+import {briefBlocks} from './brief-document';
+import {toDocxDocument} from './brief-export';
+import {feelingText, psychologyMessages} from './psychology.messages';
+import {PsychologyBriefRow, psychologyBriefs} from './psychology.schema';
+import {PsychologyService} from './psychology.service';
 
 export type ValidBriefInput = z.output<typeof appointmentBriefInputSchema>;
 
-const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const DOCX =
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
 /**
  * Briefs for an appointment with a specialist: the user's own records of a period, picked one
@@ -38,16 +39,22 @@ export class BriefService {
   async add(userId: string, input: ValidBriefInput): Promise<AppointmentBrief> {
     const [row] = await this.db
       .insert(psychologyBriefs)
-      .values({ userId, ...stored(input) })
+      .values({userId, ...stored(input)})
       .returning();
     return toBrief(row);
   }
 
-  async update(userId: string, id: string, input: ValidBriefInput): Promise<AppointmentBrief> {
+  async update(
+    userId: string,
+    id: string,
+    input: ValidBriefInput,
+  ): Promise<AppointmentBrief> {
     const [row] = await this.db
       .update(psychologyBriefs)
-      .set({ ...stored(input), updatedAt: new Date() })
-      .where(and(eq(psychologyBriefs.id, id), eq(psychologyBriefs.userId, userId)))
+      .set({...stored(input), updatedAt: new Date()})
+      .where(
+        and(eq(psychologyBriefs.id, id), eq(psychologyBriefs.userId, userId)),
+      )
       .returning();
     if (!row) {
       throw new NotFoundException();
@@ -58,15 +65,22 @@ export class BriefService {
   async remove(userId: string, id: string): Promise<void> {
     await this.db
       .delete(psychologyBriefs)
-      .where(and(eq(psychologyBriefs.id, id), eq(psychologyBriefs.userId, userId)));
+      .where(
+        and(eq(psychologyBriefs.id, id), eq(psychologyBriefs.userId, userId)),
+      );
   }
 
   /** The brief as a Word document in the user's language. */
-  async export(userId: string, id: string): Promise<{ file: Buffer; name: string; type: string }> {
+  async export(
+    userId: string,
+    id: string,
+  ): Promise<{file: Buffer; name: string; type: string}> {
     const [row] = await this.db
       .select()
       .from(psychologyBriefs)
-      .where(and(eq(psychologyBriefs.id, id), eq(psychologyBriefs.userId, userId)));
+      .where(
+        and(eq(psychologyBriefs.id, id), eq(psychologyBriefs.userId, userId)),
+      );
     if (!row) {
       throw new NotFoundException();
     }
@@ -81,7 +95,7 @@ export class BriefService {
       events,
       assessments,
       psychologyMessages(user?.locale),
-      (event) => feelingText(user?.locale, event.feeling),
+      event => feelingText(user?.locale, event.feeling),
     );
     return {
       file: toDocxDocument(blocks),
@@ -101,7 +115,9 @@ function stored(input: ValidBriefInput) {
     assessmentIds: input.assessmentIds,
     changes: input.changes,
     // One question a line: a line break inside one would make two.
-    questions: input.questions.map((question) => question.replace(/\s*\n\s*/g, ' ')).join('\n'),
+    questions: input.questions
+      .map(question => question.replace(/\s*\n\s*/g, ' '))
+      .join('\n'),
     notes: input.notes,
   };
 }

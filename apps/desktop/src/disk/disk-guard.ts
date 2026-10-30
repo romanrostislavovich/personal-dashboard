@@ -1,5 +1,5 @@
-import { homedir } from 'node:os';
-import { basename, dirname, join, parse, sep } from 'node:path';
+import {homedir} from 'node:os';
+import {basename, dirname, join, parse, sep} from 'node:path';
 
 /**
  * What the app never moves to the Recycle Bin, whatever the advice says: the system, programs,
@@ -10,7 +10,9 @@ export function isProtected(path: string, appFolders: string[]): boolean {
   const target = normalize(path);
   const root = normalize(parse(target).root);
   const home = normalize(homedir());
-  const systemRoot = normalize(process.env['SystemRoot'] ?? join(root, 'Windows'));
+  const systemRoot = normalize(
+    process.env['SystemRoot'] ?? join(root, 'Windows'),
+  );
 
   const exact = [
     root,
@@ -19,9 +21,15 @@ export function isProtected(path: string, appFolders: string[]): boolean {
     join(home, 'AppData', 'Local'),
     join(home, 'AppData', 'Roaming'),
     join(home, 'AppData', 'LocalLow'),
-    ...['Desktop', 'Documents', 'Downloads', 'Pictures', 'Music', 'Videos', 'OneDrive'].map(
-      (name) => join(home, name),
-    ),
+    ...[
+      'Desktop',
+      'Documents',
+      'Downloads',
+      'Pictures',
+      'Music',
+      'Videos',
+      'OneDrive',
+    ].map(name => join(home, name)),
     join(root, 'Users'),
   ].map(normalize);
   if (exact.includes(target)) {
@@ -43,7 +51,9 @@ export function isProtected(path: string, appFolders: string[]): boolean {
     join(home, 'AppData', 'Local', 'wsl'),
     ...appFolders,
   ].map(normalize);
-  if (inside.some((folder) => target === folder || target.startsWith(folder + sep))) {
+  if (
+    inside.some(folder => target === folder || target.startsWith(folder + sep))
+  ) {
     return true;
   }
 

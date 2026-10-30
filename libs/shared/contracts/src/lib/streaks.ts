@@ -1,4 +1,4 @@
-import { addDays, DateParts, LocalDate, toLocalDate } from './local-date';
+import {addDays, DateParts, LocalDate, toLocalDate} from './local-date';
 
 /**
  * Streaks of consecutive days (with a diary entry, with a dashboard visit).
@@ -8,7 +8,7 @@ import { addDays, DateParts, LocalDate, toLocalDate } from './local-date';
 export function computeStreaks(
   days: LocalDate[],
   today: DateParts,
-): { current: number; longest: number } {
+): {current: number; longest: number} {
   const written = new Set(days);
 
   let current = 0;
@@ -29,10 +29,10 @@ export function computeStreaks(
     previous = day;
   }
 
-  return { current, longest };
+  return {current, longest};
 }
 
 function nextDay(day: LocalDate): LocalDate {
   const [year, month, date] = day.split('-').map(Number);
-  return toLocalDate(addDays({ year, month, day: date }, 1));
+  return toLocalDate(addDays({year, month, day: date}, 1));
 }

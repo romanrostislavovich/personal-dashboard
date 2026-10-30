@@ -1,4 +1,4 @@
-import { answerShape, parseDraft, parseLabs } from './draft-parse';
+import {answerShape, parseDraft, parseLabs} from './draft-parse';
 
 describe('parseDraft', () => {
   it('reads the JSON of a visit, even inside a code fence', () => {
@@ -12,16 +12,30 @@ describe('parseDraft', () => {
           doctor: 'lek. Anna Nowak',
           speciality: 'psychiatrist',
           diagnoses: [
-            { code: 'F41.1', title: 'Zaburzenie lękowe uogólnione', status: 'confirmed' },
+            {
+              code: 'F41.1',
+              title: 'Zaburzenie lękowe uogólnione',
+              status: 'confirmed',
+            },
           ],
-          medications: [{ name: 'Escitalopram', dose: '10 mg', schedule: '1 × dziennie rano' }],
+          medications: [
+            {
+              name: 'Escitalopram',
+              dose: '10 mg',
+              schedule: '1 × dziennie rano',
+            },
+          ],
         }) +
         '\n```',
     );
     expect(draft?.kind).toBe('visit');
     expect(draft?.country).toBe('PL');
     expect(draft?.diagnoses).toEqual([
-      { code: 'F41.1', title: 'Zaburzenie lękowe uogólnione', status: 'confirmed' },
+      {
+        code: 'F41.1',
+        title: 'Zaburzenie lękowe uogólnione',
+        status: 'confirmed',
+      },
     ]);
     expect(draft?.medications[0].name).toBe('Escitalopram');
   });
@@ -34,8 +48,8 @@ describe('parseDraft', () => {
         country: 'Poland',
         laboratory: 'Diagnostyka',
         labValues: [
-          { name: 'Glukoza', result: '92', unit: 'mg/dl', range: '70-99' },
-          { name: '', result: '1' },
+          {name: 'Glukoza', result: '92', unit: 'mg/dl', range: '70-99'},
+          {name: '', result: '1'},
         ],
         diagnoses: 'none',
       }),
@@ -48,7 +62,7 @@ describe('parseDraft', () => {
       diagnoses: [],
     });
     expect(draft?.labValues).toEqual([
-      { name: 'Glukoza', result: '92', unit: 'mg/dl', range: '70-99' },
+      {name: 'Glukoza', result: '92', unit: 'mg/dl', range: '70-99'},
     ]);
   });
 
@@ -64,15 +78,19 @@ describe('parseDraft', () => {
         diagnosis: ['F41.1 Generalised anxiety disorder', 'Insomnia'],
         prescriptions: [
           'Escitalopram 10 mg in the morning',
-          { drug: 'Melatonin', dose: '3 mg', schedule: 'at night' },
+          {drug: 'Melatonin', dose: '3 mg', schedule: 'at night'},
         ],
       }),
     );
     expect(draft?.diagnoses).toEqual([
-      { code: 'F41.1', title: 'Generalised anxiety disorder', status: 'confirmed' },
-      { title: 'Insomnia', status: 'confirmed' },
+      {
+        code: 'F41.1',
+        title: 'Generalised anxiety disorder',
+        status: 'confirmed',
+      },
+      {title: 'Insomnia', status: 'confirmed'},
     ]);
-    expect(draft?.medications.map((m) => m.name)).toEqual([
+    expect(draft?.medications.map(m => m.name)).toEqual([
       'Escitalopram 10 mg in the morning',
       'Melatonin',
     ]);
@@ -80,10 +98,12 @@ describe('parseDraft', () => {
   });
 
   it('tells the shape of an answer without its words', () => {
-    expect(answerShape('{"kind":"labs","diagnoses":[],"labValues":[{"name":"x"}]}')).toBe(
-      'kind, diagnoses[0], labValues[1]',
+    expect(
+      answerShape('{"kind":"labs","diagnoses":[],"labValues":[{"name":"x"}]}'),
+    ).toBe('kind, diagnoses[0], labValues[1]');
+    expect(answerShape('Sorry, I cannot read it')).toBe(
+      'no JSON (23 characters)',
     );
-    expect(answerShape('Sorry, I cannot read it')).toBe('no JSON (23 characters)');
   });
 
   it('reads the answer to the second question about lab results', () => {
@@ -93,7 +113,7 @@ describe('parseDraft', () => {
       ),
     ).toEqual({
       laboratory: 'Synevo',
-      labValues: [{ name: 'TSH', result: '2.1', unit: 'mIU/L' }],
+      labValues: [{name: 'TSH', result: '2.1', unit: 'mIU/L'}],
       orderedTests: 0,
     });
     expect(parseLabs('{"labValues":[],"orderedTests":3}')).toMatchObject({

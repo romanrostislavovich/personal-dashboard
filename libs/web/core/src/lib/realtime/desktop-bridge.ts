@@ -1,4 +1,4 @@
-import { ScreenshotFolder } from '@pd/client-core';
+import {ScreenshotFolder} from '@pd/client-core';
 import {
   DesktopTelemetryDiagnostics,
   DiskAdvice,
@@ -13,7 +13,7 @@ import {
  */
 export interface DesktopBridge {
   /** A native system notification; clicking it opens the app on `route`. */
-  notify?(notification: { title: string; body: string; route?: string }): void;
+  notify?(notification: {title: string; body: string; route?: string}): void;
   /** Called when a system notification was clicked. */
   onNavigate?(callback: (route: string) => void): void;
   /** Called when "Check for updates" is pressed in the tray (absent in an older shell). */
@@ -43,16 +43,16 @@ export interface DesktopBridge {
     capture(): Promise<boolean>;
     resume(
       plan: WorkstateRestorePlan,
-    ): Promise<{ opened: number; failed: number; canceled: boolean }>;
+    ): Promise<{opened: number; failed: number; canceled: boolean}>;
   };
   telemetry?: {
-    status(): Promise<{ enabled: boolean; available: boolean }>;
+    status(): Promise<{enabled: boolean; available: boolean}>;
     setConsent(enabled: boolean): Promise<boolean>;
     /** Local session diagnostics; absent in older desktop bundles. Never includes credentials. */
     diagnostics?(): Promise<DesktopTelemetryDiagnostics | null>;
   };
   smartBreak?: {
-    status(): Promise<{ enabled: boolean; available: boolean }>;
+    status(): Promise<{enabled: boolean; available: boolean}>;
     setConsent(enabled: boolean): Promise<boolean>;
   };
 }
@@ -72,9 +72,11 @@ export interface DesktopDevice {
  * checks the texts (it holds the session) and tells the settings.
  */
 export interface DesktopWriting {
-  configure(config: { enabled: boolean; ignoredApps: string[] }): Promise<void>;
+  configure(config: {enabled: boolean; ignoredApps: string[]}): Promise<void>;
   onCheck(check: (text: string) => Promise<WritingIssue[]>): void;
-  onIgnore(ignore: (what: { word?: string; ruleId?: string }) => Promise<void>): void;
+  onIgnore(
+    ignore: (what: {word?: string; ruleId?: string}) => Promise<void>,
+  ): void;
   /** A fix was taken in another program; missing in an app older than the count. */
   onAccepted?(accepted: (count: number) => Promise<void>): void;
 }
@@ -84,8 +86,8 @@ export interface DesktopWriting {
  * server (see the Screenshots module); the app only reads and writes its files.
  */
 export interface DesktopScreenshots extends ScreenshotFolder {
-  status(): Promise<{ folder: string }>;
-  chooseFolder(): Promise<{ folder: string }>;
+  status(): Promise<{folder: string}>;
+  chooseFolder(): Promise<{folder: string}>;
   openFolder(): Promise<void>;
   /** Called when a file of the folder changed (a new screenshot, one deleted in Explorer). */
   onChanged(callback: () => void): void;
@@ -104,7 +106,7 @@ export interface DesktopAppsInfo {
   /** The fingerprint of the running code; `null` — run from the sources. */
   version: string | null;
   /** The browser extension, kept up to date by the app. */
-  extension: { folder: string; version: string | null };
+  extension: {folder: string; version: string | null};
 }
 
 /**
@@ -124,19 +126,21 @@ export interface DeviceBackupStatus {
   folder: string;
   keep: number;
   /** The newest first; `savedAt` is ISO. */
-  copies: { name: string; size: number; savedAt: string }[];
+  copies: {name: string; size: number; savedAt: string}[];
 }
 
 export interface DesktopCapture {
   /** The last capture: copied text, or a PNG of a piece of the screen. */
-  pending(): Promise<{ kind: 'text'; text: string } | { kind: 'image'; base64: string } | null>;
+  pending(): Promise<
+    {kind: 'text'; text: string} | {kind: 'image'; base64: string} | null
+  >;
   /** Closes the capture window. */
   close(): Promise<void>;
 }
 
 export interface DesktopDownloads {
   /** The file of a notification about a statement; `null` — gone, or not one the app found. */
-  take(id: string): Promise<{ name: string; base64: string } | null>;
+  take(id: string): Promise<{name: string; base64: string} | null>;
 }
 
 /** Scans a disk of this computer and moves what the user picked to the Recycle Bin. */
@@ -166,8 +170,8 @@ export interface DesktopFixResult {
 }
 
 export type DesktopDiskStatus =
-  | { state: 'idle' }
-  | { state: 'scanning'; mount: string; progress: { files: number; bytes: number } }
+  | {state: 'idle'}
+  | {state: 'scanning'; mount: string; progress: {files: number; bytes: number}}
   | {
       state: 'done';
       report: DiskReport;
@@ -176,7 +180,7 @@ export type DesktopDiskStatus =
       /** The advice already got for this report, kept by the app across page reloads. */
       advice?: DiskAdvice | null;
     }
-  | { state: 'error'; message: string };
+  | {state: 'error'; message: string};
 
 export interface DesktopTrashResult {
   path: string;
@@ -187,7 +191,10 @@ export interface DesktopTrashResult {
 /** The focus timer of the desktop shell; sessions go to the server with the tracker's data. */
 export interface DesktopFocus {
   status(): Promise<DesktopFocusStatus>;
-  start(options: { projectId?: string | null; note?: string | null }): Promise<void>;
+  start(options: {
+    projectId?: string | null;
+    note?: string | null;
+  }): Promise<void>;
   /** Stops a focus part or skips a break. */
   stop(): Promise<void>;
 }
@@ -208,7 +215,7 @@ export interface DesktopFocusStatus {
 export interface DesktopActivity {
   status(): Promise<DesktopActivityStatus>;
   /** This computer was registered as a device: tracking begins. */
-  enable(device: { id: string; token: string }): Promise<void>;
+  enable(device: {id: string; token: string}): Promise<void>;
   disable(): Promise<void>;
   /** `minutes` — pause for so long; `0` — until resumed; `null` — resume. */
   pause(minutes: number | null): Promise<void>;
@@ -228,5 +235,5 @@ export interface DesktopActivityStatus {
 }
 
 export function desktopBridge(): DesktopBridge | null {
-  return (window as { desktop?: DesktopBridge }).desktop ?? null;
+  return (window as {desktop?: DesktopBridge}).desktop ?? null;
 }

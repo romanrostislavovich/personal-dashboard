@@ -1,23 +1,34 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { MusicSettings } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
+import {DatePipe, DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {MusicSettings} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
 import {
   IntegrationGuideComponent,
   ServerKeyComponent,
   ServerKeyField,
   errorStatus,
 } from '@pd/web-core';
-import { MusicApi } from './music.api';
+import {MusicApi} from './music.api';
 
 /** Connecting sources: Last.fm (username + API key) and Spotify (OAuth). */
 @Component({
@@ -43,13 +54,16 @@ import { MusicApi } from './music.api';
       <mat-card appearance="outlined">
         <mat-card-header>
           <mat-card-title>Last.fm</mat-card-title>
-          <mat-card-subtitle>{{ 'music.connect.lastfmDescription' | transloco }}</mat-card-subtitle>
+          <mat-card-subtitle>{{
+            'music.connect.lastfmDescription' | transloco
+          }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           @if (s.lastfm.username) {
             <p class="ok">
               <mat-icon inline>check_circle</mat-icon>
-              {{ 'music.connect.connectedAs' | transloco }} <b>{{ s.lastfm.username }}</b>
+              {{ 'music.connect.connectedAs' | transloco }}
+              <b>{{ s.lastfm.username }}</b>
             </p>
             @if (s.lastfm.lastSyncedAt) {
               <p class="hint">
@@ -65,7 +79,10 @@ import { MusicApi } from './music.api';
                 @if (h.complete) {
                   <p class="hint">
                     <mat-icon inline>history</mat-icon>
-                    {{ 'music.history.complete' | transloco: { count: (h.imported | number) } }}
+                    {{
+                      'music.history.complete'
+                        | transloco: {count: (h.imported | number)}
+                    }}
                   </p>
                 } @else {
                   <p class="hint">
@@ -74,7 +91,8 @@ import { MusicApi } from './music.api';
                         | transloco
                           : {
                               imported: (h.imported | number),
-                              total: h.total === null ? '?' : (h.total | number),
+                              total:
+                                h.total === null ? '?' : (h.total | number),
                             }
                     }}
                   </p>
@@ -83,7 +101,12 @@ import { MusicApi } from './music.api';
                     [value]="h.total ? (100 * h.imported) / h.total : 0"
                   />
                   <p class="hint">
-                    {{ (h.running ? 'music.history.running' : 'music.history.paused') | transloco }}
+                    {{
+                      (h.running
+                        ? 'music.history.running'
+                        : 'music.history.paused'
+                      ) | transloco
+                    }}
                   </p>
                 }
               </div>
@@ -92,14 +115,25 @@ import { MusicApi } from './music.api';
             <p class="hint">{{ 'music.connect.lastfmHint' | transloco }}</p>
             <form class="form" [formGroup]="form" (ngSubmit)="connectLastfm()">
               <mat-form-field subscriptSizing="dynamic">
-                <mat-label>{{ 'music.connect.username' | transloco }}</mat-label>
+                <mat-label>{{
+                  'music.connect.username' | transloco
+                }}</mat-label>
                 <input matInput formControlName="username" autocomplete="off" />
               </mat-form-field>
               <mat-form-field subscriptSizing="dynamic">
                 <mat-label>API key</mat-label>
-                <input matInput type="password" formControlName="apiKey" autocomplete="off" />
+                <input
+                  matInput
+                  type="password"
+                  formControlName="apiKey"
+                  autocomplete="off"
+                />
               </mat-form-field>
-              <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
+              <button
+                matButton="filled"
+                type="submit"
+                [disabled]="form.invalid || busy()"
+              >
                 {{ 'music.connect.connect' | transloco }}
               </button>
             </form>
@@ -112,13 +146,19 @@ import { MusicApi } from './music.api';
         </mat-card-content>
         @if (s.lastfm.username) {
           <mat-card-actions align="end">
-            @if (s.lastfm.history && !s.lastfm.history.complete && !s.lastfm.history.running) {
+            @if (
+              s.lastfm.history &&
+              !s.lastfm.history.complete &&
+              !s.lastfm.history.running
+            ) {
               <button matButton (click)="importHistory()" [disabled]="busy()">
-                <mat-icon>history</mat-icon> {{ 'music.history.start' | transloco }}
+                <mat-icon>history</mat-icon>
+                {{ 'music.history.start' | transloco }}
               </button>
             }
             <button matButton (click)="syncLastfm()" [disabled]="busy()">
-              <mat-icon>sync</mat-icon> {{ 'music.connect.syncNow' | transloco }}
+              <mat-icon>sync</mat-icon>
+              {{ 'music.connect.syncNow' | transloco }}
             </button>
             <button matButton (click)="disconnectLastfm()">
               {{ 'music.connect.disconnect' | transloco }}
@@ -136,7 +176,9 @@ import { MusicApi } from './music.api';
         </mat-card-header>
         <mat-card-content>
           @if (!s.spotify.available) {
-            <p class="hint">{{ 'music.connect.spotifyNotConfigured' | transloco }}</p>
+            <p class="hint">
+              {{ 'music.connect.spotifyNotConfigured' | transloco }}
+            </p>
           } @else if (s.spotify.connected) {
             <p class="ok">
               <mat-icon inline>check_circle</mat-icon>
@@ -155,13 +197,14 @@ import { MusicApi } from './music.api';
               [fields]="spotifyFields"
               [set]="s.spotify.available"
               [summary]="app.clientId"
-              [initial]="{ clientId: app.clientId }"
+              [initial]="{clientId: app.clientId}"
               [save]="saveSpotifyApp"
               [remove]="removeSpotifyApp"
               (changed)="changed.emit()"
             />
             <p class="hint">
-              {{ 'music.connect.redirectUri' | transloco }} <code>{{ app.redirectUri }}</code>
+              {{ 'music.connect.redirectUri' | transloco }}
+              <code>{{ app.redirectUri }}</code>
             </p>
           }
         </mat-card-content>
@@ -231,8 +274,8 @@ export class MusicConnectComponent {
 
   protected readonly busy = signal(false);
   protected readonly spotifyFields: ServerKeyField[] = [
-    { name: 'clientId', label: 'music.connect.clientId' },
-    { name: 'clientSecret', label: 'music.connect.clientSecret', secret: true },
+    {name: 'clientId', label: 'music.connect.clientId'},
+    {name: 'clientSecret', label: 'music.connect.clientSecret', secret: true},
   ];
   protected readonly saveSpotifyApp = (values: Record<string, string>) =>
     firstValueFrom(
@@ -241,14 +284,20 @@ export class MusicConnectComponent {
         clientSecret: values['clientSecret'],
       }),
     );
-  protected readonly removeSpotifyApp = () => firstValueFrom(this.api.removeSpotifyApp());
+  protected readonly removeSpotifyApp = () =>
+    firstValueFrom(this.api.removeSpotifyApp());
   protected readonly form = inject(NonNullableFormBuilder).group({
     username: ['', Validators.required],
-    apiKey: ['', [Validators.required, Validators.pattern(/^[a-fA-F0-9]{32}$/)]],
+    apiKey: [
+      '',
+      [Validators.required, Validators.pattern(/^[a-fA-F0-9]{32}$/)],
+    ],
   });
 
   async connectLastfm(): Promise<void> {
-    await this.run(() => firstValueFrom(this.api.connectLastfm(this.form.getRawValue())));
+    await this.run(() =>
+      firstValueFrom(this.api.connectLastfm(this.form.getRawValue())),
+    );
   }
 
   async syncLastfm(): Promise<void> {
@@ -267,7 +316,7 @@ export class MusicConnectComponent {
 
   /** Go to the Spotify sign-in page; it sends us back to the settings with `?spotify=…`. */
   async connectSpotify(): Promise<void> {
-    const { url } = await firstValueFrom(this.api.spotifyConnectUrl());
+    const {url} = await firstValueFrom(this.api.spotifyConnectUrl());
     window.location.href = url;
   }
 
@@ -281,8 +330,11 @@ export class MusicConnectComponent {
       await action();
       this.changed.emit();
     } catch (error) {
-      const key = errorStatus(error) === 400 ? 'music.connect.invalid' : 'music.connect.error';
-      this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 6000 });
+      const key =
+        errorStatus(error) === 400
+          ? 'music.connect.invalid'
+          : 'music.connect.error';
+      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 6000});
     } finally {
       this.busy.set(false);
     }

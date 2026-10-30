@@ -32,40 +32,74 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
   {
     key: 'hemoglobin',
     unit: 'g/L',
-    names: ['hemoglobin', 'haemoglobin', 'hgb', 'hb', 'гемоглобин', 'гемоглобін', 'hemoglobina'],
+    names: [
+      'hemoglobin',
+      'haemoglobin',
+      'hgb',
+      'hb',
+      'гемоглобин',
+      'гемоглобін',
+      'hemoglobina',
+    ],
     units: [
-      { unit: 'g/dL', factor: 10 },
-      { unit: 'mmol/L', factor: 16.11 },
+      {unit: 'g/dL', factor: 10},
+      {unit: 'mmol/L', factor: 16.11},
     ],
   },
   {
     key: 'rbc',
     unit: '10^12/L',
-    names: ['rbc', 'red blood cells', 'erythrocytes', 'эритроциты', 'еритроцити', 'erytrocyty'],
-    units: [{ unit: '10^6/uL', factor: 1 }],
+    names: [
+      'rbc',
+      'red blood cells',
+      'erythrocytes',
+      'эритроциты',
+      'еритроцити',
+      'erytrocyty',
+    ],
+    units: [{unit: '10^6/uL', factor: 1}],
   },
   {
     key: 'wbc',
     unit: '10^9/L',
-    names: ['wbc', 'white blood cells', 'leukocytes', 'лейкоциты', 'лейкоцити', 'leukocyty'],
-    units: [{ unit: '10^3/uL', factor: 1 }],
+    names: [
+      'wbc',
+      'white blood cells',
+      'leukocytes',
+      'лейкоциты',
+      'лейкоцити',
+      'leukocyty',
+    ],
+    units: [{unit: '10^3/uL', factor: 1}],
   },
   {
     key: 'platelets',
     unit: '10^9/L',
-    names: ['plt', 'platelets', 'тромбоциты', 'тромбоцити', 'płytki krwi', 'trombocyty'],
-    units: [{ unit: '10^3/uL', factor: 1 }],
+    names: [
+      'plt',
+      'platelets',
+      'тромбоциты',
+      'тромбоцити',
+      'płytki krwi',
+      'trombocyty',
+    ],
+    units: [{unit: '10^3/uL', factor: 1}],
   },
   {
     key: 'hematocrit',
     unit: '%',
     names: ['hct', 'hematocrit', 'haematocrit', 'гематокрит', 'hematokryt'],
-    units: [{ unit: 'L/L', factor: 100 }],
+    units: [{unit: 'L/L', factor: 100}],
   },
-  { key: 'mcv', unit: 'fL', names: ['mcv'] },
-  { key: 'mch', unit: 'pg', names: ['mch'] },
-  { key: 'mchc', unit: 'g/L', names: ['mchc'], units: [{ unit: 'g/dL', factor: 10 }] },
-  { key: 'rdw', unit: '%', names: ['rdw', 'rdw-cv'] },
+  {key: 'mcv', unit: 'fL', names: ['mcv']},
+  {key: 'mch', unit: 'pg', names: ['mch']},
+  {
+    key: 'mchc',
+    unit: 'g/L',
+    names: ['mchc'],
+    units: [{unit: 'g/dL', factor: 10}],
+  },
+  {key: 'rdw', unit: '%', names: ['rdw', 'rdw-cv']},
   {
     key: 'neutrophils',
     unit: '%',
@@ -76,13 +110,21 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
     unit: '%',
     names: ['lymphocytes', 'lym', 'лимфоциты', 'лімфоцити', 'limfocyty'],
   },
-  { key: 'monocytes', unit: '%', names: ['monocytes', 'mon', 'моноциты', 'моноцити', 'monocyty'] },
+  {
+    key: 'monocytes',
+    unit: '%',
+    names: ['monocytes', 'mon', 'моноциты', 'моноцити', 'monocyty'],
+  },
   {
     key: 'eosinophils',
     unit: '%',
     names: ['eosinophils', 'eos', 'эозинофилы', 'еозинофіли', 'eozynofile'],
   },
-  { key: 'basophils', unit: '%', names: ['basophils', 'bas', 'базофилы', 'базофіли', 'bazofile'] },
+  {
+    key: 'basophils',
+    unit: '%',
+    names: ['basophils', 'bas', 'базофилы', 'базофіли', 'bazofile'],
+  },
   {
     key: 'esr',
     unit: 'mm/h',
@@ -93,8 +135,15 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
   {
     key: 'glucose',
     unit: 'mmol/L',
-    names: ['glucose', 'glu', 'глюкоза', 'glukoza', 'blood sugar', 'сахар крови'],
-    units: [{ unit: 'mg/dL', factor: MG_DL_GLUCOSE }],
+    names: [
+      'glucose',
+      'glu',
+      'глюкоза',
+      'glukoza',
+      'blood sugar',
+      'сахар крови',
+    ],
+    units: [{unit: 'mg/dL', factor: MG_DL_GLUCOSE}],
   },
   {
     key: 'hba1c',
@@ -107,15 +156,15 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
       'hemoglobina glikowana',
     ],
     // The IFCC unit; % = 0.09148 × mmol/mol + 2.152 (NGSP).
-    units: [{ unit: 'mmol/mol', factor: 0.09148, offset: 2.152 }],
+    units: [{unit: 'mmol/mol', factor: 0.09148, offset: 2.152}],
   },
   {
     key: 'insulin',
     unit: 'mIU/L',
     names: ['insulin', 'инсулин', 'інсулін', 'insulina'],
     units: [
-      { unit: 'uIU/mL', factor: 1 },
-      { unit: 'pmol/L', factor: 0.144 },
+      {unit: 'uIU/mL', factor: 1},
+      {unit: 'pmol/L', factor: 0.144},
     ],
   },
   {
@@ -130,25 +179,44 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
       'холестерин загальний',
       'cholesterol całkowity',
     ],
-    units: [{ unit: 'mg/dL', factor: 0.02586 }],
+    units: [{unit: 'mg/dL', factor: 0.02586}],
   },
   {
     key: 'hdl',
     unit: 'mmol/L',
-    names: ['hdl', 'hdl cholesterol', 'лпвп', 'холестерин лпвп', 'cholesterol hdl'],
-    units: [{ unit: 'mg/dL', factor: 0.02586 }],
+    names: [
+      'hdl',
+      'hdl cholesterol',
+      'лпвп',
+      'холестерин лпвп',
+      'cholesterol hdl',
+    ],
+    units: [{unit: 'mg/dL', factor: 0.02586}],
   },
   {
     key: 'ldl',
     unit: 'mmol/L',
-    names: ['ldl', 'ldl cholesterol', 'лпнп', 'холестерин лпнп', 'cholesterol ldl'],
-    units: [{ unit: 'mg/dL', factor: 0.02586 }],
+    names: [
+      'ldl',
+      'ldl cholesterol',
+      'лпнп',
+      'холестерин лпнп',
+      'cholesterol ldl',
+    ],
+    units: [{unit: 'mg/dL', factor: 0.02586}],
   },
   {
     key: 'triglycerides',
     unit: 'mmol/L',
-    names: ['triglycerides', 'tg', 'триглицериды', 'тригліцериди', 'triglicerydy', 'trójglicerydy'],
-    units: [{ unit: 'mg/dL', factor: 0.01129 }],
+    names: [
+      'triglycerides',
+      'tg',
+      'триглицериды',
+      'тригліцериди',
+      'triglicerydy',
+      'trójglicerydy',
+    ],
+    units: [{unit: 'mg/dL', factor: 0.01129}],
   },
 
   // --- Liver and kidneys ---
@@ -164,7 +232,7 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
       'аланинаминотрансфераза',
       'аланінамінотрансфераза',
     ],
-    units: [{ unit: 'ukat/L', factor: 60 }],
+    units: [{unit: 'ukat/L', factor: 60}],
   },
   {
     key: 'ast',
@@ -178,13 +246,20 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
       'аспартатаминотрансфераза',
       'аспартатамінотрансфераза',
     ],
-    units: [{ unit: 'ukat/L', factor: 60 }],
+    units: [{unit: 'ukat/L', factor: 60}],
   },
   {
     key: 'ggt',
     unit: 'U/L',
-    names: ['ggt', 'ggtp', 'ггт', 'ггтп', 'гамма-гт', 'гамма-глутамилтрансфераза'],
-    units: [{ unit: 'ukat/L', factor: 60 }],
+    names: [
+      'ggt',
+      'ggtp',
+      'ггт',
+      'ггтп',
+      'гамма-гт',
+      'гамма-глутамилтрансфераза',
+    ],
+    units: [{unit: 'ukat/L', factor: 60}],
   },
   {
     key: 'alp',
@@ -196,7 +271,7 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
       'лужна фосфатаза',
       'fosfataza alkaliczna',
     ],
-    units: [{ unit: 'ukat/L', factor: 60 }],
+    units: [{unit: 'ukat/L', factor: 60}],
   },
   {
     key: 'bilirubin',
@@ -211,98 +286,116 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
       'bilirubina',
       'bilirubina całkowita',
     ],
-    units: [{ unit: 'mg/dL', factor: 17.1 }],
+    units: [{unit: 'mg/dL', factor: 17.1}],
   },
   {
     key: 'bilirubinDirect',
     unit: 'umol/L',
-    names: ['direct bilirubin', 'билирубин прямой', 'білірубін прямий', 'bilirubina bezpośrednia'],
-    units: [{ unit: 'mg/dL', factor: 17.1 }],
+    names: [
+      'direct bilirubin',
+      'билирубин прямой',
+      'білірубін прямий',
+      'bilirubina bezpośrednia',
+    ],
+    units: [{unit: 'mg/dL', factor: 17.1}],
   },
   {
     key: 'protein',
     unit: 'g/L',
-    names: ['total protein', 'общий белок', 'загальний білок', 'białko całkowite'],
-    units: [{ unit: 'g/dL', factor: 10 }],
+    names: [
+      'total protein',
+      'общий белок',
+      'загальний білок',
+      'białko całkowite',
+    ],
+    units: [{unit: 'g/dL', factor: 10}],
   },
   {
     key: 'albumin',
     unit: 'g/L',
     names: ['albumin', 'альбумин', 'альбумін', 'albumina'],
-    units: [{ unit: 'g/dL', factor: 10 }],
+    units: [{unit: 'g/dL', factor: 10}],
   },
   {
     key: 'creatinine',
     unit: 'umol/L',
     names: ['creatinine', 'crea', 'креатинин', 'креатинін', 'kreatynina'],
-    units: [{ unit: 'mg/dL', factor: 88.4 }],
+    units: [{unit: 'mg/dL', factor: 88.4}],
   },
   {
     key: 'urea',
     unit: 'mmol/L',
     names: ['urea', 'мочевина', 'сечовина', 'mocznik'],
-    units: [{ unit: 'mg/dL', factor: 0.1665 }],
+    units: [{unit: 'mg/dL', factor: 0.1665}],
   },
   {
     key: 'uricAcid',
     unit: 'umol/L',
     names: ['uric acid', 'мочевая кислота', 'сечова кислота', 'kwas moczowy'],
-    units: [{ unit: 'mg/dL', factor: 59.48 }],
+    units: [{unit: 'mg/dL', factor: 59.48}],
   },
-  { key: 'egfr', unit: 'mL/min/1.73m2', names: ['egfr', 'скф', 'gfr'] },
-  { key: 'ldh', unit: 'U/L', names: ['ldh', 'лдг', 'lactate dehydrogenase'] },
-  { key: 'ck', unit: 'U/L', names: ['ck', 'cpk', 'кфк', 'creatine kinase', 'креатинкиназа'] },
-  { key: 'amylase', unit: 'U/L', names: ['amylase', 'амилаза', 'амілаза', 'amylaza'] },
-  { key: 'lipase', unit: 'U/L', names: ['lipase', 'липаза', 'ліпаза', 'lipaza'] },
+  {key: 'egfr', unit: 'mL/min/1.73m2', names: ['egfr', 'скф', 'gfr']},
+  {key: 'ldh', unit: 'U/L', names: ['ldh', 'лдг', 'lactate dehydrogenase']},
+  {
+    key: 'ck',
+    unit: 'U/L',
+    names: ['ck', 'cpk', 'кфк', 'creatine kinase', 'креатинкиназа'],
+  },
+  {
+    key: 'amylase',
+    unit: 'U/L',
+    names: ['amylase', 'амилаза', 'амілаза', 'amylaza'],
+  },
+  {key: 'lipase', unit: 'U/L', names: ['lipase', 'липаза', 'ліпаза', 'lipaza']},
 
   // --- Electrolytes and minerals ---
   {
     key: 'sodium',
     unit: 'mmol/L',
     names: ['sodium', 'na', 'натрий', 'натрій', 'sód'],
-    units: [{ unit: 'mEq/L', factor: 1 }],
+    units: [{unit: 'mEq/L', factor: 1}],
   },
   {
     key: 'potassium',
     unit: 'mmol/L',
     names: ['potassium', 'k', 'калий', 'калій', 'potas'],
-    units: [{ unit: 'mEq/L', factor: 1 }],
+    units: [{unit: 'mEq/L', factor: 1}],
   },
   {
     key: 'chloride',
     unit: 'mmol/L',
     names: ['chloride', 'cl', 'хлор', 'хлориды', 'chlorki'],
-    units: [{ unit: 'mEq/L', factor: 1 }],
+    units: [{unit: 'mEq/L', factor: 1}],
   },
   {
     key: 'calcium',
     unit: 'mmol/L',
     names: ['calcium', 'ca', 'кальций', 'кальцій', 'wapń'],
-    units: [{ unit: 'mg/dL', factor: 0.2495 }],
+    units: [{unit: 'mg/dL', factor: 0.2495}],
   },
   {
     key: 'magnesium',
     unit: 'mmol/L',
     names: ['magnesium', 'mg', 'магний', 'магній', 'magnez'],
-    units: [{ unit: 'mg/dL', factor: 0.4114 }],
+    units: [{unit: 'mg/dL', factor: 0.4114}],
   },
   {
     key: 'phosphorus',
     unit: 'mmol/L',
     names: ['phosphorus', 'phosphate', 'фосфор', 'fosfor', 'fosforany'],
-    units: [{ unit: 'mg/dL', factor: 0.3229 }],
+    units: [{unit: 'mg/dL', factor: 0.3229}],
   },
   {
     key: 'iron',
     unit: 'umol/L',
     names: ['iron', 'serum iron', 'fe', 'железо', 'залізо', 'żelazo'],
-    units: [{ unit: 'ug/dL', factor: 0.179 }],
+    units: [{unit: 'ug/dL', factor: 0.179}],
   },
   {
     key: 'ferritin',
     unit: 'ug/L',
     names: ['ferritin', 'ферритин', 'феритин', 'ferrytyna'],
-    units: [{ unit: 'ng/mL', factor: 1 }],
+    units: [{unit: 'ng/mL', factor: 1}],
   },
 
   // --- Vitamins ---
@@ -318,19 +411,32 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
       'witamina d',
       '25-oh-d3',
     ],
-    units: [{ unit: 'nmol/L', factor: 0.4006 }],
+    units: [{unit: 'nmol/L', factor: 0.4006}],
   },
   {
     key: 'vitaminB12',
     unit: 'pmol/L',
-    names: ['vitamin b12', 'b12', 'cobalamin', 'витамин b12', 'вітамін b12', 'witamina b12'],
-    units: [{ unit: 'pg/mL', factor: 0.738 }],
+    names: [
+      'vitamin b12',
+      'b12',
+      'cobalamin',
+      'витамин b12',
+      'вітамін b12',
+      'witamina b12',
+    ],
+    units: [{unit: 'pg/mL', factor: 0.738}],
   },
   {
     key: 'folate',
     unit: 'nmol/L',
-    names: ['folate', 'folic acid', 'фолиевая кислота', 'фолієва кислота', 'kwas foliowy'],
-    units: [{ unit: 'ng/mL', factor: 2.266 }],
+    names: [
+      'folate',
+      'folic acid',
+      'фолиевая кислота',
+      'фолієва кислота',
+      'kwas foliowy',
+    ],
+    units: [{unit: 'ng/mL', factor: 2.266}],
   },
 
   // --- Hormones ---
@@ -338,19 +444,19 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
     key: 'tsh',
     unit: 'mIU/L',
     names: ['tsh', 'ттг', 'ттг', 'тиреотропный гормон', 'тиреотропний гормон'],
-    units: [{ unit: 'uIU/mL', factor: 1 }],
+    units: [{unit: 'uIU/mL', factor: 1}],
   },
   {
     key: 'ft4',
     unit: 'pmol/L',
     names: ['ft4', 'free t4', 'т4 свободный', 'т4 вільний', 'св т4'],
-    units: [{ unit: 'ng/dL', factor: 12.87 }],
+    units: [{unit: 'ng/dL', factor: 12.87}],
   },
   {
     key: 'ft3',
     unit: 'pmol/L',
     names: ['ft3', 'free t3', 'т3 свободный', 'т3 вільний', 'св т3'],
-    units: [{ unit: 'pg/mL', factor: 1.536 }],
+    units: [{unit: 'pg/mL', factor: 1.536}],
   },
   {
     key: 'antiTpo',
@@ -361,34 +467,34 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
     key: 'cortisol',
     unit: 'nmol/L',
     names: ['cortisol', 'кортизол', 'kortyzol'],
-    units: [{ unit: 'ug/dL', factor: 27.59 }],
+    units: [{unit: 'ug/dL', factor: 27.59}],
   },
   {
     key: 'prolactin',
     unit: 'ng/mL',
     names: ['prolactin', 'prl', 'пролактин', 'prolaktyna'],
     units: [
-      { unit: 'mIU/L', factor: 1 / 21.2 },
-      { unit: 'ug/L', factor: 1 },
+      {unit: 'mIU/L', factor: 1 / 21.2},
+      {unit: 'ug/L', factor: 1},
     ],
   },
   {
     key: 'testosterone',
     unit: 'nmol/L',
     names: ['testosterone', 'тестостерон', 'testosteron'],
-    units: [{ unit: 'ng/dL', factor: 0.0347 }],
+    units: [{unit: 'ng/dL', factor: 0.0347}],
   },
   {
     key: 'estradiol',
     unit: 'pmol/L',
     names: ['estradiol', 'e2', 'эстрадиол', 'естрадіол'],
-    units: [{ unit: 'pg/mL', factor: 3.671 }],
+    units: [{unit: 'pg/mL', factor: 3.671}],
   },
   {
     key: 'psa',
     unit: 'ng/mL',
     names: ['psa', 'пса', 'total psa'],
-    units: [{ unit: 'ug/L', factor: 1 }],
+    units: [{unit: 'ug/L', factor: 1}],
   },
 
   // --- Inflammation and coagulation ---
@@ -403,14 +509,14 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
       'с-реактивний білок',
       'białko c-reaktywne',
     ],
-    units: [{ unit: 'mg/dL', factor: 10 }],
+    units: [{unit: 'mg/dL', factor: 10}],
   },
-  { key: 'inr', unit: '', names: ['inr', 'мно', 'мнв'] },
+  {key: 'inr', unit: '', names: ['inr', 'мно', 'мнв']},
   {
     key: 'fibrinogen',
     unit: 'g/L',
     names: ['fibrinogen', 'фибриноген', 'фібриноген', 'fibrynogen'],
-    units: [{ unit: 'mg/dL', factor: 0.01 }],
+    units: [{unit: 'mg/dL', factor: 0.01}],
   },
 
   // --- Drug levels (psychiatry above all) ---
@@ -418,20 +524,26 @@ export const LAB_ANALYTES: readonly LabAnalyte[] = [
     key: 'lithium',
     unit: 'mmol/L',
     names: ['lithium', 'литий', 'літій', 'lit'],
-    units: [{ unit: 'mEq/L', factor: 1 }],
+    units: [{unit: 'mEq/L', factor: 1}],
   },
   {
     key: 'valproate',
     unit: 'mg/L',
-    names: ['valproate', 'valproic acid', 'вальпроевая кислота', 'вальпроат', 'kwas walproinowy'],
+    names: [
+      'valproate',
+      'valproic acid',
+      'вальпроевая кислота',
+      'вальпроат',
+      'kwas walproinowy',
+    ],
     units: [
-      { unit: 'ug/mL', factor: 1 },
-      { unit: 'umol/L', factor: 0.1442 },
+      {unit: 'ug/mL', factor: 1},
+      {unit: 'umol/L', factor: 0.1442},
     ],
   },
 ];
 
-const BY_KEY = new Map(LAB_ANALYTES.map((analyte) => [analyte.key, analyte]));
+const BY_KEY = new Map(LAB_ANALYTES.map(analyte => [analyte.key, analyte]));
 
 function labAnalyte(key: string | null | undefined): LabAnalyte | undefined {
   return key ? BY_KEY.get(key) : undefined;
@@ -523,7 +635,7 @@ export function toCanonical(
   key: string | null | undefined,
   value: number,
   unit: string | null | undefined,
-  range: { low: number | null; high: number | null } = { low: null, high: null },
+  range: {low: number | null; high: number | null} = {low: null, high: null},
 ): CanonicalValue | null {
   const analyte = labAnalyte(key);
   if (!analyte) {
@@ -532,8 +644,8 @@ export function toCanonical(
   const given = looseUnit(unit ?? '');
   const conversion =
     given === looseUnit(analyte.unit)
-      ? { factor: 1, offset: 0 }
-      : analyte.units?.find((candidate) => looseUnit(candidate.unit) === given);
+      ? {factor: 1, offset: 0}
+      : analyte.units?.find(candidate => looseUnit(candidate.unit) === given);
   if (!conversion) {
     return null;
   }
@@ -555,7 +667,11 @@ function round(value: number): number {
 export type LabFlag = 'low' | 'high' | null;
 
 /** Out of the laboratory's own range; `null` — within it, or no range given. */
-export function labFlag(value: number | null, low: number | null, high: number | null): LabFlag {
+export function labFlag(
+  value: number | null,
+  low: number | null,
+  high: number | null,
+): LabFlag {
   if (value === null) {
     return null;
   }
@@ -575,10 +691,15 @@ function labNumber(text: string): number | null {
 }
 
 /** A result as typed: a number is a value, anything else (`отрицательно`, `<0.5`) is text. */
-export function parseLabResult(text: string): { value: number | null; textValue: string | null } {
+export function parseLabResult(text: string): {
+  value: number | null;
+  textValue: string | null;
+} {
   const trimmed = text.trim();
   const value = labNumber(trimmed);
-  return value === null ? { value: null, textValue: trimmed || null } : { value, textValue: null };
+  return value === null
+    ? {value: null, textValue: trimmed || null}
+    : {value, textValue: null};
 }
 
 /**
@@ -591,27 +712,29 @@ export function parseLabRange(text: string): {
   refText: string | null;
 } {
   const trimmed = text.trim();
-  const none = { refLow: null, refHigh: null, refText: null };
+  const none = {refLow: null, refHigh: null, refText: null};
   if (!trimmed) {
     return none;
   }
-  const between = /^(-?[\d\s.,]+?)\s*(?:-|–|—|\.\.\.?|…)\s*(-?[\d\s.,]+)$/.exec(trimmed);
+  const between = /^(-?[\d\s.,]+?)\s*(?:-|–|—|\.\.\.?|…)\s*(-?[\d\s.,]+)$/.exec(
+    trimmed,
+  );
   if (between) {
     const low = labNumber(between[1]);
     const high = labNumber(between[2]);
     if (low !== null && high !== null) {
-      return { refLow: low, refHigh: high, refText: null };
+      return {refLow: low, refHigh: high, refText: null};
     }
   }
   const upTo = /^(?:<|≤|<=|до|do|up to)\s*([\d\s.,]+)$/i.exec(trimmed);
   if (upTo && labNumber(upTo[1]) !== null) {
-    return { ...none, refHigh: labNumber(upTo[1]) };
+    return {...none, refHigh: labNumber(upTo[1])};
   }
   const from = /^(?:>|≥|>=|от|від|od|from)\s*([\d\s.,]+)$/i.exec(trimmed);
   if (from && labNumber(from[1]) !== null) {
-    return { ...none, refLow: labNumber(from[1]) };
+    return {...none, refLow: labNumber(from[1])};
   }
-  return { ...none, refText: trimmed };
+  return {...none, refText: trimmed};
 }
 
 /** A range back as text, for editing: `3.9–5.5`, `<5.2`, `>1`. */

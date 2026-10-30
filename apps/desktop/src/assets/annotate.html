@@ -143,7 +143,10 @@
       <span class="spacer"></span>
       <button id="cancel" title="Esc">Отмена</button>
       <button id="copy" title="Ctrl+C">Копировать</button>
-      <button id="actions" title="Сохранить и выбрать, что с ним сделать: задача, дневник…">
+      <button
+        id="actions"
+        title="Сохранить и выбрать, что с ним сделать: задача, дневник…"
+      >
         Сохранить и…
       </button>
       <button id="save" class="primary" title="Ctrl+S">Сохранить</button>
@@ -153,18 +156,25 @@
     <script>
       // The editor of a screenshot: shapes drawn over the picture, kept as a list (so they can be
       // undone), painted onto a canvas of the picture's own size; the PNG goes back to the app.
-      const COLOURS = ['#e53935', '#fdd835', '#43a047', '#1e88e5', '#212121', '#ffffff'];
+      const COLOURS = [
+        '#e53935',
+        '#fdd835',
+        '#43a047',
+        '#1e88e5',
+        '#212121',
+        '#ffffff',
+      ];
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
       const textBox = document.getElementById('text');
       const base = new Image();
-      const state = { tool: 'arrow', colour: COLOURS[0], width: 4 };
+      const state = {tool: 'arrow', colour: COLOURS[0], width: 4};
       let shapes = [];
       let undone = [];
       let drawing = null;
       let busy = false;
 
-      window.desktop.annotate.image().then((url) => {
+      window.desktop.annotate.image().then(url => {
         if (!url) return window.desktop.annotate.cancel();
         base.onload = () => {
           canvas.width = base.naturalWidth;
@@ -187,7 +197,7 @@
         swatch.title = colour;
         swatches.append(swatch);
       }
-      document.getElementById('bar').addEventListener('click', (event) => {
+      document.getElementById('bar').addEventListener('click', event => {
         const button = event.target.closest('button');
         if (!button) return;
         if (button.dataset.tool) state.tool = button.dataset.tool;
@@ -198,30 +208,41 @@
       function markChosen() {
         document
           .querySelectorAll('[data-tool]')
-          .forEach((b) => b.classList.toggle('on', b.dataset.tool === state.tool));
+          .forEach(b =>
+            b.classList.toggle('on', b.dataset.tool === state.tool),
+          );
         document
           .querySelectorAll('[data-colour]')
-          .forEach((b) => b.classList.toggle('on', b.dataset.colour === state.colour));
+          .forEach(b =>
+            b.classList.toggle('on', b.dataset.colour === state.colour),
+          );
         document
           .querySelectorAll('[data-width]')
-          .forEach((b) => b.classList.toggle('on', Number(b.dataset.width) === state.width));
+          .forEach(b =>
+            b.classList.toggle('on', Number(b.dataset.width) === state.width),
+          );
       }
       markChosen();
 
       document.getElementById('undo').onclick = undo;
       document.getElementById('redo').onclick = redo;
-      document.getElementById('cancel').onclick = () => window.desktop.annotate.cancel();
+      document.getElementById('cancel').onclick = () =>
+        window.desktop.annotate.cancel();
       document.getElementById('copy').onclick = () => finish('copy');
       document.getElementById('save').onclick = () => finish('save');
       document.getElementById('actions').onclick = () => finish('actions');
 
-      document.addEventListener('keydown', (event) => {
+      document.addEventListener('keydown', event => {
         if (textBox.style.display === 'block') return;
         const key = event.key.toLowerCase();
-        if (event.ctrlKey && key === 'z') return (event.preventDefault(), undo());
-        if (event.ctrlKey && key === 'y') return (event.preventDefault(), redo());
-        if (event.ctrlKey && key === 's') return (event.preventDefault(), finish('save'));
-        if (event.ctrlKey && key === 'c') return (event.preventDefault(), finish('copy'));
+        if (event.ctrlKey && key === 'z')
+          return (event.preventDefault(), undo());
+        if (event.ctrlKey && key === 'y')
+          return (event.preventDefault(), redo());
+        if (event.ctrlKey && key === 's')
+          return (event.preventDefault(), finish('save'));
+        if (event.ctrlKey && key === 'c')
+          return (event.preventDefault(), finish('copy'));
         if (key === 'escape') return window.desktop.annotate.cancel();
         const tools = {
           a: 'arrow',
@@ -253,7 +274,7 @@
       /** The thickness in the picture's pixels: the same on the screen whatever its scaling. */
       const thickness = () => state.width * devicePixelRatio;
 
-      canvas.addEventListener('mousedown', (event) => {
+      canvas.addEventListener('mousedown', event => {
         if (event.button !== 0) return;
         const at = point(event);
         if (state.tool === 'text') {
@@ -263,8 +284,15 @@
           return startText(event, at);
         }
         if (state.tool === 'number') {
-          const number = shapes.filter((shape) => shape.tool === 'number').length + 1;
-          return add({ tool: 'number', colour: state.colour, width: thickness(), at, number });
+          const number =
+            shapes.filter(shape => shape.tool === 'number').length + 1;
+          return add({
+            tool: 'number',
+            colour: state.colour,
+            width: thickness(),
+            at,
+            number,
+          });
         }
         drawing = {
           tool: state.tool,
@@ -275,18 +303,22 @@
           points: [at],
         };
       });
-      window.addEventListener('mousemove', (event) => {
+      window.addEventListener('mousemove', event => {
         if (!drawing) return;
         const at = point(event);
         drawing.to = at;
-        if (drawing.tool === 'pen' || drawing.tool === 'marker') drawing.points.push(at);
+        if (drawing.tool === 'pen' || drawing.tool === 'marker')
+          drawing.points.push(at);
         render(drawing);
       });
       window.addEventListener('mouseup', () => {
         if (!drawing) return;
         const shape = drawing;
         drawing = null;
-        const size = Math.hypot(shape.to.x - shape.from.x, shape.to.y - shape.from.y);
+        const size = Math.hypot(
+          shape.to.x - shape.from.x,
+          shape.to.y - shape.from.y,
+        );
         if (size > 3 || shape.points.length > 2) add(shape);
         else render();
       });
@@ -320,7 +352,7 @@
         textBox.dataset.y = at.y;
         textBox.focus();
       }
-      textBox.addEventListener('keydown', (event) => {
+      textBox.addEventListener('keydown', event => {
         if (event.key === 'Enter' && !event.shiftKey) {
           event.preventDefault();
           textBox.blur();
@@ -337,7 +369,7 @@
             tool: 'text',
             colour: state.colour,
             size: (8 + state.width * 3) * devicePixelRatio,
-            at: { x: Number(textBox.dataset.x), y: Number(textBox.dataset.y) },
+            at: {x: Number(textBox.dataset.x), y: Number(textBox.dataset.y)},
             text,
           });
         }
@@ -356,7 +388,7 @@
         ctx.strokeStyle = ctx.fillStyle = shape.colour;
         ctx.lineWidth = shape.width;
         ctx.lineCap = ctx.lineJoin = 'round';
-        const { from, to } = shape;
+        const {from, to} = shape;
         switch (shape.tool) {
           case 'arrow':
             arrow(from, to, shape.width);
@@ -401,10 +433,19 @@
             ctx.textBaseline = 'top';
             // A light outline keeps the words readable on any background.
             ctx.lineWidth = Math.max(2, shape.size / 8);
-            ctx.strokeStyle = shape.colour === '#ffffff' ? '#000000' : '#ffffff';
+            ctx.strokeStyle =
+              shape.colour === '#ffffff' ? '#000000' : '#ffffff';
             shape.text.split('\n').forEach((line, index) => {
-              ctx.strokeText(line, shape.at.x, shape.at.y + index * shape.size * 1.2);
-              ctx.fillText(line, shape.at.x, shape.at.y + index * shape.size * 1.2);
+              ctx.strokeText(
+                line,
+                shape.at.x,
+                shape.at.y + index * shape.size * 1.2,
+              );
+              ctx.fillText(
+                line,
+                shape.at.x,
+                shape.at.y + index * shape.size * 1.2,
+              );
             });
             break;
           case 'number': {
@@ -413,11 +454,17 @@
             ctx.arc(shape.at.x, shape.at.y, radius, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle =
-              shape.colour === '#ffffff' || shape.colour === '#fdd835' ? '#000000' : '#ffffff';
+              shape.colour === '#ffffff' || shape.colour === '#fdd835'
+                ? '#000000'
+                : '#ffffff';
             ctx.font = `700 ${radius * 1.2}px system-ui, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(String(shape.number), shape.at.x, shape.at.y + radius * 0.05);
+            ctx.fillText(
+              String(shape.number),
+              shape.at.x,
+              shape.at.y + radius * 0.05,
+            );
             break;
           }
           case 'blur':
@@ -432,7 +479,10 @@
         const head = Math.max(12, width * 4);
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);
-        ctx.lineTo(to.x - Math.cos(angle) * head * 0.6, to.y - Math.sin(angle) * head * 0.6);
+        ctx.lineTo(
+          to.x - Math.cos(angle) * head * 0.6,
+          to.y - Math.sin(angle) * head * 0.6,
+        );
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(to.x, to.y);
@@ -459,7 +509,9 @@
         const small = document.createElement('canvas');
         small.width = Math.max(1, Math.ceil(w / cell));
         small.height = Math.max(1, Math.ceil(h / cell));
-        small.getContext('2d').drawImage(base, x, y, w, h, 0, 0, small.width, small.height);
+        small
+          .getContext('2d')
+          .drawImage(base, x, y, w, h, 0, 0, small.width, small.height);
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(small, 0, 0, small.width, small.height, x, y, w, h);
       }
@@ -470,7 +522,9 @@
         if (busy || !base.naturalWidth) return;
         busy = true;
         render();
-        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        const blob = await new Promise(resolve =>
+          canvas.toBlob(resolve, 'image/png'),
+        );
         const data = new Uint8Array(await blob.arrayBuffer());
         await window.desktop.annotate.done(data, action);
         busy = false;

@@ -1,4 +1,4 @@
-import { pickMessages } from '@pd/api-core';
+import {pickMessages} from '@pd/api-core';
 
 /** Module texts for notifications and bot replies; the language is picked by `user.locale`. */
 const messages = {
@@ -12,7 +12,8 @@ const messages = {
     },
     done: '✓ Done.',
     snoozed: (when: string) => `⏰ I will remind you ${when}.`,
-    askWhen: 'When should I remind you? For example: "tomorrow 18:30", "05.10 9:00", "in 2 hours".',
+    askWhen:
+      'When should I remind you? For example: "tomorrow 18:30", "05.10 9:00", "in 2 hours".',
     notUnderstood:
       'I did not get the time. Press "Another time…" again and write, for example, "tomorrow 18:30".',
     gone: 'This reminder is no longer there.',
@@ -20,7 +21,8 @@ const messages = {
     todoAdded: (title: string) => `✓ Task added: ${title}`,
     remindUsage:
       'Write when and what: /remind tomorrow 9:00 call mum. Also: "in 2 hours", "05.10 18:30", "18:00".',
-    remindAdded: (when: string, text: string) => `⏰ I will remind you ${when}: ${text}`,
+    remindAdded: (when: string, text: string) =>
+      `⏰ I will remind you ${when}: ${text}`,
     tasksNone: 'Nothing for today. 🎉',
     tasksOverdue: 'Overdue',
     tasksToday: 'Today',
@@ -35,7 +37,8 @@ const messages = {
     },
     done: '✓ Готово.',
     snoozed: (when: string) => `⏰ Напомню ${when}.`,
-    askWhen: 'Когда напомнить? Например: «завтра 18:30», «05.10 9:00», «через 2 часа».',
+    askWhen:
+      'Когда напомнить? Например: «завтра 18:30», «05.10 9:00», «через 2 часа».',
     notUnderstood:
       'Не понял время. Нажми «Другое время…» ещё раз и напиши, например, «завтра 18:30».',
     gone: 'Этого напоминания уже нет.',

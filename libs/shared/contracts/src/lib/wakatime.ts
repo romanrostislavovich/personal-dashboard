@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 export const wakatimeKeyInputSchema = z.object({
   /** The secret API key from wakatime.com/settings/account (`waka_…`). */
@@ -57,5 +57,5 @@ export interface WakatimeStats {
   editors: WakatimeShare[];
   operatingSystems: WakatimeShare[];
   /** Everything saved so far; `since` is the first saved day. */
-  allTime: { seconds: number; since: LocalDate | null };
+  allTime: {seconds: number; since: LocalDate | null};
 }

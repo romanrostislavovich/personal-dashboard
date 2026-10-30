@@ -1,17 +1,17 @@
-import { httpResource } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { HABITS_READS, habitsApi } from '@pd/client-core';
-import { Habit, HabitDayInput, HabitInput, HabitKind } from '@pd/contracts';
-import { DASHBOARD_CLIENT, fromCore } from '@pd/web-core';
+import {httpResource} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {HABITS_READS, habitsApi} from '@pd/client-core';
+import {Habit, HabitDayInput, HabitInput, HabitKind} from '@pd/contracts';
+import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /** The habit requests of the client core (`@pd/client-core`) for Angular. */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class HabitsApi {
   private readonly habits = habitsApi(inject(DASHBOARD_CLIENT).api);
 
   /** Reactive list; call it in a component field. */
   list() {
-    return httpResource<Habit[]>(() => HABITS_READS.list(), { defaultValue: [] });
+    return httpResource<Habit[]>(() => HABITS_READS.list(), {defaultValue: []});
   }
 
   create(input: HabitInput) {
@@ -43,7 +43,12 @@ export function localToday(): string {
 }
 
 /** The emoji of each kind, and of a habit of one's own to build. */
-export const HABIT_ICONS = { alcohol: '🍷', smoking: '🚬', gym: '🏋️', custom: '✨' } as const;
+export const HABIT_ICONS = {
+  alcohol: '🍷',
+  smoking: '🚬',
+  gym: '🏋️',
+  custom: '✨',
+} as const;
 export const BUILD_ICON = '💪';
 
 /** The emoji of a habit: a kind's own, or the one of building for a habit of one's own. */

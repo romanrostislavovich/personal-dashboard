@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import {Injectable, OnModuleInit} from '@nestjs/common';
 import {
   AiService,
   changedFields,
@@ -15,33 +15,38 @@ import {
   zonedDateTime,
   zonedToUtc,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { RemindersService } from './reminders.service';
-import { TasksService } from './tasks.service';
-import { reminders, tasks } from './tasks.schema';
+import {z} from 'zod';
+import {RemindersService} from './reminders.service';
+import {TasksService} from './tasks.service';
+import {reminders, tasks} from './tasks.schema';
 
 const REPEAT = {
   type: 'object',
-  description: 'How often it comes back: { every: 2, unit: "week" }; null — it does not repeat',
+  description:
+    'How often it comes back: { every: 2, unit: "week" }; null — it does not repeat',
   properties: {
-    every: { type: 'number' },
-    unit: { type: 'string', enum: ['day', 'week', 'month', 'year'] },
+    every: {type: 'number'},
+    unit: {type: 'string', enum: ['day', 'week', 'month', 'year']},
   },
 } as const;
 
 /** Fields of a task, shared by adding and editing. */
 const TASK_FIELDS = {
-  title: { type: 'string' },
-  notes: { type: 'string', description: 'Details; an empty string clears' },
-  dueDate: { type: 'string', description: 'YYYY-MM-DD; null — no due date' },
-  priority: { type: 'number', description: '0 none, 1 low, 2 medium, 3 high' },
+  title: {type: 'string'},
+  notes: {type: 'string', description: 'Details; an empty string clears'},
+  dueDate: {type: 'string', description: 'YYYY-MM-DD; null — no due date'},
+  priority: {type: 'number', description: '0 none, 1 low, 2 medium, 3 high'},
   horizon: {
     type: 'string',
     enum: ['short', 'normal', 'long'],
-    description: 'short — quick, done the same day; long — goes on for weeks; normal by default',
+    description:
+      'short — quick, done the same day; long — goes on for weeks; normal by default',
   },
-  listId: { type: 'string', description: 'A list from tasks_list; null — the inbox' },
-  tags: { type: 'array', items: { type: 'string' }, description: 'Tags without #' },
+  listId: {
+    type: 'string',
+    description: 'A list from tasks_list; null — the inbox',
+  },
+  tags: {type: 'array', items: {type: 'string'}, description: 'Tags without #'},
   repeat: REPEAT,
 } as const;
 
@@ -80,7 +85,7 @@ export class TasksAiTools implements OnModuleInit {
         'due date, priority 0–3, horizon short/normal/long, tags, checklist, repeat, when done, the time of its reminder), ' +
         'and the lists they are sorted into (`listId` null — the inbox). Overdue = due before today.',
       parameters: NO_PARAMETERS,
-      handler: async (userId) => ({
+      handler: async userId => ({
         lists: await this.tasks.lists(userId),
         tasks: await this.tasks.list(userId),
       }),
@@ -97,21 +102,31 @@ export class TasksAiTools implements OnModuleInit {
         'larger as the estimate. Also done or not, due date; the longest first. Useful for ' +
         '"how long did the task X take". A task with no time of either kind is not listed.',
       parameters: NO_PARAMETERS,
-      handler: async (userId) =>
+      handler: async userId =>
         (await this.tasks.list(userId))
-          .filter((task) => task.focusSeconds > 0 || task.windowSeconds > 0)
+          .filter(task => task.focusSeconds > 0 || task.windowSeconds > 0)
           .sort(
             (a, b) =>
-              Math.max(b.focusSeconds, b.windowSeconds) - Math.max(a.focusSeconds, a.windowSeconds),
+              Math.max(b.focusSeconds, b.windowSeconds) -
+              Math.max(a.focusSeconds, a.windowSeconds),
           )
-          .map(({ id, title, focusSeconds, windowSeconds, completedAt, dueDate }) => ({
-            id,
-            title,
-            focusSeconds,
-            windowSeconds,
-            done: completedAt !== null,
-            dueDate,
-          })),
+          .map(
+            ({
+              id,
+              title,
+              focusSeconds,
+              windowSeconds,
+              completedAt,
+              dueDate,
+            }) => ({
+              id,
+              title,
+              focusSeconds,
+              windowSeconds,
+              done: completedAt !== null,
+              dueDate,
+            }),
+          ),
     });
 
     this.ai.registerTool({
@@ -122,8 +137,13 @@ export class TasksAiTools implements OnModuleInit {
       description:
         'Adds a task to the TODO list. A repeating task needs a due date. To be told about it ' +
         'at a time, add a reminder with its id (reminders_add).',
-      parameters: { type: 'object', properties: TASK_FIELDS, required: ['title'] },
-      handler: async (userId, args) => this.tasks.create(userId, taskInputSchema.parse(args)),
+      parameters: {
+        type: 'object',
+        properties: TASK_FIELDS,
+        required: ['title'],
+      },
+      handler: async (userId, args) =>
+        this.tasks.create(userId, taskInputSchema.parse(args)),
     });
 
     const find = async (userId: string, args: Record<string, unknown>) =>
@@ -140,24 +160,28 @@ export class TasksAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Task id from tasks_list' },
+          id: {type: 'string', description: 'Task id from tasks_list'},
           ...TASK_FIELDS,
-          done: { type: 'boolean' },
+          done: {type: 'boolean'},
         },
         required: ['id'],
       },
       handler: async (userId, args) => {
         const task = await find(userId, args);
-        const { done, ...fields } = changedFields(args);
+        const {done, ...fields} = changedFields(args);
         if (Object.keys(fields).length > 0) {
-          await this.tasks.update(userId, task.id, taskUpdateSchema.parse(fields));
+          await this.tasks.update(
+            userId,
+            task.id,
+            taskUpdateSchema.parse(fields),
+          );
         }
         if (done === true) {
           await this.tasks.complete(userId, task.id);
         } else if (done === false) {
           await this.tasks.reopen(userId, task.id);
         }
-        return { updated: task.title };
+        return {updated: task.title};
       },
     });
 
@@ -167,10 +191,11 @@ export class TasksAiTools implements OnModuleInit {
       writes: true,
       undoTables: [tasks],
       confirm: async (userId, args) => {
-        const { title, dueDate } = await find(userId, args);
-        return { title, dueDate };
+        const {title, dueDate} = await find(userId, args);
+        return {title, dueDate};
       },
-      description: 'Deletes a task (with its reminders). To finish a task, mark it done instead.',
+      description:
+        'Deletes a task (with its reminders). To finish a task, mark it done instead.',
       parameters: idParameters('Task id from tasks_list'),
       handler: async (userId, args) => {
         await this.tasks.remove(userId, (await find(userId, args)).id);
@@ -187,20 +212,22 @@ export class TasksAiTools implements OnModuleInit {
         "answered lately (`done`). Times are in the user's local time (`at`), with `now` to " +
         'count from.',
       parameters: NO_PARAMETERS,
-      handler: async (userId) => {
+      handler: async userId => {
         const timeZone = await this.timeZone(userId);
         const local = (at: string | Date) => {
-          const { date, time } = zonedDateTime(new Date(at), timeZone);
+          const {date, time} = zonedDateTime(new Date(at), timeZone);
           return `${date} ${time}`;
         };
         return {
           now: local(new Date()),
           timeZone,
-          reminders: (await this.reminders.list(userId)).map(({ remindAt, firedAt, ...rest }) => ({
-            ...rest,
-            at: local(remindAt),
-            firedAt: firedAt && local(firedAt),
-          })),
+          reminders: (await this.reminders.list(userId)).map(
+            ({remindAt, firedAt, ...rest}) => ({
+              ...rest,
+              at: local(remindAt),
+              firedAt: firedAt && local(firedAt),
+            }),
+          ),
         };
       },
     });
@@ -217,19 +244,28 @@ export class TasksAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          text: { type: 'string', description: 'What to remind about' },
-          at: { type: 'string', description: 'YYYY-MM-DD HH:mm, local time of the user' },
+          text: {type: 'string', description: 'What to remind about'},
+          at: {
+            type: 'string',
+            description: 'YYYY-MM-DD HH:mm, local time of the user',
+          },
           repeat: REPEAT,
-          taskId: { type: 'string', description: 'Task id from tasks_list, if it is about a task' },
+          taskId: {
+            type: 'string',
+            description: 'Task id from tasks_list, if it is about a task',
+          },
         },
         required: ['text', 'at'],
       },
       handler: async (userId, args) => {
-        const { at, ...rest } = reminderArgs.parse(args);
+        const {at, ...rest} = reminderArgs.parse(args);
         const remindAt = await this.toMoment(userId, at);
-        const input = reminderInputSchema.parse({ ...rest, remindAt: remindAt.toISOString() });
+        const input = reminderInputSchema.parse({
+          ...rest,
+          remindAt: remindAt.toISOString(),
+        });
         const reminder = await this.reminders.create(userId, input);
-        return { id: reminder.id, text: reminder.text, at };
+        return {id: reminder.id, text: reminder.text, at};
       },
     });
 
@@ -247,27 +283,36 @@ export class TasksAiTools implements OnModuleInit {
       parameters: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Reminder id from reminders_list' },
-          text: { type: 'string' },
-          at: { type: 'string', description: 'YYYY-MM-DD HH:mm, local time of the user' },
-          done: { type: 'boolean' },
+          id: {type: 'string', description: 'Reminder id from reminders_list'},
+          text: {type: 'string'},
+          at: {
+            type: 'string',
+            description: 'YYYY-MM-DD HH:mm, local time of the user',
+          },
+          done: {type: 'boolean'},
         },
         required: ['id'],
       },
       handler: async (userId, args) => {
         const reminder = await find(userId, args);
-        const text = typeof args['text'] === 'string' ? args['text'] : undefined;
-        const at = typeof args['at'] === 'string' ? localTime.parse(args['at']) : undefined;
+        const text =
+          typeof args['text'] === 'string' ? args['text'] : undefined;
+        const at =
+          typeof args['at'] === 'string'
+            ? localTime.parse(args['at'])
+            : undefined;
         if (text || at) {
           await this.reminders.update(userId, reminder.id, {
-            ...(text ? { text } : {}),
-            ...(at ? { remindAt: (await this.toMoment(userId, at)).toISOString() } : {}),
+            ...(text ? {text} : {}),
+            ...(at
+              ? {remindAt: (await this.toMoment(userId, at)).toISOString()}
+              : {}),
           });
         }
         if (args['done'] === true) {
           await this.reminders.done(userId, reminder.id);
         }
-        return { updated: text ?? reminder.text };
+        return {updated: text ?? reminder.text};
       },
     });
 
@@ -277,8 +322,8 @@ export class TasksAiTools implements OnModuleInit {
       writes: true,
       undoTables: [reminders],
       confirm: async (userId, args) => {
-        const { text } = await find(userId, args);
-        return { text };
+        const {text} = await find(userId, args);
+        return {text};
       },
       description: 'Deletes a reminder (a repeating one — the whole series).',
       parameters: idParameters('Reminder id from reminders_list'),
@@ -295,6 +340,6 @@ export class TasksAiTools implements OnModuleInit {
   /** `2026-10-03 09:00` on the user's clock → the moment. */
   private async toMoment(userId: string, local: string): Promise<Date> {
     const [date, time] = local.split(/[ T]/);
-    return zonedToUtc({ date, time }, await this.timeZone(userId));
+    return zonedToUtc({date, time}, await this.timeZone(userId));
   }
 }

@@ -1,9 +1,9 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { DesktopTelemetryDiagnostics } from '@pd/contracts';
+import {DatePipe} from '@angular/common';
+import {ChangeDetectionStrategy, Component, input} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {DesktopTelemetryDiagnostics} from '@pd/contracts';
 
 /**
  * Why the digital telemetry of this computer is on or off, and what to do about it — read from
@@ -17,35 +17,71 @@ import { DesktopTelemetryDiagnostics } from '@pd/contracts';
   template: `
     @if (diagnostics(); as d) {
       <section aria-labelledby="telemetry-diagnostics-title">
-        <h4 id="telemetry-diagnostics-title">{{ 'activity.diagnostics.title' | transloco }}</h4>
-        <p>{{ 'activity.diagnostics.collection.' + d.collection | transloco }}</p>
+        <h4 id="telemetry-diagnostics-title">
+          {{ 'activity.diagnostics.title' | transloco }}
+        </h4>
+        <p>
+          {{ 'activity.diagnostics.collection.' + d.collection | transloco }}
+        </p>
         @if (!d.telemetryConsent && d.smartBreakConsent) {
           <p>{{ 'activity.diagnostics.breaksNeedTelemetry' | transloco }}</p>
         }
         @if (d.collection === 'unregistered' || d.collection === 'stopped') {
-          <a matButton routerLink="/activity/settings">{{ 'activity.setup.open' | transloco }}</a>
+          <a matButton routerLink="/activity/settings">{{
+            'activity.setup.open' | transloco
+          }}</a>
         }
         <details>
           <summary>{{ 'activity.diagnostics.details' | transloco }}</summary>
           <dl>
             <dt>{{ 'activity.diagnostics.device' | transloco }}</dt>
-            <dd>{{ d.deviceId ?? ('activity.diagnostics.notRegistered' | transloco) }}</dd>
+            <dd>
+              {{
+                d.deviceId ?? ('activity.diagnostics.notRegistered' | transloco)
+              }}
+            </dd>
             <dt>{{ 'activity.diagnostics.version' | transloco }}</dt>
-            <dd>{{ d.version ?? ('activity.diagnostics.sourceBuild' | transloco) }}</dd>
+            <dd>
+              {{
+                d.version ?? ('activity.diagnostics.sourceBuild' | transloco)
+              }}
+            </dd>
             <dt>{{ 'activity.diagnostics.registration' | transloco }}</dt>
-            <dd>{{ 'activity.diagnostics.' + (d.registered ? 'yes' : 'no') | transloco }}</dd>
+            <dd>
+              {{
+                'activity.diagnostics.' + (d.registered ? 'yes' : 'no')
+                  | transloco
+              }}
+            </dd>
             <dt>{{ 'activity.diagnostics.server' | transloco }}</dt>
-            <dd>{{ 'activity.diagnostics.' + (d.serverConfigured ? 'yes' : 'no') | transloco }}</dd>
+            <dd>
+              {{
+                'activity.diagnostics.' + (d.serverConfigured ? 'yes' : 'no')
+                  | transloco
+              }}
+            </dd>
             <dt>{{ 'activity.digital.telemetry' | transloco }}</dt>
-            <dd>{{ 'activity.diagnostics.' + (d.telemetryConsent ? 'yes' : 'no') | transloco }}</dd>
+            <dd>
+              {{
+                'activity.diagnostics.' + (d.telemetryConsent ? 'yes' : 'no')
+                  | transloco
+              }}
+            </dd>
             <dt>{{ 'activity.digital.smartBreak' | transloco }}</dt>
             <dd>
-              {{ 'activity.diagnostics.' + (d.smartBreakConsent ? 'yes' : 'no') | transloco }}
+              {{
+                'activity.diagnostics.' + (d.smartBreakConsent ? 'yes' : 'no')
+                  | transloco
+              }}
             </dd>
             <dt>{{ 'activity.diagnostics.nativeSources' | transloco }}</dt>
-            <dd>{{ 'activity.diagnostics.sources.' + d.sources | transloco }}</dd>
+            <dd>
+              {{ 'activity.diagnostics.sources.' + d.sources | transloco }}
+            </dd>
             <dt>{{ 'activity.diagnostics.deliveryTitle' | transloco }}</dt>
-            <dd>{{ 'activity.diagnostics.delivery.' + d.delivery | transloco }}</dd>
+            <dd>
+              {{ 'activity.diagnostics.delivery.' + d.delivery | transloco }}
+            </dd>
             <dt>{{ 'activity.diagnostics.pending' | transloco }}</dt>
             <dd>{{ d.pendingBuckets }}</dd>
             <dt>{{ 'activity.diagnostics.lastAttempt' | transloco }}</dt>
@@ -63,7 +99,12 @@ import { DesktopTelemetryDiagnostics } from '@pd/contracts';
               }}
             </dd>
             <dt>{{ 'activity.diagnostics.httpStatus' | transloco }}</dt>
-            <dd>{{ d.lastHttpStatus ?? ('activity.diagnostics.noResponse' | transloco) }}</dd>
+            <dd>
+              {{
+                d.lastHttpStatus ??
+                  ('activity.diagnostics.noResponse' | transloco)
+              }}
+            </dd>
           </dl>
           <p>{{ 'activity.diagnostics.sessionOnly' | transloco }}</p>
           <h4>{{ 'activity.diagnostics.capabilities' | transloco }}</h4>

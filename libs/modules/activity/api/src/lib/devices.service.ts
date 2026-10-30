@@ -6,15 +6,22 @@ import {
   OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
-import { DB, Database, DeviceAuthService } from '@pd/api-core';
-import { ActivityDevice, ActivityDeviceCreated, ActivityDeviceInput } from '@pd/contracts';
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
-import { createHash, randomBytes } from 'node:crypto';
-import { activityPhoneNotifications } from './phone-notifications.schema';
-import { activityPhoneDaily, activityPhoneSignals } from './phone/phone-signals.schema';
-import { activityPhoneUnlocks } from './phone/phone-unlocks.schema';
-import { activityPhoneLocations } from './places/places.schema';
-import { activityWorkstates, telemetryDynamics } from './activity-context.schema';
+import {DB, Database, DeviceAuthService} from '@pd/api-core';
+import {
+  ActivityDevice,
+  ActivityDeviceCreated,
+  ActivityDeviceInput,
+} from '@pd/contracts';
+import {and, asc, eq, inArray, sql} from 'drizzle-orm';
+import {createHash, randomBytes} from 'node:crypto';
+import {activityPhoneNotifications} from './phone-notifications.schema';
+import {
+  activityPhoneDaily,
+  activityPhoneSignals,
+} from './phone/phone-signals.schema';
+import {activityPhoneUnlocks} from './phone/phone-unlocks.schema';
+import {activityPhoneLocations} from './places/places.schema';
+import {activityWorkstates, telemetryDynamics} from './activity-context.schema';
 import {
   activityDevices,
   ActivityDeviceRow,
@@ -27,7 +34,8 @@ import {
 /** A device says it is alive with every upload; the row is touched no more often than this. */
 const SEEN_EVERY_MS = 5 * 60 * 1000;
 
-const hashOf = (token: string) => createHash('sha256').update(token).digest('hex');
+const hashOf = (token: string) =>
+  createHash('sha256').update(token).digest('hex');
 
 /**
  * Trackers: the desktop shell on a computer, later an app on a phone. A device is registered by
@@ -43,9 +51,9 @@ export class DevicesService implements OnModuleInit {
 
   /** Other sections take a device's uploads too (Health: the band through the phone). */
   onModuleInit(): void {
-    this.deviceAuth.use(async (authorization) => {
+    this.deviceAuth.use(async authorization => {
       const device = await this.authenticate(authorization);
-      return { id: device.id, userId: device.userId };
+      return {id: device.id, userId: device.userId};
     });
   }
 
@@ -59,21 +67,24 @@ export class DevicesService implements OnModuleInit {
   }
 
   /** The token is returned once; only its hash is kept. */
-  async register(userId: string, input: ActivityDeviceInput): Promise<ActivityDeviceCreated> {
+  async register(
+    userId: string,
+    input: ActivityDeviceInput,
+  ): Promise<ActivityDeviceCreated> {
     const token = randomBytes(32).toString('hex');
     const [row] = await this.db
       .insert(activityDevices)
-      .values({ userId, ...input, tokenHash: hashOf(token) })
+      .values({userId, ...input, tokenHash: hashOf(token)})
       .returning();
-    return { ...toDevice(row), token };
+    return {...toDevice(row), token};
   }
 
   async rename(userId: string, id: string, name: string): Promise<void> {
     const [row] = await this.db
       .update(activityDevices)
-      .set({ name })
+      .set({name})
       .where(this.owned(userId, id))
-      .returning({ id: activityDevices.id });
+      .returning({id: activityDevices.id});
     if (!row) {
       throw new NotFoundException('Device not found');
     }
@@ -93,11 +104,16 @@ export class DevicesService implements OnModuleInit {
     if (id === into) {
       throw new BadRequestException('A device cannot be merged into itself');
     }
-    await this.db.transaction(async (tx) => {
+    await this.db.transaction(async tx => {
       const found = await tx
-        .select({ id: activityDevices.id })
+        .select({id: activityDevices.id})
         .from(activityDevices)
-        .where(and(eq(activityDevices.userId, userId), inArray(activityDevices.id, [id, into])));
+        .where(
+          and(
+            eq(activityDevices.userId, userId),
+            inArray(activityDevices.id, [id, into]),
+          ),
+        );
       if (found.length !== 2) {
         throw new NotFoundException('Device not found');
       }
@@ -147,7 +163,7 @@ export class DevicesService implements OnModuleInit {
       ]) {
         await tx
           .update(table)
-          .set({ deviceId: into })
+          .set({deviceId: into})
           .where(and(eq(table.userId, userId), eq(table.deviceId, id)));
       }
       await tx.delete(activityDevices).where(this.owned(userId, id));
@@ -155,7 +171,9 @@ export class DevicesService implements OnModuleInit {
   }
 
   /** The device behind the `Authorization: Device <token>` header of a tracker's request. */
-  async authenticate(authorization: string | undefined): Promise<ActivityDeviceRow> {
+  async authenticate(
+    authorization: string | undefined,
+  ): Promise<ActivityDeviceRow> {
     const token = authorization?.match(/^Device\s+([a-f0-9]{64})$/i)?.[1];
     const [device] = token
       ? await this.db
@@ -170,7 +188,7 @@ export class DevicesService implements OnModuleInit {
     // instances) only now and then.
     await this.db
       .update(activityDevices)
-      .set({ lastSeenAt: new Date() })
+      .set({lastSeenAt: new Date()})
       .where(
         and(
           eq(activityDevices.id, device.id),

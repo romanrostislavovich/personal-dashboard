@@ -1,4 +1,9 @@
-import { addDays, parseLocalDate, toLocalDate, zonedDateTime } from '@pd/contracts';
+import {
+  addDays,
+  parseLocalDate,
+  toLocalDate,
+  zonedDateTime,
+} from '@pd/contracts';
 
 /**
  * The title of a question held through the quiet hours, when it goes out on another day: the day
@@ -10,7 +15,10 @@ export function heldTitle(
   createdAt: Date,
   now: Date,
   timeZone: string,
-  words: { yesterday: (date: string) => string; earlier: (date: string) => string },
+  words: {
+    yesterday: (date: string) => string;
+    earlier: (date: string) => string;
+  },
 ): string {
   const asked = zonedDateTime(createdAt, timeZone).date;
   const today = zonedDateTime(now, timeZone).date;

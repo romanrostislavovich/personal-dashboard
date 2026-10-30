@@ -8,13 +8,13 @@ import {
   OnApplicationBootstrap,
   OnModuleInit,
 } from '@nestjs/common';
-import { TrashItem } from '@pd/contracts';
-import { sql } from 'drizzle-orm';
-import { DB, Database } from '../database/database.module';
-import { isForeignKeyViolation } from '../database/pg-errors';
-import { SchedulerService } from '../scheduler/scheduler.service';
-import { readSyncTables } from '../sync/sync-catalog';
-import { installTrashTriggers } from './trash-triggers';
+import {TrashItem} from '@pd/contracts';
+import {sql} from 'drizzle-orm';
+import {DB, Database} from '../database/database.module';
+import {isForeignKeyViolation} from '../database/pg-errors';
+import {SchedulerService} from '../scheduler/scheduler.service';
+import {readSyncTables} from '../sync/sync-catalog';
+import {installTrashTriggers} from './trash-triggers';
 
 /** Deleted rows are kept this long. */
 const KEEP_DAYS = 30;
@@ -64,7 +64,7 @@ export class TrashService implements OnModuleInit, OnApplicationBootstrap {
 
   async list(userId: string): Promise<TrashItem[]> {
     // A photo's bytes and a diary's text are not needed to name an item.
-    const { rows } = await this.db.execute<{
+    const {rows} = await this.db.execute<{
       tx: string;
       table_name: string;
       count: number;
@@ -79,7 +79,7 @@ export class TrashService implements OnModuleInit, OnApplicationBootstrap {
       GROUP BY r.tx, r.table_name
     `);
     const order = await this.tableOrder();
-    const items = new Map<string, TrashItem & { rank: number }>();
+    const items = new Map<string, TrashItem & {rank: number}>();
     for (const row of rows) {
       const rank = order.get(row.table_name) ?? Number.MAX_SAFE_INTEGER;
       const item = items.get(row.tx) ?? {
@@ -92,7 +92,7 @@ export class TrashService implements OnModuleInit, OnApplicationBootstrap {
         rank: Number.MAX_SAFE_INTEGER,
       };
       item.rows += row.count;
-      item.parts.push({ table: row.table_name, count: row.count });
+      item.parts.push({table: row.table_name, count: row.count});
       // The item is named after its topmost row: the account, not one of its matches.
       if (rank < item.rank) {
         item.rank = rank;
@@ -102,9 +102,11 @@ export class TrashService implements OnModuleInit, OnApplicationBootstrap {
       items.set(row.tx, item);
     }
     return [...items.values()]
-      .map(({ rank: _rank, ...item }) => ({
+      .map(({rank: _rank, ...item}) => ({
         ...item,
-        parts: item.parts.sort((a, b) => (order.get(a.table) ?? 0) - (order.get(b.table) ?? 0)),
+        parts: item.parts.sort(
+          (a, b) => (order.get(a.table) ?? 0) - (order.get(b.table) ?? 0),
+        ),
       }))
       .sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
   }
@@ -114,14 +116,15 @@ export class TrashService implements OnModuleInit, OnApplicationBootstrap {
     await this.requireOwned(userId, id);
     const order = await this.tableOrder();
     try {
-      await this.db.transaction(async (tx) => {
-        const { rows } = await tx.execute<{ table_name: string; row: string }>(sql`
+      await this.db.transaction(async tx => {
+        const {rows} = await tx.execute<{table_name: string; row: string}>(sql`
           SELECT table_name, row::text AS row FROM trash.rows WHERE tx = ${id}::xid8 ORDER BY id
         `);
         const sorted = [...rows].sort(
-          (a, b) => (order.get(a.table_name) ?? 0) - (order.get(b.table_name) ?? 0),
+          (a, b) =>
+            (order.get(a.table_name) ?? 0) - (order.get(b.table_name) ?? 0),
         );
-        for (const { table_name, row } of sorted) {
+        for (const {table_name, row} of sorted) {
           const name = sql.identifier(table_name);
           await tx.execute(sql`
             INSERT INTO ${name} SELECT * FROM jsonb_populate_record(NULL::${name}, ${row}::jsonb)
@@ -158,7 +161,7 @@ export class TrashService implements OnModuleInit, OnApplicationBootstrap {
     if (!/^\d+$/.test(id)) {
       throw new BadRequestException('Unknown item');
     }
-    const { rows } = await this.db.execute<{ found: boolean }>(sql`
+    const {rows} = await this.db.execute<{found: boolean}>(sql`
       SELECT EXISTS (SELECT 1 FROM trash.rows WHERE tx = ${id}::xid8 AND user_id = ${userId})
         AS found
     `);
@@ -169,7 +172,7 @@ export class TrashService implements OnModuleInit, OnApplicationBootstrap {
 
   private tableOrder(): Promise<Map<string, number>> {
     this.order ??= readSyncTables(this.db).then(
-      (tables) => new Map(tables.map((table, index) => [table.name, index])),
+      tables => new Map(tables.map((table, index) => [table.name, index])),
     );
     return this.order;
   }
@@ -177,9 +180,14 @@ export class TrashService implements OnModuleInit, OnApplicationBootstrap {
 
 /** "Anna", "Coffee · 12.5 EUR", "2026-09-27". */
 function labelOf(row: Record<string, unknown>): string | null {
-  const field = LABEL_FIELDS.find((name) => typeof row[name] === 'string' && row[name]);
+  const field = LABEL_FIELDS.find(
+    name => typeof row[name] === 'string' && row[name],
+  );
   const label = field ? String(row[field]) : null;
-  if (typeof row['amount'] === 'number' && typeof row['currency'] === 'string') {
+  if (
+    typeof row['amount'] === 'number' &&
+    typeof row['currency'] === 'string'
+  ) {
     const money = `${row['amount']} ${row['currency']}`;
     return label ? `${label} · ${money}` : money;
   }

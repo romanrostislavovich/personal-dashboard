@@ -1,4 +1,4 @@
-import { WebDashboardModule } from '@pd/web-core';
+import {WebDashboardModule} from '@pd/web-core';
 
 /**
  * Web part of Screenshots: the pieces of the screen the desktop app took, and the sync of its
@@ -7,16 +7,24 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const screenshotsModule: WebDashboardModule = {
   id: 'screenshots',
-  nav: { labelKey: 'screenshots.title', icon: 'screenshot_region', group: 'things' },
+  nav: {
+    labelKey: 'screenshots.title',
+    icon: 'screenshot_region',
+    group: 'things',
+  },
   loadRoutes: async () => [
-    { path: '', loadComponent: () => import('./screenshots.page').then((m) => m.ScreenshotsPage) },
+    {
+      path: '',
+      loadComponent: () =>
+        import('./screenshots.page').then(m => m.ScreenshotsPage),
+    },
   ],
   translations: {
     en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
   loadStart: async () => {
-    const { ScreenshotSyncService } = await import('./screenshot-sync.service');
-    return (injector) => injector.get(ScreenshotSyncService).start();
+    const {ScreenshotSyncService} = await import('./screenshot-sync.service');
+    return injector => injector.get(ScreenshotSyncService).start();
   },
 };

@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {Injectable, UnauthorizedException} from '@nestjs/common';
 
 /** The device behind a request's `Authorization: Device <token>`. */
 export interface DeviceIdentity {

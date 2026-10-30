@@ -1,4 +1,9 @@
-import { labelled, parseAmount, parseDate, parsePkoStatement } from './pko-statement';
+import {
+  labelled,
+  parseAmount,
+  parseDate,
+  parsePkoStatement,
+} from './pko-statement';
 
 /** The CSV as iPKO gives it: Windows-1250, the details in unnamed columns that move. */
 const CSV = [
@@ -57,12 +62,12 @@ function cp1250(text: string): Buffer {
     Ź: 0x8f,
     Ż: 0xaf,
   };
-  return Buffer.from([...text].map((char) => map[char] ?? char.charCodeAt(0)));
+  return Buffer.from([...text].map(char => map[char] ?? char.charCodeAt(0)));
 }
 
 describe('parsePkoStatement', () => {
   it('reads the CSV of iPKO in Windows-1250', () => {
-    const { operations } = parsePkoStatement(cp1250(CSV));
+    const {operations} = parsePkoStatement(cp1250(CSV));
     expect(operations).toHaveLength(4);
     expect(operations[0]).toMatchObject({
       kind: 'expense',
@@ -85,17 +90,19 @@ describe('parsePkoStatement', () => {
     const first = parsePkoStatement(cp1250(CSV)).operations;
     const again = parsePkoStatement(Buffer.from(CSV, 'utf8')).operations;
     expect(first[0].entryId).not.toBe(first[1].entryId);
-    expect(again.map((op) => op.entryId)).toEqual(first.map((op) => op.entryId));
+    expect(again.map(op => op.entryId)).toEqual(first.map(op => op.entryId));
   });
 
   it('marks a transfer to one’s own account by its type', () => {
     const own = parsePkoStatement(cp1250(CSV)).operations[3];
     expect(own.counterpartyIban).toBe('OWN');
-    expect(parsePkoStatement(cp1250(CSV)).operations[0].counterpartyIban).toBeNull();
+    expect(
+      parsePkoStatement(cp1250(CSV)).operations[0].counterpartyIban,
+    ).toBeNull();
   });
 
   it('reads the XML of iPKO with the account it is of', () => {
-    const { account, operations } = parsePkoStatement(Buffer.from(XML, 'utf8'));
+    const {account, operations} = parsePkoStatement(Buffer.from(XML, 'utf8'));
     expect(account).toBe('PL12102012340000000000000000');
     expect(operations).toEqual([
       expect.objectContaining({
@@ -114,7 +121,9 @@ describe('parsePkoStatement', () => {
   });
 
   it('refuses a file that is not a history of iPKO', () => {
-    expect(() => parsePkoStatement(Buffer.from('a,b,c\n1,2,3'))).toThrow(/iPKO/);
+    expect(() => parsePkoStatement(Buffer.from('a,b,c\n1,2,3'))).toThrow(
+      /iPKO/,
+    );
   });
 });
 
@@ -129,7 +138,9 @@ describe('the pieces of an iPKO line', () => {
   });
 
   it('splits the details by their labels', () => {
-    const details = labelled('Lokalizacja: Adres: SHOP Miasto: X Kraj: PL Adres odbiorcy: Y');
+    const details = labelled(
+      'Lokalizacja: Adres: SHOP Miasto: X Kraj: PL Adres odbiorcy: Y',
+    );
     expect(details.get('adres')).toBe('SHOP');
     expect(details.get('adres odbiorcy')).toBe('Y');
     expect(details.has('lokalizacja')).toBe(false);

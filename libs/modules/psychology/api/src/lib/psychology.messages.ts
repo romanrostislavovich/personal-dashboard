@@ -1,5 +1,5 @@
-import { pickMessages } from '@pd/api-core';
-import { EventFeeling } from '@pd/contracts';
+import {pickMessages} from '@pd/api-core';
+import {EventFeeling} from '@pd/contracts';
 
 /** Server texts of the section: the export of events and the brief for an appointment. */
 const messages = {
@@ -10,8 +10,15 @@ const messages = {
     eventsHeaders: ['From', 'To', 'Event', 'How it felt', 'Description'],
     ongoing: '',
     /** Stands in the "From" column of an event told by age. */
-    age: (from: number, to: number | null) => (to == null ? `Age ${from}` : `Age ${from}–${to}`),
-    feelings: { '-2': 'Very hard', '-1': 'Hard', '0': 'Neutral', '1': 'Good', '2': 'Very good' },
+    age: (from: number, to: number | null) =>
+      to === null || to === undefined ? `Age ${from}` : `Age ${from}–${to}`,
+    feelings: {
+      '-2': 'Very hard',
+      '-1': 'Hard',
+      '0': 'Neutral',
+      '1': 'Good',
+      '2': 'Very good',
+    },
     reminderTitle: (test: string) => `🪞 Time for ${test}`,
     reminderBody: (since: number | null, link: string) =>
       `${since === null ? 'A couple of minutes to see how you are.' : `${since} days since the last one.`}
@@ -22,9 +29,12 @@ ${link}`,
       changes: 'What changed',
       checkups: 'Questionnaires',
       trend: (test: string, first: number, last: number, times: number) =>
-        times > 1 ? `${test}: ${first} → ${last} (${times} times)` : `${test}: ${last}`,
+        times > 1
+          ? `${test}: ${first} → ${last} (${times} times)`
+          : `${test}: ${last}`,
       checkupHeaders: ['Date', 'Questionnaire', 'Score', 'Band'],
-      care: (answer: number) => `Item 9 (thoughts of self-harm): ${answer} of 3`,
+      care: (answer: number) =>
+        `Item 9 (thoughts of self-harm): ${answer} of 3`,
       events: 'Events of the period',
       eventHeaders: ['When', 'Event', 'How it felt', 'Details'],
       questions: 'Questions',
@@ -54,7 +64,9 @@ ${link}`,
     eventsHeaders: ['С', 'По', 'Событие', 'Как ощущалось', 'Описание'],
     ongoing: '',
     age: (from: number, to: number | null) =>
-      to == null ? `Возраст: ${from}` : `Возраст: ${from}–${to}`,
+      to === null || to === undefined
+        ? `Возраст: ${from}`
+        : `Возраст: ${from}–${to}`,
     feelings: {
       '-2': 'Очень тяжело',
       '-1': 'Тяжело',
@@ -72,9 +84,12 @@ ${link}`,
       changes: 'Что изменилось',
       checkups: 'Опросники',
       trend: (test: string, first: number, last: number, times: number) =>
-        times > 1 ? `${test}: ${first} → ${last} (${times} раз)` : `${test}: ${last}`,
+        times > 1
+          ? `${test}: ${first} → ${last} (${times} раз)`
+          : `${test}: ${last}`,
       checkupHeaders: ['Дата', 'Опросник', 'Баллы', 'Уровень'],
-      care: (answer: number) => `Пункт 9 (мысли о самоповреждении): ${answer} из 3`,
+      care: (answer: number) =>
+        `Пункт 9 (мысли о самоповреждении): ${answer} из 3`,
       events: 'События периода',
       eventHeaders: ['Когда', 'Событие', 'Как ощущалось', 'Подробности'],
       questions: 'Вопросы',
@@ -103,6 +118,11 @@ export function psychologyMessages(locale: string | undefined) {
   return pickMessages(messages, locale ?? 'en');
 }
 
-export function feelingText(locale: string | undefined, feeling: EventFeeling): string {
-  return psychologyMessages(locale).feelings[String(feeling) as '-2' | '-1' | '0' | '1' | '2'];
+export function feelingText(
+  locale: string | undefined,
+  feeling: EventFeeling,
+): string {
+  return psychologyMessages(locale).feelings[
+    String(feeling) as '-2' | '-1' | '0' | '1' | '2'
+  ];
 }

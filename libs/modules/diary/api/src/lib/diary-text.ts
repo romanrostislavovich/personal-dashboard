@@ -1,4 +1,4 @@
-import { diaryPlainText } from '@pd/contracts';
+import {diaryPlainText} from '@pd/contracts';
 
 /**
  * Tags are hashtags in the text: `#work`, `#side_project`. Markdown headings (`# Heading`)
@@ -6,14 +6,18 @@ import { diaryPlainText } from '@pd/contracts';
  */
 export function extractTags(content: string): string[] {
   const matches = content.matchAll(/(?<![\p{L}\p{N}_&])#([\p{L}\p{N}_-]+)/gu);
-  return [...new Set([...matches].map((match) => match[1].toLowerCase()))];
+  return [...new Set([...matches].map(match => match[1].toLowerCase()))];
 }
 
 /**
  * Appends a note (for example, from Telegram) to the end of the entry, with a timestamp
  * when it is written today (`time = null` for notes added to past days).
  */
-export function appendNote(content: string, note: string, time: string | null): string {
+export function appendNote(
+  content: string,
+  note: string,
+  time: string | null,
+): string {
   const line = time ? `**${time}** ${note.trim()}` : note.trim();
   return content.trim() ? `${content.trimEnd()}\n\n${line}` : line;
 }
@@ -24,19 +28,27 @@ export function appendNote(content: string, note: string, time: string | null): 
  * mood stays too. `null` — no conflict, the new text replaces the stored one as usual.
  */
 export function mergeOverChanged(
-  stored: { content: string; mood: number | null; updatedAt: Date } | null,
-  input: { content: string; mood: number | null; basedOn?: string | null },
-): { content: string; mood: number | null } | null {
-  if (!stored || input.basedOn === undefined || stored.content === input.content) {
+  stored: {content: string; mood: number | null; updatedAt: Date} | null,
+  input: {content: string; mood: number | null; basedOn?: string | null},
+): {content: string; mood: number | null} | null {
+  if (
+    !stored ||
+    input.basedOn === undefined ||
+    stored.content === input.content
+  ) {
     return null;
   }
-  const changed = input.basedOn === null || stored.updatedAt.getTime() > Date.parse(input.basedOn);
+  const changed =
+    input.basedOn === null ||
+    stored.updatedAt.getTime() > Date.parse(input.basedOn);
   if (!changed) {
     return null;
   }
   const added = input.content.trim();
   return {
-    content: added ? `${stored.content.trimEnd()}\n\n---\n\n${added}` : stored.content,
+    content: added
+      ? `${stored.content.trimEnd()}\n\n---\n\n${added}`
+      : stored.content,
     mood: stored.mood ?? input.mood,
   };
 }
@@ -53,11 +65,17 @@ export function hasText(content: string, query: string): boolean {
 }
 
 export function shorten(text: string, maxLength: number): string {
-  return text.length > maxLength ? `${text.slice(0, maxLength).trimEnd()}…` : text;
+  return text.length > maxLength
+    ? `${text.slice(0, maxLength).trimEnd()}…`
+    : text;
 }
 
 /** Plain text around the first case-insensitive match of `query` (or the beginning). */
-export function searchSnippet(content: string, query: string, radius = 80): string {
+export function searchSnippet(
+  content: string,
+  query: string,
+  radius = 80,
+): string {
   const plain = diaryPlainText(content);
   const index = plain.toLowerCase().indexOf(query.toLowerCase());
   if (index === -1) {

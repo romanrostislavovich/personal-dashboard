@@ -1,15 +1,20 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { trashApi } from '@pd/client-core';
-import { TrashItem } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { errorStatus } from '../client/core-requests';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {trashApi} from '@pd/client-core';
+import {TrashItem} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {errorStatus} from '../client/core-requests';
 
 /**
  * The trash: what was deleted in the last 30 days — by hand or by the AI assistant — with a way
@@ -29,8 +34,12 @@ import { errorStatus } from '../client/core-requests';
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>🗑️ {{ 'core.settings.trash.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'core.settings.trash.subtitle' | transloco }}</mat-card-subtitle>
+        <mat-card-title
+          >🗑️ {{ 'core.settings.trash.title' | transloco }}</mat-card-title
+        >
+        <mat-card-subtitle>{{
+          'core.settings.trash.subtitle' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @for (item of items(); track item.id) {
@@ -116,8 +125,12 @@ export class TrashSettingsComponent {
 
   /** "12 rows: 1 account, 11 matches". */
   protected describe(item: TrashItem): string {
-    const parts = item.parts.map((part) => `${part.count} × ${this.tableName(part.table)}`);
-    return this.transloco.translate('core.settings.trash.rows', { parts: parts.join(', ') });
+    const parts = item.parts.map(
+      part => `${part.count} × ${this.tableName(part.table)}`,
+    );
+    return this.transloco.translate('core.settings.trash.rows', {
+      parts: parts.join(', '),
+    });
   }
 
   protected async restore(item: TrashItem): Promise<void> {
@@ -128,7 +141,9 @@ export class TrashSettingsComponent {
   }
 
   protected async remove(item: TrashItem): Promise<void> {
-    if (confirm(this.transloco.translate('core.settings.trash.confirmForever'))) {
+    if (
+      confirm(this.transloco.translate('core.settings.trash.confirmForever'))
+    ) {
       await this.run(() => this.trash.remove(item.id));
     }
   }
@@ -143,7 +158,9 @@ export class TrashSettingsComponent {
       await step();
     } catch (error) {
       this.notify(
-        errorStatus(error) === 409 ? 'core.settings.trash.parentFirst' : 'core.login.error',
+        errorStatus(error) === 409
+          ? 'core.settings.trash.parentFirst'
+          : 'core.login.error',
       );
     } finally {
       this.busy.set(false);
@@ -152,6 +169,6 @@ export class TrashSettingsComponent {
   }
 
   private notify(key: string): void {
-    this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 4000 });
+    this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 4000});
   }
 }

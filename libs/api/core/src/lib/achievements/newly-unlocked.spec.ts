@@ -1,7 +1,12 @@
-import { AchievementMetric } from './achievement-metric';
-import { achievementId, newlyUnlockedTiers } from './newly-unlocked';
+import {AchievementMetric} from './achievement-metric';
+import {achievementId, newlyUnlockedTiers} from './newly-unlocked';
 
-const tier = (goal: number) => ({ goal, icon: '🔥', title: { ru: '' }, description: { ru: '' } });
+const tier = (goal: number) => ({
+  goal,
+  icon: '🔥',
+  title: {ru: ''},
+  description: {ru: ''},
+});
 const metric: AchievementMetric = {
   id: 'diary.streak',
   module: 'diary',
@@ -11,12 +16,16 @@ const metric: AchievementMetric = {
 
 describe('newlyUnlockedTiers', () => {
   it('unlocks every reached tier at once', () => {
-    expect(newlyUnlockedTiers(metric, 10, new Set()).map((t) => t.goal)).toEqual([3, 7]);
+    expect(newlyUnlockedTiers(metric, 10, new Set()).map(t => t.goal)).toEqual([
+      3, 7,
+    ]);
   });
 
   it('skips tiers that are already unlocked', () => {
     const unlocked = new Set([achievementId(metric, tier(3))]);
-    expect(newlyUnlockedTiers(metric, 10, unlocked).map((t) => t.goal)).toEqual([7]);
+    expect(newlyUnlockedTiers(metric, 10, unlocked).map(t => t.goal)).toEqual([
+      7,
+    ]);
   });
 
   it('unlocks nothing below the first goal', () => {

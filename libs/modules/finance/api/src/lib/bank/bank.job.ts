@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { SchedulerService } from '@pd/api-core';
-import { BankService } from './bank.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {SchedulerService} from '@pd/api-core';
+import {BankService} from './bank.service';
 
 /**
  * The banks' operations every six hours (PSD2 lets an application ask a bank about four times

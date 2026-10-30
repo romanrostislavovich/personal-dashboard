@@ -1,10 +1,15 @@
-import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { Project, projectInputSchema } from '@pd/contracts';
-import { and, asc, eq } from 'drizzle-orm';
-import { z } from 'zod';
-import { DB, Database } from '../database/database.module';
-import { isForeignKeyViolation } from '../database/pg-errors';
-import { projects } from './projects.schema';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {Project, projectInputSchema} from '@pd/contracts';
+import {and, asc, eq} from 'drizzle-orm';
+import {z} from 'zod';
+import {DB, Database} from '../database/database.module';
+import {isForeignKeyViolation} from '../database/pg-errors';
+import {projects} from './projects.schema';
 
 type ProjectInput = z.output<typeof projectInputSchema>;
 
@@ -47,12 +52,16 @@ export class ProjectsService {
   async create(userId: string, input: ProjectInput): Promise<Project> {
     const [row] = await this.db
       .insert(projects)
-      .values({ userId, ...input })
+      .values({userId, ...input})
       .returning();
     return toProject(row);
   }
 
-  async update(userId: string, id: string, input: ProjectInput): Promise<Project> {
+  async update(
+    userId: string,
+    id: string,
+    input: ProjectInput,
+  ): Promise<Project> {
     const [row] = await this.db
       .update(projects)
       .set(input)
@@ -66,7 +75,9 @@ export class ProjectsService {
 
   async remove(userId: string, id: string): Promise<void> {
     try {
-      await this.db.delete(projects).where(and(eq(projects.id, id), eq(projects.userId, userId)));
+      await this.db
+        .delete(projects)
+        .where(and(eq(projects.id, id), eq(projects.userId, userId)));
     } catch (error) {
       // Modules protect their data with foreign keys (for example, a project's financial transactions).
       if (isForeignKeyViolation(error)) {

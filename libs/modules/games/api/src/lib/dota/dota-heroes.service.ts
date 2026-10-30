@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { DotaHero } from '@pd/contracts';
-import { HeroInfo, openDota } from './opendota.client';
+import {Injectable, Logger} from '@nestjs/common';
+import {DotaHero} from '@pd/contracts';
+import {HeroInfo, openDota} from './opendota.client';
 
 const HEROES_CACHE_MS = 24 * 60 * 60 * 1000;
 /** After a failed load: how soon the list is asked for again. */
@@ -16,7 +16,7 @@ const RETRY_MS = 5 * 60 * 1000;
 @Injectable()
 export class DotaHeroesService {
   private readonly logger = new Logger(DotaHeroesService.name);
-  private cache: { refreshAt: number; map: Map<number, HeroInfo> } | null = null;
+  private cache: {refreshAt: number; map: Map<number, HeroInfo>} | null = null;
 
   /** A lookup for one response: `hero(id)` → name and picture (a placeholder for a new hero). */
   async resolver(): Promise<(id: number) => DotaHero> {
@@ -24,7 +24,7 @@ export class DotaHeroesService {
       this.cache = await this.load(this.cache?.map ?? new Map());
     }
     const heroes = this.cache.map;
-    return (id) => ({
+    return id => ({
       id,
       name: heroes.get(id)?.name ?? `Hero #${id}`,
       imageUrl: heroes.get(id)?.imageUrl ?? '',
@@ -38,13 +38,16 @@ export class DotaHeroesService {
   }
 
   private async load(previous: Map<number, HeroInfo>) {
-    for (const source of [() => openDota.getHeroes(), () => openDota.getHeroesFromMirror()]) {
+    for (const source of [
+      () => openDota.getHeroes(),
+      () => openDota.getHeroesFromMirror(),
+    ]) {
       try {
-        return { refreshAt: Date.now() + HEROES_CACHE_MS, map: await source() };
+        return {refreshAt: Date.now() + HEROES_CACHE_MS, map: await source()};
       } catch (error) {
         this.logger.warn(`Dota hero list is unavailable: ${error}`);
       }
     }
-    return { refreshAt: Date.now() + RETRY_MS, map: previous };
+    return {refreshAt: Date.now() + RETRY_MS, map: previous};
   }
 }

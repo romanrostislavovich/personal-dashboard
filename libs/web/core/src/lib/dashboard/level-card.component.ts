@@ -1,4 +1,4 @@
-import { httpResource } from '@angular/common/http';
+import {httpResource} from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,11 +7,11 @@ import {
   inject,
   untracked,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { CORE_READS } from '@pd/client-core';
-import { Achievement, levelFromXp } from '@pd/contracts';
-import { RealtimeClient } from '../realtime/realtime.client';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {CORE_READS} from '@pd/client-core';
+import {Achievement, levelFromXp} from '@pd/contracts';
+import {RealtimeClient} from '../realtime/realtime.client';
 
 /**
  * Player level from unlocked achievements: every achievement gives XP by rarity.
@@ -28,13 +28,21 @@ import { RealtimeClient } from '../realtime/realtime.client';
         <span class="level-number">{{ p.level }}</span>
       </span>
       <span class="text">
-        <span class="title">{{ 'core.dashboard.level' | transloco: { level: p.level } }}</span>
+        <span class="title">{{
+          'core.dashboard.level' | transloco: {level: p.level}
+        }}</span>
         <span class="bar"><span [style.width.%]="percent()"></span></span>
         <span class="muted">
-          {{ 'core.dashboard.xp' | transloco: { current: p.xpInLevel, next: p.xpForNext } }}
+          {{
+            'core.dashboard.xp'
+              | transloco: {current: p.xpInLevel, next: p.xpForNext}
+          }}
         </span>
         <span class="muted">
-          {{ 'core.dashboard.unlocked' | transloco: { unlocked: unlocked(), total: total() } }}
+          {{
+            'core.dashboard.unlocked'
+              | transloco: {unlocked: unlocked(), total: total()}
+          }}
         </span>
       </span>
     </a>
@@ -58,7 +66,11 @@ import { RealtimeClient } from '../realtime/realtime.client';
       transition: border-color 160ms ease;
     }
     .level:hover {
-      border-color: color-mix(in srgb, var(--mat-sys-primary) 45%, var(--pd-border));
+      border-color: color-mix(
+        in srgb,
+        var(--mat-sys-primary) 45%,
+        var(--pd-border)
+      );
     }
     .ring {
       --pct: 0;
@@ -94,7 +106,11 @@ import { RealtimeClient } from '../realtime/realtime.client';
     .bar {
       height: 6px;
       border-radius: 3px;
-      background: color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+      background: color-mix(
+        in srgb,
+        var(--mat-sys-on-surface) 10%,
+        transparent
+      );
       overflow: hidden;
     }
     .bar span {
@@ -110,13 +126,16 @@ import { RealtimeClient } from '../realtime/realtime.client';
   `,
 })
 export class LevelCardComponent {
-  private readonly achievements = httpResource<Achievement[]>(() => CORE_READS.achievements(), {
-    defaultValue: [],
-  });
+  private readonly achievements = httpResource<Achievement[]>(
+    () => CORE_READS.achievements(),
+    {
+      defaultValue: [],
+    },
+  );
 
   protected readonly total = computed(() => this.achievements.value().length);
   private readonly unlockedList = computed(() =>
-    this.achievements.value().filter((a) => a.unlockedAt),
+    this.achievements.value().filter(a => a.unlockedAt),
   );
   protected readonly unlocked = computed(() => this.unlockedList().length);
   protected readonly progress = computed(() =>
@@ -133,7 +152,7 @@ export class LevelCardComponent {
   }
 
   protected readonly percent = computed(() => {
-    const { xpInLevel, xpForNext } = this.progress();
+    const {xpInLevel, xpForNext} = this.progress();
     return Math.round((xpInLevel / xpForNext) * 100);
   });
 }

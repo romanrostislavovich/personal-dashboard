@@ -1,4 +1,4 @@
-import { allowedInDemo } from './demo.guard';
+import {allowedInDemo} from './demo.guard';
 
 describe('allowedInDemo', () => {
   it('lets everything be read', () => {
@@ -38,7 +38,11 @@ describe('allowedInDemo', () => {
       // A path that only starts like an allowed one.
       ['POST', '/api/tasksx'],
     ]) {
-      expect([method, path, allowedInDemo(method, path)]).toEqual([method, path, false]);
+      expect([method, path, allowedInDemo(method, path)]).toEqual([
+        method,
+        path,
+        false,
+      ]);
     }
   });
 });

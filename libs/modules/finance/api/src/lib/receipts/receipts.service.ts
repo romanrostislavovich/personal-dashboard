@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
 import {
   AiService,
   compressImage,
@@ -8,15 +13,17 @@ import {
   UserRow,
   UsersService,
 } from '@pd/api-core';
-import { zonedDateTime } from '@pd/contracts';
-import { and, eq, sql } from 'drizzle-orm';
-import { FinanceSettingsService } from '../currency/finance-settings.service';
-import { financeMessages } from '../finance.messages';
-import { financeReceipts, transactions } from '../finance.schema';
-import { TransactionsService } from '../transactions/transactions.service';
-import { parseReceipt } from './receipt-parse';
+import {zonedDateTime} from '@pd/contracts';
+import {and, eq, sql} from 'drizzle-orm';
+import {FinanceSettingsService} from '../currency/finance-settings.service';
+import {financeMessages} from '../finance.messages';
+import {financeReceipts, transactions} from '../finance.schema';
+import {TransactionsService} from '../transactions/transactions.service';
+import {parseReceipt} from './receipt-parse';
 
-const INSTRUCTION = (categories: string[]) => `You read a photo of a shop receipt (or a bill).
+const INSTRUCTION = (
+  categories: string[],
+) => `You read a photo of a shop receipt (or a bill).
 Answer with JSON only, no other text:
 {"isReceipt": true or false, "shop": "the shop's name", "total": the final amount paid as a number,
  "currency": "ISO 4217 code (zł → PLN, ₽ → RUB, € → EUR, $ → USD; guess it from the country)",
@@ -45,8 +52,9 @@ export class ReceiptsService implements OnModuleInit {
 
   onModuleInit(): void {
     this.telegram.registerPhotoHandler(
-      async (user, photo) => this.fromPhoto(user, await photo.download(), photo.mimeType),
-      { id: 'receipt', label: { en: '🧾 A receipt', ru: '🧾 Это чек' } },
+      async (user, photo) =>
+        this.fromPhoto(user, await photo.download(), photo.mimeType),
+      {id: 'receipt', label: {en: '🧾 A receipt', ru: '🧾 Это чек'}},
     );
     // "Delete" under the reply: the transaction goes, and the receipt with it.
     this.telegram.registerAction({
@@ -59,13 +67,17 @@ export class ReceiptsService implements OnModuleInit {
   }
 
   /** Reads a receipt and records it; the reply tells what was recorded. */
-  async fromPhoto(user: UserRow, data: Buffer, mimeType: string): Promise<string> {
+  async fromPhoto(
+    user: UserRow,
+    data: Buffer,
+    mimeType: string,
+  ): Promise<string> {
     const text = financeMessages(user.locale);
     const answer = await this.ai
       .completeWithImage(
         user.id,
         INSTRUCTION(await this.categories(user.id)),
-        { data, mimeType },
+        {data, mimeType},
         'finance',
       )
       .catch(() => undefined);
@@ -74,7 +86,10 @@ export class ReceiptsService implements OnModuleInit {
     }
     const today = zonedDateTime(new Date(), this.users.timeZoneOf(user)).date;
     const read = answer
-      ? parseReceipt(answer, { currency: await this.settings.mainCurrency(user.id), today })
+      ? parseReceipt(answer, {
+          currency: await this.settings.mainCurrency(user.id),
+          today,
+        })
       : null;
     if (!read) {
       return text.receiptUnreadable;
@@ -91,21 +106,29 @@ export class ReceiptsService implements OnModuleInit {
     await this.db.insert(financeReceipts).values({
       transactionId: transaction.id,
       userId: user.id,
-      ...(await compressImage({ data, mimeType })),
+      ...(await compressImage({data, mimeType})),
     });
-    await this.telegram.sendMessage(user.telegramChatId ?? '', text.receiptSaved(read), [
-      { label: text.receiptDelete, action: `rcpdel:${transaction.id}` },
-    ]);
+    await this.telegram.sendMessage(
+      user.telegramChatId ?? '',
+      text.receiptSaved(read),
+      [{label: text.receiptDelete, action: `rcpdel:${transaction.id}`}],
+    );
     return '';
   }
 
   /** The photo of a transaction's receipt. */
-  async photo(userId: string, transactionId: string): Promise<{ data: Buffer; mimeType: string }> {
+  async photo(
+    userId: string,
+    transactionId: string,
+  ): Promise<{data: Buffer; mimeType: string}> {
     const [receipt] = await this.db
-      .select({ data: financeReceipts.data, mimeType: financeReceipts.mimeType })
+      .select({data: financeReceipts.data, mimeType: financeReceipts.mimeType})
       .from(financeReceipts)
       .where(
-        and(eq(financeReceipts.transactionId, transactionId), eq(financeReceipts.userId, userId)),
+        and(
+          eq(financeReceipts.transactionId, transactionId),
+          eq(financeReceipts.userId, userId),
+        ),
       );
     if (!receipt) {
       throw new NotFoundException();
@@ -115,12 +138,14 @@ export class ReceiptsService implements OnModuleInit {
 
   private async categories(userId: string): Promise<string[]> {
     const rows = await this.db
-      .select({ category: transactions.category })
+      .select({category: transactions.category})
       .from(transactions)
-      .where(and(eq(transactions.userId, userId), eq(transactions.kind, 'expense')))
+      .where(
+        and(eq(transactions.userId, userId), eq(transactions.kind, 'expense')),
+      )
       .groupBy(transactions.category)
       .orderBy(sql`count(*) desc`)
       .limit(CATEGORY_HINTS);
-    return rows.map((row) => row.category);
+    return rows.map(row => row.category);
   }
 }

@@ -1,14 +1,20 @@
-import { Inject, Injectable, Logger, OnApplicationBootstrap, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { LocalDate, zonedDateTime } from '@pd/contracts';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnApplicationBootstrap,
+  OnModuleInit,
+} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {LocalDate, zonedDateTime} from '@pd/contracts';
 import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
-import { randomBytes } from 'node:crypto';
-import { AppConfig } from '../config/env';
-import { DB, Database } from '../database/database.module';
-import { SchedulerService } from '../scheduler/scheduler.service';
-import { UserRow, users } from '../users/users.schema';
-import { UsersService } from '../users/users.service';
+import {eq} from 'drizzle-orm';
+import {randomBytes} from 'node:crypto';
+import {AppConfig} from '../config/env';
+import {DB, Database} from '../database/database.module';
+import {SchedulerService} from '../scheduler/scheduler.service';
+import {UserRow, users} from '../users/users.schema';
+import {UsersService} from '../users/users.service';
 
 /** The visitor of a demo instance: everybody signs in as this one user. */
 const DEMO_EMAIL = 'demo@example.com';
@@ -61,7 +67,7 @@ export class DemoService implements OnModuleInit, OnApplicationBootstrap {
   ) {}
 
   get enabled(): boolean {
-    return this.config.get('DEMO_MODE', { infer: true });
+    return this.config.get('DEMO_MODE', {infer: true});
   }
 
   register(seed: DemoSeed): void {
@@ -120,20 +126,23 @@ export class DemoService implements OnModuleInit, OnApplicationBootstrap {
       // Nobody is told it: the demo is entered without a password.
       passwordHash: await bcrypt.hash(randomBytes(24).toString('hex'), 10),
       displayName: DEMO_NAME,
-      locale: this.config.get('DEFAULT_LOCALE', { infer: true }),
+      locale: this.config.get('DEFAULT_LOCALE', {infer: true}),
     });
     this.demoUserId = user.id;
 
-    const today = zonedDateTime(new Date(), this.usersService.timeZoneOf(user)).date;
+    const today = zonedDateTime(
+      new Date(),
+      this.usersService.timeZoneOf(user),
+    ).date;
     const context: DemoContext = {
       userId: user.id,
       today,
-      daysAgo: (days) => {
+      daysAgo: days => {
         const date = new Date(`${today}T12:00:00Z`);
         date.setUTCDate(date.getUTCDate() - days);
         return date.toISOString().slice(0, 10);
       },
-      projects: { shop: '', blog: '' },
+      projects: {shop: '', blog: ''},
     };
     // The core's own seed comes first: the modules need its projects.
     const ordered = [...this.seeds].sort(
@@ -144,7 +153,9 @@ export class DemoService implements OnModuleInit, OnApplicationBootstrap {
         await seed.seed(context);
       } catch (error) {
         // One section without its sample data is better than no demo at all.
-        this.logger.error(`Demo data of ${seed.module} was not made: ${String(error)}`);
+        this.logger.error(
+          `Demo data of ${seed.module} was not made: ${String(error)}`,
+        );
       }
     }
     this.logger.log(`Demo data made for ${ordered.length} sections`);

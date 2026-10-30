@@ -14,6 +14,7 @@ export * from './lib/ui/duration.pipe';
 export * from './lib/ui/integration-guide.component';
 export * from './lib/ui/server-key.component';
 export * from './lib/utils/month';
+export * from './lib/utils/with-defaults';
 export * from './lib/ui/markdown.pipe';
 export * from './lib/i18n/language';
 export * from './lib/dashboard/level-card.component';

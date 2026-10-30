@@ -1,14 +1,22 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Habit, HabitGoal, HabitInput, HabitKind } from '@pd/contracts';
-import { habitIcon, localToday } from './habits.api';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {Habit, HabitGoal, HabitInput, HabitKind} from '@pd/contracts';
+import {habitIcon, localToday} from './habits.api';
 
 export interface HabitDialogData {
   kind: HabitKind;
@@ -55,19 +63,32 @@ const DEFAULT_ASK_AT = '21:00';
         @if (data.kind === 'custom') {
           <mat-form-field>
             <mat-label>{{
-              (data.build ? 'habits.dialog.buildName' : 'habits.dialog.name') | transloco
+              (data.build ? 'habits.dialog.buildName' : 'habits.dialog.name')
+                | transloco
             }}</mat-label>
-            <input matInput maxlength="100" formControlName="name" required cdkFocusInitial />
+            <input
+              matInput
+              maxlength="100"
+              formControlName="name"
+              required
+              cdkFocusInitial
+            />
             <mat-hint>
               {{
-                (data.build ? 'habits.dialog.buildNameHint' : 'habits.dialog.nameHint') | transloco
+                (data.build
+                  ? 'habits.dialog.buildNameHint'
+                  : 'habits.dialog.nameHint'
+                ) | transloco
               }}
             </mat-hint>
           </mat-form-field>
         }
 
         <span class="label">{{ 'habits.dialog.goal' | transloco }}</span>
-        <mat-button-toggle-group formControlName="goal" [hideSingleSelectionIndicator]="true">
+        <mat-button-toggle-group
+          formControlName="goal"
+          [hideSingleSelectionIndicator]="true"
+        >
           @if (data.build) {
             <mat-button-toggle value="daily">{{
               'habits.goals.daily' | transloco
@@ -86,14 +107,28 @@ const DEFAULT_ASK_AT = '21:00';
         </mat-button-toggle-group>
         @if (form.controls.goal.value === 'weekly') {
           <mat-form-field>
-            <mat-label>{{ 'habits.dialog.timesPerWeek' | transloco }}</mat-label>
-            <input matInput type="number" min="1" max="7" formControlName="timesPerWeek" />
+            <mat-label>{{
+              'habits.dialog.timesPerWeek' | transloco
+            }}</mat-label>
+            <input
+              matInput
+              type="number"
+              min="1"
+              max="7"
+              formControlName="timesPerWeek"
+            />
           </mat-form-field>
         }
         @if (form.controls.goal.value === 'less') {
           <mat-form-field>
             <mat-label>{{ 'habits.dialog.maxDays' | transloco }}</mat-label>
-            <input matInput type="number" min="0" max="6" formControlName="maxDaysPerWeek" />
+            <input
+              matInput
+              type="number"
+              min="0"
+              max="6"
+              formControlName="maxDaysPerWeek"
+            />
             <mat-hint>{{ 'habits.dialog.maxDaysHint' | transloco }}</mat-hint>
           </mat-form-field>
         }
@@ -107,7 +142,9 @@ const DEFAULT_ASK_AT = '21:00';
             <mat-form-field>
               <mat-label>{{ 'habits.dialog.unit' | transloco }}</mat-label>
               <input matInput maxlength="30" formControlName="unit" />
-              <mat-hint>{{ 'habits.dialog.unitHint.' + data.kind | transloco }}</mat-hint>
+              <mat-hint>{{
+                'habits.dialog.unitHint.' + data.kind | transloco
+              }}</mat-hint>
             </mat-form-field>
           }
         </div>
@@ -128,7 +165,10 @@ const DEFAULT_ASK_AT = '21:00';
           {{ 'core.actions.cancel' | transloco }}
         </button>
         <button matButton="filled" type="submit" [disabled]="form.invalid">
-          {{ (data.habit ? 'core.actions.save' : 'habits.dialog.start') | transloco }}
+          {{
+            (data.habit ? 'core.actions.save' : 'habits.dialog.start')
+              | transloco
+          }}
         </button>
       </mat-dialog-actions>
     </form>
@@ -172,7 +212,11 @@ export class HabitDialog {
     name: this.habit?.name ?? '',
     // The gym is a few days a week, not every day.
     goal: (this.habit?.goal ??
-      (this.data.kind === 'gym' ? 'weekly' : this.data.build ? 'daily' : 'quit')) as HabitGoal,
+      (this.data.kind === 'gym'
+        ? 'weekly'
+        : this.data.build
+          ? 'daily'
+          : 'quit')) as HabitGoal,
     maxDaysPerWeek: this.habit?.maxDaysPerWeek ?? 2,
     timesPerWeek: this.habit?.timesPerWeek ?? 3,
     unit: this.habit?.unit ?? '',
@@ -187,7 +231,8 @@ export class HabitDialog {
       kind: this.data.kind,
       name: this.data.kind === 'custom' ? value.name.trim() : null,
       goal: value.goal,
-      maxDaysPerWeek: value.goal === 'less' ? Number(value.maxDaysPerWeek) : null,
+      maxDaysPerWeek:
+        value.goal === 'less' ? Number(value.maxDaysPerWeek) : null,
       timesPerWeek: value.goal === 'weekly' ? Number(value.timesPerWeek) : null,
       unit: this.data.build ? null : value.unit.trim() || null,
       startedOn: value.startedOn,

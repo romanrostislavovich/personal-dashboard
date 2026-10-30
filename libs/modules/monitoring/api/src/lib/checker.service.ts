@@ -1,10 +1,10 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { DB, Database, projects } from '@pd/api-core';
-import { eq, lt, sql } from 'drizzle-orm';
-import { checkHttp } from './checks/http-check';
-import { fetchSslExpiry } from './checks/ssl-check';
-import { checkResults, MonitorRow, monitors } from './monitoring.schema';
-import { applyCheck, MonitorEvent } from './state/monitor-state';
+import {Inject, Injectable, Logger} from '@nestjs/common';
+import {DB, Database, projects} from '@pd/api-core';
+import {eq, lt, sql} from 'drizzle-orm';
+import {checkHttp} from './checks/http-check';
+import {fetchSslExpiry} from './checks/ssl-check';
+import {checkResults, MonitorRow, monitors} from './monitoring.schema';
+import {applyCheck, MonitorEvent} from './state/monitor-state';
 
 /** A notification event together with whom and what to send it about. */
 export interface MonitorNotice {
@@ -43,7 +43,7 @@ export class CheckerService {
       const results = await Promise.allSettled(
         rows
           .slice(start, start + CHECKS_AT_ONCE)
-          .map((row) => this.checkOne(row.monitor, row.projectName)),
+          .map(row => this.checkOne(row.monitor, row.projectName)),
       );
       for (const [index, result] of results.entries()) {
         if (result.status === 'fulfilled') {
@@ -52,17 +52,22 @@ export class CheckerService {
           }
         } else {
           const monitor = rows[start + index].monitor;
-          this.logger.warn(`The check of ${monitor.url} failed: ${result.reason}`);
+          this.logger.warn(
+            `The check of ${monitor.url} failed: ${result.reason}`,
+          );
         }
       }
     }
     return notices;
   }
 
-  async checkOne(monitor: MonitorRow, projectName: string): Promise<MonitorNotice | null> {
+  async checkOne(
+    monitor: MonitorRow,
+    projectName: string,
+  ): Promise<MonitorNotice | null> {
     const result = await checkHttp(monitor.url);
     const now = new Date();
-    const { state, event } = applyCheck(monitor, result.isUp, now);
+    const {state, event} = applyCheck(monitor, result.isUp, now);
 
     await this.db.insert(checkResults).values({
       monitorId: monitor.id,
@@ -98,10 +103,15 @@ export class CheckerService {
   async refreshSsl(): Promise<SslNotice[]> {
     const rows = await this.monitorsWithProjects();
     const notices: SslNotice[] = [];
-    for (const { monitor, projectName } of rows) {
+    for (const {monitor, projectName} of rows) {
       const expiresAt = await this.updateSsl(monitor);
       if (expiresAt) {
-        notices.push({ userId: monitor.userId, projectName, url: monitor.url, expiresAt });
+        notices.push({
+          userId: monitor.userId,
+          projectName,
+          url: monitor.url,
+          expiresAt,
+        });
       }
     }
     return notices;
@@ -117,7 +127,7 @@ export class CheckerService {
     if (expiresAt) {
       await this.db
         .update(monitors)
-        .set({ sslExpiresAt: expiresAt })
+        .set({sslExpiresAt: expiresAt})
         .where(eq(monitors.id, monitor.id));
     }
     return expiresAt;
@@ -128,13 +138,16 @@ export class CheckerService {
     await this.db
       .delete(checkResults)
       .where(
-        lt(checkResults.checkedAt, sql`now() - make_interval(days => ${RESULTS_RETENTION_DAYS})`),
+        lt(
+          checkResults.checkedAt,
+          sql`now() - make_interval(days => ${RESULTS_RETENTION_DAYS})`,
+        ),
       );
   }
 
   private monitorsWithProjects() {
     return this.db
-      .select({ monitor: monitors, projectName: projects.name })
+      .select({monitor: monitors, projectName: projects.name})
       .from(monitors)
       .innerJoin(projects, eq(projects.id, monitors.projectId));
   }

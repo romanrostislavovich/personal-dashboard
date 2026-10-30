@@ -1,4 +1,4 @@
-import { FAILURES_TO_GO_DOWN } from './monitor-state';
+import {FAILURES_TO_GO_DOWN} from './monitor-state';
 
 /** A time a site was down: from its first failed check to the first successful one after. */
 export interface Incident {
@@ -12,12 +12,14 @@ export interface Incident {
  * The incidents in a history of checks (oldest first): a run of failed checks long enough to
  * be declared "down" — a single failed check is a hiccup of the network, as for the alerts.
  */
-export function incidentsOf(checks: { checkedAt: Date; isUp: boolean }[]): Incident[] {
+export function incidentsOf(
+  checks: {checkedAt: Date; isUp: boolean}[],
+): Incident[] {
   const incidents: Incident[] = [];
-  let run: { from: Date; failedChecks: number } | null = null;
+  let run: {from: Date; failedChecks: number} | null = null;
   const close = (to: Date | null) => {
     if (run && run.failedChecks >= FAILURES_TO_GO_DOWN) {
-      incidents.push({ ...run, to });
+      incidents.push({...run, to});
     }
     run = null;
   };
@@ -27,7 +29,7 @@ export function incidentsOf(checks: { checkedAt: Date; isUp: boolean }[]): Incid
     } else if (run) {
       run.failedChecks += 1;
     } else {
-      run = { from: check.checkedAt, failedChecks: 1 };
+      run = {from: check.checkedAt, failedChecks: 1};
     }
   }
   close(null);

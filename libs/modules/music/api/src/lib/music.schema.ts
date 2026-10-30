@@ -1,5 +1,12 @@
-import { users } from '@pd/api-core/schema';
-import { index, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import {users} from '@pd/api-core/schema';
+import {
+  index,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 /**
  * Local copy of Last.fm plays. Stored to quickly compute
@@ -11,13 +18,13 @@ export const scrobbles = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    playedAt: timestamp({ withTimezone: true }).notNull(),
+      .references(() => users.id, {onDelete: 'cascade'}),
+    playedAt: timestamp({withTimezone: true}).notNull(),
     artist: text().notNull(),
     track: text().notNull(),
     album: text(),
   },
-  (table) => [
+  table => [
     // A repeated sync does not create duplicates.
     unique().on(table.userId, table.playedAt, table.track),
     index().on(table.userId, table.playedAt),
@@ -28,12 +35,12 @@ export const scrobbles = pgTable(
 export const musicSettings = pgTable('music_settings', {
   userId: uuid()
     .primaryKey()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.id, {onDelete: 'cascade'}),
   lastfmUsername: text(),
-  lastSyncedAt: timestamp({ withTimezone: true }),
+  lastSyncedAt: timestamp({withTimezone: true}),
   lastError: text(),
   /** The whole Last.fm history is imported (see LastfmHistoryImport); null — still going. */
-  historyImportedAt: timestamp({ withTimezone: true }),
+  historyImportedAt: timestamp({withTimezone: true}),
 });
 
 export type MusicSettingsRow = typeof musicSettings.$inferSelect;

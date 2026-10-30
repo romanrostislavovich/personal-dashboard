@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { SEARCH_LIMIT, SearchService, snippet } from '@pd/api-core';
-import { HealthRecord, SearchHit } from '@pd/contracts';
-import { HealthService } from './health.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {SEARCH_LIMIT, SearchService, snippet} from '@pd/api-core';
+import {HealthRecord, SearchHit} from '@pd/contracts';
+import {HealthService} from './health.service';
 
 /**
  * Health in the command palette: diagnoses by code or wording, medications, visits and
@@ -18,7 +18,8 @@ export class HealthSearch implements OnModuleInit {
   onModuleInit(): void {
     this.search.register({
       module: 'health',
-      search: async (userId, query) => healthHits(await this.health.record(userId), query),
+      search: async (userId, query) =>
+        healthHits(await this.health.record(userId), query),
     });
   }
 }
@@ -26,8 +27,13 @@ export class HealthSearch implements OnModuleInit {
 export function healthHits(record: HealthRecord, query: string): SearchHit[] {
   const wanted = query.trim().toLowerCase();
   const has = (...texts: (string | null)[]) =>
-    texts.some((text) => text?.toLowerCase().includes(wanted));
-  const hit = (kind: string, title: string, subtitle: string | null, url: string): SearchHit => ({
+    texts.some(text => text?.toLowerCase().includes(wanted));
+  const hit = (
+    kind: string,
+    title: string,
+    subtitle: string | null,
+    url: string,
+  ): SearchHit => ({
     module: 'health',
     kind,
     title,
@@ -36,8 +42,8 @@ export function healthHits(record: HealthRecord, query: string): SearchHit[] {
   });
   return [
     ...record.diagnoses
-      .filter((d) => has(d.code, d.title, d.notes))
-      .map((d) =>
+      .filter(d => has(d.code, d.title, d.notes))
+      .map(d =>
         hit(
           'diagnosis',
           d.code ? `${d.code} ${d.title}` : d.title,
@@ -46,8 +52,8 @@ export function healthHits(record: HealthRecord, query: string): SearchHit[] {
         ),
       ),
     ...record.medications
-      .filter((m) => has(m.name, m.substance, m.notes))
-      .map((m) =>
+      .filter(m => has(m.name, m.substance, m.notes))
+      .map(m =>
         hit(
           'medication',
           m.name,
@@ -56,13 +62,17 @@ export function healthHits(record: HealthRecord, query: string): SearchHit[] {
         ),
       ),
     ...record.visits
-      .filter((v) => has(v.speciality, v.complaints, v.findings, v.recommendations, v.notes))
-      .map((v) =>
+      .filter(v =>
+        has(v.speciality, v.complaints, v.findings, v.recommendations, v.notes),
+      )
+      .map(v =>
         hit(
           'visit',
           v.visitedOn,
           snippet(
-            [v.recommendations, v.findings, v.complaints, v.notes].filter(Boolean).join(' · ') ||
+            [v.recommendations, v.findings, v.complaints, v.notes]
+              .filter(Boolean)
+              .join(' · ') ||
               (v.speciality ?? ''),
             query,
           ),
@@ -70,7 +80,7 @@ export function healthHits(record: HealthRecord, query: string): SearchHit[] {
         ),
       ),
     ...record.documents
-      .filter((d) => has(d.name))
-      .map((d) => hit('document', d.name, d.documentedOn, '/health/history')),
+      .filter(d => has(d.name))
+      .map(d => hit('document', d.name, d.documentedOn, '/health/history')),
   ].slice(0, SEARCH_LIMIT);
 }

@@ -1,5 +1,9 @@
-import { encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
-import { EventFeeling, QuestionnaireId } from '@pd/contracts';
+import {
+  encryptedText,
+  registerEncryptedTables,
+  users,
+} from '@pd/api-core/schema';
+import {EventFeeling, QuestionnaireId} from '@pd/contracts';
 import {
   date,
   index,
@@ -19,21 +23,21 @@ export const psychologyEvents = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     title: text().notNull(),
     description: text(),
     /** `null` — the event is told by age (`ageFrom`). */
-    startedOn: date({ mode: 'string' }),
+    startedOn: date({mode: 'string'}),
     /** `null` — one day, or still going on. */
-    endedOn: date({ mode: 'string' }),
+    endedOn: date({mode: 'string'}),
     /** The age in full years it happened at, for what is remembered without dates. */
     ageFrom: smallint(),
     ageTo: smallint(),
     /** How it felt: -2 (hard) … 2 (good). */
     feeling: smallint().$type<EventFeeling>().notNull().default(0),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId, table.startedOn)],
+  table => [index().on(table.userId, table.startedOn)],
 );
 
 /** A filled-in questionnaire (see QUESTIONNAIRES): the answers, so the sum can be recounted. */
@@ -43,19 +47,19 @@ export const psychologyAssessments = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     test: text().$type<QuestionnaireId>().notNull(),
-    takenOn: date({ mode: 'string' }).notNull(),
+    takenOn: date({mode: 'string'}).notNull(),
     answers: integer().array().notNull(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId, table.test, table.takenOn)],
+  table => [index().on(table.userId, table.test, table.takenOn)],
 );
 
 export const psychologySettings = pgTable('psychology_settings', {
   userId: uuid()
     .primaryKey()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.id, {onDelete: 'cascade'}),
   /** Puts the events told by age among the dated ones. */
   birthYear: smallint(),
   /** A questionnaire to be reminded of (`who5`…), every so many days, at a time of day. */
@@ -63,7 +67,7 @@ export const psychologySettings = pgTable('psychology_settings', {
   reminderEveryDays: smallint(),
   reminderAt: text(),
   /** The day the last reminder went out: not again before the period passes. */
-  remindedOn: date({ mode: 'string' }),
+  remindedOn: date({mode: 'string'}),
   /** A close person for the help button, and their Telegram: encrypted, like the diary. */
   closeName: encryptedText(),
   closeTelegram: encryptedText(),
@@ -76,13 +80,13 @@ export const psychologyGentleSteps = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     text: encryptedText().notNull(),
     /** The smaller version of the step; `null` — none. */
     smaller: encryptedText(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId)],
+  table => [index().on(table.userId)],
 );
 
 /**
@@ -96,13 +100,13 @@ export const psychologyGentleDays = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    localDate: date({ mode: 'string' }).notNull(),
+      .references(() => users.id, {onDelete: 'cascade'}),
+    localDate: date({mode: 'string'}).notNull(),
     /** `GentleDayStep[]` as JSON. */
     steps: encryptedText().notNull(),
-    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex().on(table.userId, table.localDate)],
+  table => [uniqueIndex().on(table.userId, table.localDate)],
 );
 
 /** A brief for an appointment with a specialist: the texts are stored encrypted. */
@@ -112,11 +116,11 @@ export const psychologyBriefs = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     title: encryptedText().notNull(),
-    appointmentOn: date({ mode: 'string' }),
-    from: date({ mode: 'string' }).notNull(),
-    to: date({ mode: 'string' }).notNull(),
+    appointmentOn: date({mode: 'string'}),
+    from: date({mode: 'string'}).notNull(),
+    to: date({mode: 'string'}).notNull(),
     /** The records picked by hand: Psychology's events and questionnaires. */
     eventIds: uuid().array().notNull().default([]),
     assessmentIds: uuid().array().notNull().default([]),
@@ -124,10 +128,10 @@ export const psychologyBriefs = pgTable(
     /** The questions, one per line. */
     questions: encryptedText().notNull().default(''),
     notes: encryptedText().notNull().default(''),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    updatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId, table.from)],
+  table => [index().on(table.userId, table.from)],
 );
 
 registerEncryptedTables(

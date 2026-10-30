@@ -1,4 +1,4 @@
-import { FoundProblem, pickMessages } from '@pd/api-core';
+import {FoundProblem, pickMessages} from '@pd/api-core';
 
 export type CodeHosting = 'github' | 'gitlab' | 'bitbucket';
 
@@ -10,7 +10,7 @@ export interface RepositoryFacts {
   /** Open secret scanning alerts; `null` — not readable. */
   secrets: number | null;
   /** The last run of `.github/workflows/security.yml`; `null` — the repository has none. */
-  securityCheck: { conclusion: string | null; url: string } | null;
+  securityCheck: {conclusion: string | null; url: string} | null;
 }
 
 /** A connected code hosting: the account, the token the dashboard reads it with, its repositories. */
@@ -58,7 +58,8 @@ const messages = {
     }),
     tokenExpired: (hosting: string) => ({
       title: `${hosting}: the dashboard's token has expired`,
-      details: 'The dashboard can no longer read this account: its data stopped updating.',
+      details:
+        'The dashboard can no longer read this account: its data stopped updating.',
       fix: `Create a new token on ${hosting} and save it in Settings → Integrations.`,
     }),
     tokenExpiring: (hosting: string, days: number) => ({
@@ -78,7 +79,8 @@ const messages = {
     }),
     secrets: (repository: string, open: number) => ({
       title: `${repository}: ${open} secret(s) found in the code`,
-      details: 'GitHub secret scanning has open alerts: a token or a key is in the repository.',
+      details:
+        'GitHub secret scanning has open alerts: a token or a key is in the repository.',
       fix: 'Revoke each one where it was issued and replace it (removing it from git is not enough); then close the alert in GitHub → Security → Secret scanning.',
     }),
     checkFailing: (repository: string, url: string) => ({
@@ -100,7 +102,8 @@ const messages = {
     }),
     tokenExpired: (hosting: string) => ({
       title: `${hosting}: токен дашборда истёк`,
-      details: 'Дашборд больше не может читать этот аккаунт: его данные перестали обновляться.',
+      details:
+        'Дашборд больше не может читать этот аккаунт: его данные перестали обновляться.',
       fix: `Создайте новый токен на ${hosting} и сохраните его в Настройках → Интеграции.`,
     }),
     tokenExpiring: (hosting: string, days: number) => ({
@@ -145,7 +148,7 @@ export function hostingProblems(
 ): FoundProblem[] {
   const text = pickMessages(messages, locale);
   const problems: FoundProblem[] = [];
-  for (const { hosting, account, token, repositories } of hostings) {
+  for (const {hosting, account, token, repositories} of hostings) {
     const name = NAMES[hosting];
     if (account.twoFactor === false) {
       problems.push({
@@ -155,7 +158,9 @@ export function hostingProblems(
       });
     }
     if (token.expiresAt) {
-      const days = Math.floor((Date.parse(token.expiresAt) - now.getTime()) / 86_400_000);
+      const days = Math.floor(
+        (Date.parse(token.expiresAt) - now.getTime()) / 86_400_000,
+      );
       if (days < 0) {
         problems.push({
           key: `${hosting}.token-expired`,
@@ -170,7 +175,9 @@ export function hostingProblems(
         });
       }
     }
-    const broad = (token.scopes ?? []).filter((scope) => BROAD_SCOPES[hosting].test(scope));
+    const broad = (token.scopes ?? []).filter(scope =>
+      BROAD_SCOPES[hosting].test(scope),
+    );
     if (broad.length) {
       problems.push({
         key: `${hosting}.token-broad`,
@@ -181,15 +188,15 @@ export function hostingProblems(
 
     for (const repository of repositories) {
       const found = repository.dependencies;
-      const worst = found && SEVERITIES.find((severity) => found[severity]);
+      const worst = found && SEVERITIES.find(severity => found[severity]);
       if (found && worst) {
         problems.push({
           key: `${hosting}.${repository.name}.dependencies`,
           severity: worst,
           ...text.dependencies(
             repository.name,
-            SEVERITIES.filter((severity) => found[severity])
-              .map((severity) => `${severity} ${found[severity]}`)
+            SEVERITIES.filter(severity => found[severity])
+              .map(severity => `${severity} ${found[severity]}`)
               .join(', '),
           ),
         });
@@ -211,7 +218,7 @@ export function hostingProblems(
     }
     if (
       repositories.length &&
-      repositories.every((repository) => repository.dependencies === null)
+      repositories.every(repository => repository.dependencies === null)
     ) {
       problems.push({
         key: `${hosting}.alerts-unreadable`,

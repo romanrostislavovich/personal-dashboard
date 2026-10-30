@@ -1,5 +1,5 @@
-import { Project } from '@pd/contracts';
-import { pickableProjects } from './pickable-projects';
+import {Project} from '@pd/contracts';
+import {pickableProjects} from './pickable-projects';
 
 const project = (id: string, closedOn: string | null): Project => ({
   id,
@@ -19,17 +19,14 @@ describe('pickableProjects', () => {
   ];
 
   it('leaves out the closed projects, not the ones closing later', () => {
-    expect(pickableProjects(projects, null, '2026-10-22').map((p) => p.id)).toEqual([
-      'open',
-      'planned',
-    ]);
+    expect(
+      pickableProjects(projects, null, '2026-10-22').map(p => p.id),
+    ).toEqual(['open', 'planned']);
   });
 
   it('keeps the closed project already chosen', () => {
-    expect(pickableProjects(projects, 'closed', '2026-10-22').map((p) => p.id)).toEqual([
-      'open',
-      'closed',
-      'planned',
-    ]);
+    expect(
+      pickableProjects(projects, 'closed', '2026-10-22').map(p => p.id),
+    ).toEqual(['open', 'closed', 'planned']);
   });
 });

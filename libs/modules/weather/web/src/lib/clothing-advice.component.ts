@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { ClothingAdvice } from '@pd/contracts';
-import { EXTRA_EMOJI } from './weather-emoji';
+import {ChangeDetectionStrategy, Component, input} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {ClothingAdvice} from '@pd/contracts';
+import {EXTRA_EMOJI} from './weather-emoji';
 
 /** What to wear today: the outfit and what to take with you. */
 @Component({
@@ -9,7 +9,9 @@ import { EXTRA_EMOJI } from './weather-emoji';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TranslocoPipe],
   template: `
-    <p class="outfit">👕 {{ 'weather.outfit.' + advice().outfit | transloco }}</p>
+    <p class="outfit">
+      👕 {{ 'weather.outfit.' + advice().outfit | transloco }}
+    </p>
     @if (advice().extras.length) {
       <ul class="extras">
         @for (extra of advice().extras; track extra) {

@@ -1,17 +1,17 @@
-import { TasksDemo } from './tasks.demo';
-import { Module } from '@nestjs/common';
-import { TasksAutomations } from './tasks.automations';
-import { TasksLife } from './tasks.life';
-import { TasksLinks } from './tasks.links';
-import { TasksSearch } from './tasks.search';
-import { RemindersService } from './reminders.service';
-import { TasksAchievements } from './tasks.achievements';
-import { TasksAiTools } from './tasks.ai-tools';
-import { TasksController } from './tasks.controller';
-import { TasksDigest } from './tasks.digest';
-import { TasksJobs } from './tasks.jobs';
-import { TasksService } from './tasks.service';
-import { TasksRecall } from './tasks.recall';
+import {TasksDemo} from './tasks.demo';
+import {Module} from '@nestjs/common';
+import {TasksAutomations} from './tasks.automations';
+import {TasksLife} from './tasks.life';
+import {TasksLinks} from './tasks.links';
+import {TasksSearch} from './tasks.search';
+import {RemindersService} from './reminders.service';
+import {TasksAchievements} from './tasks.achievements';
+import {TasksAiTools} from './tasks.ai-tools';
+import {TasksController} from './tasks.controller';
+import {TasksDigest} from './tasks.digest';
+import {TasksJobs} from './tasks.jobs';
+import {TasksService} from './tasks.service';
+import {TasksRecall} from './tasks.recall';
 
 /**
  * Tasks: the TODO list (lists, tags, repeating tasks) and reminders sent at a time, with

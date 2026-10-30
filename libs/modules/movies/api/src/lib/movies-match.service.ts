@@ -1,5 +1,5 @@
-import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
-import { DB, Database, SecretsService, UsersService } from '@pd/api-core';
+import {BadRequestException, Inject, Injectable, Logger} from '@nestjs/common';
+import {DB, Database, SecretsService, UsersService} from '@pd/api-core';
 import {
   MovieAdd,
   movieAddSchema,
@@ -10,12 +10,12 @@ import {
   WatchHints,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
-import { movieTitles, movieViews, MovieViewRow } from './movies.schema';
-import { MoviesService, TMDB_KEY_SECRET } from './movies.service';
-import { pickMatch } from './pick-match';
-import { TmdbAuthError, TmdbClient, TmdbDetails } from './tmdb.client';
-import { matchKey, WatchTitle, watchTitle } from './watch-title';
+import {and, eq, inArray, isNull, sql} from 'drizzle-orm';
+import {movieTitles, movieViews, MovieViewRow} from './movies.schema';
+import {MoviesService, TMDB_KEY_SECRET} from './movies.service';
+import {pickMatch} from './pick-match';
+import {TmdbAuthError, TmdbClient, TmdbDetails} from './tmdb.client';
+import {matchKey, WatchTitle, watchTitle} from './watch-title';
 
 /** Views looked at in one run of `movies.match`. */
 const BATCH = 200;
@@ -52,7 +52,9 @@ export class MoviesMatchService {
           // The key went bad: found later, once the user saves a new one.
           clients.set(row.userId, null);
         }
-        this.logger.warn(`A view was not looked up: ${(error as Error).message}`);
+        this.logger.warn(
+          `A view was not looked up: ${(error as Error).message}`,
+        );
       }
     }
   }
@@ -64,29 +66,42 @@ export class MoviesMatchService {
 
   /** A title found in TMDB, into the list to watch (or as seen today). */
   async add(userId: string, input: MovieAdd): Promise<MovieTitle> {
-    const { tmdbId, kind, wanted } = movieAddSchema.parse(input);
+    const {tmdbId, kind, wanted} = movieAddSchema.parse(input);
     const details = await (await this.needClient(userId)).details(kind, tmdbId);
     const id = await this.keep(userId, details, []);
     if (wanted) {
       await this.db
         .update(movieTitles)
-        .set({ wantedAt: sql`coalesce(${movieTitles.wantedAt}, now())`, updatedAt: new Date() })
+        .set({
+          wantedAt: sql`coalesce(${movieTitles.wantedAt}, now())`,
+          updatedAt: new Date(),
+        })
         .where(and(eq(movieTitles.id, id), isNull(movieTitles.watchedOn)));
     } else {
       await this.db
         .update(movieTitles)
-        .set({ watchedOn: await this.today(userId), wantedAt: null, updatedAt: new Date() })
+        .set({
+          watchedOn: await this.today(userId),
+          wantedAt: null,
+          updatedAt: new Date(),
+        })
         .where(eq(movieTitles.id, id));
     }
     return this.movies.title(userId, id);
   }
 
   /** "This is it": a view not found by itself, and the others of the same name with it. */
-  async assign(userId: string, viewId: string, input: MovieAssign): Promise<MovieTitle> {
+  async assign(
+    userId: string,
+    viewId: string,
+    input: MovieAssign,
+  ): Promise<MovieTitle> {
     const view = await this.movies.view(userId, viewId);
     const read = readTitle(view);
     const key = matchKey(read?.name ?? view.name);
-    const details = await (await this.needClient(userId)).details(input.kind, input.tmdbId);
+    const details = await (
+      await this.needClient(userId)
+    ).details(input.kind, input.tmdbId);
     const id = await this.keep(userId, details, key ? [key] : []);
     const others = await this.db
       .select()
@@ -99,7 +114,9 @@ export class MoviesMatchService {
         ),
       );
     const same = others.filter(
-      (row) => row.id === view.id || matchKey(readTitle(row)?.name ?? row.name) === key,
+      row =>
+        row.id === view.id ||
+        matchKey(readTitle(row)?.name ?? row.name) === key,
     );
     for (const row of same.length ? same : [view]) {
       await this.attach(row, id, details.kind, readTitle(row));
@@ -137,7 +154,10 @@ export class MoviesMatchService {
       .where(and(eq(movieTitles.userId, userId), isNull(movieTitles.tmdbId)));
     for (const title of local) {
       try {
-        const results = await client.search(title.title, { kind: title.kind, year: title.year });
+        const results = await client.search(title.title, {
+          kind: title.kind,
+          year: title.year,
+        });
         const found = pickMatch(results, {
           name: title.title,
           year: title.year,
@@ -159,16 +179,18 @@ export class MoviesMatchService {
           .where(eq(movieTitles.id, id));
         await this.db
           .update(movieViews)
-          .set({ titleId: id })
+          .set({titleId: id})
           .where(eq(movieViews.titleId, title.id));
         await this.db.delete(movieTitles).where(eq(movieTitles.id, title.id));
       } catch (error) {
-        this.logger.warn(`A title was not found again: ${(error as Error).message}`);
+        this.logger.warn(
+          `A title was not found again: ${(error as Error).message}`,
+        );
       }
     }
     await this.db
       .update(movieViews)
-      .set({ resolvedAt: null })
+      .set({resolvedAt: null})
       .where(
         and(
           eq(movieViews.userId, userId),
@@ -178,21 +200,29 @@ export class MoviesMatchService {
       );
   }
 
-  private async resolve(view: MovieViewRow, client: TmdbClient | null): Promise<void> {
+  private async resolve(
+    view: MovieViewRow,
+    client: TmdbClient | null,
+  ): Promise<void> {
     const read = readTitle(view);
     if (!read) {
-      await this.mark(view, { kind: 'unknown' });
+      await this.mark(view, {kind: 'unknown'});
       return;
     }
     if (read.kind === 'video') {
-      await this.mark(view, { kind: 'video', name: read.name });
+      await this.mark(view, {kind: 'video', name: read.name});
       return;
     }
     const key = matchKey(read.name);
     const [own] = await this.db
-      .select({ id: movieTitles.id, kind: movieTitles.kind })
+      .select({id: movieTitles.id, kind: movieTitles.kind})
       .from(movieTitles)
-      .where(and(eq(movieTitles.userId, view.userId), sql`${key} = any(${movieTitles.matchKeys})`))
+      .where(
+        and(
+          eq(movieTitles.userId, view.userId),
+          sql`${key} = any(${movieTitles.matchKeys})`,
+        ),
+      )
       .limit(1);
     if (own) {
       await this.attach(view, own.id, own.kind, read);
@@ -203,8 +233,14 @@ export class MoviesMatchService {
       // No key: kept as the page named it.
       const [made] = await this.db
         .insert(movieTitles)
-        .values({ userId: view.userId, kind, title: read.name, year: read.year, matchKeys: [key] })
-        .returning({ id: movieTitles.id });
+        .values({
+          userId: view.userId,
+          kind,
+          title: read.name,
+          year: read.year,
+          matchKeys: [key],
+        })
+        .returning({id: movieTitles.id});
       await this.attach(view, made.id, kind, read);
       return;
     }
@@ -228,7 +264,11 @@ export class MoviesMatchService {
   }
 
   /** The title of TMDB as the user's own (one row per TMDB id); the page titles that are it. */
-  private async keep(userId: string, details: TmdbDetails, keys: string[]): Promise<string> {
+  private async keep(
+    userId: string,
+    details: TmdbDetails,
+    keys: string[],
+  ): Promise<string> {
     const own = [details.title, details.originalTitle]
       .filter((name): name is string => !!name)
       .map(matchKey);
@@ -259,7 +299,7 @@ export class MoviesMatchService {
           matchKeys: sql`array(select distinct unnest(${movieTitles.matchKeys} || excluded.match_keys))`,
         },
       })
-      .returning({ id: movieTitles.id });
+      .returning({id: movieTitles.id});
     return row.id;
   }
 
@@ -278,18 +318,20 @@ export class MoviesMatchService {
     });
     await this.db
       .update(movieTitles)
-      .set({ updatedAt: new Date() })
+      .set({updatedAt: new Date()})
       .where(eq(movieTitles.id, titleId));
     await this.movies.markSeenIfWatched(view.userId, titleId);
   }
 
   private async mark(
     view: MovieViewRow,
-    set: Partial<Pick<MovieViewRow, 'kind' | 'titleId' | 'name' | 'season' | 'episode'>>,
+    set: Partial<
+      Pick<MovieViewRow, 'kind' | 'titleId' | 'name' | 'season' | 'episode'>
+    >,
   ): Promise<void> {
     await this.db
       .update(movieViews)
-      .set({ ...set, resolvedAt: new Date() })
+      .set({...set, resolvedAt: new Date()})
       .where(inArray(movieViews.id, [view.id]));
   }
 

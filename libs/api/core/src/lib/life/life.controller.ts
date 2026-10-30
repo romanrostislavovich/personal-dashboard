@@ -2,13 +2,8 @@ import {
   BadRequestException,
   Body,
   Controller,
-  Delete,
   Get,
-  HttpCode,
-  Param,
-  ParseUUIDPipe,
   Post,
-  Put,
   Query,
 } from '@nestjs/common';
 import {
@@ -31,13 +26,12 @@ import {
   MoodInsightsQuery,
   moodInsightsQuerySchema,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { AiService } from '../ai/ai.service';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { ProjectOverviewService } from '../links/project-overview.service';
-import { ZodValidationPipe } from '../validation/zod-validation.pipe';
-import { LifeStoriesService } from './life-stories.service';
-import { LifeService } from './life.service';
+import {AiService} from '../ai/ai.service';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {ProjectOverviewService} from '../links/project-overview.service';
+import {ZodValidationPipe} from '../validation/zod-validation.pipe';
+import {LifeStoriesService} from './life-stories.service';
+import {LifeService} from './life.service';
 
 /** The life timeline, the summaries and the AI's stories. */
 @Controller('life')
@@ -53,7 +47,8 @@ export class LifeController {
   @Get('mood-insights')
   moodInsights(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(moodInsightsQuerySchema)) query: MoodInsightsQuery,
+    @Query(new ZodValidationPipe(moodInsightsQuerySchema))
+    query: MoodInsightsQuery,
   ): Promise<MoodInsights> {
     return this.overviews.moodInsights(user.id, query);
   }
@@ -68,7 +63,8 @@ export class LifeController {
   @Get('correlations')
   correlations(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(correlationsQuerySchema)) query: CorrelationsQuery,
+    @Query(new ZodValidationPipe(correlationsQuerySchema))
+    query: CorrelationsQuery,
   ): Promise<Correlations> {
     return this.overviews.correlations(user.id, query);
   }
@@ -77,7 +73,8 @@ export class LifeController {
   @Get('before-after')
   beforeAfter(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(beforeAfterQuerySchema)) query: BeforeAfterQuery,
+    @Query(new ZodValidationPipe(beforeAfterQuerySchema))
+    query: BeforeAfterQuery,
   ): Promise<BeforeAfter> {
     return this.overviews.beforeAfter(user.id, query);
   }
@@ -93,9 +90,10 @@ export class LifeController {
   @Get('summary')
   async summary(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(lifeSummaryQuerySchema)) query: LifeSummaryQuery,
+    @Query(new ZodValidationPipe(lifeSummaryQuerySchema))
+    query: LifeSummaryQuery,
   ): Promise<LifeSummary> {
-    return { ...query, cards: await this.life.period(user.id, query) };
+    return {...query, cards: await this.life.period(user.id, query)};
   }
 
   // --- The AI's story of a month or a year ---
@@ -105,7 +103,7 @@ export class LifeController {
     @CurrentUser() user: AuthUser,
     @Query(new ZodValidationPipe(lifeStoryQuerySchema)) query: LifeStoryQuery,
   ) {
-    return { story: await this.stories.get(user.id, query.period) };
+    return {story: await this.stories.get(user.id, query.period)};
   }
 
   @Post('story')
@@ -117,6 +115,6 @@ export class LifeController {
     if (!(await this.ai.isConfigured(user.id))) {
       throw new BadRequestException('AI is not configured');
     }
-    return { story: await this.stories.write(user.id, body.period) };
+    return {story: await this.stories.write(user.id, body.period)};
   }
 }

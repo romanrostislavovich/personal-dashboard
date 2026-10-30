@@ -1,8 +1,18 @@
-import { AutomationCatalog, AutomationParamDef, AutomationRuleInput } from '@pd/contracts';
+import {
+  AutomationCatalog,
+  AutomationParamDef,
+  AutomationRuleInput,
+} from '@pd/contracts';
 
 /** `{{site}} is down` → `ai-text-guard.com is down`; an unknown placeholder stays as it is. */
-export function fillTemplate(text: string, vars: Record<string, string>): string {
-  return text.replace(/\{\{\s*(\w+)\s*\}\}/g, (match, name: string) => vars[name] ?? match);
+export function fillTemplate(
+  text: string,
+  vars: Record<string, string>,
+): string {
+  return text.replace(
+    /\{\{\s*(\w+)\s*\}\}/g,
+    (match, name: string) => vars[name] ?? match,
+  );
 }
 
 /** What is wrong with the params of a trigger or an action; `null` — nothing. */
@@ -24,11 +34,16 @@ export function paramsError(
     if (def.type === 'time' && !/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) {
       return `"${def.name}" must be a time HH:MM`;
     }
-    if (def.type === 'select' && !def.options?.some((option) => option.value === value)) {
-      return `"${def.name}" must be one of ${def.options?.map((o) => o.value).join(', ')}`;
+    if (
+      def.type === 'select' &&
+      !def.options?.some(option => option.value === value)
+    ) {
+      return `"${def.name}" must be one of ${def.options?.map(o => o.value).join(', ')}`;
     }
   }
-  const unknown = Object.keys(params).find((name) => !defs.some((def) => def.name === name));
+  const unknown = Object.keys(params).find(
+    name => !defs.some(def => def.name === name),
+  );
   return unknown ? `"${unknown}" is not a field here` : null;
 }
 
@@ -40,28 +55,29 @@ export function paramsError(
 export function parseDraft(
   reply: string,
   catalog: AutomationCatalog,
-): { draft: AutomationRuleInput } | { error: string } {
+): {draft: AutomationRuleInput} | {error: string} {
   const json = reply.match(/\{[\s\S]*\}/)?.[0];
   let data: Record<string, unknown>;
   try {
     data = JSON.parse(json ?? '');
   } catch {
-    return { error: reply.trim().slice(0, 300) || 'The AI gave no rule' };
+    return {error: reply.trim().slice(0, 300) || 'The AI gave no rule'};
   }
   if (typeof data['error'] === 'string') {
-    return { error: data['error'] };
+    return {error: data['error']};
   }
-  const trigger = catalog.triggers.find((t) => t.id === data['trigger']);
-  const action = catalog.actions.find((a) => a.id === data['action']);
+  const trigger = catalog.triggers.find(t => t.id === data['trigger']);
+  const action = catalog.actions.find(a => a.id === data['action']);
   if (!trigger || !action) {
-    return { error: 'The AI picked an event or an action that does not exist' };
+    return {error: 'The AI picked an event or an action that does not exist'};
   }
   const triggerParams = strings(data['triggerParams']);
   const actionParams = strings(data['actionParams']);
   const problem =
-    paramsError(trigger.params, triggerParams) ?? paramsError(action.params, actionParams);
+    paramsError(trigger.params, triggerParams) ??
+    paramsError(action.params, actionParams);
   if (problem) {
-    return { error: problem };
+    return {error: problem};
   }
   return {
     draft: {

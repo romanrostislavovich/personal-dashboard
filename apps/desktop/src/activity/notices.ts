@@ -1,7 +1,10 @@
-import { TrackerNotice } from './tracker';
+import {TrackerNotice} from './tracker';
 
 /** Legacy tray notices are Russian; optional smart suggestions follow the system locale. */
-export function noticeText(notice: TrackerNotice, locale = 'ru'): { title: string; body: string } {
+export function noticeText(
+  notice: TrackerNotice,
+  locale = 'ru',
+): {title: string; body: string} {
   switch (notice.kind) {
     case 'smart-break':
       return locale.toLowerCase().startsWith('ru')
@@ -19,9 +22,14 @@ export function noticeText(notice: TrackerNotice, locale = 'ru'): { title: strin
         body: `${notice.minutes} мин за компьютером без перерыва. Встаньте, пройдитесь, посмотрите вдаль.`,
       };
     case 'focus-ended': {
-      const held = notice.held ? ` Пока шёл фокус, пришло уведомлений: ${notice.held}.` : '';
+      const held = notice.held
+        ? ` Пока шёл фокус, пришло уведомлений: ${notice.held}.`
+        : '';
       return {
-        title: notice.next === 'long-break' ? 'Фокус завершён — длинный перерыв' : 'Фокус завершён',
+        title:
+          notice.next === 'long-break'
+            ? 'Фокус завершён — длинный перерыв'
+            : 'Фокус завершён',
         body: `Перерыв ${notice.minutes} мин.${held}`,
       };
     }

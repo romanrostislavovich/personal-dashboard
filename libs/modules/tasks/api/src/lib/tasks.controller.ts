@@ -10,7 +10,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
 import {
   Reminder,
   reminderInputSchema,
@@ -24,9 +24,9 @@ import {
   taskListInputSchema,
   taskUpdateSchema,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { RemindersService } from './reminders.service';
-import { TasksService } from './tasks.service';
+import {z} from 'zod';
+import {RemindersService} from './reminders.service';
+import {TasksService} from './tasks.service';
 
 const id = () => Param('id', ParseUUIDPipe);
 
@@ -67,7 +67,10 @@ export class TasksController {
   /** Its tasks go back to the inbox. */
   @Delete('lists/:id')
   @HttpCode(204)
-  removeList(@CurrentUser() user: AuthUser, @id() listId: string): Promise<void> {
+  removeList(
+    @CurrentUser() user: AuthUser,
+    @id() listId: string,
+  ): Promise<void> {
     return this.tasks.removeList(user.id, listId);
   }
 
@@ -81,7 +84,8 @@ export class TasksController {
   @Post('reminders')
   createReminder(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(reminderInputSchema)) input: z.output<typeof reminderInputSchema>,
+    @Body(new ZodValidationPipe(reminderInputSchema))
+    input: z.output<typeof reminderInputSchema>,
   ): Promise<Reminder> {
     return this.reminders.create(user.id, input);
   }
@@ -99,7 +103,10 @@ export class TasksController {
 
   @Post('reminders/:id/done')
   @HttpCode(204)
-  reminderDone(@CurrentUser() user: AuthUser, @id() reminderId: string): Promise<void> {
+  reminderDone(
+    @CurrentUser() user: AuthUser,
+    @id() reminderId: string,
+  ): Promise<void> {
     return this.reminders.done(user.id, reminderId);
   }
 
@@ -116,7 +123,10 @@ export class TasksController {
 
   @Delete('reminders/:id')
   @HttpCode(204)
-  removeReminder(@CurrentUser() user: AuthUser, @id() reminderId: string): Promise<void> {
+  removeReminder(
+    @CurrentUser() user: AuthUser,
+    @id() reminderId: string,
+  ): Promise<void> {
     return this.reminders.remove(user.id, reminderId);
   }
 
@@ -131,7 +141,8 @@ export class TasksController {
   @Post()
   create(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(taskInputSchema)) input: z.output<typeof taskInputSchema>,
+    @Body(new ZodValidationPipe(taskInputSchema))
+    input: z.output<typeof taskInputSchema>,
   ): Promise<Task> {
     return this.tasks.create(user.id, input);
   }
@@ -141,7 +152,8 @@ export class TasksController {
   update(
     @CurrentUser() user: AuthUser,
     @id() taskId: string,
-    @Body(new ZodValidationPipe(taskUpdateSchema)) changes: z.output<typeof taskUpdateSchema>,
+    @Body(new ZodValidationPipe(taskUpdateSchema))
+    changes: z.output<typeof taskUpdateSchema>,
   ): Promise<void> {
     return this.tasks.update(user.id, taskId, changes);
   }

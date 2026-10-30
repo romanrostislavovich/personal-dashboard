@@ -1,9 +1,15 @@
-import { OpenVaultItem } from '@pd/contracts';
-import { SaveOffer } from '../shared/messages';
-import { matchesPage, siteName, siteOf } from '../shared/site';
-import { readJson, writeJson } from './storage';
-import { DRAFT_SOURCE } from './inline';
-import { isUnlocked, itemFields, saveItem, vaultItems, vaultStatus } from './vault';
+import {OpenVaultItem} from '@pd/contracts';
+import {SaveOffer} from '../shared/messages';
+import {matchesPage, siteName, siteOf} from '../shared/site';
+import {readJson, writeJson} from './storage';
+import {DRAFT_SOURCE} from './inline';
+import {
+  isUnlocked,
+  itemFields,
+  saveItem,
+  vaultItems,
+  vaultStatus,
+} from './vault';
 
 /*
  * A login typed into a page, offered to be saved. When a form with a password is sent, the
@@ -43,7 +49,8 @@ export async function noteSubmitted(
   }
   const all = await pendingByTab();
   const before = all[tabId];
-  const sameSite = before && before.site === site.site && Date.now() - before.at < PENDING_MS;
+  const sameSite =
+    before && before.site === site.site && Date.now() - before.at < PENDING_MS;
   all[tabId] = {
     url: site.origin,
     site: site.site,
@@ -59,7 +66,10 @@ export async function noteSubmitted(
  * What to offer in this tab; `null` — nothing (or it is in the vault already). A page (`page`)
  * gets it once: after that it waits in the popup, not on every page that follows.
  */
-export async function offerFor(tabId: number, page = false): Promise<SaveOffer | null> {
+export async function offerFor(
+  tabId: number,
+  page = false,
+): Promise<SaveOffer | null> {
   const pending = await pendingOf(tabId);
   if (!pending || (page && pending.shown)) {
     return null;
@@ -68,37 +78,43 @@ export async function offerFor(tabId: number, page = false): Promise<SaveOffer |
   if (status === 'none') {
     return null;
   }
-  const offer = { site: siteName(pending.url), username: pending.username };
+  const offer = {site: siteName(pending.url), username: pending.username};
   if (status === 'locked' || status === 'signed-out') {
     if (page) {
       await markShown(tabId);
     }
-    return { mode: status, ...offer };
+    return {mode: status, ...offer};
   }
   if (await completeDraft(pending)) {
     await drop(tabId);
     return null;
   }
   const same = await sameLogins(pending);
-  if (same.some((item) => item.password === pending.password)) {
+  if (same.some(item => item.password === pending.password)) {
     await drop(tabId);
     return null;
   }
   if (page) {
     await markShown(tabId);
   }
-  return { mode: same.length ? 'update' : 'save', ...offer };
+  return {mode: same.length ? 'update' : 'save', ...offer};
 }
 
 /** Saves what the tab offers: a new login, or the new password of the same login. */
-export async function saveOffer(tabId: number, mode: 'save' | 'update'): Promise<void> {
+export async function saveOffer(
+  tabId: number,
+  mode: 'save' | 'update',
+): Promise<void> {
   const pending = await pendingOf(tabId);
   if (!pending || !(await isUnlocked())) {
     return;
   }
   const [existing] = await sameLogins(pending);
   if (mode === 'update' && existing) {
-    await saveItem({ ...itemFields(existing), password: pending.password }, existing.id);
+    await saveItem(
+      {...itemFields(existing), password: pending.password},
+      existing.id,
+    );
   } else {
     await saveItem({
       kind: 'login',
@@ -114,11 +130,16 @@ export async function saveOffer(tabId: number, mode: 'save' | 'update'): Promise
 }
 
 /** "Not now" forgets this one; "never" also stops the offers for the site. */
-export async function dismissOffer(tabId: number, never: boolean): Promise<void> {
+export async function dismissOffer(
+  tabId: number,
+  never: boolean,
+): Promise<void> {
   const pending = await pendingOf(tabId);
   if (never && pending) {
     const sites = await neverSites();
-    await writeJson(chrome.storage.local, NEVER_KEY, [...new Set([...sites, pending.site])]);
+    await writeJson(chrome.storage.local, NEVER_KEY, [
+      ...new Set([...sites, pending.site]),
+    ]);
   }
   await drop(tabId);
 }
@@ -133,9 +154,9 @@ export async function forgetTab(tabId: number): Promise<void> {
  * the login that goes with it: the saved item gets it, and nothing more is offered.
  */
 async function completeDraft(pending: Pending): Promise<boolean> {
-  const { items } = await vaultItems({ use: false });
+  const {items} = await vaultItems({use: false});
   const draft = items.find(
-    (item) =>
+    item =>
       item.source?.app === DRAFT_SOURCE &&
       item.password === pending.password &&
       matchesPage(item.urls, pending.url),
@@ -144,16 +165,19 @@ async function completeDraft(pending: Pending): Promise<boolean> {
     return false;
   }
   // Without `source`: a complete login now, like any other.
-  const { kind, title, urls, password, notes, favorite } = draft;
+  const {kind, title, urls, password, notes, favorite} = draft;
   const username = pending.username || draft.username;
-  await saveItem({ kind, title, urls, username, password, notes, favorite }, draft.id);
+  await saveItem(
+    {kind, title, urls, username, password, notes, favorite},
+    draft.id,
+  );
   return true;
 }
 
 async function sameLogins(pending: Pending): Promise<OpenVaultItem[]> {
-  const { items } = await vaultItems({ use: false });
+  const {items} = await vaultItems({use: false});
   return items.filter(
-    (item) =>
+    item =>
       item.kind === 'login' &&
       item.username === pending.username &&
       matchesPage(item.urls, pending.url),
@@ -163,7 +187,9 @@ async function sameLogins(pending: Pending): Promise<OpenVaultItem[]> {
 /** The tab's login with a password, still fresh. */
 async function pendingOf(tabId: number): Promise<Pending | null> {
   const pending = (await pendingByTab())[tabId];
-  return pending?.password && Date.now() - pending.at < PENDING_MS ? pending : null;
+  return pending?.password && Date.now() - pending.at < PENDING_MS
+    ? pending
+    : null;
 }
 
 async function pendingByTab(): Promise<PendingByTab> {
@@ -178,8 +204,10 @@ export async function offerAgain(): Promise<number[]> {
   const all = await pendingByTab();
   const tabs = Object.keys(all)
     .map(Number)
-    .filter((tabId) => all[tabId].password && Date.now() - all[tabId].at < PENDING_MS);
-  tabs.forEach((tabId) => (all[tabId].shown = false));
+    .filter(
+      tabId => all[tabId].password && Date.now() - all[tabId].at < PENDING_MS,
+    );
+  tabs.forEach(tabId => (all[tabId].shown = false));
   await writeJson(chrome.storage.session, PENDING_KEY, all);
   return tabs;
 }
@@ -206,7 +234,7 @@ export async function forgetNever(site: string): Promise<void> {
   await writeJson(
     chrome.storage.local,
     NEVER_KEY,
-    sites.filter((candidate) => candidate !== site),
+    sites.filter(candidate => candidate !== site),
   );
 }
 

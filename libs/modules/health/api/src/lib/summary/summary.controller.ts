@@ -10,15 +10,16 @@ import {
   Post,
   StreamableFile,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
 import {
   HealthSummaryOptions,
   healthSummaryOptionsSchema,
   healthShareInputSchema,
 } from '@pd/contracts';
-import { SummaryService, ValidShareInput } from './summary.service';
+import {SummaryService, ValidShareInput} from './summary.service';
 
-const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const DOCX =
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
 /** The summary for a new doctor: a page to print, a Word document, links. */
 @Controller('medical')
@@ -32,7 +33,8 @@ export class SummaryController {
   @Header('Cache-Control', 'no-store')
   html(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(healthSummaryOptionsSchema)) options: HealthSummaryOptions,
+    @Body(new ZodValidationPipe(healthSummaryOptionsSchema))
+    options: HealthSummaryOptions,
   ) {
     return this.summaries.html(user.id, options);
   }
@@ -41,7 +43,8 @@ export class SummaryController {
   @HttpCode(200)
   async docx(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(healthSummaryOptionsSchema)) options: HealthSummaryOptions,
+    @Body(new ZodValidationPipe(healthSummaryOptionsSchema))
+    options: HealthSummaryOptions,
   ): Promise<StreamableFile> {
     const file = await this.summaries.docx(user.id, options);
     return new StreamableFile(file, {
@@ -67,7 +70,10 @@ export class SummaryController {
   /** Revokes it: the link stops working at once. */
   @Delete('shares/:id')
   @HttpCode(204)
-  revoke(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  revoke(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.summaries.revoke(user.id, id);
   }
 }

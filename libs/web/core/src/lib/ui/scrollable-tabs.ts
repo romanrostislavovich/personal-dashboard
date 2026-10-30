@@ -1,6 +1,6 @@
-import { DOCUMENT } from '@angular/common';
-import { inject, Provider } from '@angular/core';
-import { MAT_TABS_CONFIG } from '@angular/material/tabs';
+import {DOCUMENT} from '@angular/common';
+import {inject, Provider} from '@angular/core';
+import {MAT_TABS_CONFIG} from '@angular/material/tabs';
 
 /** The row of tabs as Material draws it, scrolled natively instead of by its own paging. */
 const TAB_ROW = '.mat-mdc-tab-label-container, .mat-mdc-tab-link-container';
@@ -15,7 +15,7 @@ const STEP = 0.7;
  */
 export const provideScrollableTabs = (): Provider => ({
   provide: MAT_TABS_CONFIG,
-  useValue: { disablePagination: true },
+  useValue: {disablePagination: true},
 });
 
 /** Wheel over the tabs, and the arrows on every row of tabs that appears. */
@@ -40,11 +40,16 @@ export function startScrollableTabs(): void {
       row.scrollLeft += event.deltaY;
       event.preventDefault();
     },
-    { passive: false },
+    {passive: false},
   );
   const arm = () =>
-    document.querySelectorAll<HTMLElement>(TAB_ROW).forEach((row) => withArrows(row));
-  new view.MutationObserver(arm).observe(document.body, { childList: true, subtree: true });
+    document
+      .querySelectorAll<HTMLElement>(TAB_ROW)
+      .forEach(row => withArrows(row));
+  new view.MutationObserver(arm).observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
   arm();
 }
 
@@ -78,7 +83,7 @@ function withArrows(row: HTMLElement): void {
     left.hidden = row.scrollLeft <= 1;
     right.hidden = row.scrollLeft + row.clientWidth >= row.scrollWidth - 1;
   };
-  row.addEventListener('scroll', update, { passive: true });
+  row.addEventListener('scroll', update, {passive: true});
   new ResizeObserver(update).observe(row);
   update();
   // Material's paging brought the chosen tab into view; the native scroll has to do it itself,
@@ -102,6 +107,8 @@ function revealActive(row: HTMLElement): void {
     tab.offsetLeft >= row.scrollLeft &&
     tab.offsetLeft + tab.offsetWidth <= row.scrollLeft + row.clientWidth;
   if (!seen) {
-    row.scrollTo({ left: tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2 });
+    row.scrollTo({
+      left: tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2,
+    });
   }
 }

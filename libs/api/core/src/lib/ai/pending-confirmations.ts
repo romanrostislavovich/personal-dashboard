@@ -28,7 +28,7 @@ export class PendingConfirmations {
   confirmOrRequest(userId: string, call: string, turn: number): boolean {
     const calls = this.pending.get(userId) ?? new Map<string, Pending>();
     this.pending.set(userId, calls);
-    for (const [key, { at }] of calls) {
+    for (const [key, {at}] of calls) {
       if (this.now() - at > CONFIRMATION_TTL_MS) {
         calls.delete(key);
       }
@@ -38,7 +38,7 @@ export class PendingConfirmations {
       calls.delete(call);
       return true;
     }
-    calls.set(call, { turn, at: this.now() });
+    calls.set(call, {turn, at: this.now()});
     return false;
   }
 }
@@ -47,6 +47,6 @@ export class PendingConfirmations {
 export function callKey(tool: string, args: Record<string, unknown>): string {
   const sorted = Object.keys(args)
     .sort()
-    .map((key) => [key, args[key]]);
+    .map(key => [key, args[key]]);
   return `${tool}:${JSON.stringify(sorted)}`;
 }

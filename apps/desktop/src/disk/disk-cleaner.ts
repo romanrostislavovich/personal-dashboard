@@ -1,14 +1,14 @@
-import { app, shell } from 'electron';
-import { existsSync, readdirSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
-import { DiskFix, emptyRecycleBin, FixResult, runFix } from './disk-fixes';
-import { isProtected } from './disk-guard';
-import { DiskReport, ScanProgress, scanDisk } from './disk-scan';
+import {app, shell} from 'electron';
+import {existsSync, readdirSync} from 'node:fs';
+import {homedir} from 'node:os';
+import {join} from 'node:path';
+import {DiskFix, emptyRecycleBin, FixResult, runFix} from './disk-fixes';
+import {isProtected} from './disk-guard';
+import {DiskReport, ScanProgress, scanDisk} from './disk-scan';
 
 export type DiskScanStatus =
-  | { state: 'idle' }
-  | { state: 'scanning'; mount: string; progress: ScanProgress }
+  | {state: 'idle'}
+  | {state: 'scanning'; mount: string; progress: ScanProgress}
   /** The report as the AI may see it: the profile folder written as %USERPROFILE%. */
   | {
       state: 'done';
@@ -17,7 +17,7 @@ export type DiskScanStatus =
       /** The advice the page got for this report: shown again instead of asking anew. */
       advice: unknown;
     }
-  | { state: 'error'; message: string };
+  | {state: 'error'; message: string};
 
 export interface TrashResult {
   path: string;
@@ -34,7 +34,7 @@ const PROFILE = '%USERPROFILE%';
  * (disk-guard.ts) — the page, the server and the AI cannot ask for anything else.
  */
 export class DiskCleaner {
-  private status: DiskScanStatus = { state: 'idle' };
+  private status: DiskScanStatus = {state: 'idle'};
   /** Every path of the last report, as the page knows it → the real one. */
   private known = new Map<string, string>();
   /**
@@ -51,20 +51,20 @@ export class DiskCleaner {
     if (this.status.state === 'scanning' || !/^[A-Za-z]:$/.test(mount)) {
       return;
     }
-    this.status = { state: 'scanning', mount, progress: { files: 0, bytes: 0 } };
-    scanDisk(mount, (progress) => {
+    this.status = {state: 'scanning', mount, progress: {files: 0, bytes: 0}};
+    scanDisk(mount, progress => {
       if (this.status.state === 'scanning') {
-        this.status = { ...this.status, progress };
+        this.status = {...this.status, progress};
       }
     })
-      .then((report) => {
+      .then(report => {
         this.known = new Map(
-          [...report.folders, ...report.files, ...report.known].map((item) => [
+          [...report.folders, ...report.files, ...report.known].map(item => [
             hideProfile(item.path),
             item.path,
           ]),
         );
-        this.containers = new Set(report.known.map((place) => place.path));
+        this.containers = new Set(report.known.map(place => place.path));
         this.status = {
           state: 'done',
           report: withHiddenProfile(report),
@@ -72,30 +72,39 @@ export class DiskCleaner {
           advice: null,
         };
       })
-      .catch((error: Error) => (this.status = { state: 'error', message: error.message }));
+      .catch(
+        (error: Error) =>
+          (this.status = {state: 'error', message: error.message}),
+      );
   }
 
   /** Moves the picked paths to the Recycle Bin, one by one; the rest of the list goes on. */
   async trash(paths: string[]): Promise<TrashResult[]> {
-    const ownFolders = [app.getAppPath(), app.getPath('userData'), process.resourcesPath];
+    const ownFolders = [
+      app.getAppPath(),
+      app.getPath('userData'),
+      process.resourcesPath,
+    ];
     const results: TrashResult[] = [];
     for (const path of paths) {
       const real = this.known.get(path);
       if (!real) {
-        results.push({ path, ok: false, reason: 'unknown' });
+        results.push({path, ok: false, reason: 'unknown'});
       } else if (isProtected(real, ownFolders)) {
-        results.push({ path, ok: false, reason: 'protected' });
+        results.push({path, ok: false, reason: 'protected'});
       } else if (!existsSync(real)) {
-        results.push({ path, ok: false, reason: 'missing' });
+        results.push({path, ok: false, reason: 'missing'});
       } else if (this.containers.has(real)) {
         const moved = await trashContents(real);
-        results.push(moved ? { path, ok: true } : { path, ok: false, reason: 'failed' });
+        results.push(
+          moved ? {path, ok: true} : {path, ok: false, reason: 'failed'},
+        );
       } else {
         try {
           await shell.trashItem(real);
-          results.push({ path, ok: true });
+          results.push({path, ok: true});
         } catch {
-          results.push({ path, ok: false, reason: 'failed' });
+          results.push({path, ok: false, reason: 'failed'});
         }
       }
     }
@@ -105,14 +114,14 @@ export class DiskCleaner {
   /** The page got advice for the report: it outlives a reload of the page. */
   keepAdvice(advice: unknown): void {
     if (this.status.state === 'done') {
-      this.status = { ...this.status, advice };
+      this.status = {...this.status, advice};
     }
   }
 
   /** The user closed the panel: the next analysis starts from a new scan. */
   dismiss(): void {
     if (this.status.state !== 'scanning') {
-      this.status = { state: 'idle' };
+      this.status = {state: 'idle'};
       this.known = new Map();
       this.containers = new Set();
     }
@@ -167,8 +176,11 @@ function hideProfile(path: string): string {
 function withHiddenProfile(report: DiskReport): DiskReport {
   return {
     ...report,
-    folders: report.folders.map((item) => ({ ...item, path: hideProfile(item.path) })),
-    files: report.files.map((item) => ({ ...item, path: hideProfile(item.path) })),
-    known: report.known.map((item) => ({ ...item, path: hideProfile(item.path) })),
+    folders: report.folders.map(item => ({
+      ...item,
+      path: hideProfile(item.path),
+    })),
+    files: report.files.map(item => ({...item, path: hideProfile(item.path)})),
+    known: report.known.map(item => ({...item, path: hideProfile(item.path)})),
   };
 }

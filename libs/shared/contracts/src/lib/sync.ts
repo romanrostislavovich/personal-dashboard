@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /**
  * Two-way sync between two instances of the dashboard (see docs/sync.md):
@@ -74,7 +74,9 @@ export interface SyncActionResponse {
 
 /** Asks the server for its fingerprints (see `TableFingerprint`): only the handshake. */
 export const syncFingerprintsRequestSchema = z.object(handshake);
-export type SyncFingerprintsRequest = z.infer<typeof syncFingerprintsRequestSchema>;
+export type SyncFingerprintsRequest = z.infer<
+  typeof syncFingerprintsRequestSchema
+>;
 
 /**
  * A table's contents in short: the row count and a hash of all rows. The client compares them
@@ -147,7 +149,7 @@ export interface RestoreCheck {
   tables: number;
   rows: number;
   /** Tables whose restored row count is off; `restored: -1` — the table is missing. */
-  mismatches: { table: string; live: number; restored: number }[];
+  mismatches: {table: string; live: number; restored: number}[];
 }
 
 /**
@@ -156,7 +158,12 @@ export interface RestoreCheck {
  * - `unchecked` — no test restore for more than a week;
  * - `restore-failed` — the latest test restore failed or lost rows.
  */
-export const BACKUP_PROBLEMS = ['missing', 'stale', 'unchecked', 'restore-failed'] as const;
+export const BACKUP_PROBLEMS = [
+  'missing',
+  'stale',
+  'unchecked',
+  'restore-failed',
+] as const;
 export type BackupProblem = (typeof BACKUP_PROBLEMS)[number];
 
 export interface BackupStatus {

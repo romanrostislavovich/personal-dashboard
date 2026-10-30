@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { GentleDayComponent } from './gentle-day.component';
-import { GentleStepsComponent } from './gentle-steps.component';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {GentleDayComponent} from './gentle-day.component';
+import {GentleStepsComponent} from './gentle-steps.component';
 
 /** The tab of a gentle day: today's plan and the library of small steps. */
 @Component({
@@ -23,8 +23,12 @@ import { GentleStepsComponent } from './gentle-steps.component';
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>{{ 'psychology.gentle.today' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'psychology.gentle.about' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'psychology.gentle.today' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'psychology.gentle.about' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content class="padded">
         <pd-gentle-day />
@@ -38,7 +42,9 @@ import { GentleStepsComponent } from './gentle-steps.component';
     </mat-card>
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>{{ 'psychology.gentle.library' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'psychology.gentle.library' | transloco
+        }}</mat-card-title>
       </mat-card-header>
       <mat-card-content class="padded">
         <pd-gentle-steps />

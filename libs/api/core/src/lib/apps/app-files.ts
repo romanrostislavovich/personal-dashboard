@@ -1,6 +1,6 @@
-import { AppDownload, AppPlatform } from '@pd/contracts';
-import { existsSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import {AppDownload, AppPlatform} from '@pd/contracts';
+import {existsSync, readFileSync, statSync} from 'node:fs';
+import {join} from 'node:path';
 
 /*
  * What this server hands out to the apps, read from the folders it serves:
@@ -29,7 +29,8 @@ const INSTALLERS_MANIFEST = 'installers.json';
 const APK_MANIFEST = 'apk.json';
 
 /** Where the installers are when this server has none: the releases of the project. */
-const RELEASES_URL = 'https://github.com/romanrostislavovich/personal-dashboard/releases/latest';
+const RELEASES_URL =
+  'https://github.com/romanrostislavovich/personal-dashboard/releases/latest';
 
 /** `bundle.json` of a bundle folder: its version; `null` — no folder, or not a bundle. */
 export function bundleVersion(dir: string | undefined): string | null {
@@ -37,7 +38,9 @@ export function bundleVersion(dir: string | undefined): string | null {
     return null;
   }
   try {
-    const manifest = JSON.parse(readFileSync(join(dir, 'bundle.json'), 'utf8')) as {
+    const manifest = JSON.parse(
+      readFileSync(join(dir, 'bundle.json'), 'utf8'),
+    ) as {
       version?: unknown;
     };
     return typeof manifest.version === 'string' ? manifest.version : null;
@@ -47,7 +50,7 @@ export function bundleVersion(dir: string | undefined): string | null {
 }
 
 interface InstallersManifest {
-  files: { platform: AppPlatform; file: string }[];
+  files: {platform: AppPlatform; file: string}[];
 }
 
 /**
@@ -57,8 +60,8 @@ interface InstallersManifest {
 export function desktopDownloads(dir: string | undefined): AppDownload[] {
   const kept = readInstallers(dir);
   const platforms: AppPlatform[] = ['windows', 'macos', 'linux'];
-  return platforms.map((platform) => {
-    const file = kept.find((candidate) => candidate.platform === platform);
+  return platforms.map(platform => {
+    const file = kept.find(candidate => candidate.platform === platform);
     return file && dir
       ? {
           platform,
@@ -66,7 +69,7 @@ export function desktopDownloads(dir: string | undefined): AppDownload[] {
           size: statSync(join(dir, file.file)).size,
           external: false,
         }
-      : { platform, url: RELEASES_URL, size: null, external: true };
+      : {platform, url: RELEASES_URL, size: null, external: true};
   });
 }
 
@@ -90,15 +93,20 @@ export function mobileApk(dir: string | undefined): {
   downloads: AppDownload[];
 } {
   if (!dir) {
-    return { version: null, downloads: [] };
+    return {version: null, downloads: []};
   }
   try {
-    const manifest = JSON.parse(readFileSync(join(dir, APK_MANIFEST), 'utf8')) as {
+    const manifest = JSON.parse(
+      readFileSync(join(dir, APK_MANIFEST), 'utf8'),
+    ) as {
       version?: unknown;
       file?: unknown;
     };
-    if (typeof manifest.file !== 'string' || !existsSync(join(dir, manifest.file))) {
-      return { version: null, downloads: [] };
+    if (
+      typeof manifest.file !== 'string' ||
+      !existsSync(join(dir, manifest.file))
+    ) {
+      return {version: null, downloads: []};
     }
     return {
       version: typeof manifest.version === 'string' ? manifest.version : null,
@@ -112,7 +120,7 @@ export function mobileApk(dir: string | undefined): {
       ],
     };
   } catch {
-    return { version: null, downloads: [] };
+    return {version: null, downloads: []};
   }
 }
 
@@ -124,7 +132,9 @@ function readInstallers(dir: string | undefined): InstallersManifest['files'] {
     const manifest = JSON.parse(
       readFileSync(join(dir, INSTALLERS_MANIFEST), 'utf8'),
     ) as InstallersManifest;
-    return (manifest.files ?? []).filter((file) => existsSync(join(dir, file.file)));
+    return (manifest.files ?? []).filter(file =>
+      existsSync(join(dir, file.file)),
+    );
   } catch {
     return [];
   }

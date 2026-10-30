@@ -1,4 +1,4 @@
-import { LocalDate } from '@pd/contracts';
+import {LocalDate} from '@pd/contracts';
 
 /** On the diary's scale of 1–5: a good day and a bad one (as the core compares them). */
 const GOOD_FROM = 4;
@@ -30,21 +30,30 @@ export interface MoodArtists {
  * shows what goes together, not what lifts a mood.
  */
 export function moodArtists(
-  mood: { day: LocalDate; value: number }[],
-  plays: { day: LocalDate; artist: string; plays: number }[],
+  mood: {day: LocalDate; value: number}[],
+  plays: {day: LocalDate; artist: string; plays: number}[],
 ): MoodArtists {
-  const good = new Set(mood.filter((day) => day.value >= GOOD_FROM).map((day) => day.day));
-  const bad = new Set(mood.filter((day) => day.value <= BAD_UP_TO).map((day) => day.day));
+  const good = new Set(
+    mood.filter(day => day.value >= GOOD_FROM).map(day => day.day),
+  );
+  const bad = new Set(
+    mood.filter(day => day.value <= BAD_UP_TO).map(day => day.day),
+  );
   const artists = new Map<
     string,
-    { good: number; bad: number; goodPlays: number; badPlays: number }
+    {good: number; bad: number; goodPlays: number; badPlays: number}
   >();
   for (const play of plays) {
     const kind = good.has(play.day) ? 'good' : bad.has(play.day) ? 'bad' : null;
     if (!kind) {
       continue;
     }
-    const known = artists.get(play.artist) ?? { good: 0, bad: 0, goodPlays: 0, badPlays: 0 };
+    const known = artists.get(play.artist) ?? {
+      good: 0,
+      bad: 0,
+      goodPlays: 0,
+      badPlays: 0,
+    };
     known[kind] += 1;
     known[`${kind}Plays`] += play.plays;
     artists.set(play.artist, known);

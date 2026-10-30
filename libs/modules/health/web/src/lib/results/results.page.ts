@@ -1,10 +1,16 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {DatePipe, DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   formatLabRange,
   HealthLabPanel,
@@ -13,10 +19,10 @@ import {
   labSeries,
   LabSeries,
 } from '@pd/contracts';
-import { HealthDialogs } from '../dialogs/health-dialogs.service';
-import { HealthApi } from '../health.api';
-import { CountryPipe } from '../health-labels';
-import { LabChartComponent } from './lab-chart.component';
+import {HealthDialogs} from '../dialogs/health-dialogs.service';
+import {HealthApi} from '../health.api';
+import {CountryPipe} from '../health-labels';
+import {LabChartComponent} from './lab-chart.component';
 
 /**
  * Lab results and studies. On top, every analyte with its latest value — one line across
@@ -64,10 +70,15 @@ import { LabChartComponent } from './lab-chart.component';
                 [attr.aria-expanded]="opened() === s.key"
               >
                 <span class="name">
-                  {{ s.analyte ? ('health.analytes.' + s.analyte | transloco) : s.name }}
+                  {{
+                    s.analyte
+                      ? ('health.analytes.' + s.analyte | transloco)
+                      : s.name
+                  }}
                 </span>
                 <span class="latest">
-                  {{ latest.value | number: '1.0-3' }} <small>{{ s.unit }}</small>
+                  {{ latest.value | number: '1.0-3' }}
+                  <small>{{ s.unit }}</small>
                 </span>
                 @if (latest.flag) {
                   <span class="flag">
@@ -80,7 +91,11 @@ import { LabChartComponent } from './lab-chart.component';
                 <span class="hint">
                   {{ latest.day | date: 'd MMM y' }}
                   @if (s.points.length > 1) {
-                    · {{ 'health.labs.results' | transloco: { count: s.points.length } }}
+                    ·
+                    {{
+                      'health.labs.results'
+                        | transloco: {count: s.points.length}
+                    }}
                   }
                 </span>
                 <mat-icon class="chevron">
@@ -161,13 +176,19 @@ import { LabChartComponent } from './lab-chart.component';
                   <tr [class.out]="line.flag">
                     <td>{{ line.name }}</td>
                     <td class="number">
-                      {{ line.value !== null ? (line.value | number: '1.0-3') : line.textValue }}
+                      {{
+                        line.value !== null
+                          ? (line.value | number: '1.0-3')
+                          : line.textValue
+                      }}
                       @if (line.flag) {
                         {{ line.flag === 'high' ? '↑' : '↓' }}
                       }
                     </td>
                     <td>{{ line.unit }}</td>
-                    <td class="hint">{{ range(line.refLow, line.refHigh, line.refText) }}</td>
+                    <td class="hint">
+                      {{ range(line.refLow, line.refHigh, line.refText) }}
+                    </td>
                   </tr>
                 }
               </tbody>
@@ -190,7 +211,9 @@ import { LabChartComponent } from './lab-chart.component';
               @if (study.area) {
                 <span>{{ study.area }}</span>
               }
-              <span class="hint">{{ study.performedOn | date: 'd MMMM y' }}</span>
+              <span class="hint">{{
+                study.performedOn | date: 'd MMMM y'
+              }}</span>
               <span class="spacer"></span>
               <button
                 matIconButton
@@ -351,19 +374,25 @@ export class ResultsPage {
   protected readonly data = computed(() =>
     this.record.hasValue() ? this.record.value() : undefined,
   );
-  protected readonly series = computed(() => labSeries(this.data()?.labPanels ?? []));
+  protected readonly series = computed(() =>
+    labSeries(this.data()?.labPanels ?? []),
+  );
   /** The analyte whose chart is open. */
   protected readonly opened = signal<string | null>(null);
 
   protected toggle(key: string): void {
-    this.opened.update((current) => (current === key ? null : key));
+    this.opened.update(current => (current === key ? null : key));
   }
 
   protected reversed(series: LabSeries) {
     return [...series.points].reverse();
   }
 
-  protected range(low: number | null, high: number | null, text: string | null = null): string {
+  protected range(
+    low: number | null,
+    high: number | null,
+    text: string | null = null,
+  ): string {
     return formatLabRange(low, high, text);
   }
 
@@ -374,38 +403,52 @@ export class ResultsPage {
 
   protected async addPanel(): Promise<void> {
     const record = this.data();
-    if (record && (await this.dialogs.labPanel({ record }))) {
+    if (record && (await this.dialogs.labPanel({record}))) {
       this.record.reload();
     }
   }
 
-  protected async editPanel(record: HealthRecord, panel: HealthLabPanel): Promise<void> {
-    if (await this.dialogs.labPanel({ record, panel })) {
+  protected async editPanel(
+    record: HealthRecord,
+    panel: HealthLabPanel,
+  ): Promise<void> {
+    if (await this.dialogs.labPanel({record, panel})) {
       this.record.reload();
     }
   }
 
   protected async removePanel(panel: HealthLabPanel): Promise<void> {
-    if (await this.dialogs.remove(panel.takenOn, () => this.api.client.removeLabPanel(panel.id))) {
+    if (
+      await this.dialogs.remove(panel.takenOn, () =>
+        this.api.client.removeLabPanel(panel.id),
+      )
+    ) {
       this.record.reload();
     }
   }
 
   protected async addStudy(): Promise<void> {
     const record = this.data();
-    if (record && (await this.dialogs.study({ record }))) {
+    if (record && (await this.dialogs.study({record}))) {
       this.record.reload();
     }
   }
 
-  protected async editStudy(record: HealthRecord, study: HealthStudy): Promise<void> {
-    if (await this.dialogs.study({ record, study })) {
+  protected async editStudy(
+    record: HealthRecord,
+    study: HealthStudy,
+  ): Promise<void> {
+    if (await this.dialogs.study({record, study})) {
       this.record.reload();
     }
   }
 
   protected async removeStudy(study: HealthStudy): Promise<void> {
-    if (await this.dialogs.remove(study.performedOn, () => this.api.client.removeStudy(study.id))) {
+    if (
+      await this.dialogs.remove(study.performedOn, () =>
+        this.api.client.removeStudy(study.id),
+      )
+    ) {
       this.record.reload();
     }
   }

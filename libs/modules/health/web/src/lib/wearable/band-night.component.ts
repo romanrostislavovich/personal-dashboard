@@ -1,9 +1,14 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { BandDayDetail, SleepStage, WearableDay } from '@pd/contracts';
-import { clock } from './band-format';
+import {DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {MatCardModule} from '@angular/material/card';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {BandDayDetail, SleepStage, WearableDay} from '@pd/contracts';
+import {clock} from './band-format';
 
 /** The rows of the chart, top to bottom; "asleep" (a band without stages) goes with light. */
 const ROWS: SleepStage[] = ['awake', 'rem', 'light', 'deep'];
@@ -29,10 +34,13 @@ const ROW = 22;
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>{{ 'health.band.night.title' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'health.band.night.title' | transloco
+        }}</mat-card-title>
         @if (detail().sleep; as sleep) {
           <mat-card-subtitle
-            >{{ clock(sleep.startAt) }} – {{ clock(sleep.endAt) }}</mat-card-subtitle
+            >{{ clock(sleep.startAt) }} –
+            {{ clock(sleep.endAt) }}</mat-card-subtitle
           >
         }
       </mat-card-header>
@@ -79,7 +87,8 @@ const ROW = 22;
               <div>
                 <dt>{{ 'health.band.fields.sleepMinutes' | transloco }}</dt>
                 <dd>
-                  {{ d.sleepMinutes / 60 | number: '1.1-1' }} {{ 'health.band.h' | transloco }}
+                  {{ d.sleepMinutes / 60 | number: '1.1-1' }}
+                  {{ 'health.band.h' | transloco }}
                 </dd>
               </div>
             }
@@ -90,7 +99,8 @@ const ROW = 22;
                   {{ d.hrvMs | number: '1.0-0' }} ms
                   @if (detail().baseline.hrvMs; as base) {
                     <span class="base">{{
-                      'health.band.night.usual' | transloco: { value: (base | number: '1.0-0') }
+                      'health.band.night.usual'
+                        | transloco: {value: (base | number: '1.0-0')}
                     }}</span>
                   }
                 </dd>
@@ -103,7 +113,8 @@ const ROW = 22;
                   {{ d.restingHeartRate }} bpm
                   @if (detail().baseline.restingHeartRate; as base) {
                     <span class="base">{{
-                      'health.band.night.usual' | transloco: { value: (base | number: '1.0-0') }
+                      'health.band.night.usual'
+                        | transloco: {value: (base | number: '1.0-0')}
                     }}</span>
                   }
                 </dd>
@@ -113,7 +124,8 @@ const ROW = 22;
               <div>
                 <dt>{{ 'health.band.fields.skinTempDelta' | transloco }}</dt>
                 <dd>
-                  {{ d.skinTempDelta > 0 ? '+' : '' }}{{ d.skinTempDelta | number: '1.1-2' }} °C
+                  {{ d.skinTempDelta > 0 ? '+' : ''
+                  }}{{ d.skinTempDelta | number: '1.1-2' }} °C
                 </dd>
               </div>
             }
@@ -199,7 +211,7 @@ export class BandNightComponent {
     const start = Date.parse(sleep.startAt);
     const span = Date.parse(sleep.endAt) - start || 1;
     const scale = WIDTH / span;
-    return sleep.stages.map((stage) => {
+    return sleep.stages.map(stage => {
       const from = Date.parse(stage.startAt);
       return {
         stage: stage.stage,

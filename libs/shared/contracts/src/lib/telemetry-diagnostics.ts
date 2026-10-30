@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /**
  * What the desktop app tells the page about its digital telemetry (`window.desktop.telemetry
@@ -36,4 +36,6 @@ export const desktopTelemetryDiagnosticsSchema = z.object({
   delivery: z.enum(['never', 'sending', 'accepted', 'failed']),
 });
 
-export type DesktopTelemetryDiagnostics = z.infer<typeof desktopTelemetryDiagnosticsSchema>;
+export type DesktopTelemetryDiagnostics = z.infer<
+  typeof desktopTelemetryDiagnosticsSchema
+>;

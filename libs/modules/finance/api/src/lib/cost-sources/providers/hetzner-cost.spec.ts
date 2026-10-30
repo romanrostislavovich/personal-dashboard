@@ -1,18 +1,21 @@
-import { estimateHetznerMonthlyCost, HetznerPricing } from './hetzner-cost';
+import {estimateHetznerMonthlyCost, HetznerPricing} from './hetzner-cost';
 
 const price = (location: string, gross: string) => ({
   location,
-  price_monthly: { net: '0', gross },
+  price_monthly: {net: '0', gross},
 });
 
 const pricing: HetznerPricing = {
   currency: 'EUR',
-  server_backup: { percentage: '20.0000000000' },
+  server_backup: {percentage: '20.0000000000'},
   primary_ips: [
-    { type: 'ipv4', prices: [price('fsn1', '0.6000000000'), price('nbg1', '0.6000000000')] },
-    { type: 'ipv6', prices: [price('fsn1', '0.0000000000')] },
+    {
+      type: 'ipv4',
+      prices: [price('fsn1', '0.6000000000'), price('nbg1', '0.6000000000')],
+    },
+    {type: 'ipv6', prices: [price('fsn1', '0.0000000000')]},
   ],
-  volume: { price_per_gb_month: { net: '0', gross: '0.0520000000' } },
+  volume: {price_per_gb_month: {net: '0', gross: '0.0520000000'}},
 };
 
 const cx22 = {
@@ -25,21 +28,31 @@ describe('estimateHetznerMonthlyCost', () => {
     const estimate = estimateHetznerMonthlyCost({
       pricing,
       servers: [
-        { name: 'web', server_type: cx22, location: { name: 'fsn1' }, backup_window: '22-02' },
-        { name: 'worker', server_type: cx22, location: { name: 'hel1' }, backup_window: null },
+        {
+          name: 'web',
+          server_type: cx22,
+          location: {name: 'fsn1'},
+          backup_window: '22-02',
+        },
+        {
+          name: 'worker',
+          server_type: cx22,
+          location: {name: 'hel1'},
+          backup_window: null,
+        },
       ],
       primaryIps: [
-        { type: 'ipv4', location: { name: 'fsn1' } },
-        { type: 'ipv6', location: { name: 'fsn1' } },
+        {type: 'ipv4', location: {name: 'fsn1'}},
+        {type: 'ipv6', location: {name: 'fsn1'}},
       ],
-      volumes: [{ name: 'data', size: 10, location: { name: 'fsn1' } }],
+      volumes: [{name: 'data', size: 10, location: {name: 'fsn1'}}],
     });
 
     // 4.51 + 0.90 (backups) + 4.99 + 0.60 + 0.52 = 11.52
     expect(estimate.total).toBe(11.52);
     expect(estimate.currency).toBe('EUR');
     // Free IPv6 is not shown as a separate line.
-    expect(estimate.items.map((item) => item.label)).toEqual([
+    expect(estimate.items.map(item => item.label)).toEqual([
       'web (cx22)',
       'web: backups',
       'worker (cx22)',
@@ -55,6 +68,6 @@ describe('estimateHetznerMonthlyCost', () => {
       primaryIps: [],
       volumes: [],
     });
-    expect(estimate).toEqual({ currency: 'EUR', total: 0, items: [] });
+    expect(estimate).toEqual({currency: 'EUR', total: 0, items: []});
   });
 });

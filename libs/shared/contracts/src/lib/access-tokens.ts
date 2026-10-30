@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 // Access tokens: how an outside AI client (Claude Desktop, Claude Code, Cursor — over MCP)
 // reaches the user's data, without the password and apart from the sessions of the apps.

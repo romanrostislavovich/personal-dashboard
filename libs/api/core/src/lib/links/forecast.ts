@@ -1,6 +1,6 @@
-import { DailyMetric, LocalDate, MoodForecast } from '@pd/contracts';
-import { daysOf, seriesOf, shift } from './daily-series';
-import { MOOD_METRIC } from './mood-insights';
+import {DailyMetric, LocalDate, MoodForecast} from '@pd/contracts';
+import {daysOf, seriesOf, shift} from './daily-series';
+import {MOOD_METRIC} from './mood-insights';
 
 /*
  * Today's mood from yesterday's numbers — the user's own model, trained on their own days: a
@@ -30,8 +30,11 @@ interface Feature {
 }
 
 /** The forecast of `target`'s mood from the day before it (`target` is today, usually). */
-export function moodForecast(metrics: DailyMetric[], target: LocalDate): MoodForecast {
-  const moodMetric = metrics.find((metric) => metric.key === MOOD_METRIC);
+export function moodForecast(
+  metrics: DailyMetric[],
+  target: LocalDate,
+): MoodForecast {
+  const moodMetric = metrics.find(metric => metric.key === MOOD_METRIC);
   const empty: MoodForecast = {
     target,
     mood: null,
@@ -44,15 +47,17 @@ export function moodForecast(metrics: DailyMetric[], target: LocalDate): MoodFor
   if (!moodMetric) {
     return empty;
   }
-  const allDays = metrics.flatMap((metric) => metric.days.map((day) => day.day)).sort();
+  const allDays = metrics
+    .flatMap(metric => metric.days.map(day => day.day))
+    .sort();
   if (!allDays.length) {
     return empty;
   }
-  const days = daysOf({ from: allDays[0], to: target });
-  const mood = new Map(moodMetric.days.map((day) => [day.day, day.value]));
+  const days = daysOf({from: allDays[0], to: target});
+  const mood = new Map(moodMetric.days.map(day => [day.day, day.value]));
   const weekMood = (day: LocalDate) => {
     const values = [...Array(7).keys()]
-      .map((back) => mood.get(shift(day, -back)))
+      .map(back => mood.get(shift(day, -back)))
       .filter((value): value is number => value !== undefined);
     return values.length
       ? values.reduce((sum, value) => sum + value, 0) / values.length
@@ -60,42 +65,51 @@ export function moodForecast(metrics: DailyMetric[], target: LocalDate): MoodFor
   };
 
   // The days to learn from: a mood on the day and on the day before.
-  const rows = days.filter((day) => mood.has(day) && mood.has(shift(day, -1)));
+  const rows = days.filter(day => mood.has(day) && mood.has(shift(day, -1)));
   if (rows.length < MIN_DAYS) {
-    return { ...empty, days: rows.length };
+    return {...empty, days: rows.length};
   }
 
   const features: Feature[] = [
-    { key: 'mood.yesterday', metric: null, value: (day) => mood.get(shift(day, -1)) },
-    { key: 'mood.week', metric: null, value: (day) => weekMood(shift(day, -1)) },
+    {
+      key: 'mood.yesterday',
+      metric: null,
+      value: day => mood.get(shift(day, -1)),
+    },
+    {key: 'mood.week', metric: null, value: day => weekMood(shift(day, -1))},
     {
       key: 'weekend',
       metric: null,
-      value: (day) => ([0, 6].includes(new Date(`${day}T12:00:00Z`).getUTCDay()) ? 1 : 0),
+      value: day =>
+        [0, 6].includes(new Date(`${day}T12:00:00Z`).getUTCDay()) ? 1 : 0,
     },
   ];
-  for (const metric of metrics.filter((item) => item.key !== MOOD_METRIC)) {
+  for (const metric of metrics.filter(item => item.key !== MOOD_METRIC)) {
     const series = seriesOf(metric, days);
-    const present = rows.filter((day) => series.has(shift(day, -1))).length;
+    const present = rows.filter(day => series.has(shift(day, -1))).length;
     if (present / rows.length >= MIN_COVERAGE) {
-      features.push({ key: metric.key, metric, value: (day) => series.get(shift(day, -1)) });
+      features.push({
+        key: metric.key,
+        metric,
+        value: day => series.get(shift(day, -1)),
+      });
     }
   }
 
   const matrix = (dayList: LocalDate[]) =>
-    dayList.map((day) => features.map((feature) => feature.value(day)));
+    dayList.map(day => features.map(feature => feature.value(day)));
   const split = Math.floor(rows.length * (1 - TEST_SHARE));
   const learn = rows.slice(0, split);
   const test = rows.slice(split);
 
   const trained = fit(
     matrix(learn),
-    learn.map((day) => mood.get(day) as number),
+    learn.map(day => mood.get(day) as number),
   );
-  const errors = test.map((day, i) =>
+  const errors = test.map(day =>
     Math.abs(trained.predict(matrix([day])[0]) - (mood.get(day) as number)),
   );
-  const baseline = test.map((day) =>
+  const baseline = test.map(day =>
     Math.abs((weekMood(shift(day, -1)) ?? 3) - (mood.get(day) as number)),
   );
   const error = mean(errors);
@@ -104,15 +118,15 @@ export function moodForecast(metrics: DailyMetric[], target: LocalDate): MoodFor
   // The model of all the days answers for the target, and tells what weighs most.
   const model = fit(
     matrix(rows),
-    rows.map((day) => mood.get(day) as number),
+    rows.map(day => mood.get(day) as number),
   );
   const forecast = model.predict(matrix([target])[0]);
   const drivers = features
-    .map((feature, i) => ({ feature, effect: model.weights[i] }))
-    .filter(({ feature }) => feature.metric)
+    .map((feature, i) => ({feature, effect: model.weights[i]}))
+    .filter(({feature}) => feature.metric)
     .sort((a, b) => Math.abs(b.effect) - Math.abs(a.effect))
     .slice(0, DRIVERS)
-    .map(({ feature, effect }) => ({
+    .map(({feature, effect}) => ({
       key: feature.key,
       labelKey: feature.metric!.labelKey,
       label: feature.metric!.label ?? null,
@@ -143,32 +157,46 @@ interface Fitted {
  */
 export function fit(rows: (number | undefined)[][], target: number[]): Fitted {
   const width = rows[0]?.length ?? 0;
-  const means = [...Array(width).keys()].map((j) =>
-    mean(rows.map((row) => row[j]).filter((value): value is number => value !== undefined)),
+  const means = [...Array(width).keys()].map(j =>
+    mean(
+      rows
+        .map(row => row[j])
+        .filter((value): value is number => value !== undefined),
+    ),
   );
-  const deviations = [...Array(width).keys()].map((j) => {
+  const deviations = [...Array(width).keys()].map(j => {
     const values = rows
-      .map((row) => row[j])
+      .map(row => row[j])
       .filter((value): value is number => value !== undefined);
-    const spread = Math.sqrt(mean(values.map((value) => (value - means[j]) ** 2)));
+    const spread = Math.sqrt(
+      mean(values.map(value => (value - means[j]) ** 2)),
+    );
     return spread || 1;
   });
   const standard = (row: (number | undefined)[]) =>
-    row.map((value, j) => (value === undefined ? 0 : (value - means[j]) / deviations[j]));
+    row.map((value, j) =>
+      value === undefined ? 0 : (value - means[j]) / deviations[j],
+    );
   const x = rows.map(standard);
   const bias = mean(target);
-  const y = target.map((value) => value - bias);
+  const y = target.map(value => value - bias);
   // (XᵀX + λI) w = Xᵀy
-  const a = [...Array(width).keys()].map((i) =>
+  const a = [...Array(width).keys()].map(i =>
     [...Array(width).keys()].map(
-      (j) => x.reduce((sum, row) => sum + row[i] * row[j], 0) + (i === j ? RIDGE : 0),
+      j =>
+        x.reduce((sum, row) => sum + row[i] * row[j], 0) +
+        (i === j ? RIDGE : 0),
     ),
   );
-  const b = [...Array(width).keys()].map((i) => x.reduce((sum, row, k) => sum + row[i] * y[k], 0));
+  const b = [...Array(width).keys()].map(i =>
+    x.reduce((sum, row, k) => sum + row[i] * y[k], 0),
+  );
   const weights = solve(a, b);
   return {
     weights,
-    predict: (row) => bias + standard(row).reduce((sum, value, j) => sum + value * weights[j], 0),
+    predict: row =>
+      bias +
+      standard(row).reduce((sum, value, j) => sum + value * weights[j], 0),
   };
 }
 
@@ -193,7 +221,9 @@ function solve(a: number[][], b: number[]): number[] {
 }
 
 function mean(values: number[]): number {
-  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+  return values.length
+    ? values.reduce((sum, value) => sum + value, 0) / values.length
+    : 0;
 }
 
 function round(value: number, digits: number): number {

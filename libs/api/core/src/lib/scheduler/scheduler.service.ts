@@ -5,10 +5,10 @@ import {
   OnApplicationBootstrap,
   OnApplicationShutdown,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PgBoss } from 'pg-boss';
-import { AppConfig } from '../config/env';
-import { JobRunsService } from '../system/job-runs.service';
+import {ConfigService} from '@nestjs/config';
+import {PgBoss} from 'pg-boss';
+import {AppConfig} from '../config/env';
+import {JobRunsService} from '../system/job-runs.service';
 
 export interface ScheduledJob {
   /** Unique name prefixed with the module id: `birthdays.daily-reminders`. */
@@ -39,7 +39,9 @@ const DEFAULT_EXPIRE_MINUTES = 60;
 function queueOptions(job: ScheduledJob) {
   return {
     expireInSeconds: (job.expireMinutes ?? DEFAULT_EXPIRE_MINUTES) * 60,
-    ...(job.retry ? { retryLimit: 2, retryDelay: 60, retryBackoff: true } : { retryLimit: 0 }),
+    ...(job.retry
+      ? {retryLimit: 2, retryDelay: 60, retryBackoff: true}
+      : {retryLimit: 0}),
   };
 }
 
@@ -58,7 +60,9 @@ function queueOptions(job: ScheduledJob) {
  * with the sync — otherwise payments would be charged and reminders sent twice.
  */
 @Injectable()
-export class SchedulerService implements OnApplicationBootstrap, OnApplicationShutdown {
+export class SchedulerService
+  implements OnApplicationBootstrap, OnApplicationShutdown
+{
   private readonly logger = new Logger(SchedulerService.name);
   private readonly jobs: ScheduledJob[] = [];
   private readonly boss: PgBoss;
@@ -69,8 +73,8 @@ export class SchedulerService implements OnApplicationBootstrap, OnApplicationSh
     @Inject(ConfigService) private readonly config: AppConfig,
     private readonly runs: JobRunsService,
   ) {
-    this.boss = new PgBoss(config.get('DATABASE_URL', { infer: true }));
-    this.boss.on('error', (error) => this.logger.error(error));
+    this.boss = new PgBoss(config.get('DATABASE_URL', {infer: true}));
+    this.boss.on('error', error => this.logger.error(error));
     this.boss.on('stopped', () => (this.running = false));
   }
 
@@ -86,17 +90,17 @@ export class SchedulerService implements OnApplicationBootstrap, OnApplicationSh
   async onApplicationBootstrap(): Promise<void> {
     await this.boss.start();
     this.running = true;
-    if (this.config.get('SYNC_MODE', { infer: true }) === 'client') {
+    if (this.config.get('SYNC_MODE', {infer: true}) === 'client') {
       this.logger.log('Sync client: background jobs run on the server');
       return;
     }
-    const tz = this.config.get('APP_TIMEZONE', { infer: true });
-    const demo = this.config.get('DEMO_MODE', { infer: true });
+    const tz = this.config.get('APP_TIMEZONE', {infer: true});
+    const demo = this.config.get('DEMO_MODE', {infer: true});
     if (demo) {
       this.logger.log('Demo instance: only the jobs of the demo itself run');
     }
 
-    for (const job of this.jobs.filter((item) => !demo || item.demo)) {
+    for (const job of this.jobs.filter(item => !demo || item.demo)) {
       // A queue made by an older version keeps its options: they are set again on every start.
       await this.boss.createQueue(job.name, queueOptions(job));
       await this.boss.updateQueue(job.name, queueOptions(job));
@@ -109,7 +113,7 @@ export class SchedulerService implements OnApplicationBootstrap, OnApplicationSh
         if (!job.quiet) {
           this.logger.log(`Running job ${job.name}`);
         }
-        await this.runs.track(job, job.handler).catch((error) => {
+        await this.runs.track(job, job.handler).catch(error => {
           // An error-level entry: it lands in the system log and is told to the owner.
           this.logger.error(
             `Job ${job.name} failed: ${error}`,
@@ -119,7 +123,7 @@ export class SchedulerService implements OnApplicationBootstrap, OnApplicationSh
         });
       });
     }
-    await this.runs.forget(this.jobs.map((job) => job.name));
+    await this.runs.forget(this.jobs.map(job => job.name));
     this.logger.log(`Scheduled ${this.jobs.length} job(s) in ${tz}`);
   }
 

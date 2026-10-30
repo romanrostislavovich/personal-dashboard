@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import {Logger} from '@nestjs/common';
 import sharp from 'sharp';
 
 /** The longest side kept: a phone photo is 4000–8000 px, a page stays readable at this. */
@@ -30,12 +30,17 @@ export async function compressImage(file: StoredFile): Promise<StoredFile> {
     return file;
   }
   try {
-    const data = await sharp(file.data, { failOn: 'error' })
+    const data = await sharp(file.data, {failOn: 'error'})
       .rotate()
-      .resize({ width: MAX_SIDE, height: MAX_SIDE, fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: QUALITY })
+      .resize({
+        width: MAX_SIDE,
+        height: MAX_SIDE,
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .webp({quality: QUALITY})
       .toBuffer();
-    return { data, mimeType: 'image/webp' };
+    return {data, mimeType: 'image/webp'};
   } catch (error) {
     logger.warn(`A picture was kept as it came: ${error}`);
     return file;

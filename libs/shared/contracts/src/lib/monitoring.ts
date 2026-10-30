@@ -1,9 +1,9 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 export const monitorInputSchema = z.object({
   projectId: z.uuid(),
   /** The checked address: the home page or an API health endpoint. */
-  url: z.url({ protocol: /^https?$/ }),
+  url: z.url({protocol: /^https?$/}),
 });
 export type MonitorInput = z.infer<typeof monitorInputSchema>;
 
@@ -30,7 +30,7 @@ export interface Monitor {
   /** When the SSL certificate expires (for https). */
   sslExpiresAt: string | null;
   /** Share of successful checks, 0–100; `null` if there have been no checks yet. */
-  uptime: { day: number | null; week: number | null; month: number | null };
+  uptime: {day: number | null; week: number | null; month: number | null};
   /** Average response per hour over the last 24 hours. */
   responseTimes: ResponseTimePoint[];
 }

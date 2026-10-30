@@ -1,4 +1,4 @@
-import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import {DatePipe, NgTemplateOutlet} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,14 +7,14 @@ import {
   LOCALE_ID,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { WAKATIME_PERIODS, WakatimePeriod, WakatimeShare } from '@pd/contracts';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {WAKATIME_PERIODS, WakatimePeriod, WakatimeShare} from '@pd/contracts';
 import {
   Bar,
   BarChartComponent,
@@ -23,8 +23,8 @@ import {
   Share,
   ShareListComponent,
 } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { WakatimeApi } from './wakatime.api';
+import {firstValueFrom} from 'rxjs';
+import {WakatimeApi} from './wakatime.api';
 
 /** Bars of the chart: a day each up to a month, then months — a year of days is unreadable. */
 const DAILY_BARS_LIMIT = 31;
@@ -64,21 +64,25 @@ export class WakatimePage {
   protected readonly integrations = INTEGRATIONS_LINK;
 
   /** The scale of the chart: seconds as a duration ("2 h 30 min"). */
-  protected readonly hours = (seconds: number) => this.duration.transform(seconds);
+  protected readonly hours = (seconds: number) =>
+    this.duration.transform(seconds);
 
   protected readonly bars = computed<Bar[]>(() => {
     const days = this.stats.value()?.days ?? [];
     if (days.length <= DAILY_BARS_LIMIT) {
       // A label under every bar fits only for a week.
       const labelEvery = days.length <= 7 ? 1 : 5;
-      return days.map(({ day, seconds }, index) => ({
-        label: index % labelEvery === 0 ? (this.datePipe.transform(day, 'd MMM') ?? '') : '',
+      return days.map(({day, seconds}, index) => ({
+        label:
+          index % labelEvery === 0
+            ? (this.datePipe.transform(day, 'd MMM') ?? '')
+            : '',
         value: seconds,
         title: `${this.datePipe.transform(day, 'EEEE, d MMMM')} — ${this.duration.transform(seconds)}`,
       }));
     }
     const months = new Map<string, number>();
-    for (const { day, seconds } of days) {
+    for (const {day, seconds} of days) {
       const month = day.slice(0, 7);
       months.set(month, (months.get(month) ?? 0) + seconds);
     }
@@ -89,10 +93,18 @@ export class WakatimePage {
     }));
   });
 
-  protected readonly projects = computed(() => this.shares(this.stats.value()?.projects));
-  protected readonly languages = computed(() => this.shares(this.stats.value()?.languages));
-  protected readonly editors = computed(() => this.shares(this.stats.value()?.editors));
-  protected readonly systems = computed(() => this.shares(this.stats.value()?.operatingSystems));
+  protected readonly projects = computed(() =>
+    this.shares(this.stats.value()?.projects),
+  );
+  protected readonly languages = computed(() =>
+    this.shares(this.stats.value()?.languages),
+  );
+  protected readonly editors = computed(() =>
+    this.shares(this.stats.value()?.editors),
+  );
+  protected readonly systems = computed(() =>
+    this.shares(this.stats.value()?.operatingSystems),
+  );
 
   async sync(): Promise<void> {
     this.busy.set(true);
@@ -107,7 +119,7 @@ export class WakatimePage {
   }
 
   private shares(items: WakatimeShare[] | undefined): Share[] {
-    return (items ?? []).map(({ name, seconds }) => ({
+    return (items ?? []).map(({name, seconds}) => ({
       name,
       value: seconds,
       text: this.duration.transform(seconds),

@@ -13,8 +13,8 @@ import type {
   WorkstateInput,
   WritingRewriteMode,
 } from '@pd/contracts';
-import type { EngagementReport } from './engagement';
-import type { WatchReport } from './watch-session';
+import type {EngagementReport} from './engagement';
+import type {WatchReport} from './watch-session';
 
 /** The vault on the server: not created yet, locked here, or open here. */
 export type VaultStatus = 'none' | 'locked' | 'unlocked';
@@ -25,7 +25,8 @@ export type VaultStatus = 'none' | 'locked' | 'unlocked';
  * - `new-password` — a sign-up or a change of password: a strong password;
  * - `signup-username` — the login or email of a sign-up: the ones the user tends to use.
  */
-export type FieldKind = 'username' | 'password' | 'new-password' | 'signup-username';
+export type FieldKind =
+  'username' | 'password' | 'new-password' | 'signup-username';
 
 /** What the menu under a field shows (inline-menu). */
 export interface MenuState {
@@ -34,7 +35,7 @@ export interface MenuState {
   /** The site of the frame the field is in. */
   site: string;
   /** For signing in: the logins of the site, without their passwords. */
-  logins: { id: string; title: string; username: string }[];
+  logins: {id: string; title: string; username: string}[];
   /** For a sign-up's login: the user's emails and logins, the most used first. */
   suggestions: string[];
 }
@@ -64,12 +65,12 @@ export interface SaveOffer {
 }
 
 export interface PopupState {
-  telemetry: { enabled: boolean; excluded: boolean };
+  telemetry: {enabled: boolean; excluded: boolean};
   server: string | null;
   email: string | null;
   vault: VaultStatus | 'signed-out';
   /** The active tab, when it is a web page. */
-  page: { url: string; site: string } | null;
+  page: {url: string; site: string} | null;
   offer: SaveOffer | null;
   /** The check of the writing on the active page; `null` — signed out, or not a web page. */
   writing: WritingPopupState | null;
@@ -94,42 +95,42 @@ export interface Generated {
 }
 
 export type SignInResult =
-  { status: 'signed-in' } | { status: 'code-required'; challengeToken: string };
+  {status: 'signed-in'} | {status: 'code-required'; challengeToken: string};
 
 export type FillResult =
-  | { status: 'filled' }
-  | { status: 'no-form' }
+  | {status: 'filled'}
+  | {status: 'no-form'}
   /** The login is for another site: filled only when the user confirms (`force`). */
-  | { status: 'other-site'; site: string };
+  | {status: 'other-site'; site: string};
 
 /** From the popup. */
 export type PopupRequest =
   | WorkstateRequest
-  | { type: 'telemetry-consent'; enabled: boolean }
-  | { type: 'telemetry-exclude'; excluded: boolean }
-  | { type: 'state' }
-  | { type: 'sign-in'; server: string; email: string; password: string }
-  | { type: 'sign-in-code'; challengeToken: string; code: string }
-  | { type: 'sign-out' }
-  | { type: 'unlock'; masterPassword: string }
-  | { type: 'lock' }
-  | { type: 'items' }
-  | { type: 'secret'; id: string; field: 'username' | 'password' | 'notes' }
-  | { type: 'fill'; id: string; force: boolean }
+  | {type: 'telemetry-consent'; enabled: boolean}
+  | {type: 'telemetry-exclude'; excluded: boolean}
+  | {type: 'state'}
+  | {type: 'sign-in'; server: string; email: string; password: string}
+  | {type: 'sign-in-code'; challengeToken: string; code: string}
+  | {type: 'sign-out'}
+  | {type: 'unlock'; masterPassword: string}
+  | {type: 'lock'}
+  | {type: 'items'}
+  | {type: 'secret'; id: string; field: 'username' | 'password' | 'notes'}
+  | {type: 'fill'; id: string; force: boolean}
   /** A new password (made in the background: the popup stays small without the client core). */
-  | { type: 'generate'; length: number; digits: boolean; symbols: boolean }
-  | { type: 'fill-generated'; password: string }
-  | { type: 'save-offer'; mode: 'save' | 'update' }
-  | { type: 'dismiss-offer'; never: boolean }
+  | {type: 'generate'; length: number; digits: boolean; symbols: boolean}
+  | {type: 'fill-generated'; password: string}
+  | {type: 'save-offer'; mode: 'save' | 'update'}
+  | {type: 'dismiss-offer'; never: boolean}
   /** Sites where saving is never offered, and taking one off the list. */
-  | { type: 'never-sites' }
-  | { type: 'forget-never'; site: string }
+  | {type: 'never-sites'}
+  | {type: 'forget-never'; site: string}
   /** Runs the newer files on the disk now (it happens by itself when the popup is closed). */
-  | { type: 'reload' }
+  | {type: 'reload'}
   // The page shown instead of a closed site (blocked.html): why it is closed, and "open anyway".
-  | { type: 'blocked-info'; back: string }
+  | {type: 'blocked-info'; back: string}
   // The assistant and Claude (popup → "Assistant"): what this browser offers, the tokens of MCP.
-  | { type: 'assistant-state' }
+  | {type: 'assistant-state'}
   | {
       type: 'assistant-settings';
       update: Partial<{
@@ -139,83 +140,88 @@ export type PopupRequest =
         openUrl: boolean;
       }>;
     }
-  | { type: 'mcp-info' }
-  | { type: 'mcp-create'; name: string; scope: 'read' | 'write' }
-  | { type: 'mcp-revoke'; id: string }
+  | {type: 'mcp-info'}
+  | {type: 'mcp-create'; name: string; scope: 'read' | 'write'}
+  | {type: 'mcp-revoke'; id: string}
   // The assistant beside the page (sidepanel): the conversation shared with the dashboard.
-  | { type: 'chat-current' }
-  | { type: 'chat-new' }
-  | { type: 'chat-send'; content: string; conversationId?: string; attachments?: AiAttachment[] }
+  | {type: 'chat-current'}
+  | {type: 'chat-new'}
+  | {
+      type: 'chat-send';
+      content: string;
+      conversationId?: string;
+      attachments?: AiAttachment[];
+    }
   // A file for the next message (a screenshot pasted with Ctrl+V): its bytes in base64, since a
   // message between the parts of the extension carries only JSON.
-  | { type: 'chat-attach'; name: string; mimeType: string; base64: string }
-  | { type: 'open-assistant' }
-  | { type: 'pass-site'; site: string }
+  | {type: 'chat-attach'; name: string; mimeType: string; base64: string}
+  | {type: 'open-assistant'}
+  | {type: 'pass-site'; site: string}
   // Writing on the active page: on or off on its site, on or off everywhere.
-  | { type: 'writing-site'; on: boolean }
-  | { type: 'writing-enabled'; on: boolean }
+  | {type: 'writing-site'; on: boolean}
+  | {type: 'writing-enabled'; on: boolean}
   // The menu under a field (inline-menu.html, a page of the extension in a frame of the page);
   // `token` is the field it was opened for (see background/inline.ts).
-  | { type: 'menu-state'; token: string }
-  | { type: 'menu-fill'; token: string; id: string }
-  | { type: 'menu-fill-text'; token: string; value: string }
+  | {type: 'menu-state'; token: string}
+  | {type: 'menu-fill'; token: string; id: string}
+  | {type: 'menu-fill-text'; token: string; value: string}
   /** A strong password into the fields for a new one, and into the vault at once. */
-  | { type: 'menu-generate'; token: string }
-  | { type: 'menu-unlock'; token: string; masterPassword: string }
-  | { type: 'menu-open-popup' }
+  | {type: 'menu-generate'; token: string}
+  | {type: 'menu-unlock'; token: string; masterPassword: string}
+  | {type: 'menu-open-popup'}
   /** "To the wishlist": the product of the active page goes to Finance → Wishlist. */
-  | { type: 'wish-add' };
+  | {type: 'wish-add'};
 
 /** From a content script, about its own tab. */
 export type ContentRequest =
-  | { type: 'telemetry-engagement'; report: EngagementReport }
+  | {type: 'telemetry-engagement'; report: EngagementReport}
   /** A video plays in this frame (Movies): where it stands, and what the page says it is. */
-  | { type: 'watching'; report: WatchReport }
+  | {type: 'watching'; report: WatchReport}
   /** The page has a password field: the badge counts the logins for it. */
-  | { type: 'login-form' }
+  | {type: 'login-form'}
   /** A login form was sent; an empty password — the first step of a two-step sign-in. */
-  | { type: 'submitted'; username: string; password: string }
-  | { type: 'offer' }
-  | { type: 'save-offer'; mode: 'save' | 'update' }
-  | { type: 'dismiss-offer'; never: boolean }
+  | {type: 'submitted'; username: string; password: string}
+  | {type: 'offer'}
+  | {type: 'save-offer'; mode: 'save' | 'update'}
+  | {type: 'dismiss-offer'; never: boolean}
   /** "Enter the master password" / "Sign in" on the bar: the popup, at that step. */
-  | { type: 'offer-open' }
+  | {type: 'offer-open'}
   /**
    * A field the vault helps with got the focus (`explicit` — its key icon was clicked): the
    * token of a menu for it, or `null` when nothing is worth showing.
    */
-  | { type: 'menu-open'; kind: FieldKind; fieldId: string; explicit: boolean }
+  | {type: 'menu-open'; kind: FieldKind; fieldId: string; explicit: boolean}
   // Writing (content/writing): whether to check on this page, a check, a rewrite, a word or a
   // rule to leave alone — always about the text the person is typing in a field of the page.
-  | { type: 'writing-state' }
-  | { type: 'writing-check'; text: string }
-  | { type: 'writing-rewrite'; text: string; mode: WritingRewriteMode }
-  | { type: 'writing-ignore'; word?: string; ruleId?: string }
+  | {type: 'writing-state'}
+  | {type: 'writing-check'; text: string}
+  | {type: 'writing-rewrite'; text: string; mode: WritingRewriteMode}
+  | {type: 'writing-ignore'; word?: string; ruleId?: string}
   /** Fixes taken from the suggestions: only how many, for the achievements. */
-  | { type: 'writing-accepted'; count: number }
+  | {type: 'writing-accepted'; count: number}
   /** "Not on this site" from the badge's menu: only the page's own site. */
-  | { type: 'writing-off-here' }
-  | { type: 'writing-settings' };
+  | {type: 'writing-off-here'}
+  | {type: 'writing-settings'};
 
 /** From the background to a content script. */
 export type PageCommand =
   /** `fieldId` — the field a menu was opened for: its form is filled. */
-  | { type: 'fill'; username: string; password: string; fieldId?: string }
+  | {type: 'fill'; username: string; password: string; fieldId?: string}
   /** A new password from the generator: into the fields for a new one. */
-  | { type: 'fill-new-password'; password: string }
+  | {type: 'fill-new-password'; password: string}
   /** One value into the field the menu was opened for. */
-  | { type: 'fill-field'; fieldId: string; value: string }
-  | { type: 'close-menu' }
+  | {type: 'fill-field'; fieldId: string; value: string}
+  | {type: 'close-menu'}
   /** What the page shows, for the assistant's `browser_current_page`. */
-  | { type: 'snapshot'; withText: boolean }
+  | {type: 'snapshot'; withText: boolean}
   /** Writing was switched on or off: whether to check is asked again. */
-  | { type: 'writing-changed' }
+  | {type: 'writing-changed'}
   /** The vault was unlocked: a login waiting to be saved is offered again, now with "Save". */
-  | { type: 'offer-again' }
+  | {type: 'offer-again'}
   /** The page's markup, for the product it describes (the wishlist). */
-  | { type: 'product' }
+  | {type: 'product'}
   /** What the page says plays: asked when a player in a frame of it reports (Movies). */
-  | { type: 'watch-hints' };
+  | {type: 'watch-hints'};
 
 /** A page's answer to `snapshot`: the selection, and its readable text when asked. */
 export interface PageSnapshot {
@@ -267,10 +273,10 @@ export interface FillAnswer {
 /** Every answer of the background: a value, or a code of what went wrong (see ERROR_CODES). */
 /** What the server made of a file for the chat, or why it could not read it. */
 export type ChatAttachResult =
-  | { attachment: AiAttachmentUpload }
-  | { failure: 'unsupported' | 'empty' | 'no-vision' | 'too-large' | 'failed' };
+  | {attachment: AiAttachmentUpload}
+  | {failure: 'unsupported' | 'empty' | 'no-vision' | 'too-large' | 'failed'};
 
-export type Reply<T> = { ok: true; value: T } | { ok: false; error: ErrorCode };
+export type Reply<T> = {ok: true; value: T} | {ok: false; error: ErrorCode};
 
 export const ERROR_CODES = [
   'signed-out',
@@ -295,10 +301,10 @@ export class ExtensionError extends Error {
 }
 
 export type WorkstateRequest =
-  | { type: 'workstate-preview'; windowId: number }
-  | { type: 'workstate-confirm'; id: string }
-  | { type: 'workstate-cancel' }
-  | { type: 'workstate-open' };
+  | {type: 'workstate-preview'; windowId: number}
+  | {type: 'workstate-confirm'; id: string}
+  | {type: 'workstate-cancel'}
+  | {type: 'workstate-open'};
 
 export interface WorkstatePreview {
   input: WorkstateInput;
@@ -307,8 +313,11 @@ export interface WorkstatePreview {
 }
 
 /** Asks the background; throws ExtensionError with its code when it refuses. */
-export async function ask<T>(message: PopupRequest | ContentRequest): Promise<T> {
-  const reply = (await chrome.runtime.sendMessage(message)) as Reply<T> | undefined;
+export async function ask<T>(
+  message: PopupRequest | ContentRequest,
+): Promise<T> {
+  const reply = (await chrome.runtime.sendMessage(message)) as
+    Reply<T> | undefined;
   if (!reply) {
     throw new ExtensionError('failed');
   }

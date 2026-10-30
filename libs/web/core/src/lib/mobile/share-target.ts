@@ -1,8 +1,9 @@
-import { registerPlugin } from '@capacitor/core';
-import { isMobileApp } from './mobile-app';
+import {registerPlugin} from '@capacitor/core';
+import {isMobileApp} from './mobile-app';
 
 /** What another app shared into the dashboard ("Share" on Android). */
-export type SharedContent = { kind: 'text'; text: string } | { kind: 'image'; image: File };
+export type SharedContent =
+  {kind: 'text'; text: string} | {kind: 'image'; image: File};
 
 interface NativeShare {
   text?: string;
@@ -13,7 +14,7 @@ interface NativeShare {
 }
 
 interface ShareTargetPlugin {
-  take(): Promise<{ share: NativeShare | null }>;
+  take(): Promise<{share: NativeShare | null}>;
   addListener(event: 'shared', listener: () => void): Promise<unknown>;
 }
 
@@ -25,7 +26,7 @@ export async function takeShared(): Promise<SharedContent | null> {
     return null;
   }
   try {
-    const { share } = await plugin.take();
+    const {share} = await plugin.take();
     return share ? toContent(share) : null;
   } catch {
     return null; // An APK built before sharing.
@@ -43,11 +44,13 @@ export function onShared(listener: () => void): void {
 export function toContent(share: NativeShare): SharedContent | null {
   if (share.image) {
     const type = share.mimeType || 'image/jpeg';
-    const bytes = Uint8Array.from(atob(share.image), (char) => char.charCodeAt(0));
+    const bytes = Uint8Array.from(atob(share.image), char =>
+      char.charCodeAt(0),
+    );
     const extension = type.split('/')[1] ?? 'jpg';
     return {
       kind: 'image',
-      image: new File([bytes], `shared-${Date.now()}.${extension}`, { type }),
+      image: new File([bytes], `shared-${Date.now()}.${extension}`, {type}),
     };
   }
   const text = share.text?.trim() ?? '';
@@ -55,5 +58,8 @@ export function toContent(share: NativeShare): SharedContent | null {
   if (!text) {
     return null;
   }
-  return { kind: 'text', text: subject && !text.includes(subject) ? `${subject} ${text}` : text };
+  return {
+    kind: 'text',
+    text: subject && !text.includes(subject) ? `${subject} ${text}` : text,
+  };
 }

@@ -1,10 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { LifeStory, LocalDate } from '@pd/contracts';
-import { and, eq } from 'drizzle-orm';
-import { AiService } from '../ai/ai.service';
-import { DB, Database } from '../database/database.module';
-import { lifeStories } from './life.schema';
-import { LifeService } from './life.service';
+import {Inject, Injectable} from '@nestjs/common';
+import {LifeStory, LocalDate} from '@pd/contracts';
+import {and, eq} from 'drizzle-orm';
+import {AiService} from '../ai/ai.service';
+import {DB, Database} from '../database/database.module';
+import {lifeStories} from './life.schema';
+import {LifeService} from './life.service';
 
 const INSTRUCTION =
   "You get the numbers of the user's past PERIOD across a personal dashboard: each card has " +
@@ -28,7 +28,9 @@ export class LifeStoriesService {
     const [row] = await this.db
       .select()
       .from(lifeStories)
-      .where(and(eq(lifeStories.userId, userId), eq(lifeStories.period, period)));
+      .where(
+        and(eq(lifeStories.userId, userId), eq(lifeStories.period, period)),
+      );
     return row ? toStory(row) : null;
   }
 
@@ -38,28 +40,34 @@ export class LifeStoriesService {
    */
   async write(userId: string, period: string): Promise<LifeStory | null> {
     const cards = await this.life.period(userId, periodRange(period));
-    const seen = await Promise.all(cards.map((card) => this.ai.canShare(userId, card.module)));
+    const seen = await Promise.all(
+      cards.map(card => this.ai.canShare(userId, card.module)),
+    );
     const forAi = cards.filter((_, index) => seen[index]);
     if (!forAi.length || !(await this.ai.isConfigured(userId))) {
       return null;
     }
     const year = period.length === 4;
-    const instruction = INSTRUCTION.replace('PERIOD', year ? 'year' : 'month').replace(
-      'LENGTH',
-      year ? '10–15 lines' : '5–8 lines',
-    );
+    const instruction = INSTRUCTION.replace(
+      'PERIOD',
+      year ? 'year' : 'month',
+    ).replace('LENGTH', year ? '10–15 lines' : '5–8 lines');
     const text = (
-      await this.ai.complete(userId, instruction, JSON.stringify({ period, cards: forAi }))
+      await this.ai.complete(
+        userId,
+        instruction,
+        JSON.stringify({period, cards: forAi}),
+      )
     ).trim();
     if (!text) {
       return null;
     }
     const [row] = await this.db
       .insert(lifeStories)
-      .values({ userId, period, text })
+      .values({userId, period, text})
       .onConflictDoUpdate({
         target: [lifeStories.userId, lifeStories.period],
-        set: { text, createdAt: new Date() },
+        set: {text, createdAt: new Date()},
       })
       .returning();
     return toStory(row);
@@ -67,15 +75,22 @@ export class LifeStoriesService {
 }
 
 /** The days of `YYYY` or `YYYY-MM`. */
-export function periodRange(period: string): { from: LocalDate; to: LocalDate } {
+export function periodRange(period: string): {from: LocalDate; to: LocalDate} {
   if (period.length === 4) {
-    return { from: `${period}-01-01`, to: `${period}-12-31` };
+    return {from: `${period}-01-01`, to: `${period}-12-31`};
   }
   const [year, month] = period.split('-').map(Number);
   const last = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  return { from: `${period}-01`, to: `${period}-${String(last).padStart(2, '0')}` };
+  return {
+    from: `${period}-01`,
+    to: `${period}-${String(last).padStart(2, '0')}`,
+  };
 }
 
 function toStory(row: typeof lifeStories.$inferSelect): LifeStory {
-  return { period: row.period, text: row.text, createdAt: row.createdAt.toISOString() };
+  return {
+    period: row.period,
+    text: row.text,
+    createdAt: row.createdAt.toISOString(),
+  };
 }

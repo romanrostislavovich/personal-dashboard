@@ -1,4 +1,4 @@
-import { LocalDate } from '@pd/contracts';
+import {LocalDate} from '@pd/contracts';
 
 /** What a receipt says, as the AI read it. */
 export interface ReadReceipt {
@@ -18,16 +18,23 @@ const MAX_AGE_DAYS = 366;
  */
 export function parseReceipt(
   answer: string,
-  fallback: { currency: string; today: LocalDate },
+  fallback: {currency: string; today: LocalDate},
 ): ReadReceipt | null {
   let raw: Record<string, unknown>;
   try {
-    raw = JSON.parse(answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1));
+    raw = JSON.parse(
+      answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1),
+    );
   } catch {
     return null;
   }
   const total = Number(String(raw['total'] ?? '').replace(',', '.'));
-  if (raw['isReceipt'] === false || !Number.isFinite(total) || total <= 0 || total > 1_000_000) {
+  if (
+    raw['isReceipt'] === false ||
+    !Number.isFinite(total) ||
+    total <= 0 ||
+    total > 1_000_000
+  ) {
     return null;
   }
   const currency = /^[A-Za-z]{3}$/.test(String(raw['currency'] ?? ''))
@@ -42,7 +49,9 @@ export function parseReceipt(
     total: Math.round(total * 100) / 100,
     currency,
     date:
-      /^\d{4}-\d{2}-\d{2}$/.test(date) && age >= 0 && age <= MAX_AGE_DAYS ? date : fallback.today,
+      /^\d{4}-\d{2}-\d{2}$/.test(date) && age >= 0 && age <= MAX_AGE_DAYS
+        ? date
+        : fallback.today,
     category:
       String(raw['category'] ?? '')
         .trim()

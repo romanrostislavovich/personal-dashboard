@@ -1,4 +1,4 @@
-import { KeyValueStore } from '@pd/client-core';
+import {KeyValueStore} from '@pd/client-core';
 
 /**
  * A `chrome.storage` area as the client core's KeyValueStore.
@@ -13,8 +13,8 @@ export function chromeStore(area: chrome.storage.StorageArea): KeyValueStore {
       const value = (await area.get(key))[key];
       return typeof value === 'string' ? value : null;
     },
-    set: (key, value) => area.set({ [key]: value }),
-    remove: (key) => area.remove(key),
+    set: (key, value) => area.set({[key]: value}),
+    remove: key => area.remove(key),
   };
 }
 
@@ -33,5 +33,5 @@ export function writeJson(
   key: string,
   value: unknown,
 ): Promise<void> {
-  return area.set({ [key]: value });
+  return area.set({[key]: value});
 }

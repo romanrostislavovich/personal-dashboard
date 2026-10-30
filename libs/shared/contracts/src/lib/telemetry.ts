@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 const sensitive =
   /(?:password|passwd|secret|token|bearer|api[_-]?key|authorization|session|credential|private[_-]?key|-----BEGIN|[\w.+-]+@[\w.-]+\.[a-z]{2,}|\b(?:\d[ -]?){7,}\b)/i;
@@ -9,11 +9,18 @@ const privatePath =
 export function sanitizeTelemetryText(text: string): string | null {
   const value = text
     .split('')
-    .map((char) => (char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127 ? ' ' : char))
+    .map(char =>
+      char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127 ? ' ' : char,
+    )
     .join('')
     .replace(/\s+/g, ' ')
     .trim();
-  if (!value || value.length > 160 || sensitive.test(value) || /[a-z\d_+/=-]{32,}/i.test(value)) {
+  if (
+    !value ||
+    value.length > 160 ||
+    sensitive.test(value) ||
+    /[a-z\d_+/=-]{32,}/i.test(value)
+  ) {
     return null;
   }
   return value;
@@ -36,7 +43,10 @@ export function sanitizeTelemetryUrl(value: string): string | null {
       privatePath.test(path) ||
       !sanitizeTelemetryText(path) ||
       [...path].some(
-        (char) => char === '\\' || char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127,
+        char =>
+          char === '\\' ||
+          char.charCodeAt(0) < 32 ||
+          char.charCodeAt(0) === 127,
       )
     ) {
       return null;
@@ -73,22 +83,24 @@ export const telemetryMetricsSchema = z
 
 const safeText = z
   .string()
-  .refine((value) => sanitizeTelemetryText(value) === value, 'Unsafe metadata');
+  .refine(value => sanitizeTelemetryText(value) === value, 'Unsafe metadata');
 export const telemetryBucketSchema = z
   .object({
     id: z.uuid(),
     source: z.enum(['desktop', 'browser']),
-    startedAt: z.iso.datetime({ offset: true }),
-    endedAt: z.iso.datetime({ offset: true }),
+    startedAt: z.iso.datetime({offset: true}),
+    endedAt: z.iso.datetime({offset: true}),
     metrics: telemetryMetricsSchema,
     page: z
       .object({
         url: z
           .string()
           .max(2048)
-          .refine((value) => sanitizeTelemetryUrl(value) === value, 'Unsafe URL'),
+          .refine(value => sanitizeTelemetryUrl(value) === value, 'Unsafe URL'),
         title: safeText.optional(),
-        type: z.enum(['article', 'website', 'tech-article', 'video', 'course']).optional(),
+        type: z
+          .enum(['article', 'website', 'tech-article', 'video', 'course'])
+          .optional(),
         technologies: z.array(safeText).max(10).optional(),
       })
       .strict()
@@ -98,7 +110,11 @@ export const telemetryBucketSchema = z
   .superRefine((bucket, ctx) => {
     const duration = Date.parse(bucket.endedAt) - Date.parse(bucket.startedAt);
     if (duration <= 0 || duration > 300_000) {
-      ctx.addIssue({ code: 'custom', message: 'Buckets must span 0–5 minutes', path: ['endedAt'] });
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Buckets must span 0–5 minutes',
+        path: ['endedAt'],
+      });
     }
     if (bucket.source === 'desktop' && bucket.page) {
       ctx.addIssue({
@@ -116,14 +132,21 @@ export const telemetryBucketSchema = z
         });
       }
     }
-    if ((bucket.metrics.terminalFailures ?? 0) > (bucket.metrics.terminalCommands ?? 0)) {
-      ctx.addIssue({ code: 'custom', message: 'Failures exceed commands', path: ['metrics'] });
+    if (
+      (bucket.metrics.terminalFailures ?? 0) >
+      (bucket.metrics.terminalCommands ?? 0)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Failures exceed commands',
+        path: ['metrics'],
+      });
     }
   });
 export type TelemetryBucket = z.infer<typeof telemetryBucketSchema>;
 export type TelemetryMetrics = z.infer<typeof telemetryMetricsSchema>;
 
 export const telemetryIngestSchema = z
-  .object({ buckets: z.array(telemetryBucketSchema).max(100) })
+  .object({buckets: z.array(telemetryBucketSchema).max(100)})
   .strict();
 export type TelemetryIngest = z.infer<typeof telemetryIngestSchema>;

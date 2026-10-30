@@ -1,4 +1,4 @@
-import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
+import {computed, DestroyRef, inject, Injectable, signal} from '@angular/core';
 import {
   createVault,
   rewrapVault,
@@ -7,8 +7,8 @@ import {
   vaultApi,
   VaultKey,
 } from '@pd/client-core';
-import { OpenVaultItem, VaultItem, VaultKeysState } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '@pd/web-core';
+import {OpenVaultItem, VaultItem, VaultKeysState} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '@pd/web-core';
 
 /** The vault locks itself after this long without the user doing anything in it. */
 const AUTO_LOCK_MS = 10 * 60_000;
@@ -18,7 +18,7 @@ const AUTO_LOCK_MS = 10 * 60_000;
  * sent anywhere. Locking forgets it (and the opened items); so do closing the tab and
  * AUTO_LOCK_MS without a touch.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class VaultSession {
   private readonly api = vaultApi(inject(DASHBOARD_CLIENT).api);
   private vaultKey: VaultKey | null = null;
@@ -32,7 +32,9 @@ export class VaultSession {
   readonly unreadable = signal(0);
   readonly sorted = computed(() =>
     [...this.items()].sort(
-      (a, b) => Number(b.favorite) - Number(a.favorite) || a.title.localeCompare(b.title),
+      (a, b) =>
+        Number(b.favorite) - Number(a.favorite) ||
+        a.title.localeCompare(b.title),
     ),
   );
 
@@ -46,7 +48,7 @@ export class VaultSession {
 
   /** A new vault; returns its recovery key, to show once. The vault is open after it. */
   async create(masterPassword: string): Promise<string> {
-    const { keys, recoveryKey, vaultKey } = await createVault(masterPassword);
+    const {keys, recoveryKey, vaultKey} = await createVault(masterPassword);
     await this.api.createKeys(keys);
     await this.load();
     await this.open(vaultKey);
@@ -77,7 +79,10 @@ export class VaultSession {
     await this.open(vaultKey);
   }
 
-  async changeMasterPassword(newMasterPassword: string, accountPassword: string): Promise<void> {
+  async changeMasterPassword(
+    newMasterPassword: string,
+    accountPassword: string,
+  ): Promise<void> {
     const vaultKey = this.requireOpen();
     await this.api.changeKeys({
       ...(await rewrapVault(this.requireKeys(), vaultKey, newMasterPassword)),
@@ -99,7 +104,7 @@ export class VaultSession {
   }
 
   async refresh(): Promise<void> {
-    const { items, unreadable } = await this.api.open(this.requireOpen());
+    const {items, unreadable} = await this.api.open(this.requireOpen());
     this.items.set(items);
     this.unreadable.set(unreadable);
     this.touch();

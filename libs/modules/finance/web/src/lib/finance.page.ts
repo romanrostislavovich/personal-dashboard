@@ -1,17 +1,23 @@
-import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import {CurrencyPipe, DatePipe, DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatDialog} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatListModule} from '@angular/material/list';
+import {MatMenuModule} from '@angular/material/menu';
+import {MatSelectModule} from '@angular/material/select';
+import {MatTabsModule} from '@angular/material/tabs';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {
   RecurringPayment,
   RecurringPaymentInput,
@@ -20,8 +26,8 @@ import {
   TransactionInput,
   TransactionQuery,
 } from '@pd/contracts';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import {ActivatedRoute, RouterLink} from '@angular/router';
+import {firstValueFrom} from 'rxjs';
 import {
   DurationPipe,
   currentMonth,
@@ -33,12 +39,12 @@ import {
   shiftMonth,
   todayLocalDate,
 } from '@pd/web-core';
-import { FinanceApi } from './finance.api';
-import { StatementImportButton } from './statement-import.button';
-import { CashFlowChartComponent } from './overview/cash-flow-chart.component';
-import { CategoryBreakdownComponent } from './overview/category-breakdown.component';
-import { BankBalancesComponent } from './overview/bank-balances.component';
-import { FinanceKpisComponent } from './overview/finance-kpis.component';
+import {FinanceApi} from './finance.api';
+import {StatementImportButton} from './statement-import.button';
+import {CashFlowChartComponent} from './overview/cash-flow-chart.component';
+import {CategoryBreakdownComponent} from './overview/category-breakdown.component';
+import {BankBalancesComponent} from './overview/bank-balances.component';
+import {FinanceKpisComponent} from './overview/finance-kpis.component';
 import {
   cashFlowMonths,
   trimEmptyStart,
@@ -47,20 +53,23 @@ import {
   topCurrency,
   monthKey,
 } from './overview/finance-stats';
-import { UpcomingPaymentsComponent } from './overview/upcoming-payments.component';
+import {UpcomingPaymentsComponent} from './overview/upcoming-payments.component';
 import {
   RecurringPaymentFormData,
   RecurringPaymentFormDialog,
 } from './recurring-payment-form.dialog';
-import { TransactionFormData, TransactionFormDialog } from './transaction-form.dialog';
-import { TransactionListComponent } from './transactions/transaction-list.component';
-import { BudgetsCardComponent } from './budgets/budgets-card.component';
-import { ReportCardComponent } from './reports/report-card.component';
-import { WishlistTabComponent } from './wishlist/wishlist-tab.component';
-import { NetWorthCardComponent } from './overview/net-worth-card.component';
-import { ContractLetterDialog } from './recurring/contract-letter.dialog';
-import { KeyDatesCardComponent } from './recurring/key-dates-card.component';
-import { LeaksCardComponent } from './recurring/leaks-card.component';
+import {
+  TransactionFormData,
+  TransactionFormDialog,
+} from './transaction-form.dialog';
+import {TransactionListComponent} from './transactions/transaction-list.component';
+import {BudgetsCardComponent} from './budgets/budgets-card.component';
+import {ReportCardComponent} from './reports/report-card.component';
+import {WishlistTabComponent} from './wishlist/wishlist-tab.component';
+import {NetWorthCardComponent} from './overview/net-worth-card.component';
+import {ContractLetterDialog} from './recurring/contract-letter.dialog';
+import {KeyDatesCardComponent} from './recurring/key-dates-card.component';
+import {LeaksCardComponent} from './recurring/leaks-card.component';
 
 const DEFAULT_CURRENCY = 'EUR';
 /** How many months the cash flow chart shows, the selected one being the last. */
@@ -75,7 +84,7 @@ enum Tab {
 }
 
 /** `?tab=` of a link from the home page or the search. */
-const TAB_BY_NAME: Record<string, Tab> = { wishlist: Tab.Wishlist };
+const TAB_BY_NAME: Record<string, Tab> = {wishlist: Tab.Wishlist};
 
 /** The overview's "everything in the main currency" view. */
 const ALL_IN_MAIN = '*';
@@ -83,8 +92,8 @@ const ALL_IN_MAIN = '*';
 /** Transactions as amounts in the main currency; those without a rate are left out. */
 function inMain(transactions: Transaction[], main: string): Transaction[] {
   return transactions
-    .filter((t) => t.mainAmount !== null)
-    .map((t) => ({ ...t, amount: t.mainAmount as number, currency: main }));
+    .filter(t => t.mainAmount !== null)
+    .map(t => ({...t, amount: t.mainAmount as number, currency: main}));
 }
 
 /**
@@ -158,7 +167,9 @@ export class FinancePage {
 
   protected readonly Tab = Tab;
   protected readonly tab = signal(
-    TAB_BY_NAME[inject(ActivatedRoute).snapshot.queryParamMap.get('tab') ?? ''] ?? Tab.Overview,
+    TAB_BY_NAME[
+      inject(ActivatedRoute).snapshot.queryParamMap.get('tab') ?? ''
+    ] ?? Tab.Overview,
   );
   /** A category clicked in the overview filters the transactions tab. */
   protected readonly categoryFilter = signal<CategoryFilter | null>(null);
@@ -175,7 +186,9 @@ export class FinancePage {
   /** The currency totals are converted into. */
   protected readonly mainCurrency = computed(
     () =>
-      this.settings.value()?.effectiveMainCurrency ?? this.mainFlow.value()?.mainCurrency ?? null,
+      this.settings.value()?.effectiveMainCurrency ??
+      this.mainFlow.value()?.mainCurrency ??
+      null,
   );
   protected readonly recurringPayments = this.api.recurringPayments();
   /** Their cost together and repeating charges that look like subscriptions. */
@@ -188,7 +201,7 @@ export class FinancePage {
   protected readonly monthKey = computed(() => monthKey(this.month()));
   /** Categories used in the month, suggested for a new budget. */
   protected readonly knownCategories = computed(() =>
-    [...new Set(this.transactions.value().map((t) => t.category))].sort(),
+    [...new Set(this.transactions.value().map(t => t.category))].sort(),
   );
   /** Trials ending before today are over. */
   protected readonly today = todayLocalDate();
@@ -199,8 +212,8 @@ export class FinancePage {
   /** Currencies of the selected month: each one gets its own overview. */
   protected readonly currencies = computed(() => {
     const key = monthKey(this.month());
-    const inMonth = this.cashFlow.value().filter((f) => f.month === key);
-    return [...new Set(inMonth.map((f) => f.currency))].sort();
+    const inMonth = this.cashFlow.value().filter(f => f.month === key);
+    return [...new Set(inMonth.map(f => f.currency))].sort();
   });
 
   /** Whether the overview shows converted amounts. */
@@ -219,7 +232,7 @@ export class FinancePage {
     const key = monthKey(this.month());
     const flows = this.cashFlow.value();
     return (
-      topCurrency(flows.filter((f) => f.month === key)) ??
+      topCurrency(flows.filter(f => f.month === key)) ??
       topCurrency(flows) ??
       this.transactions.value()[0]?.currency ??
       DEFAULT_CURRENCY
@@ -228,14 +241,23 @@ export class FinancePage {
 
   protected readonly chartMonths = computed(() => {
     const flows = this.showsMain()
-      ? (this.mainFlow.value()?.months ?? []).map((m) => ({ ...m, currency: this.currency() }))
+      ? (this.mainFlow.value()?.months ?? []).map(m => ({
+          ...m,
+          currency: this.currency(),
+        }))
       : this.cashFlow.value();
     return cashFlowMonths(flows, this.currency(), this.month(), CHART_MONTHS);
   });
   /** The chart from the first month with money in it: empty months before it are left out. */
-  protected readonly chartShown = computed(() => trimEmptyStart(this.chartMonths()));
-  protected readonly currentFlow = computed(() => this.chartMonths()[CHART_MONTHS - 1]);
-  protected readonly previousFlow = computed(() => this.chartMonths()[CHART_MONTHS - 2]);
+  protected readonly chartShown = computed(() =>
+    trimEmptyStart(this.chartMonths()),
+  );
+  protected readonly currentFlow = computed(
+    () => this.chartMonths()[CHART_MONTHS - 1],
+  );
+  protected readonly previousFlow = computed(
+    () => this.chartMonths()[CHART_MONTHS - 2],
+  );
   protected readonly categoryShares = computed(() =>
     categoryShares(
       this.showsMain()
@@ -252,20 +274,21 @@ export class FinancePage {
       ? {
           approximate: flow.approximate,
           missing: flow.missing,
-          foreign: this.currencies().some((c) => c !== flow.mainCurrency),
+          foreign: this.currencies().some(c => c !== flow.mainCurrency),
         }
       : null;
   });
 
   protected readonly projectNames = computed(
-    () => new Map(this.projects.value().map((project) => [project.id, project.name])),
+    () =>
+      new Map(this.projects.value().map(project => [project.id, project.name])),
   );
   private readonly categories = computed(() =>
-    [...new Set(this.transactions.value().map((t) => t.category))].sort(),
+    [...new Set(this.transactions.value().map(t => t.category))].sort(),
   );
 
   shiftMonth(delta: number): void {
-    this.month.update((month) => shiftMonth(month, delta));
+    this.month.update(month => shiftMonth(month, delta));
   }
 
   selectMonth(month: Month): void {
@@ -278,7 +301,9 @@ export class FinancePage {
 
   /** `null` — back to automatic: the currency used most. */
   async setMainCurrency(mainCurrency: string | null): Promise<void> {
-    this.settings.set(await firstValueFrom(this.api.saveSettings({ mainCurrency })));
+    this.settings.set(
+      await firstValueFrom(this.api.saveSettings({mainCurrency})),
+    );
     this.view.set(ALL_IN_MAIN);
     this.transactions.reload();
     this.mainFlow.reload();
@@ -292,9 +317,12 @@ export class FinancePage {
   async openTransactionForm(transaction?: Transaction): Promise<void> {
     const input = await firstValueFrom(
       this.dialog
-        .open<TransactionFormDialog, TransactionFormData, TransactionInput>(TransactionFormDialog, {
-          data: { transaction: transaction ?? null, ...this.formContext() },
-        })
+        .open<TransactionFormDialog, TransactionFormData, TransactionInput>(
+          TransactionFormDialog,
+          {
+            data: {transaction: transaction ?? null, ...this.formContext()},
+          },
+        )
         .afterClosed(),
     );
     if (input) {
@@ -304,7 +332,9 @@ export class FinancePage {
   }
 
   async removeTransaction(transaction: Transaction): Promise<void> {
-    if (confirm(this.transloco.translate('finance.transaction.confirmDelete'))) {
+    if (
+      confirm(this.transloco.translate('finance.transaction.confirmDelete'))
+    ) {
       await firstValueFrom(this.api.removeTransaction(transaction.id));
       this.reloadTransactions();
     }
@@ -316,10 +346,13 @@ export class FinancePage {
   ): Promise<void> {
     const input = await firstValueFrom(
       this.dialog
-        .open<RecurringPaymentFormDialog, RecurringPaymentFormData, RecurringPaymentInput>(
+        .open<
           RecurringPaymentFormDialog,
-          { data: { payment: payment ?? null, draft, ...this.formContext() } },
-        )
+          RecurringPaymentFormData,
+          RecurringPaymentInput
+        >(RecurringPaymentFormDialog, {
+          data: {payment: payment ?? null, draft, ...this.formContext()},
+        })
         .afterClosed(),
     );
     if (input) {
@@ -330,7 +363,9 @@ export class FinancePage {
 
   /** "Add" on a charge never recorded, from the check of the subscriptions. */
   addHidden(key: string): Promise<void> {
-    const suggestion = this.subscriptions.value()?.suggestions.find((one) => one.key === key);
+    const suggestion = this.subscriptions
+      .value()
+      ?.suggestions.find(one => one.key === key);
     return suggestion ? this.addSuggestion(suggestion) : Promise.resolve();
   }
 
@@ -341,7 +376,7 @@ export class FinancePage {
 
   /** A letter to end the contract or to ask for a better price. */
   openLetter(payment: RecurringPayment): void {
-    this.dialog.open(ContractLetterDialog, { data: payment, autoFocus: false });
+    this.dialog.open(ContractLetterDialog, {data: payment, autoFocus: false});
   }
 
   private reloadRecurring(): void {
@@ -352,8 +387,14 @@ export class FinancePage {
 
   /** A suggested subscription becomes a recurring payment, its fields filled in. */
   addSuggestion(suggestion: SubscriptionSuggestion): Promise<void> {
-    const { name, amount, currency, category, dayOfMonth } = suggestion;
-    return this.openRecurringForm(undefined, { name, amount, currency, category, dayOfMonth });
+    const {name, amount, currency, category, dayOfMonth} = suggestion;
+    return this.openRecurringForm(undefined, {
+      name,
+      amount,
+      currency,
+      category,
+      dayOfMonth,
+    });
   }
 
   /** "every 14th" or "yearly, 10 November". */
@@ -367,12 +408,18 @@ export class FinancePage {
         }),
       });
     }
-    return this.transloco.translate('finance.recurring.everyMonth', { day: payment.dayOfMonth });
+    return this.transloco.translate('finance.recurring.everyMonth', {
+      day: payment.dayOfMonth,
+    });
   }
 
   async removeRecurring(payment: RecurringPayment): Promise<void> {
     if (
-      confirm(this.transloco.translate('finance.recurring.confirmDelete', { name: payment.name }))
+      confirm(
+        this.transloco.translate('finance.recurring.confirmDelete', {
+          name: payment.name,
+        }),
+      )
     ) {
       await firstValueFrom(this.api.removeRecurringPayment(payment.id));
       this.reloadRecurring();

@@ -1,7 +1,7 @@
-import { app } from 'electron';
-import { execFileSync, spawn } from 'node:child_process';
-import { readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import {app} from 'electron';
+import {execFileSync, spawn} from 'node:child_process';
+import {readFileSync, rmSync, writeFileSync} from 'node:fs';
+import {basename, join} from 'node:path';
 
 /**
  * One copy of the app, and never as administrator.
@@ -30,11 +30,15 @@ export function isElevated(): boolean {
     return false;
   }
   try {
-    const groups = execFileSync(windowsTool('System32', 'whoami.exe'), ['/groups'], {
-      encoding: 'utf8',
-      windowsHide: true,
-    });
-    return ELEVATED_LEVELS.some((level) => groups.includes(level));
+    const groups = execFileSync(
+      windowsTool('System32', 'whoami.exe'),
+      ['/groups'],
+      {
+        encoding: 'utf8',
+        windowsHide: true,
+      },
+    );
+    return ELEVATED_LEVELS.some(level => groups.includes(level));
   } catch {
     return false;
   }
@@ -52,10 +56,16 @@ export function relaunchAsUser(): void {
 }
 
 /** Whether `tasklist` output (CSV, no header) lists the process `pid` of the program `exe`. */
-export function listsProcess(tasklist: string, pid: number, exe: string): boolean {
+export function listsProcess(
+  tasklist: string,
+  pid: number,
+  exe: string,
+): boolean {
   return tasklist
     .split(/\r?\n/)
-    .some((line) => line.toLowerCase().startsWith(`"${exe.toLowerCase()}","${pid}"`));
+    .some(line =>
+      line.toLowerCase().startsWith(`"${exe.toLowerCase()}","${pid}"`),
+    );
 }
 
 /** Whether the process `pid` is a running copy of this program (a reused id is someone else). */

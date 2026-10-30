@@ -1,25 +1,32 @@
-import { systemPrompt } from './ai-prompt';
+import {systemPrompt} from './ai-prompt';
 
 const pages = [
-  { module: 'finance', path: '/finance', description: 'money' },
-  { module: 'projects', path: '/projects/<id>', description: 'one project' },
+  {module: 'finance', path: '/finance', description: 'money'},
+  {module: 'projects', path: '/projects/<id>', description: 'one project'},
 ];
 
 describe('systemPrompt', () => {
   it('tells the pages of the app, so an answer can lead to them', () => {
-    const prompt = systemPrompt(undefined, 'Europe/Warsaw', { pages });
+    const prompt = systemPrompt(undefined, 'Europe/Warsaw', {pages});
     expect(prompt).toContain('/finance — money; /projects/<id> — one project.');
     expect(prompt).toContain('core_project_overview');
   });
 
   it('keeps links out of plain text (Telegram), but not the tools of the links', () => {
-    const prompt = systemPrompt(undefined, 'Europe/Warsaw', { pages, plainText: true });
+    const prompt = systemPrompt(undefined, 'Europe/Warsaw', {
+      pages,
+      plainText: true,
+    });
     expect(prompt).not.toContain('/projects/<id>');
     expect(prompt).toContain('core_mood_insights');
   });
 
   it('asks for answers without judgement everywhere: the chat, Telegram, with and without writes', () => {
-    for (const options of [{}, { plainText: true }, { allowWrites: true, hasAttachments: true }]) {
+    for (const options of [
+      {},
+      {plainText: true},
+      {allowWrites: true, hasAttachments: true},
+    ]) {
       expect(systemPrompt(undefined, 'Europe/Warsaw', options)).toContain(
         'Always answer without judgement.',
       );
@@ -27,10 +34,10 @@ describe('systemPrompt', () => {
   });
 
   it('keeps the time last, so a minute later the prompt starts the same (the provider cache)', () => {
-    vi.useFakeTimers({ now: new Date('2026-10-16T10:00:00Z') });
-    const before = systemPrompt(undefined, 'Europe/Warsaw', { pages });
+    vi.useFakeTimers({now: new Date('2026-10-16T10:00:00Z')});
+    const before = systemPrompt(undefined, 'Europe/Warsaw', {pages});
     vi.setSystemTime(new Date('2026-10-16T10:01:00Z'));
-    const after = systemPrompt(undefined, 'Europe/Warsaw', { pages });
+    const after = systemPrompt(undefined, 'Europe/Warsaw', {pages});
     vi.useRealTimers();
     const tail = before.lastIndexOf('Now it is');
     expect(before).not.toBe(after);

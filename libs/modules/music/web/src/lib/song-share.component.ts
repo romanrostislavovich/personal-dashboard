@@ -1,14 +1,21 @@
-import { Clipboard } from '@angular/cdk/clipboard';
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { musicApi } from '@pd/client-core';
-import { SongLinks, songLinks } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '@pd/web-core';
+import {Clipboard} from '@angular/cdk/clipboard';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatMenuModule} from '@angular/material/menu';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {musicApi} from '@pd/client-core';
+import {SongLinks, songLinks} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '@pd/web-core';
 
 /**
  * "Share" of a song: open it in YouTube Music or Spotify, copy its link there, or send it
@@ -18,7 +25,13 @@ import { DASHBOARD_CLIENT } from '@pd/web-core';
 @Component({
   selector: 'pd-song-share',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule, TranslocoPipe],
+  imports: [
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule,
+    MatTooltipModule,
+    TranslocoPipe,
+  ],
   template: `
     <button
       matIconButton
@@ -42,21 +55,37 @@ import { DASHBOARD_CLIENT } from '@pd/web-core';
         rel="noopener"
         [disabled]="finding()"
       >
-        <mat-icon>smart_display</mat-icon> {{ 'music.share.openYoutube' | transloco }}
+        <mat-icon>smart_display</mat-icon>
+        {{ 'music.share.openYoutube' | transloco }}
         @if (!finding() && !found.youtubeMusicExact) {
           <span class="search">{{ 'music.share.search' | transloco }}</span>
         }
       </a>
-      <a mat-menu-item [href]="found.spotify" target="_blank" rel="noopener" [disabled]="finding()">
-        <mat-icon>graphic_eq</mat-icon> {{ 'music.share.openSpotify' | transloco }}
+      <a
+        mat-menu-item
+        [href]="found.spotify"
+        target="_blank"
+        rel="noopener"
+        [disabled]="finding()"
+      >
+        <mat-icon>graphic_eq</mat-icon>
+        {{ 'music.share.openSpotify' | transloco }}
         @if (!finding() && !found.spotifyExact) {
           <span class="search">{{ 'music.share.search' | transloco }}</span>
         }
       </a>
-      <button mat-menu-item [disabled]="finding()" (click)="copy(found.youtubeMusic)">
+      <button
+        mat-menu-item
+        [disabled]="finding()"
+        (click)="copy(found.youtubeMusic)"
+      >
         <mat-icon>link</mat-icon> {{ 'music.share.copyYoutube' | transloco }}
       </button>
-      <button mat-menu-item [disabled]="finding()" (click)="copy(found.spotify)">
+      <button
+        mat-menu-item
+        [disabled]="finding()"
+        (click)="copy(found.spotify)"
+      >
         <mat-icon>link</mat-icon> {{ 'music.share.copySpotify' | transloco }}
       </button>
       @if (canShare) {
@@ -99,7 +128,8 @@ export class SongShareComponent {
   /** Until the server answers (or when it cannot), links to the search of each service. */
   protected readonly links = computed(
     () =>
-      this.found() ?? songLinks({ track: this.track(), artist: this.artist(), url: this.url() }),
+      this.found() ??
+      songLinks({track: this.track(), artist: this.artist(), url: this.url()}),
   );
 
   /** The song is looked for when the menu opens: a list of songs costs nothing until then. */
@@ -112,8 +142,8 @@ export class SongShareComponent {
       this.found.set(
         await this.music.songLinks({
           track: this.track(),
-          ...(this.artist() ? { artist: this.artist() as string } : {}),
-          ...(this.url() ? { url: this.url() as string } : {}),
+          ...(this.artist() ? {artist: this.artist() as string} : {}),
+          ...(this.url() ? {url: this.url() as string} : {}),
         }),
       );
     } catch {
@@ -122,21 +152,29 @@ export class SongShareComponent {
       this.finding.set(false);
     }
   }
-  protected readonly canShare = typeof navigator !== 'undefined' && 'share' in navigator;
+  protected readonly canShare =
+    typeof navigator !== 'undefined' && 'share' in navigator;
 
   protected copy(link: string): void {
     this.clipboard.copy(link);
-    this.snackBar.open(this.transloco.translate('music.share.copied'), undefined, {
-      duration: 2000,
-    });
+    this.snackBar.open(
+      this.transloco.translate('music.share.copied'),
+      undefined,
+      {
+        duration: 2000,
+      },
+    );
   }
 
   /** The song as text with both links: the one who gets it picks their service. */
   protected async share(): Promise<void> {
     const title = [this.artist(), this.track()].filter(Boolean).join(' — ');
-    const { youtubeMusic, spotify } = this.links();
+    const {youtubeMusic, spotify} = this.links();
     await navigator
-      .share({ title, text: `${title}\nYouTube Music: ${youtubeMusic}\nSpotify: ${spotify}` })
+      .share({
+        title,
+        text: `${title}\nYouTube Music: ${youtubeMusic}\nSpotify: ${spotify}`,
+      })
       .catch(() => undefined);
   }
 }

@@ -1,9 +1,13 @@
-import { HealthSummary } from '@pd/contracts';
-import { summaryBlocks } from './summary-blocks';
-import { summaryDocx } from './summary-docx';
-import { escape, summaryHtml } from './summary-html';
-import { parseTranslations, translatableTexts, withTranslations } from './summary-translate';
-import { unzipSync, strFromU8 } from 'fflate';
+import {HealthSummary} from '@pd/contracts';
+import {summaryBlocks} from './summary-blocks';
+import {summaryDocx} from './summary-docx';
+import {escape, summaryHtml} from './summary-html';
+import {
+  parseTranslations,
+  translatableTexts,
+  withTranslations,
+} from './summary-translate';
+import {unzipSync, strFromU8} from 'fflate';
 
 const summary: HealthSummary = {
   language: 'pl',
@@ -13,7 +17,9 @@ const summary: HealthSummary = {
   translated: false,
   profile: {
     bloodType: 'O+',
-    allergies: [{ substance: 'Пенициллин', reaction: 'сыпь', severity: 'severe' }],
+    allergies: [
+      {substance: 'Пенициллин', reaction: 'сыпь', severity: 'severe'},
+    ],
     operations: [],
     vaccinations: [],
   },
@@ -47,7 +53,7 @@ const summary: HealthSummary = {
       high: 5.5,
       flag: 'high',
       day: '2026-09-01',
-      earlier: [{ day: '2021-01-01', value: 5.2 }],
+      earlier: [{day: '2021-01-01', value: 5.2}],
     },
   ],
   studies: [],
@@ -58,7 +64,10 @@ describe('summary blocks', () => {
   it('writes the headings in the doctor language and leaves out what was not asked for', () => {
     const blocks = summaryBlocks(summary);
     const text = JSON.stringify(blocks);
-    expect(blocks[0]).toEqual({ kind: 'title', text: 'Podsumowanie historii choroby' });
+    expect(blocks[0]).toEqual({
+      kind: 'title',
+      text: 'Podsumowanie historii choroby',
+    });
     expect(text).toContain('Rozpoznania');
     expect(text).toContain('Grupa krwi: O+');
     expect(text).toContain('ciężka');
@@ -75,13 +84,15 @@ describe('summary html', () => {
     expect(html).toContain('Roman &lt;script&gt;');
     expect(html).not.toContain('<script>');
     expect(html).toContain('<html lang="pl">');
-    expect(escape(`a"b'c&`)).toBe('a&quot;b&#39;c&amp;');
+    expect(escape('a"b\'c&')).toBe('a&quot;b&#39;c&amp;');
   });
 });
 
 describe('summary docx', () => {
   it('is a Word archive with the texts in it', () => {
-    const files = unzipSync(new Uint8Array(summaryDocx(summaryBlocks(summary))));
+    const files = unzipSync(
+      new Uint8Array(summaryDocx(summaryBlocks(summary))),
+    );
     const document = strFromU8(files['word/document.xml']);
     expect(Object.keys(files)).toContain('[Content_Types].xml');
     expect(document).toContain('Escitalopram');
@@ -110,7 +121,10 @@ describe('summary translation', () => {
       code: 'F41.1',
       title: 'Zaburzenie lękowe uogólnione',
     });
-    expect(translated.medications?.[0]).toMatchObject({ name: 'Escitalopram', schedule: 'rano' });
+    expect(translated.medications?.[0]).toMatchObject({
+      name: 'Escitalopram',
+      schedule: 'rano',
+    });
   });
 
   it('keeps the originals when the answer does not fit', () => {

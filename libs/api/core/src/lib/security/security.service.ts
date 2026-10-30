@@ -1,4 +1,10 @@
-import { ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   FindingOrigin,
   FindingStatus,
@@ -10,14 +16,14 @@ import {
   SecuritySettings,
   SecurityStatus,
 } from '@pd/contracts';
-import { and, desc, eq, inArray, like } from 'drizzle-orm';
-import { AiConnectionsService } from '../ai/ai-connections.service';
-import { DB, Database } from '../database/database.module';
-import { NotificationsService } from '../notifications/notifications.service';
-import { UsersService } from '../users/users.service';
-import { Coverage, coverage, settledByRules } from './finding-coverage';
-import { FoundProblem, Inspection, SecuritySource } from './security-source';
-import { securityMessages } from './security.messages';
+import {and, desc, eq, inArray, like} from 'drizzle-orm';
+import {AiConnectionsService} from '../ai/ai-connections.service';
+import {DB, Database} from '../database/database.module';
+import {NotificationsService} from '../notifications/notifications.service';
+import {UsersService} from '../users/users.service';
+import {Coverage, coverage, settledByRules} from './finding-coverage';
+import {FoundProblem, Inspection, SecuritySource} from './security-source';
+import {securityMessages} from './security.messages';
 import {
   SecurityFindingRow,
   securityFindings,
@@ -58,7 +64,7 @@ export class SecurityService {
 
   /** Called by the core and by modules (`<module>.security.ts`) on start. */
   registerSource(source: SecuritySource): void {
-    if (this.registered.some((item) => item.id === source.id)) {
+    if (this.registered.some(item => item.id === source.id)) {
       throw new Error(`Security source ${source.id} is registered twice`);
     }
     this.registered.push(source);
@@ -70,12 +76,17 @@ export class SecurityService {
 
   async assertOwner(userId: string): Promise<void> {
     if ((await this.users.owner())?.id !== userId) {
-      throw new ForbiddenException('The security agent reports to the owner of the instance');
+      throw new ForbiddenException(
+        'The security agent reports to the owner of the instance',
+      );
     }
   }
 
   /** What a source knows now; `null` — nothing to look at, or it failed (logged). */
-  async inspect(source: SecuritySource, userId: string): Promise<Inspection | null> {
+  async inspect(
+    source: SecuritySource,
+    userId: string,
+  ): Promise<Inspection | null> {
     const locale = (await this.users.findById(userId))?.locale ?? 'en';
     try {
       return await source.inspect(userId, locale);
@@ -95,16 +106,19 @@ export class SecurityService {
         continue; // Its earlier findings stay as they are: nothing is known about them now.
       }
       areas.add(source.area);
-      const problems = inspection.problems.map((problem) => ({ ...problem, area: source.area }));
+      const problems = inspection.problems.map(problem => ({
+        ...problem,
+        area: source.area,
+      }));
       fresh.push(...(await this.keep(userId, source.id, 'rules', problems)));
     }
     await this.settleAiFindings(userId);
     await this.db
       .insert(securitySettings)
-      .values({ userId, scannedAt: new Date(), areas: [...areas] })
+      .values({userId, scannedAt: new Date(), areas: [...areas]})
       .onConflictDoUpdate({
         target: securitySettings.userId,
-        set: { scannedAt: new Date(), areas: [...areas] },
+        set: {scannedAt: new Date(), areas: [...areas]},
       });
     await this.tell(userId, fresh);
   }
@@ -123,32 +137,58 @@ export class SecurityService {
     const known = await this.db
       .select()
       .from(securityFindings)
-      .where(and(eq(securityFindings.userId, userId), like(securityFindings.key, `${prefix}%`)));
+      .where(
+        and(
+          eq(securityFindings.userId, userId),
+          like(securityFindings.key, `${prefix}%`),
+        ),
+      );
     const now = new Date();
     const fresh: SecurityFindingRow[] = [];
     const seen = new Set<string>();
 
-    for (const { key: ownKey, area, severity, title, details, fix, covers = [] } of problems) {
+    for (const {
+      key: ownKey,
+      area,
+      severity,
+      title,
+      details,
+      fix,
+      covers = [],
+    } of problems) {
       const key = prefix + ownKey;
       if (seen.has(key)) {
         continue;
       }
       seen.add(key);
-      const text = { area, severity, title, details, fix, covers, lastSeenAt: now };
-      const row = known.find((item) => item.key === key);
+      const text = {
+        area,
+        severity,
+        title,
+        details,
+        fix,
+        covers,
+        lastSeenAt: now,
+      };
+      const row = known.find(item => item.key === key);
       if (!row) {
         const [created] = await this.db
           .insert(securityFindings)
-          .values({ userId, key, origin, ...text })
+          .values({userId, key, origin, ...text})
           .returning();
         fresh.push(created);
       } else {
         const back = row.status === 'resolved';
         // A problem that came back may differ from the one the guide was written for.
-        const reopened = { status: 'open' as const, resolvedAt: null, guide: null, guideAt: null };
+        const reopened = {
+          status: 'open' as const,
+          resolvedAt: null,
+          guide: null,
+          guideAt: null,
+        };
         const [updated] = await this.db
           .update(securityFindings)
-          .set({ ...text, ...(back ? reopened : {}) })
+          .set({...text, ...(back ? reopened : {})})
           .where(eq(securityFindings.id, row.id))
           .returning();
         if (back) {
@@ -159,10 +199,12 @@ export class SecurityService {
     // What the owner chose to ignore among the AI's findings stays so even when a run does not
     // repeat it: the model words things anew, and "I know" must not come undone by that.
     const kept = origin === 'ai' ? ['resolved', 'ignored'] : ['resolved'];
-    for (const row of known.filter((item) => !kept.includes(item.status) && !seen.has(item.key))) {
+    for (const row of known.filter(
+      item => !kept.includes(item.status) && !seen.has(item.key),
+    )) {
       await this.db
         .update(securityFindings)
-        .set({ status: 'resolved', resolvedAt: now })
+        .set({status: 'resolved', resolvedAt: now})
         .where(eq(securityFindings.id, row.id));
     }
     return fresh;
@@ -178,22 +220,29 @@ export class SecurityService {
     if (settled.length) {
       await this.db
         .update(securityFindings)
-        .set({ status: 'resolved', resolvedAt: new Date() })
-        .where(and(eq(securityFindings.userId, userId), inArray(securityFindings.id, settled)));
+        .set({status: 'resolved', resolvedAt: new Date()})
+        .where(
+          and(
+            eq(securityFindings.userId, userId),
+            inArray(securityFindings.id, settled),
+          ),
+        );
     }
   }
 
   /** One message about what is new and serious. */
   async tell(userId: string, fresh: SecurityFindingRow[]): Promise<void> {
-    const serious = fresh.filter((row) => NOTIFIED.has(row.severity));
+    const serious = fresh.filter(row => NOTIFIED.has(row.severity));
     if (!serious.length) {
       return;
     }
-    const text = securityMessages((await this.users.findById(userId))?.locale ?? 'en');
+    const text = securityMessages(
+      (await this.users.findById(userId))?.locale ?? 'en',
+    );
     await this.notifications.send(userId, {
       title: text.notifyTitle(serious.length),
       body: [
-        ...serious.map((row) => text.notifyLine(row.severity, row.title)),
+        ...serious.map(row => text.notifyLine(row.severity, row.title)),
         text.notifyMore,
       ].join('\n'),
       source: 'security',
@@ -212,7 +261,7 @@ export class SecurityService {
     const ai = await this.connections.settings(userId);
     return {
       findings: toFindings(rows).sort(bySeverity),
-      areas: SECURITY_AREAS.map((area) => ({
+      areas: SECURITY_AREAS.map(area => ({
         area,
         available: settings?.areas.includes(area) ?? false,
       })),
@@ -220,7 +269,7 @@ export class SecurityService {
       settings: toSettings(settings),
       scannedAt: settings?.scannedAt?.toISOString() ?? null,
       aiAvailable: ai.configured,
-      connections: ai.connections.map(({ id, name }) => ({ id, name })),
+      connections: ai.connections.map(({id, name}) => ({id, name})),
     };
   }
 
@@ -235,16 +284,22 @@ export class SecurityService {
   async saveSettings(userId: string, input: SecuritySettings): Promise<void> {
     await this.db
       .insert(securitySettings)
-      .values({ userId, ...input })
-      .onConflictDoUpdate({ target: securitySettings.userId, set: input });
+      .values({userId, ...input})
+      .onConflictDoUpdate({target: securitySettings.userId, set: input});
   }
 
   /** "I know, leave it": an ignored finding is not reported again — or back to open. */
-  async setStatus(userId: string, id: string, status: Extract<FindingStatus, 'open' | 'ignored'>) {
+  async setStatus(
+    userId: string,
+    id: string,
+    status: Extract<FindingStatus, 'open' | 'ignored'>,
+  ) {
     const [row] = await this.db
       .update(securityFindings)
-      .set({ status })
-      .where(and(eq(securityFindings.id, id), eq(securityFindings.userId, userId)))
+      .set({status})
+      .where(
+        and(eq(securityFindings.id, id), eq(securityFindings.userId, userId)),
+      )
       .returning();
     if (!row) {
       throw new NotFoundException();
@@ -257,14 +312,16 @@ export class SecurityService {
       .select()
       .from(securityFindings)
       .where(eq(securityFindings.userId, userId));
-    return rows.filter((row) => row.status !== 'resolved');
+    return rows.filter(row => row.status !== 'resolved');
   }
 
   async finding(userId: string, id: string): Promise<SecurityFindingRow> {
     const [row] = await this.db
       .select()
       .from(securityFindings)
-      .where(and(eq(securityFindings.id, id), eq(securityFindings.userId, userId)));
+      .where(
+        and(eq(securityFindings.id, id), eq(securityFindings.userId, userId)),
+      );
     if (!row) {
       throw new NotFoundException();
     }
@@ -274,22 +331,33 @@ export class SecurityService {
   async saveGuide(id: string, guide: string): Promise<void> {
     await this.db
       .update(securityFindings)
-      .set({ guide, guideAt: new Date() })
+      .set({guide, guideAt: new Date()})
       .where(eq(securityFindings.id, id));
   }
 
-  async saveReport(userId: string, text: string, model: string): Promise<SecurityReport> {
-    const [row] = await this.db.insert(securityReports).values({ userId, text, model }).returning();
+  async saveReport(
+    userId: string,
+    text: string,
+    model: string,
+  ): Promise<SecurityReport> {
+    const [row] = await this.db
+      .insert(securityReports)
+      .values({userId, text, model})
+      .returning();
     const old = await this.db
-      .select({ id: securityReports.id })
+      .select({id: securityReports.id})
       .from(securityReports)
       .where(eq(securityReports.userId, userId))
       .orderBy(desc(securityReports.createdAt))
       .offset(REPORTS_KEPT);
-    for (const { id } of old) {
+    for (const {id} of old) {
       await this.db.delete(securityReports).where(eq(securityReports.id, id));
     }
-    return { text: row.text, model: row.model, createdAt: row.createdAt.toISOString() };
+    return {
+      text: row.text,
+      model: row.model,
+      createdAt: row.createdAt.toISOString(),
+    };
   }
 
   private async latestReport(userId: string): Promise<SecurityReport | null> {
@@ -300,24 +368,36 @@ export class SecurityService {
       .orderBy(desc(securityReports.createdAt))
       .limit(1);
     return row
-      ? { text: row.text, model: row.model, createdAt: row.createdAt.toISOString() }
+      ? {
+          text: row.text,
+          model: row.model,
+          createdAt: row.createdAt.toISOString(),
+        }
       : null;
   }
 }
 
 function toSettings(
-  row: { aiEnabled: boolean; connectionId: string | null } | undefined,
+  row: {aiEnabled: boolean; connectionId: string | null} | undefined,
 ): SecuritySettings {
-  return { aiEnabled: row?.aiEnabled ?? true, connectionId: row?.connectionId ?? null };
+  return {
+    aiEnabled: row?.aiEnabled ?? true,
+    connectionId: row?.connectionId ?? null,
+  };
 }
 
 /** The findings as the page shows them: the rules' ones folded under the AI's where it covers them. */
 function toFindings(rows: SecurityFindingRow[]): SecurityFinding[] {
   const folded = coverage(rows);
-  return rows.map((row) => ({ ...toFinding(row), ...(folded.get(row.id) as Coverage) }));
+  return rows.map(row => ({
+    ...toFinding(row),
+    ...(folded.get(row.id) as Coverage),
+  }));
 }
 
-function toFinding(row: SecurityFindingRow): Omit<SecurityFinding, 'coveredBy' | 'covers'> {
+function toFinding(
+  row: SecurityFindingRow,
+): Omit<SecurityFinding, 'coveredBy' | 'covers'> {
   return {
     id: row.id,
     area: row.area,
@@ -338,7 +418,8 @@ function toFinding(row: SecurityFindingRow): Omit<SecurityFinding, 'coveredBy' |
 /** The worst first; among equals the newest. */
 function bySeverity(a: SecurityFinding, b: SecurityFinding): number {
   return (
-    SECURITY_SEVERITIES.indexOf(a.severity) - SECURITY_SEVERITIES.indexOf(b.severity) ||
+    SECURITY_SEVERITIES.indexOf(a.severity) -
+      SECURITY_SEVERITIES.indexOf(b.severity) ||
     b.firstSeenAt.localeCompare(a.firstSeenAt)
   );
 }

@@ -6,7 +6,7 @@ import {
   ThermalFeel,
   WeatherCondition,
 } from '@pd/contracts';
-import { isSnow } from './weather-code';
+import {isSnow} from './weather-code';
 
 /** The weather during the hours you are likely to be outside. */
 export interface DaytimeWeather {
@@ -66,11 +66,14 @@ export function clothingAdvice(
     ...coldExtras(feel.min),
     ...sunExtras(weather.uvIndexMax, feel.max),
   ];
-  return { outfit, extras };
+  return {outfit, extras};
 }
 
 /** An umbrella or a raincoat, shoes for puddles and snow, something against the wind. */
-function rainAndWindExtras(weather: DaytimeWeather, feelMin: number): ClothingExtra[] {
+function rainAndWindExtras(
+  weather: DaytimeWeather,
+  feelMin: number,
+): ClothingExtra[] {
   const snow = weather.conditions.some(isSnow);
   const wet =
     weather.precipitationProbability >= LIKELY_RAIN_PERCENT ||

@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MorningDigestService } from '@pd/api-core';
-import { upcomingDates } from '@pd/contracts';
-import { BirthdaysService } from './birthdays.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {MorningDigestService} from '@pd/api-core';
+import {upcomingDates} from '@pd/contracts';
+import {BirthdaysService} from './birthdays.service';
 
 /** How far ahead the digest looks. */
 const WEEK = 7;
@@ -26,16 +26,18 @@ export class BirthdaysDigest implements OnModuleInit {
         'congratulations, no exclamation marks, no gift ideas. Mention the ones that are ' +
         'today and the ones new to the list.',
       // Dates, not "days until": the list changes when someone enters the week or it is the day.
-      collect: async (userId) => {
-        const upcoming = upcomingDates(await this.birthdays.list(userId)).filter(
-          (date) => date.daysUntil <= WEEK,
-        );
+      collect: async userId => {
+        const upcoming = upcomingDates(
+          await this.birthdays.list(userId),
+        ).filter(date => date.daysUntil <= WEEK);
         return {
-          today: upcoming.filter((date) => date.daysUntil === 0).map((date) => date.person.name),
-          week: upcoming.map(({ kind, person, date, years }) => ({
+          today: upcoming
+            .filter(date => date.daysUntil === 0)
+            .map(date => date.person.name),
+          week: upcoming.map(({kind, person, date, years}) => ({
             name: person.name,
             kind,
-            ...(kind === 'birthday' && person.memorial ? { inMemory: true } : {}),
+            ...(kind === 'birthday' && person.memorial ? {inMemory: true} : {}),
             date,
             years,
             note: person.note,

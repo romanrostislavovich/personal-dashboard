@@ -1,4 +1,4 @@
-import { DatePipe, formatDate } from '@angular/common';
+import {DatePipe, formatDate} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -9,16 +9,20 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { ActivityDevice, ActivityPlatform } from '@pd/contracts';
-import { desktopBridge, DesktopActivityStatus, DeviceOnlyComponent } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { ActivityApi } from './activity.api';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatMenuModule} from '@angular/material/menu';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {ActivityDevice, ActivityPlatform} from '@pd/contracts';
+import {
+  desktopBridge,
+  DesktopActivityStatus,
+  DeviceOnlyComponent,
+} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {ActivityApi} from './activity.api';
 
 const PLATFORMS: Record<string, ActivityPlatform> = {
   win32: 'windows',
@@ -48,7 +52,9 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>devices</mat-icon>
-        <mat-card-title>{{ 'activity.tracker.title' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'activity.tracker.title' | transloco
+        }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <pd-device-only kind="desktop" />
@@ -60,33 +66,49 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
           } @else if (!s.deviceId || removedHere()) {
             <p class="hint">
               {{
-                (removedHere() ? 'activity.tracker.removed' : 'activity.tracker.off') | transloco
+                (removedHere()
+                  ? 'activity.tracker.removed'
+                  : 'activity.tracker.off'
+                ) | transloco
               }}
             </p>
             <button matButton="filled" (click)="enable()" [disabled]="busy()">
-              <mat-icon>play_arrow</mat-icon> {{ 'activity.tracker.enable' | transloco }}
+              <mat-icon>play_arrow</mat-icon>
+              {{ 'activity.tracker.enable' | transloco }}
             </button>
             @if (refused()) {
-              <p class="hint" role="alert">{{ 'activity.tracker.refused' | transloco }}</p>
+              <p class="hint" role="alert">
+                {{ 'activity.tracker.refused' | transloco }}
+              </p>
             }
           } @else {
             <p class="state" [class.paused]="s.paused">
-              <mat-icon inline>{{ s.paused ? 'pause_circle' : 'radio_button_checked' }}</mat-icon>
-              {{ (s.paused ? 'activity.tracker.paused' : 'activity.tracker.on') | transloco }}
+              <mat-icon inline>{{
+                s.paused ? 'pause_circle' : 'radio_button_checked'
+              }}</mat-icon>
+              {{
+                (s.paused ? 'activity.tracker.paused' : 'activity.tracker.on')
+                  | transloco
+              }}
               @if (s.pending > 0) {
                 <span class="hint">
-                  · {{ 'activity.tracker.pending' | transloco: { count: s.pending } }}
+                  ·
+                  {{
+                    'activity.tracker.pending' | transloco: {count: s.pending}
+                  }}
                 </span>
               }
             </p>
             <div class="actions">
               @if (s.paused) {
                 <button matButton (click)="pause(null)">
-                  <mat-icon>play_arrow</mat-icon> {{ 'activity.tracker.resume' | transloco }}
+                  <mat-icon>play_arrow</mat-icon>
+                  {{ 'activity.tracker.resume' | transloco }}
                 </button>
               } @else {
                 <button matButton (click)="pause(60)">
-                  <mat-icon>pause</mat-icon> {{ 'activity.tracker.pauseHour' | transloco }}
+                  <mat-icon>pause</mat-icon>
+                  {{ 'activity.tracker.pauseHour' | transloco }}
                 </button>
                 <button matButton (click)="pause(0)">
                   {{ 'activity.tracker.pauseUntil' | transloco }}
@@ -111,7 +133,9 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
                 <span class="name">
                   {{ device.name }}
                   @if (device.id === status()?.deviceId) {
-                    <span class="hint">· {{ 'activity.tracker.thisDevice' | transloco }}</span>
+                    <span class="hint"
+                      >· {{ 'activity.tracker.thisDevice' | transloco }}</span
+                    >
                   }
                 </span>
                 <span class="hint">
@@ -139,7 +163,9 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
                     <mat-icon>call_merge</mat-icon>
                   </button>
                   <mat-menu #mergeMenu="matMenu">
-                    <p class="menu-title">{{ 'activity.tracker.mergeInto' | transloco }}</p>
+                    <p class="menu-title">
+                      {{ 'activity.tracker.mergeInto' | transloco }}
+                    </p>
                     @for (into of devices.value(); track into.id) {
                       @if (into.id !== device.id) {
                         <button mat-menu-item (click)="merge(device, into)">
@@ -231,7 +257,7 @@ export class TrackerCardComponent {
     return (
       !!deviceId &&
       this.devices.status() === 'resolved' &&
-      !this.devices.value().some((device) => device.id === deviceId)
+      !this.devices.value().some(device => device.id === deviceId)
     );
   });
 
@@ -240,7 +266,9 @@ export class TrackerCardComponent {
     // The tracker changes by itself too (tray pause, a removed device): read it again on return.
     const onFocus = () => void this.refresh();
     window.addEventListener('focus', onFocus);
-    inject(DestroyRef).onDestroy(() => window.removeEventListener('focus', onFocus));
+    inject(DestroyRef).onDestroy(() =>
+      window.removeEventListener('focus', onFocus),
+    );
   }
 
   /** Registers this computer as a device and hands its token to the tracker. */
@@ -252,11 +280,13 @@ export class TrackerCardComponent {
     try {
       const device = await firstValueFrom(
         this.api.registerDevice({
-          name: this.desktop.hostname || this.transloco.translate('activity.tracker.computer'),
+          name:
+            this.desktop.hostname ||
+            this.transloco.translate('activity.tracker.computer'),
           platform: PLATFORMS[this.desktop.platform] ?? 'windows',
         }),
       );
-      await this.desktop.enable({ id: device.id, token: device.token });
+      await this.desktop.enable({id: device.id, token: device.token});
       // The app refuses a page it does not trust without an error: the device registered for
       // it would only wait in the list as one that never reported.
       const taken = (await this.desktop.status())?.deviceId === device.id;
@@ -282,7 +312,10 @@ export class TrackerCardComponent {
   }
 
   protected async rename(device: ActivityDevice): Promise<void> {
-    const name = prompt(this.transloco.translate('activity.tracker.rename'), device.name)?.trim();
+    const name = prompt(
+      this.transloco.translate('activity.tracker.rename'),
+      device.name,
+    )?.trim();
     if (name && name !== device.name) {
       await firstValueFrom(this.api.renameDevice(device.id, name));
       this.devices.reload();
@@ -292,7 +325,11 @@ export class TrackerCardComponent {
 
   protected async remove(device: ActivityDevice): Promise<void> {
     if (
-      !confirm(this.transloco.translate('activity.tracker.confirmRemove', { name: device.name }))
+      !confirm(
+        this.transloco.translate('activity.tracker.confirmRemove', {
+          name: device.name,
+        }),
+      )
     ) {
       return;
     }
@@ -318,7 +355,10 @@ export class TrackerCardComponent {
   }
 
   /** The records of `device` go to `into`, and `device` is removed: nothing is lost. */
-  protected async merge(device: ActivityDevice, into: ActivityDevice): Promise<void> {
+  protected async merge(
+    device: ActivityDevice,
+    into: ActivityDevice,
+  ): Promise<void> {
     const question = this.transloco.translate('activity.tracker.confirmMerge', {
       from: this.label(device),
       into: this.label(into),

@@ -13,13 +13,13 @@ export interface DateParts {
   day: number;
 }
 
-export function toLocalDate({ year, month, day }: DateParts): LocalDate {
+export function toLocalDate({year, month, day}: DateParts): LocalDate {
   return `${year}-${pad(month)}-${pad(day)}`;
 }
 
 export function parseLocalDate(value: LocalDate): DateParts {
   const [year, month, day] = value.split('-').map(Number);
-  return { year, month, day };
+  return {year, month, day};
 }
 
 /** Today's date in the given time zone (for example, `Europe/Warsaw`). */
@@ -30,8 +30,8 @@ export function todayIn(timeZone: string, now: Date = new Date()): DateParts {
     month: '2-digit',
     day: '2-digit',
   }).formatToParts(now);
-  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
-  return { year: get('year'), month: get('month'), day: get('day') };
+  const get = (type: string) => Number(parts.find(p => p.type === type)?.value);
+  return {year: get('year'), month: get('month'), day: get('day')};
 }
 
 export function isLeapYear(year: number): boolean {
@@ -43,9 +43,16 @@ export function daysInMonth(year: number, month: number): number {
 }
 
 /** The date `days` days later (or earlier for a negative value). */
-export function addDays({ year, month, day }: DateParts, days: number): DateParts {
+export function addDays(
+  {year, month, day}: DateParts,
+  days: number,
+): DateParts {
   const date = new Date(Date.UTC(year, month - 1, day + days));
-  return { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate() };
+  return {
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+  };
 }
 
 /** Number of days between two dates (b − a). */
@@ -54,7 +61,7 @@ export function daysBetween(a: DateParts, b: DateParts): number {
   return Math.round((toUtc(b) - toUtc(a)) / msPerDay);
 }
 
-function toUtc({ year, month, day }: DateParts): number {
+function toUtc({year, month, day}: DateParts): number {
   return Date.UTC(year, month - 1, day);
 }
 

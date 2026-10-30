@@ -1,8 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database } from '@pd/api-core';
-import { SQL, sql } from 'drizzle-orm';
-import { scrobbles } from './music.schema';
+import {Inject, Injectable} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, DB, Database} from '@pd/api-core';
+import {SQL, sql} from 'drizzle-orm';
+import {scrobbles} from './music.schema';
 
 /** Numbers over the stored play history (`music_scrobbles`) — the base for music achievements. */
 export interface MusicHistoryStats {
@@ -31,7 +31,10 @@ const YEAR_MS = 365.25 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class MusicHistoryStatsService {
-  private readonly cache = new Map<string, { at: number; stats: Promise<MusicHistoryStats> }>();
+  private readonly cache = new Map<
+    string,
+    {at: number; stats: Promise<MusicHistoryStats>}
+  >();
 
   constructor(
     @Inject(DB) private readonly db: Database,
@@ -44,22 +47,28 @@ export class MusicHistoryStatsService {
       return cached.stats;
     }
     const stats = this.load(userId);
-    this.cache.set(userId, { at: Date.now(), stats });
+    this.cache.set(userId, {at: Date.now(), stats});
     stats.catch(() => this.cache.delete(userId));
     return stats;
   }
 
   private async load(userId: string): Promise<MusicHistoryStats> {
     const s = scrobbles;
-    const [{ firstPlayAt, ...totals }, days, artists, tracks, albums, longestStreak] =
-      await Promise.all([
-        this.totals(userId),
-        this.groups(userId, sql`${this.localDay()}`),
-        this.groups(userId, sql`${s.artist}`),
-        this.groups(userId, sql`${s.artist}, ${s.track}`),
-        this.groups(userId, sql`${s.artist}, ${s.album}`, sql`${s.album} <> ''`),
-        this.longestStreak(userId),
-      ]);
+    const [
+      {firstPlayAt, ...totals},
+      days,
+      artists,
+      tracks,
+      albums,
+      longestStreak,
+    ] = await Promise.all([
+      this.totals(userId),
+      this.groups(userId, sql`${this.localDay()}`),
+      this.groups(userId, sql`${s.artist}`),
+      this.groups(userId, sql`${s.artist}, ${s.track}`),
+      this.groups(userId, sql`${s.artist}, ${s.album}`, sql`${s.album} <> ''`),
+      this.longestStreak(userId),
+    ]);
     return {
       ...totals,
       artists: artists.count,
@@ -104,8 +113,8 @@ export class MusicHistoryStatsService {
     userId: string,
     groupBy: SQL,
     where: SQL = sql`true`,
-  ): Promise<{ count: number; largest: number }> {
-    const result = await this.db.execute<{ count: number; largest: number }>(sql`
+  ): Promise<{count: number; largest: number}> {
+    const result = await this.db.execute<{count: number; largest: number}>(sql`
       SELECT count(*)::int AS count, coalesce(max(plays), 0)::int AS largest FROM (
         SELECT count(*) AS plays FROM ${scrobbles}
         WHERE ${scrobbles.userId} = ${userId} AND ${where}
@@ -117,7 +126,7 @@ export class MusicHistoryStatsService {
 
   /** Days in a row: consecutive dates minus their row number give the same value (one run). */
   private async longestStreak(userId: string): Promise<number> {
-    const result = await this.db.execute<{ value: number | null }>(sql`
+    const result = await this.db.execute<{value: number | null}>(sql`
       SELECT max(days)::int AS value FROM (
         SELECT count(*) AS days FROM (
           SELECT day - (row_number() OVER (ORDER BY day))::int AS run FROM (
@@ -137,6 +146,6 @@ export class MusicHistoryStatsService {
   }
 
   private timeZone(): string {
-    return this.config.get('APP_TIMEZONE', { infer: true });
+    return this.config.get('APP_TIMEZONE', {infer: true});
   }
 }

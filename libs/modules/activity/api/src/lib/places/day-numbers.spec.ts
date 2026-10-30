@@ -1,17 +1,17 @@
-import { placeDayNumbers } from './day-numbers';
-import { Entry } from './stays';
+import {placeDayNumbers} from './day-numbers';
+import {Entry} from './stays';
 
 const H = 3_600_000;
-const HOME = { latitude: 52.2297, longitude: 21.0122 };
-const CAFE = { latitude: 52.2477, longitude: 21.0322 };
-const PARK = { latitude: 52.2, longitude: 21.0 };
+const HOME = {latitude: 52.2297, longitude: 21.0122};
+const CAFE = {latitude: 52.2477, longitude: 21.0322};
+const PARK = {latitude: 52.2, longitude: 21.0};
 
 function stay(place: typeof HOME, start: number, end: number): Entry {
-  return { kind: 'stay', ...place, start, end };
+  return {kind: 'stay', ...place, start, end};
 }
 
 function walk(start: number, end: number): Entry {
-  return { kind: 'trip', start, end, meters: 1000, mode: 'walk', path: [] };
+  return {kind: 'trip', start, end, meters: 1000, mode: 'walk', path: []};
 }
 
 describe('the numbers of a day of places', () => {
@@ -52,7 +52,9 @@ describe('the numbers of a day of places', () => {
   });
 
   it('knows no home without a night', () => {
-    const days = [{ day: '2026-10-20', start: 0, entries: [stay(CAFE, 10 * H, 12 * H)] }];
+    const days = [
+      {day: '2026-10-20', start: 0, entries: [stay(CAFE, 10 * H, 12 * H)]},
+    ];
     expect(placeDayNumbers(days, [], '2026-10-20')[0].homeSeconds).toBeNull();
   });
 });

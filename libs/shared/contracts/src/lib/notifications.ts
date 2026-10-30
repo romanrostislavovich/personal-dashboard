@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 export interface NotificationSettings {
   telegram: {
@@ -47,7 +47,8 @@ export const NOTIFICATION_DELIVERY_STATUSES = [
   'failed',
   'deduplicated',
 ] as const;
-export type NotificationDeliveryStatus = (typeof NOTIFICATION_DELIVERY_STATUSES)[number];
+export type NotificationDeliveryStatus =
+  (typeof NOTIFICATION_DELIVERY_STATUSES)[number];
 
 /** A line of the delivery log (Settings → Notifications). */
 export interface NotificationDelivery {
@@ -126,8 +127,8 @@ export interface InboxSummary {
 
 /** `POST /api/notifications/inbox/:id/answer`: a button pressed, or the words asked for after it. */
 export const inboxAnswerSchema = z.union([
-  z.object({ action: z.string().min(1).max(64) }),
-  z.object({ text: z.string().trim().min(1).max(4000) }),
+  z.object({action: z.string().min(1).max(64)}),
+  z.object({text: z.string().trim().min(1).max(4000)}),
 ]);
 export type InboxAnswerInput = z.infer<typeof inboxAnswerSchema>;
 

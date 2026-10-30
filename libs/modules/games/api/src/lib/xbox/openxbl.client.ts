@@ -1,11 +1,11 @@
-import { fetchWithTimeout } from '@pd/api-core';
-import { XboxGame } from '@pd/contracts';
+import {fetchWithTimeout} from '@pd/api-core';
+import {XboxGame} from '@pd/contracts';
 
 /** OpenXBL's API (its OpenAPI spec: https://api.xbl.io/docs/json); the old xbl.io/api/v2 takes no new keys. */
 const API = 'https://api.xbl.io/v2';
 const TIMEOUT_MS = 20_000;
 /** The locale Xbox is asked in, by the user's language. */
-const ACCEPT_LANGUAGES: Record<string, string> = { en: 'en-US', ru: 'ru-RU' };
+const ACCEPT_LANGUAGES: Record<string, string> = {en: 'en-US', ru: 'ru-RU'};
 /** The games kept: the last played first. */
 const MAX_GAMES = 100;
 
@@ -45,9 +45,11 @@ export function shapeOf(raw: unknown, depth = 0): string {
   }
   return `{${Object.keys(raw)
     .slice(0, 8)
-    .map((key) => {
+    .map(key => {
       const value = raw[key];
-      return isObject(value) || Array.isArray(value) ? `${key}${shapeOf(value, depth + 1)}` : key;
+      return isObject(value) || Array.isArray(value)
+        ? `${key}${shapeOf(value, depth + 1)}`
+        : key;
     })
     .join(',')}}`;
 }
@@ -57,9 +59,17 @@ export function shapeOf(raw: unknown, depth = 0): string {
  * refusal comes as a string in `content`, still with 200 — it is an error, not "no games".
  */
 function unwrap(raw: unknown): unknown {
-  if (isObject(raw) && (typeof raw['content'] === 'string' || Array.isArray(raw['content']))) {
-    const said = typeof raw['content'] === 'string' ? raw['content'] : raw['content'].join(' ');
-    throw new Error(`Xbox answered: ${said.replace(/[[\]"]/g, '').slice(0, 200)}`);
+  if (
+    isObject(raw) &&
+    (typeof raw['content'] === 'string' || Array.isArray(raw['content']))
+  ) {
+    const said =
+      typeof raw['content'] === 'string'
+        ? raw['content']
+        : raw['content'].join(' ');
+    throw new Error(
+      `Xbox answered: ${said.replace(/[[\]"]/g, '').slice(0, 200)}`,
+    );
   }
   return isObject(raw) && isObject(raw['content']) ? raw['content'] : raw;
 }
@@ -75,7 +85,9 @@ function text(value: unknown): string | null {
 export function parseProfile(raw: unknown): XboxProfile {
   const body = unwrap(raw);
   const user =
-    isObject(body) && Array.isArray(body['profileUsers']) ? body['profileUsers'][0] : null;
+    isObject(body) && Array.isArray(body['profileUsers'])
+      ? body['profileUsers'][0]
+      : null;
   if (!isObject(user)) {
     throw new Error('OpenXBL gave no profile');
   }
@@ -86,7 +98,8 @@ export function parseProfile(raw: unknown): XboxProfile {
     }
   }
   const xuid = text(user['id']);
-  const gamertag = text(settings.get('Gamertag')) ?? text(settings.get('ModernGamertag'));
+  const gamertag =
+    text(settings.get('Gamertag')) ?? text(settings.get('ModernGamertag'));
   if (!xuid || !gamertag) {
     throw new Error('OpenXBL gave a profile without a gamertag');
   }
@@ -105,7 +118,8 @@ export function parseProfile(raw: unknown): XboxProfile {
  */
 export function parseTitles(raw: unknown): XboxGame[] {
   const body = unwrap(raw);
-  const titles = isObject(body) && Array.isArray(body['titles']) ? body['titles'] : [];
+  const titles =
+    isObject(body) && Array.isArray(body['titles']) ? body['titles'] : [];
   const games: XboxGame[] = [];
   for (const title of titles) {
     if (!isObject(title)) {
@@ -116,22 +130,36 @@ export function parseTitles(raw: unknown): XboxGame[] {
     if (!titleId || !name) {
       continue;
     }
-    const achievement = isObject(title['achievement']) ? title['achievement'] : {};
-    const history = isObject(title['titleHistory']) ? title['titleHistory'] : {};
+    const achievement = isObject(title['achievement'])
+      ? title['achievement']
+      : {};
+    const history = isObject(title['titleHistory'])
+      ? title['titleHistory']
+      : {};
     // `/achievements` answers another shape: the gamerscore on the title, the achievements listed.
-    const listed = Array.isArray(title['achievements']) ? title['achievements'] : null;
-    const total = listed ? listed.length : num(achievement['totalAchievements']);
+    const listed = Array.isArray(title['achievements'])
+      ? title['achievements']
+      : null;
+    const total = listed
+      ? listed.length
+      : num(achievement['totalAchievements']);
     const unlocked = listed
-      ? listed.filter((item) => isObject(item) && item['isUnlocked'] === true).length
+      ? listed.filter(item => isObject(item) && item['isUnlocked'] === true)
+          .length
       : num(achievement['currentAchievements']);
     games.push({
       titleId,
       name,
       imageUrl: text(title['displayImage']),
-      gamerscore: num(achievement['currentGamerscore'] ?? title['currentGamerscore']),
-      totalGamerscore: num(achievement['totalGamerscore'] ?? title['maxGamerscore']),
+      gamerscore: num(
+        achievement['currentGamerscore'] ?? title['currentGamerscore'],
+      ),
+      totalGamerscore: num(
+        achievement['totalGamerscore'] ?? title['maxGamerscore'],
+      ),
       // Older games tell what was unlocked but not how many there are (total 0).
-      achievements: total > 0 || unlocked > 0 ? { unlocked, total: total || null } : null,
+      achievements:
+        total > 0 || unlocked > 0 ? {unlocked, total: total || null} : null,
       lastPlayedAt: text(history['lastTimePlayed']),
     });
   }
@@ -160,7 +188,7 @@ export class OpenXblClient {
    * The games: `/titles` first, then the other ways OpenXBL tells them, until one has any. With
    * none, `shapes` says what each answered (its keys, no values), to tell why.
    */
-  async games(xuid: string): Promise<{ games: XboxGame[]; shapes: string[] }> {
+  async games(xuid: string): Promise<{games: XboxGame[]; shapes: string[]}> {
     const shapes: string[] = [];
     for (const path of [
       '/titles',
@@ -172,19 +200,25 @@ export class OpenXblClient {
         const raw = await this.get(path);
         const games = parseTitles(raw);
         if (games.length) {
-          return { games, shapes: [] };
+          return {games, shapes: []};
         }
         shapes.push(`${path} → ${shapeOf(raw)}`);
       } catch (error) {
-        if (error instanceof OpenXblKeyError || error instanceof OpenXblRateLimitError) {
+        if (
+          error instanceof OpenXblKeyError ||
+          error instanceof OpenXblRateLimitError
+        ) {
           throw error;
         }
         shapes.push(
-          `${path} → ${error instanceof Error ? error.message : String(error)}`.slice(0, 260),
+          `${path} → ${error instanceof Error ? error.message : String(error)}`.slice(
+            0,
+            260,
+          ),
         );
       }
     }
-    return { games: [], shapes };
+    return {games: [], shapes};
   }
 
   private async get(path: string): Promise<unknown> {
@@ -204,7 +238,9 @@ export class OpenXblClient {
       throw new OpenXblKeyError('OpenXBL did not accept the key');
     }
     if (response.status === 429) {
-      throw new OpenXblRateLimitError('OpenXBL: the hourly limit of requests is spent');
+      throw new OpenXblRateLimitError(
+        'OpenXBL: the hourly limit of requests is spent',
+      );
     }
     if (!response.ok) {
       throw new Error(`OpenXBL answered ${response.status}`);

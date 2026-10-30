@@ -1,7 +1,12 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { AchievementsService, achievementTiers, DB, Database } from '@pd/api-core';
-import { count, eq, sql } from 'drizzle-orm';
-import { psychologyAssessments, psychologyEvents } from './psychology.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  AchievementsService,
+  achievementTiers,
+  DB,
+  Database,
+} from '@pd/api-core';
+import {count, eq, sql} from 'drizzle-orm';
+import {psychologyAssessments, psychologyEvents} from './psychology.schema';
 
 /**
  * Psychology achievements reward the regularity of watching oneself — a questionnaire month
@@ -19,12 +24,12 @@ export class PsychologyAchievements implements OnModuleInit {
     this.achievements.register({
       id: 'psychology.checkin-months',
       module: 'psychology',
-      measure: (userId) => this.checkinMonths(userId),
+      measure: userId => this.checkinMonths(userId),
       tiers: achievementTiers(
         [
           3,
           '🪞',
-          { en: 'Checking in', ru: 'На связи с собой' },
+          {en: 'Checking in', ru: 'На связи с собой'},
           {
             en: 'A questionnaire 3 months in a row',
             ru: 'Опросник 3 месяца подряд',
@@ -33,7 +38,7 @@ export class PsychologyAchievements implements OnModuleInit {
         [
           6,
           '🧘',
-          { en: 'Half a year of attention', ru: 'Полгода внимания' },
+          {en: 'Half a year of attention', ru: 'Полгода внимания'},
           {
             en: 'A questionnaire 6 months in a row',
             ru: 'Опросник 6 месяцев подряд',
@@ -42,7 +47,7 @@ export class PsychologyAchievements implements OnModuleInit {
         [
           12,
           '🌳',
-          { en: 'A year with myself', ru: 'Год с собой' },
+          {en: 'A year with myself', ru: 'Год с собой'},
           {
             en: 'A questionnaire 12 months in a row',
             ru: 'Опросник 12 месяцев подряд',
@@ -54,19 +59,25 @@ export class PsychologyAchievements implements OnModuleInit {
     this.achievements.register({
       id: 'psychology.events',
       module: 'psychology',
-      measure: (userId) => this.events(userId),
+      measure: userId => this.events(userId),
       tiers: achievementTiers(
         [
           10,
           '📖',
-          { en: 'Chapters of a life', ru: 'Главы жизни' },
-          { en: '10 events of a life written down', ru: '10 событий жизни записано' },
+          {en: 'Chapters of a life', ru: 'Главы жизни'},
+          {
+            en: '10 events of a life written down',
+            ru: '10 событий жизни записано',
+          },
         ],
         [
           30,
           '🗺️',
-          { en: 'The map of a life', ru: 'Карта жизни' },
-          { en: '30 events of a life written down', ru: '30 событий жизни записано' },
+          {en: 'The map of a life', ru: 'Карта жизни'},
+          {
+            en: '30 events of a life written down',
+            ru: '30 событий жизни записано',
+          },
         ],
       ),
     });
@@ -74,7 +85,7 @@ export class PsychologyAchievements implements OnModuleInit {
 
   /** The longest run of calendar months, each with at least one questionnaire. */
   private async checkinMonths(userId: string): Promise<number> {
-    const result = await this.db.execute<{ streak: number | null }>(sql`
+    const result = await this.db.execute<{streak: number | null}>(sql`
       WITH months AS (
         SELECT DISTINCT date_trunc('month', taken_on)::date AS month
         FROM ${psychologyAssessments}
@@ -93,7 +104,7 @@ export class PsychologyAchievements implements OnModuleInit {
 
   private async events(userId: string): Promise<number> {
     const [row] = await this.db
-      .select({ value: count() })
+      .select({value: count()})
       .from(psychologyEvents)
       .where(eq(psychologyEvents.userId, userId));
     return row?.value ?? 0;

@@ -1,6 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { FinanceApi } from './finance.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {FinanceApi} from './finance.api';
 
 /**
  * The user's own category model in one line (in the bank's card): whether it already sorts a
@@ -17,12 +22,14 @@ import { FinanceApi } from './finance.api';
         @if (model.trusted) {
           {{
             'finance.categoryModel.trusted'
-              | transloco: { sure: percent(model.sureAccuracy), examples: model.examples }
+              | transloco
+                : {sure: percent(model.sureAccuracy), examples: model.examples}
           }}
         } @else if (model.examples) {
           {{
             'finance.categoryModel.learning'
-              | transloco: { accuracy: percent(model.accuracy), examples: model.examples }
+              | transloco
+                : {accuracy: percent(model.accuracy), examples: model.examples}
           }}
         } @else {
           {{ 'finance.categoryModel.empty' | transloco }}
@@ -43,7 +50,9 @@ export class CategoryModelComponent {
 
   /** Spending is what a bank import sorts most; income is a few salaries. */
   protected readonly expense = computed(() =>
-    this.state.hasValue() ? this.state.value().kinds.find((kind) => kind.kind === 'expense') : null,
+    this.state.hasValue()
+      ? this.state.value().kinds.find(kind => kind.kind === 'expense')
+      : null,
   );
 
   protected percent(share: number): number {

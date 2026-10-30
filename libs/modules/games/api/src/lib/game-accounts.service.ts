@@ -6,20 +6,23 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { DB, Database, NotificationsService, UsersService } from '@pd/api-core';
-import { GameAccount, GameAccountInput } from '@pd/contracts';
-import { and, asc, eq } from 'drizzle-orm';
-import { DotaProfileNotFoundError } from './dota/opendota.client';
-import { DotaService } from './dota/dota.service';
-import { OpenDotaKeyService } from './dota/opendota-key.service';
-import { parseDotaAccountId } from './dota/steam-id';
-import { gameAccounts, GameAccountRow } from './games.schema';
-import { gamesMessages } from './games.messages';
-import { WowCharacterNotFoundError, WowRealmNotFoundError } from './wow/battlenet.client';
-import { SteamProfileNotFoundError } from './steam/steam.client';
-import { SteamService } from './steam/steam.service';
-import { XboxService } from './xbox/xbox.service';
-import { toWowExternalId, WowService } from './wow/wow.service';
+import {DB, Database, NotificationsService, UsersService} from '@pd/api-core';
+import {GameAccount, GameAccountInput} from '@pd/contracts';
+import {and, asc, eq} from 'drizzle-orm';
+import {DotaProfileNotFoundError} from './dota/opendota.client';
+import {DotaService} from './dota/dota.service';
+import {OpenDotaKeyService} from './dota/opendota-key.service';
+import {parseDotaAccountId} from './dota/steam-id';
+import {gameAccounts, GameAccountRow} from './games.schema';
+import {gamesMessages} from './games.messages';
+import {
+  WowCharacterNotFoundError,
+  WowRealmNotFoundError,
+} from './wow/battlenet.client';
+import {SteamProfileNotFoundError} from './steam/steam.client';
+import {SteamService} from './steam/steam.service';
+import {XboxService} from './xbox/xbox.service';
+import {toWowExternalId, WowService} from './wow/wow.service';
 
 @Injectable()
 export class GameAccountsService {
@@ -43,7 +46,7 @@ export class GameAccountsService {
       .where(eq(gameAccounts.userId, userId))
       .orderBy(asc(gameAccounts.createdAt));
     return Promise.all(
-      rows.map(async (row) => ({
+      rows.map(async row => ({
         id: row.id,
         game: row.game,
         displayName: row.displayName,
@@ -56,17 +59,17 @@ export class GameAccountsService {
 
   /** Adds an account and syncs it right away; a non-existent account is not saved. */
   async add(userId: string, input: GameAccountInput): Promise<void> {
-    const { externalId, displayName } = await this.identify(userId, input);
+    const {externalId, displayName} = await this.identify(userId, input);
     const [row] = await this.db
       .insert(gameAccounts)
-      .values({ userId, game: input.game, externalId, displayName })
+      .values({userId, game: input.game, externalId, displayName})
       .onConflictDoNothing()
       .returning();
     if (!row) {
       throw new ConflictException('Account is already added');
     }
     try {
-      await this.syncAccount(row, { throwErrors: true });
+      await this.syncAccount(row, {throwErrors: true});
     } catch (error) {
       await this.remove(userId, row.id);
       if (
@@ -91,10 +94,10 @@ export class GameAccountsService {
   /** Ids of the user's accounts of a game. */
   async idsOf(userId: string, game: GameAccountRow['game']): Promise<string[]> {
     const rows = await this.db
-      .select({ id: gameAccounts.id })
+      .select({id: gameAccounts.id})
       .from(gameAccounts)
       .where(and(eq(gameAccounts.userId, userId), eq(gameAccounts.game, game)));
-    return rows.map((row) => row.id);
+    return rows.map(row => row.id);
   }
 
   async syncOne(userId: string, id: string): Promise<void> {
@@ -106,30 +109,33 @@ export class GameAccountsService {
       throw new NotFoundException();
     }
     // A manual refresh re-downloads the whole history (e.g. after enabling public match data).
-    await this.syncAccount(row, { fullHistory: true });
+    await this.syncAccount(row, {fullHistory: true});
   }
 
   /** "Refresh all": every account of the user, Dota with its whole history. */
   async syncAllOf(userId: string): Promise<void> {
-    const rows = await this.db.select().from(gameAccounts).where(eq(gameAccounts.userId, userId));
+    const rows = await this.db
+      .select()
+      .from(gameAccounts)
+      .where(eq(gameAccounts.userId, userId));
     for (const row of rows) {
-      await this.syncAccount(row, { fullHistory: true });
+      await this.syncAccount(row, {fullHistory: true});
     }
   }
 
   /** Background sync of all accounts; news goes to notifications. */
   async syncAll(): Promise<void> {
     for (const row of await this.db.select().from(gameAccounts)) {
-      await this.syncAccount(row, { awaitDetails: true });
+      await this.syncAccount(row, {awaitDetails: true});
     }
   }
 
   private async syncAccount(
     row: GameAccountRow,
-    { throwErrors = false, fullHistory = false, awaitDetails = false } = {},
+    {throwErrors = false, fullHistory = false, awaitDetails = false} = {},
   ): Promise<void> {
     try {
-      const news = await this.syncGame(row, { fullHistory, awaitDetails });
+      const news = await this.syncGame(row, {fullHistory, awaitDetails});
       if (news.length > 0) {
         await this.notify(row.userId, news);
       }
@@ -137,10 +143,14 @@ export class GameAccountsService {
       if (throwErrors) {
         throw error;
       }
-      this.logger.warn(`Sync of ${row.game} account ${row.displayName} failed: ${error}`);
+      this.logger.warn(
+        `Sync of ${row.game} account ${row.displayName} failed: ${error}`,
+      );
       await this.db
         .update(gameAccounts)
-        .set({ lastError: error instanceof Error ? error.message : String(error) })
+        .set({
+          lastError: error instanceof Error ? error.message : String(error),
+        })
         .where(eq(gameAccounts.id, row.id));
     }
   }
@@ -161,7 +171,7 @@ export class GameAccountsService {
   /** Syncs the account with its game; returns news lines for a notification. */
   private syncGame(
     row: GameAccountRow,
-    options: { fullHistory: boolean; awaitDetails: boolean },
+    options: {fullHistory: boolean; awaitDetails: boolean},
   ): Promise<string[]> {
     switch (row.game) {
       case 'dota2':
@@ -178,34 +188,38 @@ export class GameAccountsService {
   /** A library changes quietly: playtime and achievements are on the page, not in notifications. */
   private async syncSteam(row: GameAccountRow): Promise<string[]> {
     const profile = await this.steam.sync(row);
-    await this.saveProfile(row, profile.personaName, { ...profile });
+    await this.saveProfile(row, profile.personaName, {...profile});
     return [];
   }
 
   /** Like a Steam library: the games and the gamerscore are on the page, not in notifications. */
   private async syncXbox(row: GameAccountRow): Promise<string[]> {
     const profile = await this.xbox.sync(row);
-    await this.saveProfile(row, profile.gamertag, { ...profile });
+    await this.saveProfile(row, profile.gamertag, {...profile});
     return [];
   }
 
   private async syncDota(
     row: GameAccountRow,
-    options: { fullHistory: boolean; awaitDetails: boolean },
+    options: {fullHistory: boolean; awaitDetails: boolean},
   ): Promise<string[]> {
-    const { profile, rankChange } = await this.dota.sync(row, options);
-    await this.saveProfile(row, profile.personaName, { ...profile });
+    const {profile, rankChange} = await this.dota.sync(row, options);
+    await this.saveProfile(row, profile.personaName, {...profile});
     const text = gamesMessages(await this.localeOf(row.userId));
-    return rankChange ? [text.dotaRank(profile.personaName, rankChange.from, rankChange.to)] : [];
+    return rankChange
+      ? [text.dotaRank(profile.personaName, rankChange.from, rankChange.to)]
+      : [];
   }
 
   private async syncWow(row: GameAccountRow): Promise<string[]> {
-    const { profile, newAchievements, news } = await this.wow.sync(row);
-    await this.saveProfile(row, `${profile.name} — ${profile.realm}`, { ...profile });
+    const {profile, newAchievements, news} = await this.wow.sync(row);
+    await this.saveProfile(row, `${profile.name} — ${profile.realm}`, {
+      ...profile,
+    });
     const text = gamesMessages(await this.localeOf(row.userId));
     return [
-      ...newAchievements.map((a) => text.wowAchievement(profile.name, a.name)),
-      ...news.map((item) => text.wowNews(profile.name, item)),
+      ...newAchievements.map(a => text.wowAchievement(profile.name, a.name)),
+      ...news.map(item => text.wowNews(profile.name, item)),
     ];
   }
 
@@ -216,7 +230,7 @@ export class GameAccountsService {
   ): Promise<void> {
     await this.db
       .update(gameAccounts)
-      .set({ displayName, profile, lastSyncedAt: new Date(), lastError: null })
+      .set({displayName, profile, lastSyncedAt: new Date(), lastError: null})
       .where(eq(gameAccounts.id, row.id));
   }
 
@@ -237,31 +251,33 @@ export class GameAccountsService {
   private async identify(
     userId: string,
     input: GameAccountInput,
-  ): Promise<{ externalId: string; displayName: string }> {
+  ): Promise<{externalId: string; displayName: string}> {
     if (input.game === 'xbox') {
       return this.xbox.identify(userId);
     }
     if (input.game === 'steam') {
       const steamId = await this.steam.resolveSteamId(userId, input.steamId);
-      return { externalId: steamId, displayName: steamId };
+      return {externalId: steamId, displayName: steamId};
     }
     if (input.game === 'dota2') {
       const accountId = parseDotaAccountId(input.steamId);
       if (!accountId) {
-        throw new BadRequestException('Cannot find a Steam account id in the input');
+        throw new BadRequestException(
+          'Cannot find a Steam account id in the input',
+        );
       }
-      return { externalId: String(accountId), displayName: String(accountId) };
+      return {externalId: String(accountId), displayName: String(accountId)};
     }
     // The realm is typed the way the game shows it; Blizzard's API wants its slug.
     const client = await this.wow.clientFor(userId);
-    const realm = await client.resolveRealm(input, input.realm).catch((error) => {
+    const realm = await client.resolveRealm(input, input.realm).catch(error => {
       if (error instanceof WowRealmNotFoundError) {
         throw new BadRequestException(error.message);
       }
       throw error;
     });
     return {
-      externalId: toWowExternalId({ ...input, realm: realm.slug }),
+      externalId: toWowExternalId({...input, realm: realm.slug}),
       displayName: `${input.name} — ${realm.name}`,
     };
   }

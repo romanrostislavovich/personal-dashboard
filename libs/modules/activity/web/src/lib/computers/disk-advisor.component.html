@@ -6,7 +6,7 @@
       <h3>{{ 'activity.disk.title' | transloco }}</h3>
       @if (scanned(); as sc) {
         <span class="hint">
-          {{ 'activity.disk.scannedAt' | transloco: { mount: sc.mount } }}
+          {{ 'activity.disk.scannedAt' | transloco: {mount: sc.mount} }}
           {{ sc.at | date: 'd MMM, HH:mm' }}
         </span>
       }
@@ -40,7 +40,9 @@
         }}
       </p>
     } @else if (s.state === 'error') {
-      <p class="error">{{ 'activity.disk.failed' | transloco }}: {{ s.message }}</p>
+      <p class="error">
+        {{ 'activity.disk.failed' | transloco }}: {{ s.message }}
+      </p>
     } @else if (thinking()) {
       <mat-progress-bar mode="indeterminate" />
       <p class="hint">{{ 'activity.disk.thinking' | transloco }}</p>
@@ -81,10 +83,13 @@
               <div class="head">
                 <span class="path">{{ item.path }}</span>
                 <span class="size">
-                  {{ item.bytes / gb | number: '1.1-1' }} {{ 'activity.disk.gb' | transloco }}
+                  {{ item.bytes / gb | number: '1.1-1' }}
+                  {{ 'activity.disk.gb' | transloco }}
                 </span>
               </div>
-              <span class="safety">{{ 'activity.disk.safety.' + item.safety | transloco }}</span>
+              <span class="safety">{{
+                'activity.disk.safety.' + item.safety | transloco
+              }}</span>
               <span class="reason">{{ item.reason }}</span>
               @if (item.how; as how) {
                 <span class="how">
@@ -107,21 +112,36 @@
               @if (!outcome?.ok) {
                 <div class="actions">
                   @if (item.action === 'trash') {
-                    <button matButton="tonal" [disabled]="busy" (click)="trashOne(item)">
-                      <mat-icon>delete</mat-icon> {{ 'activity.disk.toBin' | transloco }}
+                    <button
+                      matButton="tonal"
+                      [disabled]="busy"
+                      (click)="trashOne(item)"
+                    >
+                      <mat-icon>delete</mat-icon>
+                      {{ 'activity.disk.toBin' | transloco }}
                     </button>
                   }
                   @if (item.fix && disk.fix) {
-                    <button matButton="tonal" [disabled]="busy" (click)="fix(item)">
+                    <button
+                      matButton="tonal"
+                      [disabled]="busy"
+                      (click)="fix(item)"
+                    >
                       <mat-icon>{{
-                        item.fix === 'storage-settings' ? 'settings' : 'cleaning_services'
+                        item.fix === 'storage-settings'
+                          ? 'settings'
+                          : 'cleaning_services'
                       }}</mat-icon>
-                      {{ 'activity.disk.fixes.' + item.fix + '.button' | transloco }}
+                      {{
+                        'activity.disk.fixes.' + item.fix + '.button'
+                          | transloco
+                      }}
                     </button>
                   }
                   @if (disk.reveal) {
                     <button matButton [disabled]="busy" (click)="reveal(item)">
-                      <mat-icon>folder_open</mat-icon> {{ 'activity.disk.reveal' | transloco }}
+                      <mat-icon>folder_open</mat-icon>
+                      {{ 'activity.disk.reveal' | transloco }}
                     </button>
                   }
                 </div>
@@ -133,9 +153,16 @@
         }
       </ul>
       @if (picked().size) {
-        <button matButton="filled" [disabled]="working() !== null" (click)="trashPicked()">
+        <button
+          matButton="filled"
+          [disabled]="working() !== null"
+          (click)="trashPicked()"
+        >
           <mat-icon>delete</mat-icon>
-          {{ 'activity.disk.trash' | transloco: { gb: (pickedBytes() / gb | number: '1.1-1') } }}
+          {{
+            'activity.disk.trash'
+              | transloco: {gb: (pickedBytes() / gb | number: '1.1-1')}
+          }}
         </button>
       }
     }
@@ -150,11 +177,13 @@
         }
         <div class="actions">
           <button matButton (click)="openRecycleBin()">
-            <mat-icon>delete_outline</mat-icon> {{ 'activity.disk.openBin' | transloco }}
+            <mat-icon>delete_outline</mat-icon>
+            {{ 'activity.disk.openBin' | transloco }}
           </button>
           @if (trashed() && disk.emptyRecycleBin) {
             <button matButton="filled" (click)="emptyRecycleBin()">
-              <mat-icon>delete_sweep</mat-icon> {{ 'activity.disk.emptyBinButton' | transloco }}
+              <mat-icon>delete_sweep</mat-icon>
+              {{ 'activity.disk.emptyBinButton' | transloco }}
             </button>
           }
         </div>

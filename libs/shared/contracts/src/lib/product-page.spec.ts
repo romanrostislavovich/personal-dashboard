@@ -1,4 +1,9 @@
-import { pageText, parseAiProduct, parsePrice, readProductPage } from './product-page';
+import {
+  pageText,
+  parseAiProduct,
+  parsePrice,
+  readProductPage,
+} from './product-page';
 
 const jsonLd = (data: unknown) =>
   `<script type="application/ld+json">${JSON.stringify(data)}</script>`;
@@ -30,7 +35,7 @@ describe('readProductPage', () => {
       '@type': 'Product',
       name: 'Garmin Venu 3 &amp; strap',
       image: ['https://shop.example/venu.jpg'],
-      offers: { '@type': 'Offer', price: '1899.00', priceCurrency: 'pln' },
+      offers: {'@type': 'Offer', price: '1899.00', priceCurrency: 'pln'},
     });
     expect(readProductPage(html)).toEqual({
       name: 'Garmin Venu 3 & strap',
@@ -45,14 +50,14 @@ describe('readProductPage', () => {
       '<script type="application/ld+json">{broken</script>' +
       jsonLd({
         '@graph': [
-          { '@type': 'WebPage' },
+          {'@type': 'WebPage'},
           {
             '@type': ['Product'],
             name: 'Watch',
-            image: { '@type': 'ImageObject', url: 'https://shop.example/w.png' },
+            image: {'@type': 'ImageObject', url: 'https://shop.example/w.png'},
             offers: [
-              { price: 250, priceCurrency: 'EUR' },
-              { priceSpecification: { price: '199,90', priceCurrency: 'EUR' } },
+              {price: 250, priceCurrency: 'EUR'},
+              {priceSpecification: {price: '199,90', priceCurrency: 'EUR'}},
             ],
           },
         ],
@@ -66,11 +71,11 @@ describe('readProductPage', () => {
 
   it('skips a product group without a price for the product next to it', () => {
     const html = jsonLd([
-      { '@type': 'ProductGroup', name: 'Garmin Venu' },
+      {'@type': 'ProductGroup', name: 'Garmin Venu'},
       {
         '@type': 'Product',
         name: 'Garmin Venu 3 black',
-        offers: { price: 1499, priceCurrency: 'PLN' },
+        offers: {price: 1499, priceCurrency: 'PLN'},
       },
     ]);
     expect(readProductPage(html)).toMatchObject({
@@ -84,9 +89,14 @@ describe('readProductPage', () => {
     const html = jsonLd({
       '@type': 'Product',
       name: 'Watch',
-      offers: { '@type': 'AggregateOffer', lowPrice: 149, highPrice: 180, priceCurrency: 'USD' },
+      offers: {
+        '@type': 'AggregateOffer',
+        lowPrice: 149,
+        highPrice: 180,
+        priceCurrency: 'USD',
+      },
     });
-    expect(readProductPage(html)).toMatchObject({ price: 149, currency: 'USD' });
+    expect(readProductPage(html)).toMatchObject({price: 149, currency: 'USD'});
   });
 
   it('falls back to Open Graph tags, whatever the order of the attributes', () => {
@@ -129,7 +139,8 @@ describe('readProductPage', () => {
 
 describe('pageText', () => {
   it('leaves the text only', () => {
-    const html = '<style>p{}</style><p>Watch&nbsp;X</p><script>var a = "<b>";</script> <b>99 €</b>';
+    const html =
+      '<style>p{}</style><p>Watch&nbsp;X</p><script>var a = "<b>";</script> <b>99 €</b>';
     expect(pageText(html, 100)).toBe('Watch X 99 €');
     expect(pageText(html, 5)).toBe('Watch');
   });
@@ -137,7 +148,9 @@ describe('pageText', () => {
 
 describe('parseAiProduct', () => {
   it('takes a price with a currency', () => {
-    expect(parseAiProduct('Here: {"price": "1 299,00", "currency": "pln"}')).toEqual({
+    expect(
+      parseAiProduct('Here: {"price": "1 299,00", "currency": "pln"}'),
+    ).toEqual({
       price: 1299,
       currency: 'PLN',
     });

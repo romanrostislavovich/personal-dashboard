@@ -1,11 +1,11 @@
-import { defineConfig } from 'vitest/config';
-import { API_TEST_ENV } from '../../../api/core/test-env.mts';
+import {defineConfig} from 'vitest/config';
+import {API_TEST_ENV} from '../../../api/core/test-env.mts';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../../../node_modules/.vite/libs/modules/screenshots/api',
   // @pd/* aliases from tsconfig.base.json.
-  resolve: { tsconfigPaths: true },
+  resolve: {tsconfigPaths: true},
   test: {
     env: API_TEST_ENV,
     name: 'screenshots-api',

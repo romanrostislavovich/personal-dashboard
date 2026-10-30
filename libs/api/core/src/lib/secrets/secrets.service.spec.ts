@@ -1,8 +1,8 @@
-import { SecretsService } from './secrets.service';
+import {SecretsService} from './secrets.service';
 
 /** Only encryption is tested here; no database needed. */
 function createService(encryptionKey: string) {
-  const config = { get: () => encryptionKey };
+  const config = {get: () => encryptionKey};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new SecretsService({} as any, config as any) as unknown as {
     encrypt(value: string): string;

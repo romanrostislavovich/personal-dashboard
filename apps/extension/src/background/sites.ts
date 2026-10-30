@@ -1,8 +1,13 @@
-import { activityApi } from '@pd/client-core';
-import { ActivityBrowserConfig, siteOf } from '@pd/contracts';
-import { BlockReason, blockReason, isPrivateSite, Visit } from '../shared/site-rules';
-import { signedInClient } from './account';
-import { readJson, writeJson } from './storage';
+import {activityApi} from '@pd/client-core';
+import {ActivityBrowserConfig, siteOf} from '@pd/contracts';
+import {
+  BlockReason,
+  blockReason,
+  isPrivateSite,
+  Visit,
+} from '../shared/site-rules';
+import {signedInClient} from './account';
+import {readJson, writeJson} from './storage';
 
 /*
  * Time by site and the sites kept closed. What is in front — the active tab of the focused
@@ -43,7 +48,10 @@ const NO_CONFIG: ActivityBrowserConfig = {
 };
 
 export function scheduleSites(): void {
-  void chrome.alarms.create(SITES_ALARM, { delayInMinutes: 0.5, periodInMinutes: 1 });
+  void chrome.alarms.create(SITES_ALARM, {
+    delayInMinutes: 0.5,
+    periodInMinutes: 1,
+  });
   chrome.idle.setDetectionInterval(IDLE_SECONDS);
 }
 
@@ -69,9 +77,17 @@ let noting: Promise<void> = Promise.resolve();
 
 async function takeFront(cut: boolean): Promise<void> {
   const site = await frontSite();
-  const current = await readJson<Current | null>(chrome.storage.session, CURRENT_KEY, null);
+  const current = await readJson<Current | null>(
+    chrome.storage.session,
+    CURRENT_KEY,
+    null,
+  );
   const now = Date.now();
-  if (current && current.site === site && !(cut && now - current.startedAt >= CUT_MS)) {
+  if (
+    current &&
+    current.site === site &&
+    !(cut && now - current.startedAt >= CUT_MS)
+  ) {
     return;
   }
   if (current) {
@@ -82,40 +98,68 @@ async function takeFront(cut: boolean): Promise<void> {
       endedAt: new Date(now).toISOString(),
     });
   }
-  await writeJson(chrome.storage.session, CURRENT_KEY, site ? { site, startedAt: now } : null);
+  await writeJson(
+    chrome.storage.session,
+    CURRENT_KEY,
+    site ? {site, startedAt: now} : null,
+  );
 }
 
 /** Whether a page of a tab is to be closed now, and why. */
-export async function blockOf(url: string): Promise<{ site: string; block: BlockReason } | null> {
+export async function blockOf(
+  url: string,
+): Promise<{site: string; block: BlockReason} | null> {
   const site = siteOf(url);
   if (!site) {
     return null;
   }
   const config = await readJson(chrome.storage.local, CONFIG_KEY, NO_CONFIG);
-  const passes = await readJson<Record<string, number>>(chrome.storage.session, PASSES_KEY, {});
-  const block = blockReason(config, site, new Date(), await unsentVisits(), passes);
-  return block ? { site, block } : null;
+  const passes = await readJson<Record<string, number>>(
+    chrome.storage.session,
+    PASSES_KEY,
+    {},
+  );
+  const block = blockReason(
+    config,
+    site,
+    new Date(),
+    await unsentVisits(),
+    passes,
+  );
+  return block ? {site, block} : null;
 }
 
 /** "Open anyway": the site is let in for a few minutes. */
 export async function passSite(site: string): Promise<void> {
-  const passes = await readJson<Record<string, number>>(chrome.storage.session, PASSES_KEY, {});
+  const passes = await readJson<Record<string, number>>(
+    chrome.storage.session,
+    PASSES_KEY,
+    {},
+  );
   const now = Date.now();
-  const kept = Object.fromEntries(Object.entries(passes).filter(([, until]) => until > now));
-  await writeJson(chrome.storage.session, PASSES_KEY, { ...kept, [site]: now + PASS_MS });
+  const kept = Object.fromEntries(
+    Object.entries(passes).filter(([, until]) => until > now),
+  );
+  await writeJson(chrome.storage.session, PASSES_KEY, {
+    ...kept,
+    [site]: now + PASS_MS,
+  });
 }
 
 /** A page that was just opened: the page of the extension instead, when its site is closed. */
-export async function guardNavigation(tabId: number, url: string): Promise<void> {
+export async function guardNavigation(
+  tabId: number,
+  url: string,
+): Promise<void> {
   const found = await blockOf(url);
   if (found) {
-    await chrome.tabs.update(tabId, { url: blockedPage(found.site, url) });
+    await chrome.tabs.update(tabId, {url: blockedPage(found.site, url)});
   }
 }
 
 /** The page shown instead of a closed site; `back` — the address to open when let in. */
 function blockedPage(site: string, back: string): string {
-  const query = new URLSearchParams({ site, back });
+  const query = new URLSearchParams({site, back});
   return chrome.runtime.getURL(`blocked.html?${query}`);
 }
 
@@ -129,7 +173,7 @@ async function frontSite(): Promise<string | null> {
   if (!window?.focused || window.incognito) {
     return null;
   }
-  const [tab] = await chrome.tabs.query({ active: true, windowId: window.id });
+  const [tab] = await chrome.tabs.query({active: true, windowId: window.id});
   const site = tab?.url ? siteOf(tab.url) : null;
   if (!tab || !site || isPrivateSite(site, config.privateWords)) {
     return null;
@@ -142,7 +186,11 @@ async function frontSite(): Promise<string | null> {
 /** The visits not sent yet, the open one so far among them. */
 async function unsentVisits(): Promise<Visit[]> {
   const queue = await readJson<Visit[]>(chrome.storage.local, QUEUE_KEY, []);
-  const current = await readJson<Current | null>(chrome.storage.session, CURRENT_KEY, null);
+  const current = await readJson<Current | null>(
+    chrome.storage.session,
+    CURRENT_KEY,
+    null,
+  );
   if (!current) {
     return queue;
   }
@@ -160,7 +208,11 @@ async function enqueue(visit: Visit): Promise<void> {
     return;
   }
   const queue = await readJson<Visit[]>(chrome.storage.local, QUEUE_KEY, []);
-  await writeJson(chrome.storage.local, QUEUE_KEY, [...queue, visit].slice(-MAX_QUEUE));
+  await writeJson(
+    chrome.storage.local,
+    QUEUE_KEY,
+    [...queue, visit].slice(-MAX_QUEUE),
+  );
 }
 
 /** What waits goes to the server (none is fine); its answer is what to follow from now. */
@@ -185,12 +237,12 @@ async function send(): Promise<void> {
     };
     await writeJson(chrome.storage.local, CONFIG_KEY, config);
     // Visits recorded meanwhile stay for the next time.
-    const sent = new Set(batch.map((visit) => visit.id));
+    const sent = new Set(batch.map(visit => visit.id));
     const now = await readJson<Visit[]>(chrome.storage.local, QUEUE_KEY, []);
     await writeJson(
       chrome.storage.local,
       QUEUE_KEY,
-      now.filter((visit) => !sent.has(visit.id)),
+      now.filter(visit => !sent.has(visit.id)),
     );
   } catch {
     // No connection: the visits wait, the last answer stays in force.
@@ -203,12 +255,17 @@ async function send(): Promise<void> {
  */
 async function closeBlockedFront(): Promise<void> {
   const tabs = [
-    ...(await chrome.tabs.query({ active: true })),
-    ...(await chrome.tabs.query({ audible: true })),
+    ...(await chrome.tabs.query({active: true})),
+    ...(await chrome.tabs.query({audible: true})),
   ];
   const seen = new Set<number>();
   for (const tab of tabs) {
-    if (tab.id !== undefined && tab.url && !tab.incognito && !seen.has(tab.id)) {
+    if (
+      tab.id !== undefined &&
+      tab.url &&
+      !tab.incognito &&
+      !seen.has(tab.id)
+    ) {
       seen.add(tab.id);
       await guardNavigation(tab.id, tab.url);
     }

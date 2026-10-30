@@ -1,14 +1,19 @@
-import { Injectable, Logger, OnApplicationBootstrap, OnApplicationShutdown } from '@nestjs/common';
-import { HttpAdapterHost } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
-import { DEVICE_KINDS, DeviceMessage, ServerToDevice } from '@pd/contracts';
-import { randomUUID } from 'node:crypto';
-import type { IncomingMessage } from 'node:http';
-import type { Duplex } from 'node:stream';
-import { WebSocket, WebSocketServer } from 'ws';
-import { AccessPayload } from '../auth/auth.service';
-import { SessionsService } from '../auth/sessions.service';
-import { DeviceToolsService } from './device-tools.service';
+import {
+  Injectable,
+  Logger,
+  OnApplicationBootstrap,
+  OnApplicationShutdown,
+} from '@nestjs/common';
+import {HttpAdapterHost} from '@nestjs/core';
+import {JwtService} from '@nestjs/jwt';
+import {DEVICE_KINDS, DeviceMessage, ServerToDevice} from '@pd/contracts';
+import {randomUUID} from 'node:crypto';
+import type {IncomingMessage} from 'node:http';
+import type {Duplex} from 'node:stream';
+import {WebSocket, WebSocketServer} from 'ws';
+import {AccessPayload} from '../auth/auth.service';
+import {SessionsService} from '../auth/sessions.service';
+import {DeviceToolsService} from './device-tools.service';
 
 const PATH = '/api/devices/socket';
 /** A device must say who it is this soon after connecting. */
@@ -24,7 +29,9 @@ const MAX_MESSAGE_BYTES = 2 * 1024 * 1024;
  * sends calls and the device answers them. Lives on the API's own HTTP server.
  */
 @Injectable()
-export class DeviceSocket implements OnApplicationBootstrap, OnApplicationShutdown {
+export class DeviceSocket
+  implements OnApplicationBootstrap, OnApplicationShutdown
+{
   private readonly logger = new Logger(DeviceSocket.name);
   private server: WebSocketServer | null = null;
 
@@ -40,13 +47,21 @@ export class DeviceSocket implements OnApplicationBootstrap, OnApplicationShutdo
     if (!http) {
       return;
     }
-    this.server = new WebSocketServer({ noServer: true, maxPayload: MAX_MESSAGE_BYTES });
-    http.on('upgrade', (request: IncomingMessage, socket: Duplex, head: Buffer) => {
-      if (new URL(request.url ?? '/', 'http://local').pathname !== PATH) {
-        return;
-      }
-      this.server?.handleUpgrade(request, socket, head, (ws) => this.accept(ws));
+    this.server = new WebSocketServer({
+      noServer: true,
+      maxPayload: MAX_MESSAGE_BYTES,
     });
+    http.on(
+      'upgrade',
+      (request: IncomingMessage, socket: Duplex, head: Buffer) => {
+        if (new URL(request.url ?? '/', 'http://local').pathname !== PATH) {
+          return;
+        }
+        this.server?.handleUpgrade(request, socket, head, ws =>
+          this.accept(ws),
+        );
+      },
+    );
   }
 
   onApplicationShutdown(): void {
@@ -60,16 +75,19 @@ export class DeviceSocket implements OnApplicationBootstrap, OnApplicationShutdo
         ws.send(JSON.stringify(message));
       }
     };
-    let session: { userId: string; sessionId: string } | null = null;
-    const helloTimer = setTimeout(() => !session && ws.close(4401, 'No hello'), HELLO_WITHIN_MS);
+    let session: {userId: string; sessionId: string} | null = null;
+    const helloTimer = setTimeout(
+      () => !session && ws.close(4401, 'No hello'),
+      HELLO_WITHIN_MS,
+    );
     const sessionTimer = setInterval(async () => {
       if (session && !(await this.sessions.isAlive(session.sessionId))) {
-        send({ type: 'unauthorized' });
+        send({type: 'unauthorized'});
         ws.close(4401, 'Signed out');
       }
     }, SESSION_CHECK_MS);
 
-    ws.on('message', async (raw) => {
+    ws.on('message', async raw => {
       let message: DeviceMessage;
       try {
         message = JSON.parse(raw.toString()) as DeviceMessage;
@@ -81,14 +99,14 @@ export class DeviceSocket implements OnApplicationBootstrap, OnApplicationShutdo
           .verifyAsync<AccessPayload>(String(message.accessToken))
           .catch(() => null);
         if (!payload?.sid || !(await this.sessions.isAlive(payload.sid))) {
-          send({ type: 'unauthorized' });
+          send({type: 'unauthorized'});
           return;
         }
         if (!DEVICE_KINDS.includes(message.kind)) {
           ws.close(4400, 'Unknown kind');
           return;
         }
-        session = { userId: payload.sub, sessionId: payload.sid };
+        session = {userId: payload.sub, sessionId: payload.sid};
         this.tools.connected({
           id: deviceId,
           userId: payload.sub,
@@ -98,7 +116,7 @@ export class DeviceSocket implements OnApplicationBootstrap, OnApplicationShutdo
           activeAt: Date.now(),
           send,
         });
-        send({ type: 'welcome' });
+        send({type: 'welcome'});
         return;
       }
       if (!session) {
@@ -115,10 +133,13 @@ export class DeviceSocket implements OnApplicationBootstrap, OnApplicationShutdo
           this.tools.answered(String(message.id), message.value);
           break;
         case 'error':
-          this.tools.failed(String(message.id), String(message.message).slice(0, 500));
+          this.tools.failed(
+            String(message.id),
+            String(message.message).slice(0, 500),
+          );
           break;
         case 'ping':
-          send({ type: 'pong' });
+          send({type: 'pong'});
           break;
       }
     });
@@ -127,6 +148,8 @@ export class DeviceSocket implements OnApplicationBootstrap, OnApplicationShutdo
       clearInterval(sessionTimer);
       this.tools.disconnected(deviceId);
     });
-    ws.on('error', (error) => this.logger.warn(`A device socket failed: ${error.message}`));
+    ws.on('error', error =>
+      this.logger.warn(`A device socket failed: ${error.message}`),
+    );
   }
 }

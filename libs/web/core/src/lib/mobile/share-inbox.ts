@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
-import { SharedContent } from './share-target';
+import {Injectable} from '@angular/core';
+import {SharedContent} from './share-target';
 
 /** What was shared into the Android app, waiting for the capture page to take it. */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class ShareInbox {
   private content: SharedContent | null = null;
 

@@ -1,11 +1,24 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   AI_PROVIDER_PRESETS,
   AI_PROVIDERS,
@@ -13,9 +26,9 @@ import {
   AiProvider,
   AiSettings,
 } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { errorStatus } from '@pd/web-core';
-import { AiApi } from './ai.api';
+import {firstValueFrom} from 'rxjs';
+import {errorStatus} from '@pd/web-core';
+import {AiApi} from './ai.api';
 
 /** Provider names for a new connection's default name. */
 const PROVIDER_NAMES: Record<AiProvider, string> = {
@@ -43,14 +56,19 @@ const PROVIDER_NAMES: Record<AiProvider, string> = {
   ],
   template: `
     <h2 mat-dialog-title>
-      {{ (connection ? 'ai.connections.edit' : 'ai.connections.add') | transloco }}
+      {{
+        (connection ? 'ai.connections.edit' : 'ai.connections.add') | transloco
+      }}
     </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
         <div class="row">
           <mat-form-field>
             <mat-label>{{ 'ai.settings.provider' | transloco }}</mat-label>
-            <mat-select formControlName="provider" (selectionChange)="applyPreset($event.value)">
+            <mat-select
+              formControlName="provider"
+              (selectionChange)="applyPreset($event.value)"
+            >
               @for (provider of providers; track provider) {
                 <mat-option [value]="provider">
                   {{ 'ai.settings.providers.' + provider | transloco }}
@@ -78,7 +96,11 @@ const PROVIDER_NAMES: Record<AiProvider, string> = {
             type="password"
             formControlName="apiKey"
             autocomplete="off"
-            [placeholder]="connection?.hasApiKey ? ('ai.settings.apiKeySaved' | transloco) : ''"
+            [placeholder]="
+              connection?.hasApiKey
+                ? ('ai.settings.apiKeySaved' | transloco)
+                : ''
+            "
           />
           <mat-hint>{{ 'ai.settings.apiKeyHint' | transloco }}</mat-hint>
         </mat-form-field>
@@ -86,17 +108,35 @@ const PROVIDER_NAMES: Record<AiProvider, string> = {
         <div class="row three">
           <mat-form-field>
             <mat-label>{{ 'ai.usage.priceInput' | transloco }}</mat-label>
-            <input matInput type="number" min="0" step="0.01" formControlName="priceInput" />
+            <input
+              matInput
+              type="number"
+              min="0"
+              step="0.01"
+              formControlName="priceInput"
+            />
             <span matTextPrefix>$&nbsp;</span>
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'ai.usage.priceOutput' | transloco }}</mat-label>
-            <input matInput type="number" min="0" step="0.01" formControlName="priceOutput" />
+            <input
+              matInput
+              type="number"
+              min="0"
+              step="0.01"
+              formControlName="priceOutput"
+            />
             <span matTextPrefix>$&nbsp;</span>
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'ai.usage.monthlyLimit' | transloco }}</mat-label>
-            <input matInput type="number" min="0" step="1" formControlName="monthlyLimit" />
+            <input
+              matInput
+              type="number"
+              min="0"
+              step="1"
+              formControlName="monthlyLimit"
+            />
             <span matTextPrefix>$&nbsp;</span>
           </mat-form-field>
         </div>
@@ -116,7 +156,10 @@ const PROVIDER_NAMES: Record<AiProvider, string> = {
           type="submit"
           [disabled]="form.invalid || limitWithoutPrices() || busy()"
         >
-          {{ (busy() ? 'ai.connections.checking' : 'ai.settings.save') | transloco }}
+          {{
+            (busy() ? 'ai.connections.checking' : 'ai.settings.save')
+              | transloco
+          }}
         </button>
       </mat-dialog-actions>
     </form>
@@ -154,7 +197,9 @@ const PROVIDER_NAMES: Record<AiProvider, string> = {
 })
 export class AiConnectionFormDialog {
   private readonly api = inject(AiApi);
-  private readonly dialogRef = inject(MatDialogRef<AiConnectionFormDialog, AiSettings>);
+  private readonly dialogRef = inject(
+    MatDialogRef<AiConnectionFormDialog, AiSettings>,
+  );
   protected readonly connection = inject<AiConnection | null>(MAT_DIALOG_DATA);
 
   protected readonly providers = AI_PROVIDERS;
@@ -164,12 +209,18 @@ export class AiConnectionFormDialog {
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     provider: [this.connection?.provider ?? ('deepseek' as AiProvider)],
-    name: [this.connection?.name ?? PROVIDER_NAMES.deepseek, Validators.required],
+    name: [
+      this.connection?.name ?? PROVIDER_NAMES.deepseek,
+      Validators.required,
+    ],
     baseUrl: [
       this.connection?.baseUrl ?? AI_PROVIDER_PRESETS.deepseek.baseUrl,
       Validators.required,
     ],
-    model: [this.connection?.model ?? AI_PROVIDER_PRESETS.deepseek.model, Validators.required],
+    model: [
+      this.connection?.model ?? AI_PROVIDER_PRESETS.deepseek.model,
+      Validators.required,
+    ],
     apiKey: [''],
     priceInput: [this.connection?.priceInput ?? null, Validators.min(0)],
     priceOutput: [this.connection?.priceOutput ?? null, Validators.min(0)],
@@ -178,36 +229,46 @@ export class AiConnectionFormDialog {
 
   /** A limit is in money: it is counted from both prices. */
   protected readonly limitWithoutPrices = () => {
-    const { priceInput, priceOutput, monthlyLimit } = this.form.getRawValue();
-    return Boolean(monthlyLimit) && (priceInput === null || priceOutput === null);
+    const {priceInput, priceOutput, monthlyLimit} = this.form.getRawValue();
+    return (
+      Boolean(monthlyLimit) && (priceInput === null || priceOutput === null)
+    );
   };
 
   /** A provider was selected — fill in its default address, model and name. */
   applyPreset(provider: AiProvider): void {
-    const { baseUrl, model } = AI_PROVIDER_PRESETS[provider];
-    const nameUntouched = Object.values(PROVIDER_NAMES).includes(this.form.value.name ?? '');
+    const {baseUrl, model} = AI_PROVIDER_PRESETS[provider];
+    const nameUntouched = Object.values(PROVIDER_NAMES).includes(
+      this.form.value.name ?? '',
+    );
     this.form.patchValue({
       baseUrl,
       model,
-      ...(nameUntouched ? { name: PROVIDER_NAMES[provider] } : {}),
+      ...(nameUntouched ? {name: PROVIDER_NAMES[provider]} : {}),
     });
   }
 
   async save(): Promise<void> {
-    const { apiKey, monthlyLimit, ...rest } = this.form.getRawValue();
+    const {apiKey, monthlyLimit, ...rest} = this.form.getRawValue();
     this.busy.set(true);
     this.error.set(null);
     try {
       const settings = await firstValueFrom(
         this.api.saveConnection(
-          { ...rest, monthlyLimit: monthlyLimit || null, apiKey: apiKey || undefined },
+          {
+            ...rest,
+            monthlyLimit: monthlyLimit || null,
+            apiKey: apiKey || undefined,
+          },
           this.connection?.id,
         ),
       );
       this.dialogRef.close(settings);
     } catch (error) {
       this.error.set(
-        errorStatus(error) === 400 ? 'ai.settings.connectionFailed' : 'ai.errors.generic',
+        errorStatus(error) === 400
+          ? 'ai.settings.connectionFailed'
+          : 'ai.errors.generic',
       );
     } finally {
       this.busy.set(false);

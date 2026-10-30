@@ -1,6 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { LocalDate } from '@pd/contracts';
-import { Amount, Converted, convertAll, DailyRates, rateRange } from './conversion';
+import {Injectable, Logger} from '@nestjs/common';
+import {LocalDate} from '@pd/contracts';
+import {
+  Amount,
+  Converted,
+  convertAll,
+  DailyRates,
+  rateRange,
+} from './conversion';
 
 /** Frankfurter: ECB reference rates by day, no API key (frankfurter.dev). */
 const FRANKFURTER = 'https://api.frankfurter.dev/v1';
@@ -21,18 +27,19 @@ export class ExchangeRatesService {
   private readonly logger = new Logger(ExchangeRatesService.name);
   private readonly daily = new Map<string, Promise<DailyRates>>();
   private supported: Promise<string[]> | null = null;
-  private latest: { at: number; rates: Promise<Record<string, number>> } | null = null;
+  private latest: {at: number; rates: Promise<Record<string, number>>} | null =
+    null;
 
   async convert(amounts: Amount[], main: string): Promise<Converted> {
     const range = rateRange(amounts);
     if (!range) {
-      return { values: [], approximate: [], missing: [] };
+      return {values: [], approximate: [], missing: []};
     }
     const supported = new Set(await this.supportedCurrencies());
-    const currencies = new Set([main, ...amounts.map((a) => a.currency)]);
+    const currencies = new Set([main, ...amounts.map(a => a.currency)]);
     currencies.delete('EUR');
-    const exact = [...currencies].filter((c) => supported.has(c)).sort();
-    const others = [...currencies].filter((c) => !supported.has(c));
+    const exact = [...currencies].filter(c => supported.has(c)).sort();
+    const others = [...currencies].filter(c => !supported.has(c));
     const [daily, latest] = await Promise.all([
       exact.length ? this.dailyRates(range.from, range.to, exact) : new Map(),
       others.length ? this.latestRates() : {},
@@ -42,9 +49,11 @@ export class ExchangeRatesService {
 
   /** The currencies with daily ECB rates, EUR included. */
   supportedCurrencies(): Promise<string[]> {
-    this.supported ??= this.get<Record<string, string>>(`${FRANKFURTER}/currencies`)
-      .then((names) => Object.keys(names).sort())
-      .catch((error) => {
+    this.supported ??= this.get<Record<string, string>>(
+      `${FRANKFURTER}/currencies`,
+    )
+      .then(names => Object.keys(names).sort())
+      .catch(error => {
         this.supported = null; // Try again next time.
         this.logger.warn(`Could not load the ECB currency list: ${error}`);
         return ['EUR'];
@@ -52,15 +61,19 @@ export class ExchangeRatesService {
     return this.supported;
   }
 
-  private dailyRates(from: LocalDate, to: LocalDate, symbols: string[]): Promise<DailyRates> {
+  private dailyRates(
+    from: LocalDate,
+    to: LocalDate,
+    symbols: string[],
+  ): Promise<DailyRates> {
     const key = `${from}..${to}:${symbols.join(',')}`;
     let rates = this.daily.get(key);
     if (!rates) {
-      rates = this.get<{ rates: Record<LocalDate, Record<string, number>> }>(
+      rates = this.get<{rates: Record<LocalDate, Record<string, number>>}>(
         `${FRANKFURTER}/${from}..${to}?base=EUR&symbols=${symbols.join(',')}`,
       )
-        .then((body) => new Map(Object.entries(body.rates)) as DailyRates)
-        .catch((error) => {
+        .then(body => new Map(Object.entries(body.rates)) as DailyRates)
+        .catch(error => {
           this.daily.delete(key);
           this.logger.warn(`Could not load ECB rates ${key}: ${error}`);
           return new Map() as DailyRates;
@@ -77,9 +90,9 @@ export class ExchangeRatesService {
     if (!this.latest || Date.now() - this.latest.at > LATEST_TTL_MS) {
       this.latest = {
         at: Date.now(),
-        rates: this.get<{ rates: Record<string, number> }>(OPEN_ER_API)
-          .then((body) => body.rates)
-          .catch((error) => {
+        rates: this.get<{rates: Record<string, number>}>(OPEN_ER_API)
+          .then(body => body.rates)
+          .catch(error => {
             this.latest = null;
             this.logger.warn(`Could not load today's rates: ${error}`);
             return {};
@@ -90,7 +103,9 @@ export class ExchangeRatesService {
   }
 
   private async get<T>(url: string): Promise<T> {
-    const response = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
     if (!response.ok) {
       throw new Error(`${response.status} from ${url}`);
     }

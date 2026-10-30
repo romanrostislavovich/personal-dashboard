@@ -1,23 +1,30 @@
-import { z } from 'zod';
-import { sanitizeTelemetryText, sanitizeTelemetryUrl, TelemetryBucket } from './telemetry';
+import {z} from 'zod';
+import {
+  sanitizeTelemetryText,
+  sanitizeTelemetryUrl,
+  TelemetryBucket,
+} from './telemetry';
 
 export const ACTIVITY_CONTEXT_RETENTION_DAYS = 30;
 export const workstateIdSchema = z.uuid();
-const instant = z.iso.datetime({ offset: true });
+const instant = z.iso.datetime({offset: true});
 const text = z.string().trim().min(1).max(160);
-const safeText = text.refine((value) => sanitizeTelemetryText(value) === value, 'Unsafe context');
+const safeText = text.refine(
+  value => sanitizeTelemetryText(value) === value,
+  'Unsafe context',
+);
 const safeUrl = z
   .string()
   .max(2048)
-  .refine((value) => sanitizeTelemetryUrl(value) === value, 'Unsafe URL');
+  .refine(value => sanitizeTelemetryUrl(value) === value, 'Unsafe URL');
 
 /** Absolute local paths only; a declarative target, never a shell argument or command. */
 export const workstateProjectPathSchema = safeText.refine(
-  (value) =>
+  value =>
     /^(?:[A-Za-z]:[\\/]|\/(?![\\/]))/.test(value) &&
     (!value.startsWith('/') || !value.includes('\\')) &&
     !/[<>:"|?*`$;&\r\n]/.test(value.replace(/^[A-Za-z]:/, '')) &&
-    !value.split(/[\\/]/).some((part) => part === '..' || part === '.'),
+    !value.split(/[\\/]/).some(part => part === '..' || part === '.'),
   'Unsafe project path',
 );
 
@@ -54,8 +61,15 @@ const pageQuery = z
     beforeId: workstateIdSchema.optional(),
   })
   .strict();
-const validRange = (query: { from?: string; to?: string; before?: string; beforeId?: string }) =>
-  (!query.from || !query.to || Date.parse(query.from) <= Date.parse(query.to)) &&
+const validRange = (query: {
+  from?: string;
+  to?: string;
+  before?: string;
+  beforeId?: string;
+}) =>
+  (!query.from ||
+    !query.to ||
+    Date.parse(query.from) <= Date.parse(query.to)) &&
   Boolean(query.before) === Boolean(query.beforeId);
 
 export const workstateQuerySchema = pageQuery
@@ -76,7 +90,9 @@ export type TelemetryQuery = z.input<typeof telemetryQuerySchema>;
 
 export const workstateRestoreRequestSchema = z.object({}).strict();
 
-export const workstateSchema = workstateInputSchema.extend({ deviceId: z.uuid().nullable() });
+export const workstateSchema = workstateInputSchema.extend({
+  deviceId: z.uuid().nullable(),
+});
 export type Workstate = z.infer<typeof workstateSchema>;
 export interface ActivityContextCursor {
   before: string;
@@ -88,7 +104,7 @@ export interface WorkstatePage {
   nextCursor: ActivityContextCursor | null;
 }
 export interface TelemetryPage {
-  items: (TelemetryBucket & { deviceId: string | null })[];
+  items: (TelemetryBucket & {deviceId: string | null})[];
   nextCursor: ActivityContextCursor | null;
 }
 
@@ -99,8 +115,13 @@ export const workstateRestorePlanSchema = z
     actions: z
       .array(
         z.discriminatedUnion('kind', [
-          z.object({ kind: z.literal('openUrl'), url: safeUrl }).strict(),
-          z.object({ kind: z.literal('openProject'), path: workstateProjectPathSchema }).strict(),
+          z.object({kind: z.literal('openUrl'), url: safeUrl}).strict(),
+          z
+            .object({
+              kind: z.literal('openProject'),
+              path: workstateProjectPathSchema,
+            })
+            .strict(),
           z
             .object({
               kind: z.literal('reference'),

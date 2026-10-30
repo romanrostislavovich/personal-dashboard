@@ -1,10 +1,16 @@
-import { Controller, Delete, ForbiddenException, Get, HttpCode } from '@nestjs/common';
-import { SystemStatus } from '@pd/contracts';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { SyncService } from '../sync/sync.service';
-import { UsersService } from '../users/users.service';
-import { JobRunsService } from './job-runs.service';
-import { SystemLogService } from './system-log.service';
+import {
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  HttpCode,
+} from '@nestjs/common';
+import {SystemStatus} from '@pd/contracts';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {SyncService} from '../sync/sync.service';
+import {UsersService} from '../users/users.service';
+import {JobRunsService} from './job-runs.service';
+import {SystemLogService} from './system-log.service';
 
 /**
  * How this instance is doing: background jobs and the log of errors. Only for the owner (the
@@ -39,7 +45,9 @@ export class SystemController {
 
   private async requireOwner(user: AuthUser): Promise<void> {
     if ((await this.users.owner())?.id !== user.id) {
-      throw new ForbiddenException('Only the owner of the dashboard sees the system status');
+      throw new ForbiddenException(
+        'Only the owner of the dashboard sees the system status',
+      );
     }
   }
 }

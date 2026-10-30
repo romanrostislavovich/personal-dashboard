@@ -9,12 +9,12 @@ import {
 
 const MB = 1024 ** 2;
 
-type Text = { en: string; ru: string };
+type Text = {en: string; ru: string};
 
 /** What to do with a known place: the default advice, and what the AI starts from. */
 const PLACES: Record<
   DiskKnownPlace,
-  { action: DiskAction; safety: DiskSafety; reason: Text; how?: Text }
+  {action: DiskAction; safety: DiskSafety; reason: Text; how?: Text}
 > = {
   temp: {
     action: 'trash',
@@ -47,7 +47,7 @@ const PLACES: Record<
       en: 'npm downloads packages again when needed.',
       ru: 'npm скачает пакеты заново, когда понадобятся.',
     },
-    how: { en: 'npm cache clean --force', ru: 'npm cache clean --force' },
+    how: {en: 'npm cache clean --force', ru: 'npm cache clean --force'},
   },
   'yarn-cache': {
     action: 'command',
@@ -56,7 +56,7 @@ const PLACES: Record<
       en: 'Yarn downloads packages again when needed.',
       ru: 'Yarn скачает пакеты заново, когда понадобятся.',
     },
-    how: { en: 'yarn cache clean', ru: 'yarn cache clean' },
+    how: {en: 'yarn cache clean', ru: 'yarn cache clean'},
   },
   'pip-cache': {
     action: 'command',
@@ -65,7 +65,7 @@ const PLACES: Record<
       en: 'pip downloads packages again when needed.',
       ru: 'pip скачает пакеты заново, когда понадобятся.',
     },
-    how: { en: 'pip cache purge', ru: 'pip cache purge' },
+    how: {en: 'pip cache purge', ru: 'pip cache purge'},
   },
   'nuget-cache': {
     action: 'command',
@@ -74,7 +74,10 @@ const PLACES: Record<
       en: 'NuGet restores packages again on the next build.',
       ru: 'NuGet восстановит пакеты при следующей сборке.',
     },
-    how: { en: 'dotnet nuget locals all --clear', ru: 'dotnet nuget locals all --clear' },
+    how: {
+      en: 'dotnet nuget locals all --clear',
+      ru: 'dotnet nuget locals all --clear',
+    },
   },
   'gradle-cache': {
     action: 'trash',
@@ -163,7 +166,10 @@ const PLACES: Record<
       en: 'Deleted files still take the space until the Recycle Bin is emptied.',
       ru: 'Удалённые файлы занимают место, пока корзину не очистить.',
     },
-    how: { en: 'Recycle Bin → Empty Recycle Bin', ru: 'Корзина → Очистить корзину' },
+    how: {
+      en: 'Recycle Bin → Empty Recycle Bin',
+      ru: 'Корзина → Очистить корзину',
+    },
   },
   downloads: {
     action: 'review',
@@ -188,16 +194,19 @@ const FIXES: Partial<Record<DiskKnownPlace, DiskFix>> = {
 
 /** The fix of a path that is a known place of the report. */
 export function fixOf(report: DiskReport, path: string): DiskFix | null {
-  const place = report.known.find((known) => known.path === path)?.place;
+  const place = report.known.find(known => known.path === path)?.place;
   return (place && FIXES[place]) ?? null;
 }
 
 /** The advice without the AI: the known places worth more than a little. */
-export function ruleAdvice(report: DiskReport, locale: string | null = 'en'): DiskSuggestion[] {
+export function ruleAdvice(
+  report: DiskReport,
+  locale: string | null = 'en',
+): DiskSuggestion[] {
   const lang: keyof Text = locale === 'ru' ? 'ru' : 'en';
   return report.known
-    .filter((place) => place.bytes >= 200 * MB)
-    .map((place) => {
+    .filter(place => place.bytes >= 200 * MB)
+    .map(place => {
       const rule = PLACES[place.place];
       return {
         path: place.path,
@@ -235,12 +244,18 @@ export function mustNotTrash(path: string): boolean {
     /^%userprofile%\\(desktop|documents|downloads|pictures|music|videos|onedrive)$/,
     /^[a-z]:\\[^\\]+\.[a-z0-9]+$/, // A file right in the root of a disk.
   ];
-  return protectedRoots.some((rule) => rule.test(p)) || exact.some((rule) => rule.test(p));
+  return (
+    protectedRoots.some(rule => rule.test(p)) ||
+    exact.some(rule => rule.test(p))
+  );
 }
 
 /** Every path of the report: advice about anything else is dropped. */
 export function reportPaths(report: DiskReport): Map<string, number> {
   return new Map(
-    [...report.folders, ...report.files, ...report.known].map((item) => [item.path, item.bytes]),
+    [...report.folders, ...report.files, ...report.known].map(item => [
+      item.path,
+      item.bytes,
+    ]),
   );
 }

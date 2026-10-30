@@ -1,6 +1,11 @@
-import { BadRequestException, HttpException, Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database } from '@pd/api-core';
+import {
+  BadRequestException,
+  HttpException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, DB, Database} from '@pd/api-core';
 import {
   CodeAccount,
   DateParts,
@@ -11,12 +16,12 @@ import {
   toLocalDate,
   TokenProvider,
 } from '@pd/contracts';
-import { and, asc, between, desc, eq, gte, notInArray, sql } from 'drizzle-orm';
-import { contributionStats } from '../github-profile/contribution-stats';
-import { FetchedAccount } from './account-source';
-import { AccountTokensService } from './account-tokens.service';
-import { codeAccountDays, codeAccounts } from './accounts.schema';
-import { ActivityDay, activityDays } from './activity-days';
+import {and, asc, between, desc, eq, gte, notInArray, sql} from 'drizzle-orm';
+import {contributionStats} from '../github-profile/contribution-stats';
+import {FetchedAccount} from './account-source';
+import {AccountTokensService} from './account-tokens.service';
+import {codeAccountDays, codeAccounts} from './accounts.schema';
+import {ActivityDay, activityDays} from './activity-days';
 
 const TOP_REPOS = 10;
 const TOP_LANGUAGES = 10;
@@ -39,8 +44,14 @@ export class CodeAccountsService {
   ) {}
 
   /** `null` until the first sync (no token yet). */
-  async account(userId: string, provider: TokenProvider): Promise<CodeAccount | null> {
-    const [row] = await this.db.select().from(codeAccounts).where(this.owned(userId, provider));
+  async account(
+    userId: string,
+    provider: TokenProvider,
+  ): Promise<CodeAccount | null> {
+    const [row] = await this.db
+      .select()
+      .from(codeAccounts)
+      .where(this.owned(userId, provider));
     if (!row) {
       return null;
     }
@@ -56,7 +67,10 @@ export class CodeAccountsService {
       following: row.following,
       repos: row.repos,
       totalStars: row.totalStars,
-      totalContributions: years.reduce((sum, year) => sum + year.contributions, 0),
+      totalContributions: years.reduce(
+        (sum, year) => sum + year.contributions,
+        0,
+      ),
       ...contributionStats(await this.allDays(userId, provider), this.today()),
       years,
       languages: row.languages,
@@ -77,19 +91,31 @@ export class CodeAccountsService {
   ): Promise<GithubContributionDay[]> {
     const d = codeAccountDays;
     return this.db
-      .select({ day: d.day, count: d.count })
+      .select({day: d.day, count: d.count})
       .from(d)
-      .where(and(eq(d.userId, userId), eq(d.provider, provider), between(d.day, from, to)))
+      .where(
+        and(
+          eq(d.userId, userId),
+          eq(d.provider, provider),
+          between(d.day, from, to),
+        ),
+      )
       .orderBy(asc(d.day));
   }
 
   /** Every saved day, oldest first — for streaks and records. */
-  allDays(userId: string, provider: TokenProvider): Promise<GithubContributionDay[]> {
+  allDays(
+    userId: string,
+    provider: TokenProvider,
+  ): Promise<GithubContributionDay[]> {
     return this.contributions(userId, provider, '0001-01-01', '9999-12-31');
   }
 
   /** What every year was made of, newest first. */
-  async years(userId: string, provider: TokenProvider): Promise<GithubYearTotals[]> {
+  async years(
+    userId: string,
+    provider: TokenProvider,
+  ): Promise<GithubYearTotals[]> {
     const d = codeAccountDays;
     const year = sql<number>`extract(year from ${d.day})::int`;
     const rows = await this.db
@@ -105,7 +131,7 @@ export class CodeAccountsService {
       .where(and(eq(d.userId, userId), eq(d.provider, provider)))
       .groupBy(year)
       .orderBy(desc(year));
-    return rows.map((row) => ({ ...row, restricted: 0 }));
+    return rows.map(row => ({...row, restricted: 0}));
   }
 
   /**
@@ -119,13 +145,18 @@ export class CodeAccountsService {
     }
     try {
       const [saved] = await this.db
-        .select({ lastSyncedAt: codeAccounts.lastSyncedAt })
+        .select({lastSyncedAt: codeAccounts.lastSyncedAt})
         .from(codeAccounts)
         .where(this.owned(userId, provider));
-      const since = saved?.lastSyncedAt ? refreshFrom(saved.lastSyncedAt) : null;
+      const since = saved?.lastSyncedAt
+        ? refreshFrom(saved.lastSyncedAt)
+        : null;
       const account = await sources.account.getAccount();
-      const timeZone = this.config.get('APP_TIMEZONE', { infer: true });
-      const days = activityDays(await sources.account.getActivity(since), timeZone);
+      const timeZone = this.config.get('APP_TIMEZONE', {infer: true});
+      const days = activityDays(
+        await sources.account.getActivity(since),
+        timeZone,
+      );
       // The day `since` falls into is read only in part: it keeps what is saved.
       const from = since
         ? toLocalDate(todayIn(timeZone, new Date(since.getTime() + DAY_MS)))
@@ -134,31 +165,35 @@ export class CodeAccountsService {
         userId,
         provider,
         account,
-        days.filter((day) => !from || day.day >= from),
+        days.filter(day => !from || day.day >= from),
         from,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       await this.db
         .update(codeAccounts)
-        .set({ syncError: message })
+        .set({syncError: message})
         .where(this.owned(userId, provider));
       // The page shows the service's own explanation (an invalid token, a missing scope).
-      throw error instanceof HttpException ? error : new BadRequestException(message);
+      throw error instanceof HttpException
+        ? error
+        : new BadRequestException(message);
     }
   }
 
   /** Forgets the account when its token is removed. */
   async remove(userId: string, provider: TokenProvider): Promise<void> {
     const d = codeAccountDays;
-    await this.db.transaction(async (tx) => {
-      await tx.delete(d).where(and(eq(d.userId, userId), eq(d.provider, provider)));
+    await this.db.transaction(async tx => {
+      await tx
+        .delete(d)
+        .where(and(eq(d.userId, userId), eq(d.provider, provider)));
       await tx.delete(codeAccounts).where(this.owned(userId, provider));
     });
   }
 
   today(): DateParts {
-    return todayIn(this.config.get('APP_TIMEZONE', { infer: true }));
+    return todayIn(this.config.get('APP_TIMEZONE', {infer: true}));
   }
 
   /** `from` — the days from it on are replaced by `days`; `null` — all of them. */
@@ -178,14 +213,17 @@ export class CodeAccountsService {
       syncError: null,
     };
     const d = codeAccountDays;
-    await this.db.transaction(async (tx) => {
+    await this.db.transaction(async tx => {
       await tx
         .insert(codeAccounts)
-        .values({ userId, provider, ...profile })
-        .onConflictDoUpdate({ target: [codeAccounts.userId, codeAccounts.provider], set: profile });
+        .values({userId, provider, ...profile})
+        .onConflictDoUpdate({
+          target: [codeAccounts.userId, codeAccounts.provider],
+          set: profile,
+        });
 
       // A day whose activity is gone (a deleted repository) goes too.
-      const kept = days.map((day) => day.day);
+      const kept = days.map(day => day.day);
       await tx
         .delete(d)
         .where(
@@ -199,7 +237,11 @@ export class CodeAccountsService {
       for (let i = 0; i < days.length; i += INSERT_CHUNK) {
         await tx
           .insert(d)
-          .values(days.slice(i, i + INSERT_CHUNK).map((day) => ({ userId, provider, ...day })))
+          .values(
+            days
+              .slice(i, i + INSERT_CHUNK)
+              .map(day => ({userId, provider, ...day})),
+          )
           .onConflictDoUpdate({
             target: [d.userId, d.provider, d.day],
             set: {
@@ -219,7 +261,10 @@ export class CodeAccountsService {
   }
 
   private owned(userId: string, provider: TokenProvider) {
-    return and(eq(codeAccounts.userId, userId), eq(codeAccounts.provider, provider));
+    return and(
+      eq(codeAccounts.userId, userId),
+      eq(codeAccounts.provider, provider),
+    );
   }
 }
 

@@ -1,23 +1,31 @@
-import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatChipsModule} from '@angular/material/chips';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {TranslocoPipe} from '@jsverse/transloco';
 import {
   siteDomainSchema,
   WRITING_LANGUAGES,
   WritingConfig,
   WritingSettingsUpdate,
 } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { WritingApi } from './writing.api';
+import {firstValueFrom} from 'rxjs';
+import {WritingApi} from './writing.api';
 
-type ListField = 'dictionary' | 'disabledRules' | 'ignoredSites' | 'ignoredApps';
+type ListField =
+  'dictionary' | 'disabledRules' | 'ignoredSites' | 'ignoredApps';
 
 /**
  * How the writing is checked, the same for the page, the browser extension and the desktop
@@ -42,19 +50,29 @@ type ListField = 'dictionary' | 'disabledRules' | 'ignoredSites' | 'ignoredApps'
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>tune</mat-icon>
-        <mat-card-title>{{ 'writing.settings.title' | transloco }}</mat-card-title>
+        <mat-card-title>{{
+          'writing.settings.title' | transloco
+        }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         @if (!current.canCheck) {
-          <p class="warning">{{ 'writing.settings.noLanguageTool' | transloco }}</p>
+          <p class="warning">
+            {{ 'writing.settings.noLanguageTool' | transloco }}
+          </p>
         }
-        <mat-slide-toggle [checked]="current.enabled" (change)="save({ enabled: $event.checked })">
+        <mat-slide-toggle
+          [checked]="current.enabled"
+          (change)="save({enabled: $event.checked})"
+        >
           {{ 'writing.settings.enabled' | transloco }}
         </mat-slide-toggle>
         <div class="row">
           <mat-form-field subscriptSizing="dynamic">
             <mat-label>{{ 'writing.settings.language' | transloco }}</mat-label>
-            <mat-select [value]="current.language" (valueChange)="save({ language: $event })">
+            <mat-select
+              [value]="current.language"
+              (valueChange)="save({language: $event})"
+            >
               @for (language of languages; track language) {
                 <mat-option [value]="language">
                   {{ 'writing.languages.' + language | transloco }}
@@ -66,43 +84,67 @@ type ListField = 'dictionary' | 'disabledRules' | 'ignoredSites' | 'ignoredApps'
             <mat-label>{{ 'writing.settings.english' | transloco }}</mat-label>
             <mat-select
               [value]="current.englishVariant"
-              (valueChange)="save({ englishVariant: $event })"
+              (valueChange)="save({englishVariant: $event})"
             >
-              <mat-option value="en-US">{{ 'writing.languages.en-US' | transloco }}</mat-option>
-              <mat-option value="en-GB">{{ 'writing.languages.en-GB' | transloco }}</mat-option>
+              <mat-option value="en-US">{{
+                'writing.languages.en-US' | transloco
+              }}</mat-option>
+              <mat-option value="en-GB">{{
+                'writing.languages.en-GB' | transloco
+              }}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
-        <mat-slide-toggle [checked]="current.picky" (change)="save({ picky: $event.checked })">
+        <mat-slide-toggle
+          [checked]="current.picky"
+          (change)="save({picky: $event.checked})"
+        >
           {{ 'writing.settings.picky' | transloco }}
         </mat-slide-toggle>
 
         @for (field of lists; track field) {
           <h3>{{ 'writing.settings.' + field + '.title' | transloco }}</h3>
-          <p class="hint">{{ 'writing.settings.' + field + '.hint' | transloco }}</p>
-          <mat-chip-set [attr.aria-label]="'writing.settings.' + field + '.title' | transloco">
+          <p class="hint">
+            {{ 'writing.settings.' + field + '.hint' | transloco }}
+          </p>
+          <mat-chip-set
+            [attr.aria-label]="
+              'writing.settings.' + field + '.title' | transloco
+            "
+          >
             @for (value of current[field]; track value) {
               <mat-chip (removed)="remove(field, value)">
                 {{ value }}
-                <button matChipRemove [attr.aria-label]="'core.actions.delete' | transloco">
+                <button
+                  matChipRemove
+                  [attr.aria-label]="'core.actions.delete' | transloco"
+                >
                   <mat-icon>cancel</mat-icon>
                 </button>
               </mat-chip>
             } @empty {
-              <span class="hint">{{ 'writing.settings.empty' | transloco }}</span>
+              <span class="hint">{{
+                'writing.settings.empty' | transloco
+              }}</span>
             }
           </mat-chip-set>
           @if (field !== 'disabledRules') {
             <form class="row" (submit)="$event.preventDefault(); add(field)">
               <mat-form-field subscriptSizing="dynamic">
-                <mat-label>{{ 'writing.settings.' + field + '.add' | transloco }}</mat-label>
+                <mat-label>{{
+                  'writing.settings.' + field + '.add' | transloco
+                }}</mat-label>
                 <input
                   matInput
                   [value]="drafts()[field]"
                   (input)="draft(field, $any($event.target).value)"
                 />
               </mat-form-field>
-              <button matButton="tonal" type="submit" [disabled]="!valueOf(field)">
+              <button
+                matButton="tonal"
+                type="submit"
+                [disabled]="!valueOf(field)"
+              >
                 {{ 'core.actions.add' | transloco }}
               </button>
             </form>
@@ -142,7 +184,9 @@ export class WritingSettingsComponent {
   readonly config = input.required<WritingConfig>();
   readonly changed = output<WritingConfig>();
 
-  protected readonly languages = WRITING_LANGUAGES.filter((code) => code !== 'en-GB');
+  protected readonly languages = WRITING_LANGUAGES.filter(
+    code => code !== 'en-GB',
+  );
   protected readonly lists: ListField[] = [
     'dictionary',
     'disabledRules',
@@ -157,7 +201,7 @@ export class WritingSettingsComponent {
   });
 
   protected draft(field: ListField, value: string): void {
-    this.drafts.update((drafts) => ({ ...drafts, [field]: value }));
+    this.drafts.update(drafts => ({...drafts, [field]: value}));
   }
 
   /** What would be added: a site as its domain, a program in lower case; null — nothing. */
@@ -181,12 +225,14 @@ export class WritingSettingsComponent {
     const value = this.valueOf(field);
     const values = this.config()[field];
     if (value && !values.includes(value)) {
-      void this.save({ [field]: [...values, value] });
+      void this.save({[field]: [...values, value]});
     }
     this.draft(field, '');
   }
 
   protected remove(field: ListField, value: string): void {
-    void this.save({ [field]: this.config()[field].filter((one) => one !== value) });
+    void this.save({
+      [field]: this.config()[field].filter(one => one !== value),
+    });
   }
 }

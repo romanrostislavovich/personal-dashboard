@@ -32,21 +32,21 @@ export type DeviceMessage =
       tools: DeviceToolSpec[];
     }
   /** What it offers changed (a tool switched off in its settings). */
-  | { type: 'tools'; tools: DeviceToolSpec[] }
+  | {type: 'tools'; tools: DeviceToolSpec[]}
   /** The user is at this device now: its tools answer before another device's of the kind. */
-  | { type: 'active' }
-  | { type: 'result'; id: string; value: unknown }
-  | { type: 'error'; id: string; message: string }
+  | {type: 'active'}
+  | {type: 'result'; id: string; value: unknown}
+  | {type: 'error'; id: string; message: string}
   /** Keeps the connection (and a browser's service worker) alive. */
-  | { type: 'ping' };
+  | {type: 'ping'};
 
 /** Server → device. */
 export type ServerToDevice =
-  | { type: 'welcome' }
-  | { type: 'call'; id: string; name: string; args: Record<string, unknown> }
-  | { type: 'pong' }
+  | {type: 'welcome'}
+  | {type: 'call'; id: string; name: string; args: Record<string, unknown>}
+  | {type: 'pong'}
   /** The access token expired: send a fresh one in a new hello. */
-  | { type: 'unauthorized' };
+  | {type: 'unauthorized'};
 
 /** A tool name a device may use. */
 export const DEVICE_TOOL_NAME = /^(browser|computer|phone)_[a-z0-9_]{1,60}$/;

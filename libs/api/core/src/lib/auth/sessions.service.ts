@@ -1,9 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { SessionInfo } from '@pd/contracts';
-import { and, desc, eq, lt, ne, or } from 'drizzle-orm';
-import { createHash, randomBytes } from 'node:crypto';
-import { DB, Database } from '../database/database.module';
-import { SessionRow, sessions } from './auth.schema';
+import {Inject, Injectable} from '@nestjs/common';
+import {SessionInfo} from '@pd/contracts';
+import {and, desc, eq, lt, ne, or} from 'drizzle-orm';
+import {createHash, randomBytes} from 'node:crypto';
+import {DB, Database} from '../database/database.module';
+import {SessionRow, sessions} from './auth.schema';
 
 /** An unused session ends after this long; every use moves the end forward. */
 const SESSION_TTL_MS = 60 * 24 * 60 * 60 * 1000;
@@ -28,14 +28,14 @@ export interface Refreshed {
 /** Sign-in sessions and their refresh tokens (see `sessions` in auth.schema.ts). */
 @Injectable()
 export class SessionsService {
-  private readonly alive = new Map<string, { alive: boolean; at: number }>();
+  private readonly alive = new Map<string, {alive: boolean; at: number}>();
 
   constructor(@Inject(DB) private readonly db: Database) {}
 
   async create(
     userId: string,
     meta: ClientMeta,
-  ): Promise<{ session: SessionRow; refreshToken: string }> {
+  ): Promise<{session: SessionRow; refreshToken: string}> {
     await this.db.delete(sessions).where(lt(sessions.expiresAt, new Date()));
     const refreshToken = newToken();
     const [session] = await this.db
@@ -47,16 +47,24 @@ export class SessionsService {
         ...meta,
       })
       .returning();
-    return { session, refreshToken };
+    return {session, refreshToken};
   }
 
   /** The session of a refresh token, prolonged and — once a day — with a new token. */
-  async refresh(refreshToken: string, meta: ClientMeta): Promise<Refreshed | null> {
+  async refresh(
+    refreshToken: string,
+    meta: ClientMeta,
+  ): Promise<Refreshed | null> {
     const tokenHash = hash(refreshToken);
     const [session] = await this.db
       .select()
       .from(sessions)
-      .where(or(eq(sessions.tokenHash, tokenHash), eq(sessions.previousHash, tokenHash)));
+      .where(
+        or(
+          eq(sessions.tokenHash, tokenHash),
+          eq(sessions.previousHash, tokenHash),
+        ),
+      );
     const now = Date.now();
     if (!session || session.expiresAt.getTime() < now) {
       return null;
@@ -65,7 +73,8 @@ export class SessionsService {
     if (isPrevious && now - session.rotatedAt.getTime() > PREVIOUS_GRACE_MS) {
       return null;
     }
-    const rotate = !isPrevious && now - session.rotatedAt.getTime() > ROTATE_AFTER_MS;
+    const rotate =
+      !isPrevious && now - session.rotatedAt.getTime() > ROTATE_AFTER_MS;
     const next = rotate ? newToken() : null;
     const [updated] = await this.db
       .update(sessions)
@@ -73,11 +82,15 @@ export class SessionsService {
         lastUsedAt: new Date(now),
         expiresAt: new Date(now + SESSION_TTL_MS),
         ...meta,
-        ...(next && { tokenHash: hash(next), previousHash: tokenHash, rotatedAt: new Date(now) }),
+        ...(next && {
+          tokenHash: hash(next),
+          previousHash: tokenHash,
+          rotatedAt: new Date(now),
+        }),
       })
       .where(eq(sessions.id, session.id))
       .returning();
-    return { session: updated, refreshToken: next };
+    return {session: updated, refreshToken: next};
   }
 
   /** Whether the session of an access token still exists (not signed out, not expired). */
@@ -87,11 +100,11 @@ export class SessionsService {
       return cached.alive;
     }
     const [row] = await this.db
-      .select({ expiresAt: sessions.expiresAt })
+      .select({expiresAt: sessions.expiresAt})
       .from(sessions)
       .where(eq(sessions.id, sessionId));
     const alive = !!row && row.expiresAt.getTime() > Date.now();
-    this.alive.set(sessionId, { alive, at: Date.now() });
+    this.alive.set(sessionId, {alive, at: Date.now()});
     return alive;
   }
 
@@ -101,7 +114,7 @@ export class SessionsService {
       .from(sessions)
       .where(eq(sessions.userId, userId))
       .orderBy(desc(sessions.lastUsedAt));
-    return rows.map((row) => ({
+    return rows.map(row => ({
       id: row.id,
       createdAt: row.createdAt.toISOString(),
       lastUsedAt: row.lastUsedAt.toISOString(),
@@ -115,16 +128,16 @@ export class SessionsService {
     await this.db
       .delete(sessions)
       .where(and(eq(sessions.id, sessionId), eq(sessions.userId, userId)));
-    this.alive.set(sessionId, { alive: false, at: Date.now() });
+    this.alive.set(sessionId, {alive: false, at: Date.now()});
   }
 
   async revokeByToken(refreshToken: string): Promise<void> {
     const [row] = await this.db
       .delete(sessions)
       .where(eq(sessions.tokenHash, hash(refreshToken)))
-      .returning({ id: sessions.id });
+      .returning({id: sessions.id});
     if (row) {
-      this.alive.set(row.id, { alive: false, at: Date.now() });
+      this.alive.set(row.id, {alive: false, at: Date.now()});
     }
   }
 
@@ -132,9 +145,14 @@ export class SessionsService {
   async revokeOthers(userId: string, keepId: string | null): Promise<void> {
     const rows = await this.db
       .delete(sessions)
-      .where(and(eq(sessions.userId, userId), keepId ? ne(sessions.id, keepId) : undefined))
-      .returning({ id: sessions.id });
-    rows.forEach((row) => this.alive.set(row.id, { alive: false, at: Date.now() }));
+      .where(
+        and(
+          eq(sessions.userId, userId),
+          keepId ? ne(sessions.id, keepId) : undefined,
+        ),
+      )
+      .returning({id: sessions.id});
+    rows.forEach(row => this.alive.set(row.id, {alive: false, at: Date.now()}));
   }
 }
 

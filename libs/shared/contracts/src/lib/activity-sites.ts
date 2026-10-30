@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 // The browser extension's part of Activity: the time on each site (the desktop app sees only
 // "Chrome, 3 hours"), the sites a focus session keeps closed, and the daily limits of sites.
@@ -13,7 +13,7 @@ const LOCAL_HOST = /^(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|\[::1\])$/;
  */
 export function siteOf(url: string): string | null {
   try {
-    const { protocol, hostname, port } = new URL(url);
+    const {protocol, hostname, port} = new URL(url);
     if ((protocol !== 'http:' && protocol !== 'https:') || !hostname) {
       return null;
     }
@@ -36,8 +36,18 @@ export const siteDomainSchema = z
   .toLowerCase()
   .min(3)
   .max(253)
-  .transform((value) => siteOf(value.includes('://') ? value : `https://${value}`) ?? value)
-  .pipe(z.string().regex(/^[a-z0-9-]+(\.[a-z0-9-]+)+$/, 'Expected a domain like youtube.com'));
+  .transform(
+    value =>
+      siteOf(value.includes('://') ? value : `https://${value}`) ?? value,
+  )
+  .pipe(
+    z
+      .string()
+      .regex(
+        /^[a-z0-9-]+(\.[a-z0-9-]+)+$/,
+        'Expected a domain like youtube.com',
+      ),
+  );
 
 /** Sites a focus session keeps closed until the user changes the list. */
 export const DEFAULT_DISTRACTING_SITES = [
@@ -52,7 +62,7 @@ export const DEFAULT_DISTRACTING_SITES = [
   'twitch.tv',
 ];
 
-const moment = z.iso.datetime({ offset: true });
+const moment = z.iso.datetime({offset: true});
 
 /**
  * The site of a visit as the extension takes it (see siteOf): a domain, but also a local
@@ -77,7 +87,10 @@ export const activitySiteVisitSchema = z
     startedAt: moment,
     endedAt: moment,
   })
-  .refine((visit) => visit.endedAt > visit.startedAt, 'A visit ends after it starts');
+  .refine(
+    visit => visit.endedAt > visit.startedAt,
+    'A visit ends after it starts',
+  );
 export type ActivitySiteVisitInput = z.infer<typeof activitySiteVisitSchema>;
 
 /** `POST /api/activity/sites`. */
@@ -95,7 +108,7 @@ export interface ActivityBrowserConfig {
   /** Closed while it runs. */
   distractingSites: string[];
   /** Sites with a daily limit, and how much of it today has taken already (every browser). */
-  siteLimits: { site: string; minutes: number; usedSeconds: number }[];
+  siteLimits: {site: string; minutes: number; usedSeconds: number}[];
   /** Sites never recorded: their domain has one of the private words of Activity. */
   privateWords: string[];
 }

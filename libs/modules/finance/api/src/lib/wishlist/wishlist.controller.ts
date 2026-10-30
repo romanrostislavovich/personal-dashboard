@@ -9,11 +9,21 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
-import { Wish, WishBought, wishBoughtSchema, wishInputSchema } from '@pd/contracts';
-import { z } from 'zod';
-import { FINANCE_ACTIONS } from '../finance.server-actions';
-import { WishlistService } from './wishlist.service';
+import {
+  AuthUser,
+  CurrentUser,
+  ServerActions,
+  ZodValidationPipe,
+} from '@pd/api-core';
+import {
+  Wish,
+  WishBought,
+  wishBoughtSchema,
+  wishInputSchema,
+} from '@pd/contracts';
+import {z} from 'zod';
+import {FINANCE_ACTIONS} from '../finance.server-actions';
+import {WishlistService} from './wishlist.service';
 
 type ValidWishInput = z.output<typeof wishInputSchema>;
 
@@ -50,12 +60,18 @@ export class WishlistController {
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.wishlist.remove(user.id, id);
   }
 
   @Get(':id/prices')
-  prices(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  prices(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.wishlist.history(user.id, id);
   }
 
@@ -63,7 +79,7 @@ export class WishlistController {
   @Post(':id/check')
   @HttpCode(200)
   check(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
-    return this.actions.run<Wish>(user.id, FINANCE_ACTIONS.checkWish, { id });
+    return this.actions.run<Wish>(user.id, FINANCE_ACTIONS.checkWish, {id});
   }
 
   @Put(':id/bought')

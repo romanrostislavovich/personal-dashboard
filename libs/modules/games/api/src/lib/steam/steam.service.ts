@@ -1,11 +1,11 @@
-import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
-import { DB, Database } from '@pd/api-core';
-import { SteamGame, SteamSummary } from '@pd/contracts';
-import { and, desc, eq, sql } from 'drizzle-orm';
-import { GameAccountRow, steamGames } from '../games.schema';
-import { parseSteamReference } from './steam-id';
-import { SteamKeyService } from './steam-key.service';
-import { SteamPlayService } from './steam-play.service';
+import {BadRequestException, Inject, Injectable, Logger} from '@nestjs/common';
+import {DB, Database} from '@pd/api-core';
+import {SteamGame, SteamSummary} from '@pd/contracts';
+import {and, desc, eq, sql} from 'drizzle-orm';
+import {GameAccountRow, steamGames} from '../games.schema';
+import {parseSteamReference} from './steam-id';
+import {SteamKeyService} from './steam-key.service';
+import {SteamPlayService} from './steam-play.service';
 import {
   mergeGames,
   SteamClient,
@@ -52,7 +52,9 @@ export class SteamService {
     if ('steamId' in reference) {
       return reference.steamId;
     }
-    const steamId = await (await this.client(userId)).resolveVanity(reference.vanity);
+    const steamId = await (
+      await this.client(userId)
+    ).resolveVanity(reference.vanity);
     if (!steamId) {
       throw new BadRequestException('Steam profile not found');
     }
@@ -117,7 +119,10 @@ export class SteamService {
         achievements:
           row.achievementsTotal === null || row.achievementsUnlocked === null
             ? null
-            : { unlocked: row.achievementsUnlocked, total: row.achievementsTotal },
+            : {
+                unlocked: row.achievementsUnlocked,
+                total: row.achievementsTotal,
+              },
       })),
     };
   }
@@ -130,12 +135,17 @@ export class SteamService {
     return client;
   }
 
-  private async saveGames(accountId: string, games: SteamOwnedGame[]): Promise<void> {
+  private async saveGames(
+    accountId: string,
+    games: SteamOwnedGame[],
+  ): Promise<void> {
     const g = steamGames;
     for (let i = 0; i < games.length; i += INSERT_CHUNK) {
       await this.db
         .insert(g)
-        .values(games.slice(i, i + INSERT_CHUNK).map((game) => ({ accountId, ...game })))
+        .values(
+          games.slice(i, i + INSERT_CHUNK).map(game => ({accountId, ...game})),
+        )
         .onConflictDoUpdate({
           target: [g.accountId, g.appId],
           set: {
@@ -164,7 +174,7 @@ export class SteamService {
   ): Promise<void> {
     const g = steamGames;
     const stale = await this.db
-      .select({ appId: g.appId, playtimeMinutes: g.playtimeMinutes })
+      .select({appId: g.appId, playtimeMinutes: g.playtimeMinutes})
       .from(g)
       .where(
         and(
@@ -193,13 +203,19 @@ export class SteamService {
           return;
         }
         // One game failing (a removed app, a timeout) does not stop the others.
-        this.logger.warn(`Steam achievements of app ${game.appId} failed: ${error}`);
+        this.logger.warn(
+          `Steam achievements of app ${game.appId} failed: ${error}`,
+        );
       }
     }
   }
 }
 
-function toProfile(player: SteamPlayer, level: number | null, gamesHidden: boolean): SteamProfile {
+function toProfile(
+  player: SteamPlayer,
+  level: number | null,
+  gamesHidden: boolean,
+): SteamProfile {
   return {
     personaName: player.personaName,
     avatarUrl: player.avatarUrl,

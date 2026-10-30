@@ -1,4 +1,4 @@
-import { WritingRewriteMode } from '@pd/contracts';
+import {WritingRewriteMode} from '@pd/contracts';
 
 /** What every rewrite keeps: the language, the meaning, the facts and the form of the text. */
 const KEEP =

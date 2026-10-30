@@ -1,6 +1,6 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, DemoService } from '@pd/api-core';
-import { musicSettings, scrobbles } from './music.schema';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, DemoService} from '@pd/api-core';
+import {musicSettings, scrobbles} from './music.schema';
 
 const MINUTE_MS = 60_000;
 const PLAYS = 900;
@@ -31,7 +31,7 @@ export class MusicDemo implements OnModuleInit {
   onModuleInit(): void {
     this.demo.register({
       module: 'music',
-      seed: async ({ userId }) => {
+      seed: async ({userId}) => {
         const now = Date.now();
         await this.db.insert(musicSettings).values({
           userId,
@@ -40,8 +40,9 @@ export class MusicDemo implements OnModuleInit {
           historyImportedAt: new Date(now),
         });
         // A play every 47 minutes, the tracks in turn with a skip, so some are heard more.
-        const plays = Array.from({ length: PLAYS }, (_, index) => {
-          const [artist, track, album] = TRACKS[(index + Math.floor(index / 5)) % TRACKS.length];
+        const plays = Array.from({length: PLAYS}, (_, index) => {
+          const [artist, track, album] =
+            TRACKS[(index + Math.floor(index / 5)) % TRACKS.length];
           return {
             userId,
             playedAt: new Date(now - (index * 47 + 6) * MINUTE_MS),
@@ -51,7 +52,9 @@ export class MusicDemo implements OnModuleInit {
           };
         });
         for (let i = 0; i < plays.length; i += INSERT_CHUNK) {
-          await this.db.insert(scrobbles).values(plays.slice(i, i + INSERT_CHUNK));
+          await this.db
+            .insert(scrobbles)
+            .values(plays.slice(i, i + INSERT_CHUNK));
         }
       },
     });

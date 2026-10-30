@@ -6,9 +6,9 @@
 //
 // Inter and Manrope (SIL Open Font License), Material Symbols Rounded (Apache 2.0), from
 // Google Fonts; only the alphabets the app speaks: Latin (with Polish and the like), Cyrillic.
-import { createHash } from 'node:crypto';
-import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import {createHash} from 'node:crypto';
+import {mkdirSync, readdirSync, rmSync, writeFileSync} from 'node:fs';
+import {join} from 'node:path';
 
 const OUT = 'apps/web/public/fonts';
 const SHEETS = [
@@ -18,9 +18,15 @@ const SHEETS = [
 /** Google answers a browser it knows with woff2. */
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
-const KEEP = new Set(['latin', 'latin-ext', 'cyrillic', 'cyrillic-ext', 'fallback']);
+const KEEP = new Set([
+  'latin',
+  'latin-ext',
+  'cyrillic',
+  'cyrillic-ext',
+  'fallback',
+]);
 
-mkdirSync(OUT, { recursive: true });
+mkdirSync(OUT, {recursive: true});
 for (const file of readdirSync(OUT)) {
   rmSync(join(OUT, file));
 }
@@ -28,7 +34,9 @@ for (const file of readdirSync(OUT)) {
 const files = new Map();
 let css = '/* Written by apps/web/fonts.mjs — do not edit by hand. */\n';
 for (const sheet of SHEETS) {
-  const text = await (await fetch(sheet, { headers: { 'User-Agent': USER_AGENT } })).text();
+  const text = await (
+    await fetch(sheet, {headers: {'User-Agent': USER_AGENT}})
+  ).text();
   // Blocks are "/* subset */ @font-face {…}"; what follows the last one (a class) is kept too.
   for (const block of text.split(/(?=\/\* [\w-]+ \*\/)/)) {
     const subset = block.match(/^\/\* ([\w-]+) \*\//)?.[1];

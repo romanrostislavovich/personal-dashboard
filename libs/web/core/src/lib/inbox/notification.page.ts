@@ -1,4 +1,4 @@
-import { httpResource } from '@angular/common/http';
+import {httpResource} from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -9,21 +9,21 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { Router, RouterLink } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { CORE_READS } from '@pd/client-core';
-import { InboxAction, InboxItem } from '@pd/contracts';
-import { errorBody } from '../client/core-requests';
-import { inboxTime, InboxStore } from './inbox.store';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {Router, RouterLink} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {CORE_READS} from '@pd/client-core';
+import {InboxAction, InboxItem} from '@pd/contracts';
+import {errorBody} from '../client/core-requests';
+import {inboxTime, InboxStore} from './inbox.store';
 
 /** After an answer, the next question comes by itself after this long. */
 const NEXT_AFTER_MS = 1500;
 
 /** Buttons as rows: where they say (ratings 1–5, 6–10), else as many as fit. */
 export function buttonRows(actions: InboxAction[]): InboxAction[][] {
-  if (!actions.some((action) => action.newRow)) {
+  if (!actions.some(action => action.newRow)) {
     return [actions];
   }
   const rows: InboxAction[][] = [];
@@ -59,11 +59,13 @@ export function buttonRows(actions: InboxAction[]): InboxAction[][] {
         }
 
         @if (reply(); as text) {
-          <p class="reply"><mat-icon inline>check_circle</mat-icon> {{ text }}</p>
+          <p class="reply">
+            <mat-icon inline>check_circle</mat-icon> {{ text }}
+          </p>
         } @else if (n.answeredAt) {
           <p class="reply">
             <mat-icon inline>check_circle</mat-icon>
-            {{ 'core.inbox.answered' | transloco: { answer: n.answer } }}
+            {{ 'core.inbox.answered' | transloco: {answer: n.answer} }}
             @if (n.answeredVia) {
               · {{ 'core.inbox.via.' + n.answeredVia | transloco }}
             }
@@ -79,7 +81,11 @@ export function buttonRows(actions: InboxAction[]): InboxAction[][] {
               (input)="words.set($any($event.target).value)"
             ></textarea>
             <div class="row">
-              <button matButton="filled" type="submit" [disabled]="busy() || !words().trim()">
+              <button
+                matButton="filled"
+                type="submit"
+                [disabled]="busy() || !words().trim()"
+              >
                 {{ 'core.inbox.save' | transloco }}
               </button>
               <button matButton type="button" (click)="skipWords()">
@@ -92,7 +98,11 @@ export function buttonRows(actions: InboxAction[]): InboxAction[][] {
             @for (row of rows(); track $index) {
               <div class="row">
                 @for (button of row; track button.action) {
-                  <button matButton="tonal" [disabled]="busy()" (click)="press(button.action)">
+                  <button
+                    matButton="tonal"
+                    [disabled]="busy()"
+                    (click)="press(button.action)"
+                  >
                     {{ button.label }}
                   </button>
                 }
@@ -106,14 +116,21 @@ export function buttonRows(actions: InboxAction[]): InboxAction[][] {
         }
 
         <footer>
-          <a matButton [routerLink]="n.link">{{ 'core.inbox.openSection' | transloco }}</a>
+          <a matButton [routerLink]="n.link">{{
+            'core.inbox.openSection' | transloco
+          }}</a>
           @if (done()) {
             @if (next(); as following) {
-              <a matButton="filled" [routerLink]="['/notifications', following.id]">
-                {{ 'core.inbox.next' | transloco: { count: nextCount() } }}
+              <a
+                matButton="filled"
+                [routerLink]="['/notifications', following.id]"
+              >
+                {{ 'core.inbox.next' | transloco: {count: nextCount()} }}
               </a>
             } @else {
-              <span class="all-done">{{ 'core.inbox.allAnswered' | transloco }}</span>
+              <span class="all-done">{{
+                'core.inbox.allAnswered' | transloco
+              }}</span>
             }
           }
         </footer>
@@ -209,9 +226,9 @@ export class NotificationPage {
   private readonly waiting = httpResource<InboxItem[]>(
     () => {
       this.store.version();
-      return CORE_READS.inbox({ filter: 'questions', limit: 20 });
+      return CORE_READS.inbox({filter: 'questions', limit: 20});
     },
-    { defaultValue: [] },
+    {defaultValue: []},
   );
 
   protected readonly reply = signal<string | null>(null);
@@ -220,14 +237,18 @@ export class NotificationPage {
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
 
-  protected readonly rows = computed(() => buttonRows(this.item.value()?.actions ?? []));
+  protected readonly rows = computed(() =>
+    buttonRows(this.item.value()?.actions ?? []),
+  );
   /** Nothing more to do here: answered, or nothing to answer. */
   protected readonly done = computed(() => {
     const item = this.item.value();
-    return !!item && !this.askingWords() && (!item.waiting || this.reply() !== null);
+    return (
+      !!item && !this.askingWords() && (!item.waiting || this.reply() !== null)
+    );
   });
   private readonly others = computed(() =>
-    this.waiting.value().filter((one) => one.id !== this.id()),
+    this.waiting.value().filter(one => one.id !== this.id()),
   );
   protected readonly next = computed(() => this.others()[0] ?? null);
   protected readonly nextCount = computed(() => this.others().length);
@@ -267,7 +288,7 @@ export class NotificationPage {
 
   protected async press(action: string): Promise<void> {
     await this.run(async () => {
-      const result = await this.store.answer(this.id(), { action });
+      const result = await this.store.answer(this.id(), {action});
       this.reply.set(result.reply);
       this.askingWords.set(result.expectsText);
       if (!result.expectsText) {
@@ -278,7 +299,9 @@ export class NotificationPage {
 
   protected async sendWords(): Promise<void> {
     await this.run(async () => {
-      const result = await this.store.answer(this.id(), { text: this.words().trim() });
+      const result = await this.store.answer(this.id(), {
+        text: this.words().trim(),
+      });
       this.reply.set(result.reply);
       this.askingWords.set(false);
       this.goNextSoon();
@@ -297,9 +320,11 @@ export class NotificationPage {
       await work();
     } catch (error) {
       // The section's own words ("nothing waits for words…"), or a plain "did not work".
-      const message = (errorBody(error) as { message?: unknown } | null)?.message;
+      const message = (errorBody(error) as {message?: unknown} | null)?.message;
       this.error.set(
-        typeof message === 'string' ? message : this.transloco.translate('core.inbox.failed'),
+        typeof message === 'string'
+          ? message
+          : this.transloco.translate('core.inbox.failed'),
       );
     } finally {
       this.busy.set(false);

@@ -1,12 +1,12 @@
-import { DOCUMENT } from '@angular/common';
-import { effect, inject, Injectable, signal } from '@angular/core';
-import { SwUpdate } from '@angular/service-worker';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoService } from '@jsverse/transloco';
-import { AuthService } from '../auth/auth.service';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { desktopBridge } from '../realtime/desktop-bridge';
-import { ToastService } from '../toast/toast.service';
+import {DOCUMENT} from '@angular/common';
+import {effect, inject, Injectable, signal} from '@angular/core';
+import {SwUpdate} from '@angular/service-worker';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoService} from '@jsverse/transloco';
+import {AuthService} from '../auth/auth.service';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {desktopBridge} from '../realtime/desktop-bridge';
+import {ToastService} from '../toast/toast.service';
 
 /** While something waits to be sent, the server is tried this often. */
 const RETRY_MS = 60_000;
@@ -24,7 +24,7 @@ const UPDATE_CHECK_ON_RETURN_MS = 5 * 60_000;
  * - A new version downloaded by the service worker is offered with a "Reload" button; an app
  *   nobody is looking at (a hidden tab, the desktop app in the tray) reloads by itself.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class OfflineService {
   private readonly client = inject(DASHBOARD_CLIENT);
   private readonly auth = inject(AuthService);
@@ -53,8 +53,8 @@ export class OfflineService {
 
   /** Called once on start (see provideDashboard). */
   start(): void {
-    void this.client.outbox.pending().then((count) => this.pending.set(count));
-    this.client.outbox.onChange((count) => {
+    void this.client.outbox.pending().then(count => this.pending.set(count));
+    this.client.outbox.onChange(count => {
       if (count > this.pending()) {
         this.toast.show({
           icon: '📴',
@@ -99,13 +99,15 @@ export class OfflineService {
     }
     if (result.sent > 0) {
       // What the server made of them may differ (a diary entry changed elsewhere meanwhile).
-      this.synced.update((count) => count + 1);
+      this.synced.update(count => count + 1);
     }
     if (result.sent > 0) {
       this.toast.show({
         icon: '✅',
         title: this.transloco.translate('core.offline.sentTitle'),
-        text: this.transloco.translate('core.offline.sentText', { count: result.sent }),
+        text: this.transloco.translate('core.offline.sentText', {
+          count: result.sent,
+        }),
       });
     }
     if (result.refused.length > 0) {
@@ -125,7 +127,7 @@ export class OfflineService {
       return;
     }
     const document = this.window?.document;
-    this.updates.versionUpdates.subscribe((event) => {
+    this.updates.versionUpdates.subscribe(event => {
       if (event.type !== 'VERSION_READY') {
         return;
       }

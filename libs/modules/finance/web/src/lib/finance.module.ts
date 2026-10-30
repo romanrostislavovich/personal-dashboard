@@ -1,11 +1,14 @@
-import { WebDashboardModule } from '@pd/web-core';
+import {WebDashboardModule} from '@pd/web-core';
 
 /** Web part of the Finance module. Plugged in at apps/web/src/app/modules.ts. */
 export const financeModule: WebDashboardModule = {
   id: 'finance',
-  nav: { labelKey: 'finance.title', icon: 'account_balance_wallet' },
+  nav: {labelKey: 'finance.title', icon: 'account_balance_wallet'},
   loadRoutes: async () => [
-    { path: '', loadComponent: () => import('./finance.page').then((m) => m.FinancePage) },
+    {
+      path: '',
+      loadComponent: () => import('./finance.page').then(m => m.FinancePage),
+    },
   ],
   translations: {
     en: () => import('./i18n/en.json'),
@@ -15,23 +18,28 @@ export const financeModule: WebDashboardModule = {
     {
       id: 'finance.summary',
       size: 'medium',
-      loadComponent: () => import('./finance-summary.widget').then((m) => m.FinanceSummaryWidget),
+      loadComponent: () =>
+        import('./finance-summary.widget').then(m => m.FinanceSummaryWidget),
     },
     {
       id: 'finance.wishlist',
       size: 'medium',
-      loadComponent: () => import('./wishlist/wishlist.widget').then((m) => m.WishlistWidget),
+      loadComponent: () =>
+        import('./wishlist/wishlist.widget').then(m => m.WishlistWidget),
     },
   ],
   integrations: [
     {
       id: 'finance.bank',
-      loadComponent: () => import('./bank.integration').then((m) => m.BankIntegration),
+      loadComponent: () =>
+        import('./bank.integration').then(m => m.BankIntegration),
     },
     {
       id: 'finance.cost-sources',
       loadComponent: () =>
-        import('./cost-sources.integration').then((m) => m.CostSourcesIntegration),
+        import('./cost-sources.integration').then(
+          m => m.CostSourcesIntegration,
+        ),
     },
   ],
 };

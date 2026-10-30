@@ -1,11 +1,11 @@
-import { defineConfig } from 'vitest/config';
+import {defineConfig} from 'vitest/config';
 
 // Tests of plain TypeScript (the commands), without Angular components.
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../../../node_modules/.vite/libs/modules/movies/web',
   // @pd/* aliases from tsconfig.base.json.
-  resolve: { tsconfigPaths: true },
+  resolve: {tsconfigPaths: true},
   test: {
     name: 'movies-web',
     watch: false,

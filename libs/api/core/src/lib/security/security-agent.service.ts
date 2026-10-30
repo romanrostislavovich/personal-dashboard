@@ -1,4 +1,9 @@
-import { BadGatewayException, BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import {
   SECURITY_AREAS,
   SECURITY_SEVERITIES,
@@ -6,20 +11,20 @@ import {
   todayIn,
   toLocalDate,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { AiConnectionsService } from '../ai/ai-connections.service';
-import { AiTool, NO_PARAMETERS } from '../ai/ai-tool';
-import { AiLimitError, AiUsageService } from '../ai/ai-usage.service';
+import {z} from 'zod';
+import {AiConnectionsService} from '../ai/ai-connections.service';
+import {AiTool, NO_PARAMETERS} from '../ai/ai-tool';
+import {AiLimitError, AiUsageService} from '../ai/ai-usage.service';
 import {
   AiRequestError,
   ChatConnection,
   ChatMessage,
   ToolDefinition,
 } from '../ai/openai-compatible.client';
-import { runToolLoop } from '../ai/tool-loop';
-import { coreMessages } from '../i18n/core.messages';
-import { UsersService } from '../users/users.service';
-import { AI_SOURCE, AreaProblem, SecurityService } from './security.service';
+import {runToolLoop} from '../ai/tool-loop';
+import {coreMessages} from '../i18n/core.messages';
+import {UsersService} from '../users/users.service';
+import {AI_SOURCE, AreaProblem, SecurityService} from './security.service';
 
 /** The model may look around this many times before it must write the report. */
 const MAX_ROUNDS = 12;
@@ -129,10 +134,11 @@ export class SecurityAgent {
 
   /** The agent's connection: its own if one is chosen, otherwise the assistant's. */
   async connection(userId: string): Promise<ChatConnection | null> {
-    const { connectionId } = await this.security.settings(userId);
+    const {connectionId} = await this.security.settings(userId);
     return (
-      (connectionId ? await this.connections.connection(userId, connectionId) : null) ??
-      (await this.connections.active(userId))
+      (connectionId
+        ? await this.connections.connection(userId, connectionId)
+        : null) ?? (await this.connections.active(userId))
     );
   }
 
@@ -145,11 +151,14 @@ export class SecurityAgent {
     const user = await this.users.findById(userId);
     const reported: AreaProblem[] = [];
 
-    const { reply } = await runToolLoop({
+    const {reply} = await runToolLoop({
       messages: [
         {
           role: 'system',
-          content: INSTRUCTION.replace('LANGUAGE', coreMessages(user?.locale).aiLanguage),
+          content: INSTRUCTION.replace(
+            'LANGUAGE',
+            coreMessages(user?.locale).aiLanguage,
+          ),
         },
         {
           role: 'user',
@@ -157,16 +166,22 @@ export class SecurityAgent {
         },
       ],
       tools: this.tools(userId, reported),
-      complete: (messages, tools) => this.ask(userId, connection, messages, tools),
+      complete: (messages, tools) =>
+        this.ask(userId, connection, messages, tools),
       runTool: async (tool, rawArgs) => {
         if (!tool) {
-          return JSON.stringify({ error: 'Unknown tool' });
+          return JSON.stringify({error: 'Unknown tool'});
         }
         try {
-          const result = await tool.handler(userId, JSON.parse(rawArgs || '{}'));
+          const result = await tool.handler(
+            userId,
+            JSON.parse(rawArgs || '{}'),
+          );
           return JSON.stringify(result).slice(0, MAX_TOOL_CHARS);
         } catch (error) {
-          return JSON.stringify({ error: error instanceof Error ? error.message : String(error) });
+          return JSON.stringify({
+            error: error instanceof Error ? error.message : String(error),
+          });
         }
       },
       maxRounds: MAX_ROUNDS,
@@ -178,14 +193,18 @@ export class SecurityAgent {
     // Only the rules' findings can be covered: a made-up reference covers nothing.
     const refs = new Set(
       (await this.security.known(userId))
-        .filter((row) => row.origin === 'rules')
-        .map((row) => row.key),
+        .filter(row => row.origin === 'rules')
+        .map(row => row.key),
     );
     for (const finding of reported) {
-      finding.covers = (finding.covers ?? []).filter((ref) => refs.has(ref));
+      finding.covers = (finding.covers ?? []).filter(ref => refs.has(ref));
     }
     const fresh = await this.security.keep(userId, AI_SOURCE, 'ai', reported);
-    const report = await this.security.saveReport(userId, reply.trim(), connection.model);
+    const report = await this.security.saveReport(
+      userId,
+      reply.trim(),
+      connection.model,
+    );
     this.logger.log(`Investigated: ${reported.length} finding(s) of the model`);
     if (notify) {
       await this.security.tell(userId, fresh);
@@ -205,24 +224,30 @@ export class SecurityAgent {
     const finding = await this.security.finding(userId, findingId);
     const [sourceId] = finding.key.split(':');
     // A finding of the AI itself came from the whole area, not from one source.
-    const sources = this.security.sources.filter((source) =>
-      sourceId === AI_SOURCE ? source.area === finding.area : source.id === sourceId,
+    const sources = this.security.sources.filter(source =>
+      sourceId === AI_SOURCE
+        ? source.area === finding.area
+        : source.id === sourceId,
     );
     const facts: Record<string, unknown> = {};
     for (const source of sources) {
-      facts[source.id] = (await this.security.inspect(source, userId))?.facts ?? null;
+      facts[source.id] =
+        (await this.security.inspect(source, userId))?.facts ?? null;
     }
     const user = await this.users.findById(userId);
-    const { area, severity, title, details, fix } = finding;
+    const {area, severity, title, details, fix} = finding;
     const reply = await this.ask(userId, connection, [
       {
         role: 'system',
-        content: GUIDE_INSTRUCTION.replace('LANGUAGE', coreMessages(user?.locale).aiLanguage),
+        content: GUIDE_INSTRUCTION.replace(
+          'LANGUAGE',
+          coreMessages(user?.locale).aiLanguage,
+        ),
       },
       {
         role: 'user',
         content: JSON.stringify({
-          finding: { area, severity, title, details, shortFix: fix },
+          finding: {area, severity, title, details, shortFix: fix},
           facts,
         }).slice(0, MAX_TOOL_CHARS),
       },
@@ -239,15 +264,21 @@ export class SecurityAgent {
     connection: ChatConnection,
     messages: ChatMessage[],
     tools: ToolDefinition[] = [],
-  ): Promise<Extract<ChatMessage, { role: 'assistant' }>> {
-    return this.usage.complete(userId, connection, messages, tools).catch((error: unknown) => {
-      this.logger.warn(`The agent's model did not answer: ${String(error).slice(0, 300)}`);
-      throw error instanceof AiRequestError
-        ? new BadGatewayException(`The AI provider refused the request (${error.status})`)
-        : error instanceof AiLimitError
-          ? new BadGatewayException(error.message)
-          : new BadGatewayException('The AI provider is unreachable');
-    });
+  ): Promise<Extract<ChatMessage, {role: 'assistant'}>> {
+    return this.usage
+      .complete(userId, connection, messages, tools)
+      .catch((error: unknown) => {
+        this.logger.warn(
+          `The agent's model did not answer: ${String(error).slice(0, 300)}`,
+        );
+        throw error instanceof AiRequestError
+          ? new BadGatewayException(
+              `The AI provider refused the request (${error.status})`,
+            )
+          : error instanceof AiLimitError
+            ? new BadGatewayException(error.message)
+            : new BadGatewayException('The AI provider is unreachable');
+      });
   }
 
   /** One tool a source, the findings so far, and the only way to say something: a finding. */
@@ -276,8 +307,10 @@ export class SecurityAgent {
         parameters: NO_PARAMETERS,
         handler: async () =>
           (await this.security.known(userId)).map(
-            ({ key, area, severity, title, details, origin, status }) => ({
-              ...(origin === 'ai' ? { key: key.slice(AI_SOURCE.length + 1) } : { ref: key }),
+            ({key, area, severity, title, details, origin, status}) => ({
+              ...(origin === 'ai'
+                ? {key: key.slice(AI_SOURCE.length + 1)}
+                : {ref: key}),
               area,
               severity,
               title,
@@ -299,14 +332,20 @@ export class SecurityAgent {
               type: 'string',
               description: 'Stable id: lowercase, dashes, e.g. "ssh-key-age"',
             },
-            area: { type: 'string', enum: [...SECURITY_AREAS] },
-            severity: { type: 'string', enum: [...SECURITY_SEVERITIES] },
-            title: { type: 'string' },
-            details: { type: 'string', description: 'What exactly you saw, with the numbers' },
-            fix: { type: 'string', description: 'What the owner should do, concretely' },
+            area: {type: 'string', enum: [...SECURITY_AREAS]},
+            severity: {type: 'string', enum: [...SECURITY_SEVERITIES]},
+            title: {type: 'string'},
+            details: {
+              type: 'string',
+              description: 'What exactly you saw, with the numbers',
+            },
+            fix: {
+              type: 'string',
+              description: 'What the owner should do, concretely',
+            },
             covers: {
               type: 'array',
-              items: { type: 'string' },
+              items: {type: 'string'},
               description:
                 'The `ref` of every finding of the rules this one is about: yours is shown ' +
                 'instead of them',
@@ -316,15 +355,22 @@ export class SecurityAgent {
         },
         handler: async (_userId, args) => {
           if (reported.length >= MAX_FINDINGS) {
-            return { error: `At most ${MAX_FINDINGS} findings: keep the most important` };
+            return {
+              error: `At most ${MAX_FINDINGS} findings: keep the most important`,
+            };
           }
           const finding = reportedFinding.parse(args);
-          if (reported.some((item) => item.key === finding.key)) {
-            return { error: 'Already recorded in this run: one finding a problem' };
+          if (reported.some(item => item.key === finding.key)) {
+            return {
+              error: 'Already recorded in this run: one finding a problem',
+            };
           }
           reported.push(finding);
           // Seeing its own list keeps the model from recording the same thing twice.
-          return { recorded: true, recordedInThisRun: reported.map((item) => item.title) };
+          return {
+            recorded: true,
+            recordedInThisRun: reported.map(item => item.title),
+          };
         },
       },
     ];
@@ -332,7 +378,7 @@ export class SecurityAgent {
 
   /** The daily run: only with the AI switched on and a model to ask. */
   async runDaily(userId: string): Promise<void> {
-    const { aiEnabled } = await this.security.settings(userId);
+    const {aiEnabled} = await this.security.settings(userId);
     if (!aiEnabled || !(await this.connection(userId))) {
       return;
     }

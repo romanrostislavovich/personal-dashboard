@@ -1,113 +1,116 @@
-import { Global, Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { JwtModule } from '@nestjs/jwt';
-import { AchievementsController } from './achievements/achievements.controller';
-import { AchievementsService } from './achievements/achievements.service';
-import { AiConnectionsService } from './ai/ai-connections.service';
-import { AiUsageService } from './ai/ai-usage.service';
-import { AiController } from './ai/ai.controller';
-import { AiTelegramAssistant } from './ai/ai-telegram.assistant';
-import { VoiceAssistantService } from './ai/voice-assistant.service';
-import { AiActionsService } from './ai/ai-actions.service';
-import { AiConversationsService } from './ai/ai-conversations.service';
-import { AiLinks } from './ai/ai.links';
-import { CoreAiTools } from './ai/core.ai-tools';
-import { MorningDigestJob } from './ai/morning-digest.job';
-import { MorningDigestService } from './ai/morning-digest.service';
-import { AiService } from './ai/ai.service';
-import { AuthController } from './auth/auth.controller';
-import { AuthGuard } from './auth/auth.guard';
-import { TrashController } from './trash/trash.controller';
-import { DataController } from './data-export/data.controller';
-import { OtherComputersService } from './computer-time/other-computers.service';
-import { LinksAchievements } from './links/links.achievements';
-import { SectionsAchievements } from './achievements/sections.achievements';
-import { DemoGuard } from './demo/demo.guard';
-import { DemoService } from './demo/demo.service';
-import { CoreDemo } from './demo/core.demo';
-import { CoreIntegrations } from './integrations/core.integrations';
-import { IntegrationsController } from './integrations/integrations.controller';
-import { IntegrationsService } from './integrations/integrations.service';
-import { AppsController } from './apps/apps.controller';
-import { AppsService } from './apps/apps.service';
-import { OutboundPolicy } from './net/outbound-policy';
-import { LinksService } from './links/links.service';
-import { ProjectOverviewService } from './links/project-overview.service';
-import { CoreSecuritySources } from './security/core.security-sources';
-import { SecurityAgent } from './security/security-agent.service';
-import { SecurityController } from './security/security.controller';
-import { SecurityJobs } from './security/security.jobs';
-import { SecurityLinks } from './security/security.links';
-import { SecurityService } from './security/security.service';
-import { SignInLog } from './security/sign-in-log.service';
-import { DataExportService } from './data-export/data-export.service';
-import { DataImportService } from './data-export/data-import.service';
-import { TrashService } from './trash/trash.service';
-import { AiUndoService } from './ai/ai-undo.service';
-import { AiMemoryService } from './ai/ai-memory.service';
-import { RecallService } from './recall/recall.service';
-import { SessionsService } from './auth/sessions.service';
-import { TwoFactorService } from './auth/two-factor.service';
-import { AuthService } from './auth/auth.service';
-import { AppConfig, validateEnv } from './config/env';
-import { DatabaseModule } from './database/database.module';
-import { NOTIFICATION_CHANNELS, NotificationChannel } from './notifications/notification-channel';
-import { NotificationsController } from './notifications/notifications.controller';
-import { AccessTokensService } from './mcp/access-tokens.service';
-import { DeviceSocket } from './devices/device-socket';
-import { DeviceAuthService } from './devices/device-auth.service';
-import { DeviceToolsService } from './devices/device-tools.service';
-import { AccessTokensController, McpController } from './mcp/mcp.controller';
-import { NotificationActions } from './notifications/notification-actions';
-import { NotificationInboxController } from './notifications/notification-inbox.controller';
-import { NotificationInboxService } from './notifications/notification-inbox.service';
-import { NotificationOutbox } from './notifications/notification-outbox';
-import { NotificationsService } from './notifications/notifications.service';
-import { TelegramBotService } from './notifications/telegram/telegram-bot.service';
-import { PushChannel } from './notifications/push/push.channel';
-import { PushController } from './notifications/push/push.controller';
-import { PushService } from './notifications/push/push.service';
-import { TelegramChannel } from './notifications/telegram/telegram.channel';
-import { ProjectsController } from './projects/projects.controller';
-import { ProjectsService } from './projects/projects.service';
-import { SchedulerService } from './scheduler/scheduler.service';
-import { HealthController } from './system/health.controller';
-import { EncryptExistingService } from './crypto/encrypt-existing.service';
-import { RateLimitGuard } from './system/rate-limit';
-import { LifeMonthJob } from './life/life-month.job';
-import { LifeController } from './life/life.controller';
-import { LifeService } from './life/life.service';
-import { AutomationsController } from './automations/automations.controller';
-import { AutomationsService } from './automations/automations.service';
-import { CoreAutomations } from './automations/core.automations';
-import { AchievementsLife } from './life/achievements.life';
-import { LifeStoriesService } from './life/life-stories.service';
-import { LifelogService } from './life/lifelog.service';
-import { LifelogController } from './life/lifelog.controller';
-import { LifelogGenerator } from './life/lifelog-generator.service';
-import { LifelogJob } from './life/lifelog.job';
-import { SearchController } from './search/search.controller';
-import { SearchService } from './search/search.service';
-import { SecretsService } from './secrets/secrets.service';
-import { ServerKeysService } from './server-keys/server-keys.service';
-import { JobRunsService } from './system/job-runs.service';
-import { SystemController } from './system/system.controller';
-import { SystemLogService } from './system/system-log.service';
-import { UnhandledErrorsFilter } from './system/unhandled-errors.filter';
-import { ServerActions } from './sync/server-actions';
-import { SyncClient } from './sync/sync-client.service';
-import { SyncController } from './sync/sync.controller';
-import { SyncService } from './sync/sync.service';
-import { SyncStore } from './sync/sync-store';
-import { SyncConflictsService } from './sync/sync-conflicts.service';
-import { BackupService } from './backup/backup.service';
-import { UsersService } from './users/users.service';
-import { InAppChannel } from './realtime/in-app.channel';
-import { RealtimeController } from './realtime/realtime.controller';
-import { RealtimeService } from './realtime/realtime.service';
-import { UserActivityInterceptor } from './realtime/user-activity.interceptor';
-import { UserActivityService } from './realtime/user-activity.service';
+import {Global, Module} from '@nestjs/common';
+import {ConfigModule, ConfigService} from '@nestjs/config';
+import {APP_FILTER, APP_GUARD, APP_INTERCEPTOR} from '@nestjs/core';
+import {JwtModule} from '@nestjs/jwt';
+import {AchievementsController} from './achievements/achievements.controller';
+import {AchievementsService} from './achievements/achievements.service';
+import {AiConnectionsService} from './ai/ai-connections.service';
+import {AiUsageService} from './ai/ai-usage.service';
+import {AiController} from './ai/ai.controller';
+import {AiTelegramAssistant} from './ai/ai-telegram.assistant';
+import {VoiceAssistantService} from './ai/voice-assistant.service';
+import {AiActionsService} from './ai/ai-actions.service';
+import {AiConversationsService} from './ai/ai-conversations.service';
+import {AiLinks} from './ai/ai.links';
+import {CoreAiTools} from './ai/core.ai-tools';
+import {MorningDigestJob} from './ai/morning-digest.job';
+import {MorningDigestService} from './ai/morning-digest.service';
+import {AiService} from './ai/ai.service';
+import {AuthController} from './auth/auth.controller';
+import {AuthGuard} from './auth/auth.guard';
+import {TrashController} from './trash/trash.controller';
+import {DataController} from './data-export/data.controller';
+import {OtherComputersService} from './computer-time/other-computers.service';
+import {LinksAchievements} from './links/links.achievements';
+import {SectionsAchievements} from './achievements/sections.achievements';
+import {DemoGuard} from './demo/demo.guard';
+import {DemoService} from './demo/demo.service';
+import {CoreDemo} from './demo/core.demo';
+import {CoreIntegrations} from './integrations/core.integrations';
+import {IntegrationsController} from './integrations/integrations.controller';
+import {IntegrationsService} from './integrations/integrations.service';
+import {AppsController} from './apps/apps.controller';
+import {AppsService} from './apps/apps.service';
+import {OutboundPolicy} from './net/outbound-policy';
+import {LinksService} from './links/links.service';
+import {ProjectOverviewService} from './links/project-overview.service';
+import {CoreSecuritySources} from './security/core.security-sources';
+import {SecurityAgent} from './security/security-agent.service';
+import {SecurityController} from './security/security.controller';
+import {SecurityJobs} from './security/security.jobs';
+import {SecurityLinks} from './security/security.links';
+import {SecurityService} from './security/security.service';
+import {SignInLog} from './security/sign-in-log.service';
+import {DataExportService} from './data-export/data-export.service';
+import {DataImportService} from './data-export/data-import.service';
+import {TrashService} from './trash/trash.service';
+import {AiUndoService} from './ai/ai-undo.service';
+import {AiMemoryService} from './ai/ai-memory.service';
+import {RecallService} from './recall/recall.service';
+import {SessionsService} from './auth/sessions.service';
+import {TwoFactorService} from './auth/two-factor.service';
+import {AuthService} from './auth/auth.service';
+import {AppConfig, validateEnv} from './config/env';
+import {DatabaseModule} from './database/database.module';
+import {
+  NOTIFICATION_CHANNELS,
+  NotificationChannel,
+} from './notifications/notification-channel';
+import {NotificationsController} from './notifications/notifications.controller';
+import {AccessTokensService} from './mcp/access-tokens.service';
+import {DeviceSocket} from './devices/device-socket';
+import {DeviceAuthService} from './devices/device-auth.service';
+import {DeviceToolsService} from './devices/device-tools.service';
+import {AccessTokensController, McpController} from './mcp/mcp.controller';
+import {NotificationActions} from './notifications/notification-actions';
+import {NotificationInboxController} from './notifications/notification-inbox.controller';
+import {NotificationInboxService} from './notifications/notification-inbox.service';
+import {NotificationOutbox} from './notifications/notification-outbox';
+import {NotificationsService} from './notifications/notifications.service';
+import {TelegramBotService} from './notifications/telegram/telegram-bot.service';
+import {PushChannel} from './notifications/push/push.channel';
+import {PushController} from './notifications/push/push.controller';
+import {PushService} from './notifications/push/push.service';
+import {TelegramChannel} from './notifications/telegram/telegram.channel';
+import {ProjectsController} from './projects/projects.controller';
+import {ProjectsService} from './projects/projects.service';
+import {SchedulerService} from './scheduler/scheduler.service';
+import {HealthController} from './system/health.controller';
+import {EncryptExistingService} from './crypto/encrypt-existing.service';
+import {RateLimitGuard} from './system/rate-limit';
+import {LifeMonthJob} from './life/life-month.job';
+import {LifeController} from './life/life.controller';
+import {LifeService} from './life/life.service';
+import {AutomationsController} from './automations/automations.controller';
+import {AutomationsService} from './automations/automations.service';
+import {CoreAutomations} from './automations/core.automations';
+import {AchievementsLife} from './life/achievements.life';
+import {LifeStoriesService} from './life/life-stories.service';
+import {LifelogService} from './life/lifelog.service';
+import {LifelogController} from './life/lifelog.controller';
+import {LifelogGenerator} from './life/lifelog-generator.service';
+import {LifelogJob} from './life/lifelog.job';
+import {SearchController} from './search/search.controller';
+import {SearchService} from './search/search.service';
+import {SecretsService} from './secrets/secrets.service';
+import {ServerKeysService} from './server-keys/server-keys.service';
+import {JobRunsService} from './system/job-runs.service';
+import {SystemController} from './system/system.controller';
+import {SystemLogService} from './system/system-log.service';
+import {UnhandledErrorsFilter} from './system/unhandled-errors.filter';
+import {ServerActions} from './sync/server-actions';
+import {SyncClient} from './sync/sync-client.service';
+import {SyncController} from './sync/sync.controller';
+import {SyncService} from './sync/sync.service';
+import {SyncStore} from './sync/sync-store';
+import {SyncConflictsService} from './sync/sync-conflicts.service';
+import {BackupService} from './backup/backup.service';
+import {UsersService} from './users/users.service';
+import {InAppChannel} from './realtime/in-app.channel';
+import {RealtimeController} from './realtime/realtime.controller';
+import {RealtimeService} from './realtime/realtime.service';
+import {UserActivityInterceptor} from './realtime/user-activity.interceptor';
+import {UserActivityService} from './realtime/user-activity.service';
 
 /**
  * Core: config, database, auth, projects, scheduler, integration secrets, notifications,
@@ -118,14 +121,14 @@ import { UserActivityService } from './realtime/user-activity.service';
 @Global()
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
+    ConfigModule.forRoot({isGlobal: true, validate: validateEnv}),
     DatabaseModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: AppConfig) => ({
-        secret: config.get('JWT_SECRET', { infer: true }),
+        secret: config.get('JWT_SECRET', {infer: true}),
         // Every token sets its own lifetime (see AuthService); this is only a safety net.
-        signOptions: { expiresIn: '15m' },
+        signOptions: {expiresIn: '15m'},
       }),
     }),
   ],
@@ -165,15 +168,15 @@ import { UserActivityService } from './realtime/user-activity.service';
     LifelogService,
     LifelogGenerator,
     LifelogJob,
-    { provide: APP_GUARD, useClass: AuthGuard },
+    {provide: APP_GUARD, useClass: AuthGuard},
     // After AuthGuard: it needs to know who is asking.
-    { provide: APP_GUARD, useClass: DemoGuard },
+    {provide: APP_GUARD, useClass: DemoGuard},
     // After AuthGuard too: a signed-in user is counted by their account, others by the address.
-    { provide: APP_GUARD, useClass: RateLimitGuard },
+    {provide: APP_GUARD, useClass: RateLimitGuard},
     DemoService,
     EncryptExistingService,
     CoreDemo,
-    { provide: APP_INTERCEPTOR, useClass: UserActivityInterceptor },
+    {provide: APP_INTERCEPTOR, useClass: UserActivityInterceptor},
     AuthService,
     SessionsService,
     TrashService,
@@ -238,7 +241,7 @@ import { UserActivityService } from './realtime/user-activity.service';
     JobRunsService,
     SystemLogService,
     // Errors nobody caught are logged with their request (see the filter).
-    { provide: APP_FILTER, useClass: UnhandledErrorsFilter },
+    {provide: APP_FILTER, useClass: UnhandledErrorsFilter},
     // New channels (Discord, e-mail…) are added to this list.
     {
       provide: NOTIFICATION_CHANNELS,

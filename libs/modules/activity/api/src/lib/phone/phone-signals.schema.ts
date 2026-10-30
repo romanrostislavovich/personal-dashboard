@@ -1,4 +1,8 @@
-import { encryptedText, registerEncryptedTables, users } from '@pd/api-core/schema';
+import {
+  encryptedText,
+  registerEncryptedTables,
+  users,
+} from '@pd/api-core/schema';
 import {
   date,
   doublePrecision,
@@ -9,7 +13,7 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { activityDevices } from '../activity.schema';
+import {activityDevices} from '../activity.schema';
 
 /**
  * A signal of the phone (docs/telemetry.md, the phone's collectors 1–10): the screen on and off,
@@ -22,16 +26,16 @@ export const activityPhoneSignals = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     deviceId: uuid()
       .notNull()
-      .references(() => activityDevices.id, { onDelete: 'cascade' }),
+      .references(() => activityDevices.id, {onDelete: 'cascade'}),
     kind: text().notNull(),
-    at: timestamp({ withTimezone: true }).notNull(),
+    at: timestamp({withTimezone: true}).notNull(),
     /** JSON of what the signal tells; `null` — nothing beyond the moment (the screen on). */
     data: encryptedText(),
   },
-  (table) => [
+  table => [
     // A batch sent twice (the answer was lost) is written once.
     unique().on(table.deviceId, table.kind, table.at),
     index().on(table.userId, table.at),
@@ -45,19 +49,19 @@ export const activityPhoneDaily = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     deviceId: uuid()
       .notNull()
-      .references(() => activityDevices.id, { onDelete: 'cascade' }),
+      .references(() => activityDevices.id, {onDelete: 'cascade'}),
     /** The phone's own day. */
     day: date().notNull(),
     kind: text().notNull(),
     /** The app of mobile data; '' for one number a day. */
     key: text().notNull().default(''),
     value: doublePrecision().notNull(),
-    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [
+  table => [
     unique().on(table.deviceId, table.day, table.kind, table.key),
     index().on(table.userId, table.day),
   ],

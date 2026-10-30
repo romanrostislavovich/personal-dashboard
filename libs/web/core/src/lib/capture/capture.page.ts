@@ -7,15 +7,15 @@ import {
   OnDestroy,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { Router } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { DashboardCommand, DASHBOARD_MODULES } from '../dashboard-module';
-import { LayoutService } from '../layout/layout.service';
-import { ShareInbox } from '../mobile/share-inbox';
-import { SharedContent } from '../mobile/share-target';
-import { desktopBridge } from '../realtime/desktop-bridge';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {Router} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {DashboardCommand, DASHBOARD_MODULES} from '../dashboard-module';
+import {LayoutService} from '../layout/layout.service';
+import {ShareInbox} from '../mobile/share-inbox';
+import {SharedContent} from '../mobile/share-target';
+import {desktopBridge} from '../realtime/desktop-bridge';
 
 /**
  * What the desktop app captured with a shortcut — copied text or a piece of the screen — or what
@@ -47,8 +47,13 @@ import { desktopBridge } from '../realtime/desktop-bridge';
         } @else {
           <div class="actions">
             @for (command of commands(); track command.id) {
-              <button matButton="tonal" [disabled]="busy()" (click)="run(command)">
-                <mat-icon>{{ command.icon }}</mat-icon> {{ command.labelKey | transloco }}
+              <button
+                matButton="tonal"
+                [disabled]="busy()"
+                (click)="run(command)"
+              >
+                <mat-icon>{{ command.icon }}</mat-icon>
+                {{ command.labelKey | transloco }}
               </button>
             }
           </div>
@@ -137,9 +142,11 @@ export class CapturePage implements OnDestroy {
   protected readonly commands = computed(() => {
     const kind = this.captured()?.kind;
     return this.modules
-      .filter((module) => !this.layout.isHidden(module.id))
-      .flatMap((module) => module.commands ?? [])
-      .filter((command) => (kind === 'image' ? command.loadImageAction : command.loadAction));
+      .filter(module => !this.layout.isHidden(module.id))
+      .flatMap(module => module.commands ?? [])
+      .filter(command =>
+        kind === 'image' ? command.loadImageAction : command.loadAction,
+      );
   });
 
   constructor() {
@@ -148,12 +155,16 @@ export class CapturePage implements OnDestroy {
       this.show(shared);
       return;
     }
-    void this.capture?.pending().then((captured) => {
+    void this.capture?.pending().then(captured => {
       if (captured?.kind === 'image') {
-        const image = new File([toBytes(captured.base64)], `screenshot-${Date.now()}.png`, {
-          type: 'image/png',
-        });
-        this.show({ kind: 'image', image });
+        const image = new File(
+          [toBytes(captured.base64)],
+          `screenshot-${Date.now()}.png`,
+          {
+            type: 'image/png',
+          },
+        );
+        this.show({kind: 'image', image});
       } else if (captured) {
         this.show(captured);
       }
@@ -209,5 +220,5 @@ export class CapturePage implements OnDestroy {
 }
 
 function toBytes(base64: string): Uint8Array<ArrayBuffer> {
-  return Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+  return Uint8Array.from(atob(base64), char => char.charCodeAt(0));
 }

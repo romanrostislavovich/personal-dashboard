@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /**
  * The band in detail, read by the phone from Health Connect (docs/proposals/mobile-app.md,
@@ -8,7 +8,14 @@ import { z } from 'zod';
  */
 
 /** A part of a night (Health Connect's stages, the ones a band tells). */
-export const SLEEP_STAGES = ['awake', 'light', 'deep', 'rem', 'asleep', 'out'] as const;
+export const SLEEP_STAGES = [
+  'awake',
+  'light',
+  'deep',
+  'rem',
+  'asleep',
+  'out',
+] as const;
 export type SleepStage = (typeof SLEEP_STAGES)[number];
 
 /** A reading at a moment. `restingHr`, `spo2` and `respiratoryRate` only when a band writes them. */
@@ -29,7 +36,13 @@ export const STRESS_LEVELS = ['calm', 'normal', 'raised', 'high'] as const;
 export type StressLevel = (typeof STRESS_LEVELS)[number];
 
 export function stressLevel(score: number): StressLevel {
-  return score < 25 ? 'calm' : score < 60 ? 'normal' : score < 85 ? 'raised' : 'high';
+  return score < 25
+    ? 'calm'
+    : score < 60
+      ? 'normal'
+      : score < 85
+        ? 'raised'
+        : 'high';
 }
 
 /** What the owner says a reaction of the body was (the notification's buttons). */
@@ -43,7 +56,7 @@ export const REACTION_FEELINGS = [
 ] as const;
 export type ReactionFeeling = (typeof REACTION_FEELINGS)[number];
 
-const at = z.iso.datetime({ offset: true });
+const at = z.iso.datetime({offset: true});
 const bpm = z.number().min(20).max(250);
 
 /**
@@ -78,7 +91,13 @@ export const bandIngestSchema = z
       )
       .max(60),
     points: z
-      .array(z.object({ kind: z.enum(BAND_POINT_KINDS), at, value: z.number().min(-50).max(500) }))
+      .array(
+        z.object({
+          kind: z.enum(BAND_POINT_KINDS),
+          at,
+          value: z.number().min(-50).max(500),
+        }),
+      )
       .max(3000),
     sessions: z
       .array(
@@ -90,19 +109,26 @@ export const bandIngestSchema = z
           type: z.number().int().min(0).max(1000).nullable(),
           title: z.string().trim().max(200).nullable(),
           stages: z
-            .array(z.object({ startAt: at, endAt: at, stage: z.enum(SLEEP_STAGES) }))
+            .array(
+              z.object({startAt: at, endAt: at, stage: z.enum(SLEEP_STAGES)}),
+            )
             .max(500),
         }),
       )
       .max(100),
   })
-  .refine((body) => Date.parse(body.to) > Date.parse(body.from), { message: 'to before from' })
-  .refine((body) => Date.parse(body.to) - Date.parse(body.from) <= 50 * 3600_000, {
-    message: 'a window of at most two days',
-  });
+  .refine(body => Date.parse(body.to) > Date.parse(body.from), {
+    message: 'to before from',
+  })
+  .refine(
+    body => Date.parse(body.to) - Date.parse(body.from) <= 50 * 3600_000,
+    {
+      message: 'a window of at most two days',
+    },
+  );
 export type BandIngest = z.infer<typeof bandIngestSchema>;
 
-export const bandDayQuerySchema = z.object({ day: z.iso.date() });
+export const bandDayQuerySchema = z.object({day: z.iso.date()});
 export type BandDayQuery = z.infer<typeof bandDayQuerySchema>;
 
 export interface BandMinute {
@@ -122,7 +148,7 @@ export interface BandHour {
 export interface BandSleep {
   startAt: string;
   endAt: string;
-  stages: { startAt: string; endAt: string; stage: SleepStage }[];
+  stages: {startAt: string; endAt: string; stage: SleepStage}[];
 }
 
 export interface BandSession {
@@ -159,7 +185,7 @@ export interface BandDayDetail {
   mindfulness: BandSession[];
   reactions: BandReaction[];
   /** The points of the day and its night: HRV readings, skin temperature. */
-  points: { kind: BandPointKind; at: string; value: number }[];
+  points: {kind: BandPointKind; at: string; value: number}[];
   /** The owner's 28-day baselines, for "against the norm". */
   baseline: {
     restingHeartRate: number | null;
@@ -168,7 +194,9 @@ export interface BandDayDetail {
   };
 }
 
-export const reactionFeelingSchema = z.object({ feeling: z.enum(REACTION_FEELINGS) });
+export const reactionFeelingSchema = z.object({
+  feeling: z.enum(REACTION_FEELINGS),
+});
 export type ReactionFeelingInput = z.infer<typeof reactionFeelingSchema>;
 
 /** A breathing session done in the dashboard (or told after it). */

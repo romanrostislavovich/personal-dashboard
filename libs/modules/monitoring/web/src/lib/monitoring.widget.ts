@@ -1,12 +1,17 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { needsSetup, ProjectsApi } from '@pd/web-core';
-import { MonitoringApi } from './monitoring.api';
-import { StatusBadgeComponent } from './status-badge.component';
+import {DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {RouterLink} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {needsSetup, ProjectsApi} from '@pd/web-core';
+import {MonitoringApi} from './monitoring.api';
+import {StatusBadgeComponent} from './status-badge.component';
 
 /** Home widget: status of all monitors; down ones first. */
 @Component({
@@ -23,7 +28,9 @@ import { StatusBadgeComponent } from './status-badge.component';
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>📡 {{ 'monitoring.widget.title' | transloco }}</mat-card-title>
+        <mat-card-title
+          >📡 {{ 'monitoring.widget.title' | transloco }}</mat-card-title
+        >
       </mat-card-header>
       <mat-card-content>
         @for (monitor of sorted(); track monitor.id) {
@@ -34,7 +41,9 @@ import { StatusBadgeComponent } from './status-badge.component';
             </div>
             <span class="uptime">
               {{
-                monitor.uptime.week === null ? '—' : (monitor.uptime.week | number: '1.0-2') + '%'
+                monitor.uptime.week === null
+                  ? '—'
+                  : (monitor.uptime.week | number: '1.0-2') + '%'
               }}
             </span>
             <pd-status-badge [status]="monitor.status" />
@@ -44,7 +53,9 @@ import { StatusBadgeComponent } from './status-badge.component';
         }
       </mat-card-content>
       <mat-card-actions align="end">
-        <a matButton routerLink="/monitoring">{{ 'monitoring.widget.open' | transloco }}</a>
+        <a matButton routerLink="/monitoring">{{
+          'monitoring.widget.open' | transloco
+        }}</a>
       </mat-card-actions>
     </mat-card>
   `,
@@ -80,15 +91,18 @@ export class MonitoringWidget {
   private readonly monitors = inject(MonitoringApi).monitors();
 
   constructor() {
-    needsSetup(() => !this.monitors.isLoading() && !this.monitors.value().length);
+    needsSetup(
+      () => !this.monitors.isLoading() && !this.monitors.value().length,
+    );
   }
   private readonly projects = inject(ProjectsApi).list();
 
   protected readonly projectNames = computed(
-    () => new Map(this.projects.value().map((project) => [project.id, project.name])),
+    () =>
+      new Map(this.projects.value().map(project => [project.id, project.name])),
   );
 
-  private readonly statusOrder = { down: 0, pending: 1, up: 2 } as const;
+  private readonly statusOrder = {down: 0, pending: 1, up: 2} as const;
   protected readonly sorted = computed(() =>
     [...this.monitors.value()].sort(
       (a, b) => this.statusOrder[a.status] - this.statusOrder[b.status],

@@ -1,18 +1,24 @@
-import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { ActivatedRoute } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { CORE_READS } from '@pd/client-core';
-import { LifeSummary } from '@pd/contracts';
-import { LifelogJournalComponent } from './lifelog-journal.component';
-import { lifelogMonthRange } from './lifelog-dates';
-import { MoodInsightsComponent } from './mood-insights.component';
-import { MoodForecastComponent } from './mood-forecast.component';
-import { StoryCardComponent } from './story-card.component';
+import {CurrencyPipe, DatePipe, DecimalPipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {ActivatedRoute} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {CORE_READS} from '@pd/client-core';
+import {LifeSummary} from '@pd/contracts';
+import {LifelogJournalComponent} from './lifelog-journal.component';
+import {lifelogMonthRange} from './lifelog-dates';
+import {MoodInsightsComponent} from './mood-insights.component';
+import {MoodForecastComponent} from './mood-forecast.component';
+import {StoryCardComponent} from './story-card.component';
 
 /** "Wrapped": the numbers of every module for a month or a year. */
 @Component({
@@ -39,8 +45,12 @@ import { StoryCardComponent } from './story-card.component';
         [attr.aria-label]="'life.period' | transloco"
         (change)="kind.set($event.value)"
       >
-        <mat-button-toggle value="month">{{ 'life.month' | transloco }}</mat-button-toggle>
-        <mat-button-toggle value="year">{{ 'life.year' | transloco }}</mat-button-toggle>
+        <mat-button-toggle value="month">{{
+          'life.month' | transloco
+        }}</mat-button-toggle>
+        <mat-button-toggle value="year">{{
+          'life.year' | transloco
+        }}</mat-button-toggle>
       </mat-button-toggle-group>
       @if (kind() === 'month') {
         <input
@@ -78,10 +88,15 @@ import { StoryCardComponent } from './story-card.component';
             <span class="value">
               @switch (card.format) {
                 @case ('money') {
-                  {{ card.value | currency: card.currency : 'symbol' : '1.0-0' }}
+                  {{
+                    card.value | currency: card.currency : 'symbol' : '1.0-0'
+                  }}
                 }
                 @case ('hours') {
-                  {{ 'life.hours' | transloco: { value: (card.value | number: '1.0-0') } }}
+                  {{
+                    'life.hours'
+                      | transloco: {value: (card.value | number: '1.0-0')}
+                  }}
                 }
                 @default {
                   {{ card.value | number: '1.0-1' }}
@@ -89,7 +104,9 @@ import { StoryCardComponent } from './story-card.component';
               }
             </span>
             @if (card.detailKey) {
-              <span class="detail">{{ card.detailKey | transloco: card.detailParams ?? {} }}</span>
+              <span class="detail">{{
+                card.detailKey | transloco: card.detailParams ?? {}
+              }}</span>
             }
           </mat-card-content>
         </mat-card>
@@ -166,20 +183,25 @@ export class SummaryPage {
 
   private readonly query = inject(ActivatedRoute).snapshot.queryParamMap;
   /** `?month=2026-09` and `?year=2026` (the links of the messages on the 1st) open that period. */
-  protected readonly kind = signal<'month' | 'year'>(this.query.get('year') ? 'year' : 'month');
+  protected readonly kind = signal<'month' | 'year'>(
+    this.query.get('year') ? 'year' : 'month',
+  );
   protected readonly month = signal(
-    lifelogMonthRange(this.query.get('month') ?? '') && this.query.get('month')! <= this.thisMonth
+    lifelogMonthRange(this.query.get('month') ?? '') &&
+      this.query.get('month')! <= this.thisMonth
       ? this.query.get('month')!
       : this.thisMonth,
   );
-  protected readonly year = signal(Number(this.query.get('year')) || this.thisYear);
+  protected readonly year = signal(
+    Number(this.query.get('year')) || this.thisYear,
+  );
   protected readonly storyPeriod = computed(() =>
     this.kind() === 'year' ? String(this.year()) : this.month(),
   );
 
   private readonly period = computed(() => {
     if (this.kind() === 'year') {
-      return { from: `${this.year()}-01-01`, to: `${this.year()}-12-31` };
+      return {from: `${this.year()}-01-01`, to: `${this.year()}-12-31`};
     }
     return lifelogMonthRange(this.month())!;
   });

@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Headers, Post, Query } from '@nestjs/common';
-import { AuthUser, CurrentUser, Public, ZodValidationPipe } from '@pd/api-core';
+import {Body, Controller, Get, Headers, Post, Query} from '@nestjs/common';
+import {AuthUser, CurrentUser, Public, ZodValidationPipe} from '@pd/api-core';
 import {
   PhoneUnlockIngest,
   phoneUnlockIngestSchema,
@@ -9,10 +9,10 @@ import {
   phoneSignalIngestSchema,
   PhoneSignalsDay,
 } from '@pd/contracts';
-import { DevicesService } from '../devices.service';
-import { z } from 'zod';
-import { PhoneSignalsService } from './phone-signals.service';
-import { PhoneUsageService } from './phone-usage.service';
+import {DevicesService} from '../devices.service';
+import {z} from 'zod';
+import {PhoneSignalsService} from './phone-signals.service';
+import {PhoneUsageService} from './phone-usage.service';
 
 /**
  * How the phone is used: the Android app sends its unlocks with its device token; Activity →
@@ -30,10 +30,11 @@ export class PhoneUsageController {
   @Post('device/unlocks')
   async ingest(
     @Headers('authorization') authorization: string | undefined,
-    @Body(new ZodValidationPipe(phoneUnlockIngestSchema)) body: PhoneUnlockIngest,
-  ): Promise<{ saved: number }> {
+    @Body(new ZodValidationPipe(phoneUnlockIngestSchema))
+    body: PhoneUnlockIngest,
+  ): Promise<{saved: number}> {
     const device = await this.devices.authenticate(authorization);
-    return { saved: await this.phone.ingest(device, body.unlocks) };
+    return {saved: await this.phone.ingest(device, body.unlocks)};
   }
 
   /** The phone's other signals (the screen, steps, calls…, docs/telemetry.md), with its device token. */
@@ -43,7 +44,7 @@ export class PhoneUsageController {
     @Headers('authorization') authorization: string | undefined,
     @Body(new ZodValidationPipe(phoneSignalIngestSchema))
     body: z.output<typeof phoneSignalIngestSchema>,
-  ): Promise<{ saved: number }> {
+  ): Promise<{saved: number}> {
     const device = await this.devices.authenticate(authorization);
     return this.signals.ingest(device, body);
   }

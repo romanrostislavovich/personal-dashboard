@@ -1,4 +1,9 @@
-import { AllergySeverity, DiagnosisStatus, HealthStudyKind, SummaryLanguage } from '@pd/contracts';
+import {
+  AllergySeverity,
+  DiagnosisStatus,
+  HealthStudyKind,
+  SummaryLanguage,
+} from '@pd/contracts';
 
 /**
  * The fixed words of a summary in the doctor's language: headings, statuses, specialities. The
@@ -59,15 +64,16 @@ const en: SummaryText = {
   operations: 'Operations',
   vaccinations: 'Vaccinations',
   vaccine: 'Vaccine',
-  severities: { mild: 'mild', moderate: 'moderate', severe: 'severe' },
+  severities: {mild: 'mild', moderate: 'moderate', severe: 'severe'},
   title: 'Medical history summary',
   patient: 'Patient',
   madeOn: 'Compiled on',
-  period: (from) => `Since ${from}`,
+  period: from => `Since ${from}`,
   disclaimer:
     'Compiled by the patient from their own medical documents (several countries and clinics). ' +
     'It is not a record of a clinic; the original documents can be shown on request.',
-  translated: 'The texts were translated automatically; codes and numbers are as in the originals.',
+  translated:
+    'The texts were translated automatically; codes and numbers are as in the originals.',
   conditions: 'Diagnoses',
   medications: 'Medications',
   labs: 'Latest lab results',
@@ -84,7 +90,7 @@ const en: SummaryText = {
   dose: 'Dose and schedule',
   taken: 'Taken',
   now: 'now',
-  stopped: (reason) => `stopped: ${reason}`,
+  stopped: reason => `stopped: ${reason}`,
   analyte: 'Test',
   value: 'Result',
   range: 'Reference range',
@@ -142,15 +148,16 @@ const pl: SummaryText = {
   operations: 'Operacje',
   vaccinations: 'Szczepienia',
   vaccine: 'Szczepionka',
-  severities: { mild: 'łagodna', moderate: 'umiarkowana', severe: 'ciężka' },
+  severities: {mild: 'łagodna', moderate: 'umiarkowana', severe: 'ciężka'},
   title: 'Podsumowanie historii choroby',
   patient: 'Pacjent',
   madeOn: 'Sporządzono',
-  period: (from) => `Od ${from}`,
+  period: from => `Od ${from}`,
   disclaimer:
     'Sporządzone przez pacjenta na podstawie własnej dokumentacji medycznej (kilka krajów i ' +
     'placówek). Nie jest to dokumentacja placówki; oryginały dokumentów mogą zostać okazane.',
-  translated: 'Teksty przetłumaczono automatycznie; kody i liczby są jak w oryginałach.',
+  translated:
+    'Teksty przetłumaczono automatycznie; kody i liczby są jak w oryginałach.',
   conditions: 'Rozpoznania',
   medications: 'Leki',
   labs: 'Ostatnie wyniki badań laboratoryjnych',
@@ -167,7 +174,7 @@ const pl: SummaryText = {
   dose: 'Dawka i dawkowanie',
   taken: 'Przyjmowany',
   now: 'obecnie',
-  stopped: (reason) => `odstawiony: ${reason}`,
+  stopped: reason => `odstawiony: ${reason}`,
   analyte: 'Badanie',
   value: 'Wynik',
   range: 'Zakres referencyjny',
@@ -225,11 +232,11 @@ const uk: SummaryText = {
   operations: 'Операції',
   vaccinations: 'Щеплення',
   vaccine: 'Вакцина',
-  severities: { mild: 'легка', moderate: 'помірна', severe: 'важка' },
+  severities: {mild: 'легка', moderate: 'помірна', severe: 'важка'},
   title: 'Виписка з історії хвороби',
   patient: 'Пацієнт',
   madeOn: 'Складено',
-  period: (from) => `З ${from}`,
+  period: from => `З ${from}`,
   disclaimer:
     'Складено пацієнтом за власними медичними документами (кілька країн і закладів). Це не ' +
     'документація закладу; оригінали документів можна показати на запит.',
@@ -250,7 +257,7 @@ const uk: SummaryText = {
   dose: 'Доза і прийом',
   taken: 'Приймається',
   now: 'зараз',
-  stopped: (reason) => `скасовано: ${reason}`,
+  stopped: reason => `скасовано: ${reason}`,
   analyte: 'Показник',
   value: 'Результат',
   range: 'Референтні значення',
@@ -308,15 +315,16 @@ const ru: SummaryText = {
   operations: 'Операции',
   vaccinations: 'Прививки',
   vaccine: 'Вакцина',
-  severities: { mild: 'лёгкая', moderate: 'умеренная', severe: 'тяжёлая' },
+  severities: {mild: 'лёгкая', moderate: 'умеренная', severe: 'тяжёлая'},
   title: 'Выписка из истории болезни',
   patient: 'Пациент',
   madeOn: 'Составлено',
-  period: (from) => `С ${from}`,
+  period: from => `С ${from}`,
   disclaimer:
     'Составлено пациентом по собственным медицинским документам (несколько стран и клиник). ' +
     'Это не документация учреждения; оригиналы документов можно показать по запросу.',
-  translated: 'Тексты переведены автоматически; коды и числа — как в оригиналах.',
+  translated:
+    'Тексты переведены автоматически; коды и числа — как в оригиналах.',
   conditions: 'Диагнозы',
   medications: 'Лекарства',
   labs: 'Последние результаты анализов',
@@ -333,7 +341,7 @@ const ru: SummaryText = {
   dose: 'Доза и приём',
   taken: 'Принимается',
   now: 'сейчас',
-  stopped: (reason) => `отменён: ${reason}`,
+  stopped: reason => `отменён: ${reason}`,
   analyte: 'Показатель',
   value: 'Результат',
   range: 'Референсные значения',
@@ -391,15 +399,16 @@ const de: SummaryText = {
   operations: 'Operationen',
   vaccinations: 'Impfungen',
   vaccine: 'Impfstoff',
-  severities: { mild: 'leicht', moderate: 'mittel', severe: 'schwer' },
+  severities: {mild: 'leicht', moderate: 'mittel', severe: 'schwer'},
   title: 'Zusammenfassung der Krankengeschichte',
   patient: 'Patient',
   madeOn: 'Erstellt am',
-  period: (from) => `Seit ${from}`,
+  period: from => `Seit ${from}`,
   disclaimer:
     'Vom Patienten aus eigenen medizinischen Unterlagen (mehrere Länder und Einrichtungen) ' +
     'zusammengestellt. Keine Dokumentation einer Einrichtung; die Originale können vorgelegt werden.',
-  translated: 'Die Texte wurden automatisch übersetzt; Codes und Zahlen wie im Original.',
+  translated:
+    'Die Texte wurden automatisch übersetzt; Codes und Zahlen wie im Original.',
   conditions: 'Diagnosen',
   medications: 'Medikamente',
   labs: 'Letzte Laborwerte',
@@ -416,7 +425,7 @@ const de: SummaryText = {
   dose: 'Dosis und Einnahme',
   taken: 'Eingenommen',
   now: 'aktuell',
-  stopped: (reason) => `abgesetzt: ${reason}`,
+  stopped: reason => `abgesetzt: ${reason}`,
   analyte: 'Wert',
   value: 'Ergebnis',
   range: 'Referenzbereich',
@@ -466,24 +475,30 @@ const de: SummaryText = {
   },
 };
 
-const TEXTS: Record<SummaryLanguage, SummaryText> = { en, pl, uk, ru, de };
+const TEXTS: Record<SummaryLanguage, SummaryText> = {en, pl, uk, ru, de};
 
 export function summaryText(language: SummaryLanguage): SummaryText {
   return TEXTS[language];
 }
 
 /** The speciality in the doctor's language; one typed by hand as it is. */
-export function specialityName(text: SummaryText, speciality: string | null): string {
+export function specialityName(
+  text: SummaryText,
+  speciality: string | null,
+): string {
   return speciality ? (text.specialities[speciality] ?? speciality) : '';
 }
 
 /** `PL` → "Polska" in the doctor's language. */
-export function countryName(language: SummaryLanguage, code: string | null): string {
+export function countryName(
+  language: SummaryLanguage,
+  code: string | null,
+): string {
   if (!code) {
     return '';
   }
   try {
-    return new Intl.DisplayNames([language], { type: 'region' }).of(code) ?? code;
+    return new Intl.DisplayNames([language], {type: 'region'}).of(code) ?? code;
   } catch {
     return code;
   }

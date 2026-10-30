@@ -1,5 +1,5 @@
-import { nextFreeName, Screenshot } from '@pd/contracts';
-import { ApiClient, apiRequest } from '../api-client';
+import {nextFreeName, Screenshot} from '@pd/contracts';
+import {ApiClient, apiRequest} from '../api-client';
 
 const BASE = '/api/screenshots';
 
@@ -51,22 +51,54 @@ export type ScreenshotIndex = Record<string, SyncedScreenshot>;
 
 export type SyncStep =
   /** New in the folder. */
-  | { kind: 'upload'; name: string }
+  | {kind: 'upload'; name: string}
   /** Changed in the folder only. */
-  | { kind: 'replace'; name: string; id: string }
+  | {kind: 'replace'; name: string; id: string}
   /**
    * The server's file into the folder as `as`. `keep` — it is that screenshot from now on;
    * a copy kept beside a file changed on both sides is not, and goes up as a new one next time.
    */
-  | { kind: 'download'; id: string; hash: string; as: string; keep: boolean }
+  | {kind: 'download'; id: string; hash: string; as: string; keep: boolean}
   /** A file of the folder moves aside: its name is the server's for another file. */
-  | { kind: 'rename-local'; from: string; to: string }
+  | {kind: 'rename-local'; from: string; to: string}
   /** Deleted on the server, unchanged here. */
-  | { kind: 'delete-local'; name: string }
+  | {kind: 'delete-local'; name: string}
   /** Deleted here. */
-  | { kind: 'delete-server'; name: string; id: string }
+  | {kind: 'delete-server'; name: string; id: string}
   /** No longer synced under this name. */
-  | { kind: 'forget'; name: string };
+  | {kind: 'forget'; name: string};
+
+/**
+ * A synced file that is both in the folder and on the server: what changed where since the last
+ * sync (`entry`).
+ */
+function syncBoth(
+  name: string,
+  entry: ScreenshotIndex[string],
+  file: LocalScreenshot,
+  shot: Screenshot,
+  free: (name: string) => string,
+): SyncStep[] {
+  const download = (as: string, keep: boolean): SyncStep => ({
+    kind: 'download',
+    id: shot.id,
+    hash: shot.hash,
+    as,
+    keep,
+  });
+  if (file.hash === shot.hash) {
+    // Changed the same way on both sides: only the record is behind (nothing is fetched).
+    return file.hash === entry.hash ? [] : [download(name, true)];
+  }
+  const changedHere = file.hash !== entry.hash;
+  const changedThere = shot.hash !== entry.hash;
+  if (changedHere && changedThere) {
+    return [download(free(name), false), {kind: 'replace', name, id: shot.id}];
+  }
+  return changedHere
+    ? [{kind: 'replace', name, id: shot.id}]
+    : [download(name, true)];
+}
 
 /**
  * What to do to make a folder and the server the same, by what changed on each side since the
@@ -78,12 +110,12 @@ function planSync(
   server: Screenshot[],
   index: ScreenshotIndex,
 ): SyncStep[] {
-  const here = new Map(local.map((file) => [file.name, file]));
-  const there = new Map(server.map((shot) => [shot.id, shot]));
-  const known = new Set(Object.values(index).map((entry) => entry.id));
-  const taken = new Set([...here.keys(), ...server.map((shot) => shot.name)]);
+  const here = new Map(local.map(file => [file.name, file]));
+  const there = new Map(server.map(shot => [shot.id, shot]));
+  const known = new Set(Object.values(index).map(entry => entry.id));
+  const taken = new Set([...here.keys(), ...server.map(shot => shot.name)]);
   const free = (name: string) => {
-    const found = nextFreeName(name, (candidate) => taken.has(candidate));
+    const found = nextFreeName(name, candidate => taken.has(candidate));
     taken.add(found);
     return found;
   };
@@ -96,32 +128,18 @@ function planSync(
     const shot = there.get(entry.id);
     handled.add(name);
     if (!file && !shot) {
-      steps.push({ kind: 'forget', name });
+      steps.push({kind: 'forget', name});
     } else if (!shot && file) {
       if (file.hash === entry.hash) {
-        steps.push({ kind: 'delete-local', name });
+        steps.push({kind: 'delete-local', name});
       } else {
         // Deleted on the server but changed here meanwhile: kept, as a new one.
-        steps.push({ kind: 'forget', name }, { kind: 'upload', name });
+        steps.push({kind: 'forget', name}, {kind: 'upload', name});
       }
     } else if (shot && !file) {
-      steps.push({ kind: 'delete-server', name, id: entry.id });
-    } else if (shot && file && file.hash !== shot.hash) {
-      const changedHere = file.hash !== entry.hash;
-      const changedThere = shot.hash !== entry.hash;
-      if (changedHere && changedThere) {
-        steps.push(
-          { kind: 'download', id: shot.id, hash: shot.hash, as: free(name), keep: false },
-          { kind: 'replace', name, id: shot.id },
-        );
-      } else if (changedHere) {
-        steps.push({ kind: 'replace', name, id: shot.id });
-      } else {
-        steps.push({ kind: 'download', id: shot.id, hash: shot.hash, as: name, keep: true });
-      }
-    } else if (shot && file && file.hash !== entry.hash) {
-      // Changed the same way on both sides: only the record is behind (nothing is fetched).
-      steps.push({ kind: 'download', id: shot.id, hash: shot.hash, as: name, keep: true });
+      steps.push({kind: 'delete-server', name, id: entry.id});
+    } else if (shot && file) {
+      steps.push(...syncBoth(name, entry, file, shot, free));
     }
   }
 
@@ -134,17 +152,23 @@ function planSync(
       // Another file under this name here: it moves aside and goes up as a new one.
       const aside = free(shot.name);
       steps.push(
-        { kind: 'rename-local', from: shot.name, to: aside },
-        { kind: 'upload', name: aside },
+        {kind: 'rename-local', from: shot.name, to: aside},
+        {kind: 'upload', name: aside},
       );
     }
     handled.add(shot.name);
-    steps.push({ kind: 'download', id: shot.id, hash: shot.hash, as: shot.name, keep: true });
+    steps.push({
+      kind: 'download',
+      id: shot.id,
+      hash: shot.hash,
+      as: shot.name,
+      keep: true,
+    });
   }
 
   for (const file of local) {
     if (!handled.has(file.name)) {
-      steps.push({ kind: 'upload', name: file.name });
+      steps.push({kind: 'upload', name: file.name});
     }
   }
   return steps;
@@ -156,7 +180,9 @@ const MAX_QUIET_DELETIONS = 10;
 /** A sync that would delete most of the screenshots on the server: not done. */
 export class ScreenshotSyncStopped extends Error {
   constructor(readonly deletions: number) {
-    super(`The folder lost ${deletions} screenshots at once: the server keeps them`);
+    super(
+      `The folder lost ${deletions} screenshots at once: the server keeps them`,
+    );
   }
 }
 
@@ -178,19 +204,19 @@ export async function syncScreenshots(
   api: ScreenshotsClient,
   index: ScreenshotIndex,
   save: (index: ScreenshotIndex) => void,
-): Promise<{ steps: number }> {
+): Promise<{steps: number}> {
   const local = await folder.list();
   const server = await api.list();
   const steps = planSync(local, server, index);
-  const deletions = steps.filter((step) => step.kind === 'delete-server').length;
+  const deletions = steps.filter(step => step.kind === 'delete-server').length;
   if (deletions > MAX_QUIET_DELETIONS && deletions > server.length / 2) {
     // A folder gone or emptied by mistake (a drive not plugged in) must not empty the server.
     throw new ScreenshotSyncStopped(deletions);
   }
-  const hashes = new Map(local.map((file) => [file.name, file.hash]));
-  const next: ScreenshotIndex = { ...index };
+  const hashes = new Map(local.map(file => [file.name, file.hash]));
+  const next: ScreenshotIndex = {...index};
   const blob = async (name: string) =>
-    new Blob([new Uint8Array(await folder.read(name))], { type: mimeOf(name) });
+    new Blob([new Uint8Array(await folder.read(name))], {type: mimeOf(name)});
 
   for (const step of steps) {
     switch (step.kind) {
@@ -216,12 +242,16 @@ export async function syncScreenshots(
           // The name was taken on the server (another computer, the same second).
           await folder.rename(step.name, shot.name);
         }
-        next[shot.name] = { id: shot.id, hash: shot.hash };
+        next[shot.name] = {id: shot.id, hash: shot.hash};
         break;
       }
       case 'replace': {
-        const shot = await api.replace(step.id, step.name, await blob(step.name));
-        next[step.name] = { id: shot.id, hash: shot.hash };
+        const shot = await api.replace(
+          step.id,
+          step.name,
+          await blob(step.name),
+        );
+        next[step.name] = {id: shot.id, hash: shot.hash};
         break;
       }
       case 'download':
@@ -231,16 +261,20 @@ export async function syncScreenshots(
           hashes.set(step.as, step.hash);
         }
         if (step.keep) {
-          next[step.as] = { id: step.id, hash: step.hash };
+          next[step.as] = {id: step.id, hash: step.hash};
         }
         break;
     }
     save(next);
   }
-  return { steps: steps.length };
+  return {steps: steps.length};
 }
 
 function mimeOf(name: string): string {
   const extension = name.split('.').pop()?.toLowerCase();
-  return extension === 'png' ? 'image/png' : extension === 'webp' ? 'image/webp' : 'image/jpeg';
+  return extension === 'png'
+    ? 'image/png'
+    : extension === 'webp'
+      ? 'image/webp'
+      : 'image/jpeg';
 }

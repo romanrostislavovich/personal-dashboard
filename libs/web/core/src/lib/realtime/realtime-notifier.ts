@@ -1,18 +1,18 @@
-import { DestroyRef, inject, Injectable } from '@angular/core';
-import { Router } from '@angular/router';
-import { TranslocoService } from '@jsverse/transloco';
-import { RealtimeEvent } from '@pd/contracts';
-import { ToastService } from '../toast/toast.service';
-import { desktopBridge } from './desktop-bridge';
-import { RealtimeClient } from './realtime.client';
+import {DestroyRef, inject, Injectable} from '@angular/core';
+import {Router} from '@angular/router';
+import {TranslocoService} from '@jsverse/transloco';
+import {RealtimeEvent} from '@pd/contracts';
+import {ToastService} from '../toast/toast.service';
+import {desktopBridge} from './desktop-bridge';
+import {RealtimeClient} from './realtime.client';
 
-import { desktopNotificationsOn } from './desktop-notifications';
+import {desktopNotificationsOn} from './desktop-notifications';
 
 /**
  * Turns live events into what the user sees: a toast in the page, and in the desktop app
  * also a system notification when the window is hidden or not in focus.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class RealtimeNotifier {
   private readonly toasts = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
@@ -27,16 +27,20 @@ export class RealtimeNotifier {
       return;
     }
     this.started = true;
-    const subscription = this.client.events$.subscribe((event) => this.show(event));
+    const subscription = this.client.events$.subscribe(event =>
+      this.show(event),
+    );
     this.destroyRef.onDestroy(() => subscription.unsubscribe());
-    this.desktop?.onNavigate?.((route) => void this.router.navigateByUrl(route));
+    this.desktop?.onNavigate?.(route => void this.router.navigateByUrl(route));
   }
 
   private show(event: RealtimeEvent): void {
     if (event.type === 'achievements') {
       const label = this.transloco.translate('core.toast.achievement');
       for (const achievement of event.achievements) {
-        const rarity = this.transloco.translate(`core.toast.rarity.${achievement.rarity}`);
+        const rarity = this.transloco.translate(
+          `core.toast.rarity.${achievement.rarity}`,
+        );
         this.toasts.show({
           icon: achievement.icon,
           label,
@@ -45,10 +49,19 @@ export class RealtimeNotifier {
           rarity: achievement.rarity,
           route: '/achievements',
         });
-        this.notifyDesktop(`${label} ${achievement.icon}`, achievement.title, '/achievements');
+        this.notifyDesktop(
+          `${label} ${achievement.icon}`,
+          achievement.title,
+          '/achievements',
+        );
       }
     } else if (event.type === 'notification') {
-      this.toasts.show({ icon: '🔔', title: event.title, text: event.body, route: event.route });
+      this.toasts.show({
+        icon: '🔔',
+        title: event.title,
+        text: event.body,
+        route: event.route,
+      });
       // Not in the quiet hours, not for a section kept off the computer (the server tells).
       if (event.system !== false) {
         this.notifyDesktop(event.title, event.body, event.route);
@@ -63,7 +76,7 @@ export class RealtimeNotifier {
       desktopNotificationsOn() &&
       (document.hidden || !document.hasFocus())
     ) {
-      this.desktop.notify({ title, body, route });
+      this.desktop.notify({title, body, route});
     }
   }
 }

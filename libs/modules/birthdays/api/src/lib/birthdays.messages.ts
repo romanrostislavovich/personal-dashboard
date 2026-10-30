@@ -1,5 +1,5 @@
-import { pickMessages } from '@pd/api-core';
-import { UpcomingBirthday } from '@pd/contracts';
+import {pickMessages} from '@pd/api-core';
+import {UpcomingBirthday} from '@pd/contracts';
 
 /**
  * Notification texts; the language is picked by `user.locale`. The ones about someone who has
@@ -55,7 +55,9 @@ const messages = {
         ? `Завтра день памяти: ${b.name}`
         : `Через ${b.memorial?.daysUntil} ${pluralDaysRu(b.memorial?.daysUntil ?? 0)} ` +
           `(${formatDate(b.memorial?.nextDate)}) день памяти: ${b.name}`) +
-      (b.memorial?.years ? ` — ${yearsRu(b.memorial.years)} со дня смерти` : '') +
+      (b.memorial?.years
+        ? ` — ${yearsRu(b.memorial.years)} со дня смерти`
+        : '') +
       '.',
   },
 };
@@ -77,7 +79,8 @@ function yearsRu(n: number): string {
   const mod10 = n % 10;
   const mod100 = n % 100;
   if (mod10 === 1 && mod100 !== 11) return `${n} год`;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} года`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14))
+    return `${n} года`;
   return `${n} лет`;
 }
 

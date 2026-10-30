@@ -1,4 +1,4 @@
-import { Transaction, TransactionKind } from '@pd/contracts';
+import {Transaction, TransactionKind} from '@pd/contracts';
 
 /** What narrows a list of transactions for the assistant. */
 export interface TransactionFilter {
@@ -17,17 +17,18 @@ const plain = (text: string) =>
     .replace(/ł/gi, 'l')
     .toLowerCase();
 
-export function filterTransactions<T extends Pick<Transaction, 'kind' | 'category' | 'note'>>(
-  transactions: T[],
-  { kind, category, search }: TransactionFilter,
-): T[] {
+export function filterTransactions<
+  T extends Pick<Transaction, 'kind' | 'category' | 'note'>,
+>(transactions: T[], {kind, category, search}: TransactionFilter): T[] {
   const wanted = category && plain(category.trim());
   const part = search && plain(search.trim());
   return transactions.filter(
-    (t) =>
+    t =>
       (!kind || t.kind === kind) &&
       (!wanted || plain(t.category) === wanted) &&
-      (!part || plain(t.note ?? '').includes(part) || plain(t.category).includes(part)),
+      (!part ||
+        plain(t.note ?? '').includes(part) ||
+        plain(t.category).includes(part)),
   );
 }
 
@@ -47,7 +48,10 @@ const round = (value: number) => Math.round(value * 100) / 100;
 
 /** Every category with what went through it — all of them, the largest first. */
 export function totalsByCategory(
-  transactions: Pick<Transaction, 'kind' | 'category' | 'amount' | 'currency' | 'mainAmount'>[],
+  transactions: Pick<
+    Transaction,
+    'kind' | 'category' | 'amount' | 'currency' | 'mainAmount'
+  >[],
 ): CategoryTotal[] {
   const totals = new Map<string, CategoryTotal>();
   for (const t of transactions) {
@@ -61,7 +65,9 @@ export function totalsByCategory(
       unconverted: 0,
     };
     total.count += 1;
-    total.amounts[t.currency] = round((total.amounts[t.currency] ?? 0) + t.amount);
+    total.amounts[t.currency] = round(
+      (total.amounts[t.currency] ?? 0) + t.amount,
+    );
     if (t.mainAmount === null) {
       total.unconverted += 1;
     } else {

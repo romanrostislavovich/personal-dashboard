@@ -1,12 +1,12 @@
-import { telemetryApi } from '@pd/client-core';
-import { TelemetryBucket, telemetryBucketSchema } from '@pd/contracts';
-import { safeKnowledgeMetadata } from '../shared/knowledge-meta';
+import {telemetryApi} from '@pd/client-core';
+import {TelemetryBucket, telemetryBucketSchema} from '@pd/contracts';
+import {safeKnowledgeMetadata} from '../shared/knowledge-meta';
 import {
   allowedTelemetryUrl,
   boundedTelemetryQueue,
   telemetrySenderAllowed,
 } from '../shared/telemetry-gates';
-import { serverUrl, signedInClient } from './account';
+import {serverUrl, signedInClient} from './account';
 import {
   clearTelemetryConsent,
   TELEMETRY_CONSENT,
@@ -38,7 +38,10 @@ export function invalidateEngagement(): void {
 
 export async function scheduleTelemetry(): Promise<void> {
   if (!(await chrome.alarms.get(TELEMETRY_ALARM))) {
-    await chrome.alarms.create(TELEMETRY_ALARM, { delayInMinutes: 5, periodInMinutes: 5 });
+    await chrome.alarms.create(TELEMETRY_ALARM, {
+      delayInMinutes: 5,
+      periodInMinutes: 5,
+    });
   }
 }
 
@@ -47,19 +50,26 @@ async function identity() {
   const user = await client.offlineUser();
   const server = await serverUrl();
   if (!user?.id || !server) throw new Error('No telemetry identity');
-  return { client, owner: JSON.stringify([server, user.id]) };
+  return {client, owner: JSON.stringify([server, user.id])};
 }
 
 async function consent(): Promise<Consent | null> {
-  const value = object((await chrome.storage.local.get(TELEMETRY_CONSENT))[TELEMETRY_CONSENT]);
-  if (!value || typeof value.owner !== 'string' || typeof value.epoch !== 'string') return null;
+  const value = object(
+    (await chrome.storage.local.get(TELEMETRY_CONSENT))[TELEMETRY_CONSENT],
+  );
+  if (
+    !value ||
+    typeof value.owner !== 'string' ||
+    typeof value.epoch !== 'string'
+  )
+    return null;
   const account = await identity().catch(() => null);
   if (account?.owner !== value.owner) {
     await clearTelemetryConsent();
     invalidateEngagement();
     return null;
   }
-  return { owner: value.owner, epoch: value.epoch };
+  return {owner: value.owner, epoch: value.epoch};
 }
 
 function object(value: unknown): Record<string, unknown> {
@@ -68,26 +78,39 @@ function object(value: unknown): Record<string, unknown> {
     : {};
 }
 
-export async function exclusions(): Promise<{ excluded: string[]; privateWords: string[] }> {
-  const values = await chrome.storage.local.get([TELEMETRY_EXCLUDED, 'neverSave', 'browserConfig']);
+export async function exclusions(): Promise<{
+  excluded: string[];
+  privateWords: string[];
+}> {
+  const values = await chrome.storage.local.get([
+    TELEMETRY_EXCLUDED,
+    'neverSave',
+    'browserConfig',
+  ]);
   const strings = (value: unknown): string[] =>
     Array.isArray(value)
       ? value
           .filter((item): item is string => typeof item === 'string')
-          .map((item) => item.toLowerCase())
+          .map(item => item.toLowerCase())
       : [];
   return {
-    excluded: [...strings(values[TELEMETRY_EXCLUDED]), ...strings(values['neverSave'])],
+    excluded: [
+      ...strings(values[TELEMETRY_EXCLUDED]),
+      ...strings(values['neverSave']),
+    ],
     privateWords: strings(object(values['browserConfig']).privateWords),
   };
 }
 
-export function telemetrySettings(url?: string): Promise<{ enabled: boolean; excluded: boolean }> {
+export function telemetrySettings(
+  url?: string,
+): Promise<{enabled: boolean; excluded: boolean}> {
   return telemetryExclusive(async () => {
     const rules = await exclusions();
     return {
       enabled: !!(await consent()),
-      excluded: !!url && !allowedTelemetryUrl(url, rules.excluded, rules.privateWords),
+      excluded:
+        !!url && !allowedTelemetryUrl(url, rules.excluded, rules.privateWords),
     };
   });
 }
@@ -97,28 +120,36 @@ export function setTelemetryConsent(enabled: boolean): Promise<void> {
   return telemetryExclusive(async () => {
     await clearTelemetryConsent();
     if (enabled) {
-      const { owner } = await identity();
+      const {owner} = await identity();
       await chrome.storage.local.set({
-        [TELEMETRY_CONSENT]: { owner, epoch: crypto.randomUUID() },
+        [TELEMETRY_CONSENT]: {owner, epoch: crypto.randomUUID()},
       });
     }
     await resetPages();
   });
 }
 
-export function excludeTelemetrySite(url: string, excluded: boolean): Promise<void> {
+export function excludeTelemetrySite(
+  url: string,
+  excluded: boolean,
+): Promise<void> {
   invalidateEngagement();
   return telemetryExclusive(async () => {
     const host = new URL(url).hostname;
-    const values = (await chrome.storage.local.get(TELEMETRY_EXCLUDED))[TELEMETRY_EXCLUDED];
+    const values = (await chrome.storage.local.get(TELEMETRY_EXCLUDED))[
+      TELEMETRY_EXCLUDED
+    ];
     const sites: string[] = Array.isArray(values)
       ? values.filter((site): site is string => typeof site === 'string')
       : [];
     const updated = [
-      ...new Set([...sites.filter((site) => site !== host), ...(excluded ? [host] : [])]),
+      ...new Set([
+        ...sites.filter(site => site !== host),
+        ...(excluded ? [host] : []),
+      ]),
     ];
     if (updated.length > 200) throw new Error('Too many excluded sites');
-    await chrome.storage.local.set({ [TELEMETRY_EXCLUDED]: updated });
+    await chrome.storage.local.set({[TELEMETRY_EXCLUDED]: updated});
     // A privacy change discards pending aggregates instead of risking an excluded upload.
     await chrome.storage.session.remove(TELEMETRY_QUEUE);
     await resetPages();
@@ -128,10 +159,12 @@ export function excludeTelemetrySite(url: string, excluded: boolean): Promise<vo
 async function resetPages(): Promise<void> {
   const tabs = await chrome.tabs.query({});
   await Promise.all(
-    tabs.map((tab) =>
+    tabs.map(tab =>
       tab.id === undefined
         ? undefined
-        : chrome.tabs.sendMessage(tab.id, { type: 'telemetry-reset' }).catch(() => undefined),
+        : chrome.tabs
+            .sendMessage(tab.id, {type: 'telemetry-reset'})
+            .catch(() => undefined),
     ),
   );
 }
@@ -139,7 +172,7 @@ async function resetPages(): Promise<void> {
 export function receiveEngagement(
   report: unknown,
   sender: chrome.runtime.MessageSender,
-): Promise<{ lease: string } | null> {
+): Promise<{lease: string} | null> {
   return telemetryExclusive(async () => {
     const before = revision;
     const permission = await consent();
@@ -157,12 +190,22 @@ export function receiveEngagement(
     const rules = await exclusions();
     if (
       before !== revision ||
-      !telemetrySenderAllowed(sender, tab, chrome.runtime.id, window.focused, idle === 'active')
+      !telemetrySenderAllowed(
+        sender,
+        tab,
+        chrome.runtime.id,
+        window.focused,
+        idle === 'active',
+      )
     ) {
       invalidateEngagement();
       return null;
     }
-    const url = allowedTelemetryUrl(tab.url, rules.excluded, rules.privateWords);
+    const url = allowedTelemetryUrl(
+      tab.url,
+      rules.excluded,
+      rules.privateWords,
+    );
     if (!url) {
       invalidateEngagement();
       return null;
@@ -191,7 +234,7 @@ export function receiveEngagement(
     }
     if (before !== revision) return null;
     lease = next;
-    return { lease: lease.token };
+    return {lease: lease.token};
   });
 }
 
@@ -222,17 +265,22 @@ function engagementBucket(
       scrollDepthPercent: candidate['scrollDepthPercent'],
       copyCount: candidate['copyCount'],
     },
-    page: { url: next.url, ...safeKnowledgeMetadata(candidate['metadata']) },
+    page: {url: next.url, ...safeKnowledgeMetadata(candidate['metadata'])},
   });
   return parsed.success &&
-    ((parsed.data.metrics.readingSeconds ?? 0) > 0 || (parsed.data.metrics.copyCount ?? 0) > 0)
+    ((parsed.data.metrics.readingSeconds ?? 0) > 0 ||
+      (parsed.data.metrics.copyCount ?? 0) > 0)
     ? parsed.data
     : null;
 }
 
 async function readQueue(permission: Consent): Promise<TelemetryBucket[]> {
-  const value = object((await chrome.storage.session.get(TELEMETRY_QUEUE))[TELEMETRY_QUEUE]);
-  return value.epoch === permission.epoch ? boundedTelemetryQueue(value.buckets, Date.now()) : [];
+  const value = object(
+    (await chrome.storage.session.get(TELEMETRY_QUEUE))[TELEMETRY_QUEUE],
+  );
+  return value.epoch === permission.epoch
+    ? boundedTelemetryQueue(value.buckets, Date.now())
+    : [];
 }
 
 export function uploadTelemetry(): Promise<void> {
@@ -244,12 +292,19 @@ export function uploadTelemetry(): Promise<void> {
     }
     const rules = await exclusions();
     const buckets = (await readQueue(permission)).filter(
-      (bucket) =>
-        !!bucket.page && allowedTelemetryUrl(bucket.page.url, rules.excluded, rules.privateWords),
+      bucket =>
+        !!bucket.page &&
+        allowedTelemetryUrl(
+          bucket.page.url,
+          rules.excluded,
+          rules.privateWords,
+        ),
     );
-    await chrome.storage.session.set({ [TELEMETRY_QUEUE]: { epoch: permission.epoch, buckets } });
+    await chrome.storage.session.set({
+      [TELEMETRY_QUEUE]: {epoch: permission.epoch, buckets},
+    });
     if (!buckets.length) return;
-    const { client, owner } = await identity();
+    const {client, owner} = await identity();
     if (owner !== permission.owner) {
       await clearTelemetryConsent();
       return;

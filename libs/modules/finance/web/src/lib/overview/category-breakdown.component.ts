@@ -1,9 +1,15 @@
-import { CurrencyPipe, PercentPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { categoryIcon } from './category-icon';
-import { CategoryFilter, CategoryShare } from './finance-stats';
+import {CurrencyPipe, PercentPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  output,
+} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {categoryIcon} from './category-icon';
+import {CategoryFilter, CategoryShare} from './finance-stats';
 
 /**
  * Where the money went: categories from the largest, each with its share of the month.
@@ -18,16 +24,24 @@ import { CategoryFilter, CategoryShare } from './finance-stats';
     @for (row of rows(); track row.category) {
       <button type="button" class="row" (click)="select(row)">
         <span class="avatar"
-          ><mat-icon>{{ row.category === null ? 'more_horiz' : row.icon }}</mat-icon></span
+          ><mat-icon>{{
+            row.category === null ? 'more_horiz' : row.icon
+          }}</mat-icon></span
         >
         <span class="body">
           <span class="line">
-            <span class="name">{{ row.category ?? ('finance.categories.other' | transloco) }}</span>
+            <span class="name">{{
+              row.category ?? ('finance.categories.other' | transloco)
+            }}</span>
             <span class="amount">{{ row.amount | currency: currency() }}</span>
           </span>
-          <span class="track"><span class="fill" [style.width.%]="row.width"></span></span>
+          <span class="track"
+            ><span class="fill" [style.width.%]="row.width"></span
+          ></span>
           <span class="line meta">
-            <span>{{ 'finance.categories.count' | transloco: { count: row.count } }}</span>
+            <span>{{
+              'finance.categories.count' | transloco: {count: row.count}
+            }}</span>
             <span>{{ row.share | percent }}</span>
           </span>
         </span>
@@ -119,12 +133,16 @@ export class CategoryBreakdownComponent {
 
   /** The breakdown is of expenses, so the list shows the expenses it counted. */
   protected select(row: CategoryShare): void {
-    this.selectCategory.emit({ label: row.category, categories: row.categories, kind: 'expense' });
+    this.selectCategory.emit({
+      label: row.category,
+      categories: row.categories,
+      kind: 'expense',
+    });
   }
 
   protected readonly rows = computed(() => {
-    const max = Math.max(...this.shares().map((s) => s.amount), 0) || 1;
-    return this.shares().map((share) => ({
+    const max = Math.max(...this.shares().map(s => s.amount), 0) || 1;
+    return this.shares().map(share => ({
       ...share,
       icon: categoryIcon(share.category, 'expense'),
       // The largest category fills the track: differences between the rest stay visible.

@@ -1,23 +1,32 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Reminder, Repeat } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { localInputValue, momentOf, nextHour } from '../local-time';
-import { RepeatFieldComponent } from '../repeat-field.component';
-import { TasksApi } from '../tasks.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {Reminder, Repeat} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {localInputValue, momentOf, nextHour} from '../local-time';
+import {RepeatFieldComponent} from '../repeat-field.component';
+import {TasksApi} from '../tasks.api';
 
 /** What the dialog is opened for. */
 export type ReminderDialogData =
   /** A new reminder, maybe about a task. */
-  | { mode: 'new'; text?: string; taskId?: string }
+  | {mode: 'new'; text?: string; taskId?: string}
   /** Another time for a reminder that went off (or is still waiting). */
-  | { mode: 'snooze'; reminder: Reminder }
-  | { mode: 'edit'; reminder: Reminder };
+  | {mode: 'snooze'; reminder: Reminder}
+  | {mode: 'edit'; reminder: Reminder};
 
 /**
  * One dialog for a reminder: a new one, an edit, or "remind me later" — the day and the time
@@ -36,7 +45,9 @@ export type ReminderDialogData =
     RepeatFieldComponent,
   ],
   template: `
-    <h2 mat-dialog-title>{{ 'tasks.reminders.dialog.' + data.mode | transloco }}</h2>
+    <h2 mat-dialog-title>
+      {{ 'tasks.reminders.dialog.' + data.mode | transloco }}
+    </h2>
     <mat-dialog-content class="form">
       @if (data.mode !== 'snooze') {
         <mat-form-field>
@@ -55,8 +66,14 @@ export type ReminderDialogData =
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button matButton mat-dialog-close>{{ 'core.actions.cancel' | transloco }}</button>
-      <button matButton="filled" [disabled]="!valid() || saving()" (click)="save()">
+      <button matButton mat-dialog-close>
+        {{ 'core.actions.cancel' | transloco }}
+      </button>
+      <button
+        matButton="filled"
+        [disabled]="!valid() || saving()"
+        (click)="save()"
+      >
         {{ 'core.actions.save' | transloco }}
       </button>
     </mat-dialog-actions>
@@ -77,17 +94,24 @@ export type ReminderDialogData =
 export class ReminderFormDialog {
   protected readonly data = inject<ReminderDialogData>(MAT_DIALOG_DATA);
   private readonly api = inject(TasksApi);
-  private readonly dialogRef = inject(MatDialogRef<ReminderFormDialog, boolean>);
+  private readonly dialogRef = inject(
+    MatDialogRef<ReminderFormDialog, boolean>,
+  );
 
-  private readonly existing = this.data.mode === 'new' ? null : this.data.reminder;
+  private readonly existing =
+    this.data.mode === 'new' ? null : this.data.reminder;
   protected readonly text = signal(
     this.data.mode === 'new' ? (this.data.text ?? '') : this.data.reminder.text,
   );
   /** A snooze starts from the next hour; an edit — from the time it has. */
   protected readonly when = signal(
-    this.data.mode === 'edit' ? localInputValue(new Date(this.data.reminder.remindAt)) : nextHour(),
+    this.data.mode === 'edit'
+      ? localInputValue(new Date(this.data.reminder.remindAt))
+      : nextHour(),
   );
-  protected readonly repeat = signal<Repeat | null>(this.existing?.repeat ?? null);
+  protected readonly repeat = signal<Repeat | null>(
+    this.existing?.repeat ?? null,
+  );
   protected readonly saving = signal(false);
 
   protected valid(): boolean {
@@ -114,7 +138,9 @@ export class ReminderFormDialog {
           );
           break;
         case 'snooze':
-          await firstValueFrom(this.api.snoozeReminder(this.data.reminder.id, remindAt));
+          await firstValueFrom(
+            this.api.snoozeReminder(this.data.reminder.id, remindAt),
+          );
           break;
         case 'edit':
           await firstValueFrom(

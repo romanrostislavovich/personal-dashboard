@@ -1,4 +1,4 @@
-import { WritingIssue } from './writing';
+import {WritingIssue} from './writing';
 
 /** A piece of the text, plain or a mistake, for the marks behind the editor. */
 export interface TextPiece {
@@ -16,13 +16,16 @@ export function pieces(text: string, issues: WritingIssue[]): TextPiece[] {
       continue;
     }
     if (issue.offset > at) {
-      result.push({ text: text.slice(at, issue.offset), issue: null });
+      result.push({text: text.slice(at, issue.offset), issue: null});
     }
-    result.push({ text: text.slice(issue.offset, issue.offset + issue.length), issue });
+    result.push({
+      text: text.slice(issue.offset, issue.offset + issue.length),
+      issue,
+    });
     at = issue.offset + issue.length;
   }
   if (at < text.length) {
-    result.push({ text: text.slice(at), issue: null });
+    result.push({text: text.slice(at), issue: null});
   }
   return result;
 }
@@ -36,19 +39,21 @@ export function applyFix(
   issues: WritingIssue[],
   fixed: WritingIssue,
   replacement: string,
-): { text: string; issues: WritingIssue[] } {
+): {text: string; issues: WritingIssue[]} {
   const end = fixed.offset + fixed.length;
   const shift = replacement.length - fixed.length;
   return {
     text: text.slice(0, fixed.offset) + replacement + text.slice(end),
-    issues: issues.flatMap((issue) => {
+    issues: issues.flatMap(issue => {
       if (issue === fixed) {
         return [];
       }
       if (issue.offset + issue.length <= fixed.offset) {
         return [issue];
       }
-      return issue.offset >= end ? [{ ...issue, offset: issue.offset + shift }] : [];
+      return issue.offset >= end
+        ? [{...issue, offset: issue.offset + shift}]
+        : [];
     }),
   };
 }

@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {Inject, Injectable, Logger, NotFoundException} from '@nestjs/common';
 import {
   AiService,
   AutomationsService,
@@ -17,17 +17,17 @@ import {
   wishInputSchema,
   WishPricePoint,
 } from '@pd/contracts';
-import { and, asc, desc, eq, isNotNull, isNull, max, min } from 'drizzle-orm';
-import { z } from 'zod';
-import { BudgetsService } from '../budgets/budgets.service';
-import { ExchangeRatesService } from '../currency/exchange-rates.service';
-import { FinanceSettingsService } from '../currency/finance-settings.service';
-import { financeMessages } from '../finance.messages';
-import { WishRow, wishes, wishPrices } from '../finance.schema';
-import { RecurringPaymentsService } from '../recurring/recurring-payments.service';
-import { TransactionsService } from '../transactions/transactions.service';
-import { againstBudget } from './affordable';
-import { fetchPage } from './fetch-page';
+import {and, asc, desc, eq, isNotNull, isNull, max, min} from 'drizzle-orm';
+import {z} from 'zod';
+import {BudgetsService} from '../budgets/budgets.service';
+import {ExchangeRatesService} from '../currency/exchange-rates.service';
+import {FinanceSettingsService} from '../currency/finance-settings.service';
+import {financeMessages} from '../finance.messages';
+import {WishRow, wishes, wishPrices} from '../finance.schema';
+import {RecurringPaymentsService} from '../recurring/recurring-payments.service';
+import {TransactionsService} from '../transactions/transactions.service';
+import {againstBudget} from './affordable';
+import {fetchPage} from './fetch-page';
 
 type ValidWishInput = z.output<typeof wishInputSchema>;
 
@@ -92,10 +92,12 @@ export class WishlistService {
       .where(eq(wishPrices.userId, userId))
       .groupBy(wishPrices.wishId, wishPrices.currency);
     const money = await this.money(userId, rows);
-    return rows.map((row) => ({
+    return rows.map(row => ({
       ...toWish(
         row,
-        ranges.find((range) => range.wishId === row.id && range.currency === row.currency),
+        ranges.find(
+          range => range.wishId === row.id && range.currency === row.currency,
+        ),
       ),
       ...money(row),
     }));
@@ -109,20 +111,28 @@ export class WishlistService {
     userId: string,
     rows: WishRow[],
   ): Promise<(row: WishRow) => Pick<Wish, 'budget'>> {
-    const wanted = rows.filter((row) => !row.boughtAt && row.price !== null && row.currency);
+    const wanted = rows.filter(
+      row => !row.boughtAt && row.price !== null && row.currency,
+    );
     if (!wanted.length) {
-      return () => ({ budget: null });
+      return () => ({budget: null});
     }
     const today = toLocalDate(this.recurring.today());
     const [total] = (await this.budgets.list(userId, today.slice(0, 7))).filter(
-      (budget) => budget.category === BUDGET_TOTAL,
+      budget => budget.category === BUDGET_TOTAL,
     );
     const priceIn = async (row: WishRow, currency: string) =>
       row.currency === currency
         ? row.price
         : ((
             await this.rates.convert(
-              [{ amount: row.price ?? 0, currency: row.currency ?? currency, day: today }],
+              [
+                {
+                  amount: row.price ?? 0,
+                  currency: row.currency ?? currency,
+                  day: today,
+                },
+              ],
               currency,
             )
           ).values[0] ?? null);
@@ -130,10 +140,12 @@ export class WishlistService {
     const found = new Map<string, Pick<Wish, 'budget'>>();
     for (const row of wanted) {
       found.set(row.id, {
-        budget: total ? againstBudget(await priceIn(row, total.currency), total) : null,
+        budget: total
+          ? againstBudget(await priceIn(row, total.currency), total)
+          : null,
       });
     }
-    return (row) => found.get(row.id) ?? { budget: null };
+    return row => found.get(row.id) ?? {budget: null};
   }
 
   /** The price day by day, in the currency the wish has now. */
@@ -143,9 +155,11 @@ export class WishlistService {
       return [];
     }
     return this.db
-      .select({ day: wishPrices.day, price: wishPrices.price })
+      .select({day: wishPrices.day, price: wishPrices.price})
       .from(wishPrices)
-      .where(and(eq(wishPrices.wishId, id), eq(wishPrices.currency, row.currency)))
+      .where(
+        and(eq(wishPrices.wishId, id), eq(wishPrices.currency, row.currency)),
+      )
       .orderBy(asc(wishPrices.day));
   }
 
@@ -166,13 +180,22 @@ export class WishlistService {
       .returning();
     const price = reading.price ?? input.price ?? null;
     if (price !== null) {
-      const currency = reading.price !== null ? reading.currency : input.currency;
-      await this.setPrice(row, price, currency ?? (await this.settings.mainCurrency(userId)));
+      const currency =
+        reading.price !== null ? reading.currency : input.currency;
+      await this.setPrice(
+        row,
+        price,
+        currency ?? (await this.settings.mainCurrency(userId)),
+      );
     }
     return this.get(userId, row.id);
   }
 
-  async update(userId: string, id: string, input: ValidWishInput): Promise<Wish> {
+  async update(
+    userId: string,
+    id: string,
+    input: ValidWishInput,
+  ): Promise<Wish> {
     const row = await this.row(userId, id);
     await this.db
       .update(wishes)
@@ -181,11 +204,17 @@ export class WishlistService {
         name: input.name || row.name,
         // Left out — as it was (the extension sends only a price seen); `null` — cleared.
         note: input.note === undefined ? row.note : input.note || null,
-        recipient: input.recipient === undefined ? row.recipient : input.recipient || null,
+        recipient:
+          input.recipient === undefined
+            ? row.recipient
+            : input.recipient || null,
       })
       .where(and(eq(wishes.id, id), eq(wishes.userId, userId)));
-    if (input.price != null) {
-      const currency = input.currency ?? row.currency ?? (await this.settings.mainCurrency(userId));
+    if (input.price !== null && input.price !== undefined) {
+      const currency =
+        input.currency ??
+        row.currency ??
+        (await this.settings.mainCurrency(userId));
       if (input.price !== row.price || currency !== row.currency) {
         await this.setPrice(row, input.price, currency);
       }
@@ -194,7 +223,9 @@ export class WishlistService {
   }
 
   async remove(userId: string, id: string): Promise<void> {
-    await this.db.delete(wishes).where(and(eq(wishes.id, id), eq(wishes.userId, userId)));
+    await this.db
+      .delete(wishes)
+      .where(and(eq(wishes.id, id), eq(wishes.userId, userId)));
   }
 
   /**
@@ -202,13 +233,24 @@ export class WishlistService {
    * purchase also becomes an expense of today at the wish's price — once: a wish that is
    * bought already is not recorded again.
    */
-  async setBought(userId: string, id: string, bought: boolean, record = false): Promise<Wish> {
+  async setBought(
+    userId: string,
+    id: string,
+    bought: boolean,
+    record = false,
+  ): Promise<Wish> {
     const row = await this.row(userId, id);
     await this.db
       .update(wishes)
-      .set({ boughtAt: bought ? new Date() : null })
+      .set({boughtAt: bought ? new Date() : null})
       .where(and(eq(wishes.id, id), eq(wishes.userId, userId)));
-    if (bought && record && !row.boughtAt && row.price !== null && row.currency) {
+    if (
+      bought &&
+      record &&
+      !row.boughtAt &&
+      row.price !== null &&
+      row.currency
+    ) {
       await this.transactions.create(userId, {
         kind: 'expense',
         amount: row.price,
@@ -222,7 +264,10 @@ export class WishlistService {
   }
 
   /** The gift ideas for the people of these names (lower case): the wishes not bought yet. */
-  async giftIdeas(userId: string, names: string[]): Promise<Map<string, Wish[]>> {
+  async giftIdeas(
+    userId: string,
+    names: string[],
+  ): Promise<Map<string, Wish[]>> {
     const ideas = new Map<string, Wish[]>();
     for (const wish of await this.list(userId)) {
       const name = wish.recipient?.trim().toLowerCase();
@@ -241,7 +286,10 @@ export class WishlistService {
 
   /** The daily check of everything still wanted, of every user. */
   async checkAll(): Promise<void> {
-    const rows = await this.db.select().from(wishes).where(isNull(wishes.boughtAt));
+    const rows = await this.db
+      .select()
+      .from(wishes)
+      .where(isNull(wishes.boughtAt));
     for (const row of rows) {
       try {
         await this.checkRow(row);
@@ -263,7 +311,9 @@ export class WishlistService {
       .where(eq(wishes.id, row.id));
     if (reading.price !== null) {
       const currency =
-        reading.currency ?? row.currency ?? (await this.settings.mainCurrency(row.userId));
+        reading.currency ??
+        row.currency ??
+        (await this.settings.mainCurrency(row.userId));
       await this.setPrice(row, reading.price, currency, true);
     }
   }
@@ -272,10 +322,19 @@ export class WishlistService {
   private async read(userId: string, url: string): Promise<Reading> {
     const page = await fetchPage(url);
     if ('error' in page) {
-      return { name: null, image: null, price: null, currency: null, error: page.error };
+      return {
+        name: null,
+        image: null,
+        price: null,
+        currency: null,
+        error: page.error,
+      };
     }
     const info = readProductPage(page.html);
-    const found = info.price !== null ? info : ((await this.askAi(userId, page.html)) ?? info);
+    const found =
+      info.price !== null
+        ? info
+        : ((await this.askAi(userId, page.html)) ?? info);
     return {
       name: info.name,
       image: info.image,
@@ -286,14 +345,19 @@ export class WishlistService {
   }
 
   private async askAi(userId: string, html: string) {
-    if (!(await this.ai.isConfigured(userId)) || !(await this.ai.canSee(userId, 'finance'))) {
+    if (
+      !(await this.ai.isConfigured(userId)) ||
+      !(await this.ai.canSee(userId, 'finance'))
+    ) {
       return null;
     }
     try {
       const text = pageText(html, AI_TEXT_LIMIT);
       // Reading a name and a price off a page: light work.
       return parseAiProduct(
-        await this.ai.complete(userId, AI_INSTRUCTION, text, 'finance', { light: true }),
+        await this.ai.complete(userId, AI_INSTRUCTION, text, 'finance', {
+          light: true,
+        }),
       );
     } catch (error) {
       this.logger.warn(`The AI did not read a product page: ${String(error)}`);
@@ -313,10 +377,12 @@ export class WishlistService {
   ): Promise<void> {
     const sameCurrency = row.currency === currency;
     const changed = sameCurrency && row.price !== null && row.price !== price;
-    const [{ lowest }] = await this.db
-      .select({ lowest: min(wishPrices.price).mapWith(Number) })
+    const [{lowest}] = await this.db
+      .select({lowest: min(wishPrices.price).mapWith(Number)})
       .from(wishPrices)
-      .where(and(eq(wishPrices.wishId, row.id), eq(wishPrices.currency, currency)));
+      .where(
+        and(eq(wishPrices.wishId, row.id), eq(wishPrices.currency, currency)),
+      );
 
     await this.db
       .update(wishes)
@@ -324,20 +390,30 @@ export class WishlistService {
         price,
         currency,
         // Prices in another currency are not compared.
-        previousPrice: changed ? row.price : sameCurrency ? row.previousPrice : null,
+        previousPrice: changed
+          ? row.price
+          : sameCurrency
+            ? row.previousPrice
+            : null,
       })
       .where(eq(wishes.id, row.id));
     const day = toLocalDate(this.recurring.today());
     await this.db
       .insert(wishPrices)
-      .values({ userId: row.userId, wishId: row.id, day, price, currency })
+      .values({userId: row.userId, wishId: row.id, day, price, currency})
       .onConflictDoUpdate({
         target: [wishPrices.wishId, wishPrices.day],
-        set: { price, currency },
+        set: {price, currency},
       });
 
     if (changed && notify && row.price !== null) {
-      await this.tell(row, row.price, price, currency, lowest !== null && price < lowest);
+      await this.tell(
+        row,
+        row.price,
+        price,
+        currency,
+        lowest !== null && price < lowest,
+      );
     }
   }
 
@@ -348,13 +424,18 @@ export class WishlistService {
     currency: string,
     isLowest: boolean,
   ): Promise<void> {
-    const text = financeMessages((await this.users.findById(row.userId))?.locale ?? 'en');
+    const text = financeMessages(
+      (await this.users.findById(row.userId))?.locale ?? 'en',
+    );
     await this.notifications.send(row.userId, {
-      title: now < was ? text.wishCheaperTitle(row.name) : text.wishPricierTitle(row.name),
+      title:
+        now < was
+          ? text.wishCheaperTitle(row.name)
+          : text.wishPricierTitle(row.name),
       body: text.wishPriceBody(was, now, currency, isLowest, row.url),
       source: 'finance',
       // A price that jumps back and forth is told once in a while, not at every check.
-      dedupe: { key: `finance.wish-price:${row.id}`, minutes: 12 * 60 },
+      dedupe: {key: `finance.wish-price:${row.id}`, minutes: 12 * 60},
     });
     await this.automations.emit(row.userId, 'finance.wish-price', {
       direction: now < was ? 'down' : 'up',
@@ -367,7 +448,7 @@ export class WishlistService {
   }
 
   private async get(userId: string, id: string): Promise<Wish> {
-    const wish = (await this.list(userId)).find((item) => item.id === id);
+    const wish = (await this.list(userId)).find(item => item.id === id);
     if (!wish) {
       throw new NotFoundException();
     }
@@ -386,7 +467,7 @@ export class WishlistService {
   }
 }
 
-function toWish(row: WishRow, range?: { lowest: number; highest: number }): Wish {
+function toWish(row: WishRow, range?: {lowest: number; highest: number}): Wish {
   return {
     id: row.id,
     url: row.url,

@@ -1,4 +1,4 @@
-import { GithubLanguageShare, GithubTopRepo } from '@pd/contracts';
+import {GithubLanguageShare, GithubTopRepo} from '@pd/contracts';
 
 /** The account as the service shows it now. */
 export interface FetchedAccount {
@@ -17,7 +17,8 @@ export interface FetchedAccount {
   topRepos: GithubTopRepo[];
 }
 
-export type ActivityKind = 'commit' | 'pullRequest' | 'review' | 'issue' | 'other';
+export type ActivityKind =
+  'commit' | 'pullRequest' | 'review' | 'issue' | 'other';
 
 /** Something the user did: a push, an opened merge request, a comment. */
 export interface ActivityEvent {

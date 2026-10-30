@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {Inject, Injectable} from '@nestjs/common';
 import {
   BotActionReply,
   DB,
@@ -8,9 +8,9 @@ import {
   UserRow,
   UsersService,
 } from '@pd/api-core';
-import { and, eq, isNotNull, isNull, sql } from 'drizzle-orm';
-import { movieTitles, movieViews } from './movies.schema';
-import { moviesMessages } from './movies.messages';
+import {and, eq, isNotNull, isNull, sql} from 'drizzle-orm';
+import {movieTitles, movieViews} from './movies.schema';
+import {moviesMessages} from './movies.messages';
 
 /** The Telegram buttons: `mv:r:<title id>:<1–10>` rates, `mv:x:<title id>` — not finished. */
 export const MOVIE_ACTION = 'mv';
@@ -39,7 +39,7 @@ export class MovieQuestionService {
     const lastView = sql<Date>`(select max(${movieViews.endedAt}) from ${movieViews}
       where ${movieViews.titleId} = ${t.id} and not ${movieViews.dismissed})`;
     const due = await this.db
-      .select({ id: t.id, userId: t.userId, title: t.title })
+      .select({id: t.id, userId: t.userId, title: t.title})
       .from(t)
       .where(
         and(
@@ -55,9 +55,9 @@ export class MovieQuestionService {
       // Taken by this run only: another run (or instance) at the same minute gets nothing.
       const [claimed] = await this.db
         .update(t)
-        .set({ askedAt: now })
+        .set({askedAt: now})
         .where(and(eq(t.id, film.id), isNull(t.askedAt)))
-        .returning({ id: t.id });
+        .returning({id: t.id});
       if (!claimed) {
         continue;
       }
@@ -76,24 +76,32 @@ export class MovieQuestionService {
   async answer(user: UserRow, payload: string): Promise<BotActionReply> {
     const text = moviesMessages(user.locale);
     const [what, id, value] = payload.split(':');
-    const owned = and(eq(movieTitles.id, id ?? ''), eq(movieTitles.userId, user.id));
+    const owned = and(
+      eq(movieTitles.id, id ?? ''),
+      eq(movieTitles.userId, user.id),
+    );
     if (what === 'x') {
       const [row] = await this.db
         .update(movieTitles)
-        .set({ watchedOn: null, updatedAt: new Date() })
+        .set({watchedOn: null, updatedAt: new Date()})
         .where(owned)
-        .returning({ id: movieTitles.id });
+        .returning({id: movieTitles.id});
       return row ? text.unfinished : text.gone;
     }
     const rating = Number(value);
-    if (what !== 'r' || !Number.isInteger(rating) || rating < 1 || rating > 10) {
+    if (
+      what !== 'r' ||
+      !Number.isInteger(rating) ||
+      rating < 1 ||
+      rating > 10
+    ) {
       return text.gone;
     }
     const [row] = await this.db
       .update(movieTitles)
-      .set({ rating, updatedAt: new Date() })
+      .set({rating, updatedAt: new Date()})
       .where(owned)
-      .returning({ id: movieTitles.id, note: movieTitles.note });
+      .returning({id: movieTitles.id, note: movieTitles.note});
     if (!row) {
       return text.gone;
     }
@@ -106,8 +114,16 @@ export class MovieQuestionService {
         }
         await this.db
           .update(movieTitles)
-          .set({ note: row.note ? `${row.note}\n${note}` : note, updatedAt: new Date() })
-          .where(and(eq(movieTitles.id, row.id), eq(movieTitles.userId, answerer.id)));
+          .set({
+            note: row.note ? `${row.note}\n${note}` : note,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(movieTitles.id, row.id),
+              eq(movieTitles.userId, answerer.id),
+            ),
+          );
         return text.noted;
       },
     };
@@ -115,14 +131,17 @@ export class MovieQuestionService {
 }
 
 /** 1–5 and 6–10 as two rows, then "Did not finish" on a row of its own. */
-export function buttons(titleId: string, notFinished: string): NotificationAction[] {
+export function buttons(
+  titleId: string,
+  notFinished: string,
+): NotificationAction[] {
   const rate = (n: number): NotificationAction => ({
     label: String(n),
     action: `${MOVIE_ACTION}:r:${titleId}:${n}`,
-    ...(n === 1 || n === 6 ? { newRow: true } : {}),
+    ...(n === 1 || n === 6 ? {newRow: true} : {}),
   });
   return [
     ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(rate),
-    { label: notFinished, action: `${MOVIE_ACTION}:x:${titleId}`, newRow: true },
+    {label: notFinished, action: `${MOVIE_ACTION}:x:${titleId}`, newRow: true},
   ];
 }

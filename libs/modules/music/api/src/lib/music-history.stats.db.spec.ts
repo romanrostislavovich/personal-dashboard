@@ -1,15 +1,21 @@
-import { sql } from 'drizzle-orm';
-import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import { randomUUID } from 'node:crypto';
-import { join } from 'node:path';
-import { Pool } from 'pg';
-import { historyTopSchema, MusicHistoryQueryService } from './music-history.query';
-import { MusicHistoryStatsService } from './music-history.stats';
+import {sql} from 'drizzle-orm';
+import {drizzle, NodePgDatabase} from 'drizzle-orm/node-postgres';
+import {migrate} from 'drizzle-orm/node-postgres/migrator';
+import {randomUUID} from 'node:crypto';
+import {join} from 'node:path';
+import {Pool} from 'pg';
+import {
+  historyTopSchema,
+  MusicHistoryQueryService,
+} from './music-history.query';
+import {MusicHistoryStatsService} from './music-history.stats';
 
 /** Needs PostgreSQL, see `sync-store.db.spec.ts` in api-core for how to run it. */
 const ADMIN_URL = process.env['TEST_DATABASE_URL'];
-const MIGRATIONS = join(import.meta.dirname, '../../../../../../apps/api/migrations');
+const MIGRATIONS = join(
+  import.meta.dirname,
+  '../../../../../../apps/api/migrations',
+);
 const DB_NAME = `music_stats_test_${process.pid}`;
 
 describe.skipIf(!ADMIN_URL)('MusicHistoryStatsService', () => {
@@ -27,23 +33,33 @@ describe.skipIf(!ADMIN_URL)('MusicHistoryStatsService', () => {
   };
 
   /** `at` is UTC; the service counts days in Europe/Warsaw (UTC+2 in summer). */
-  const play = (userId: string, at: string, artist: string, track: string, album = '') =>
+  const play = (
+    userId: string,
+    at: string,
+    artist: string,
+    track: string,
+    album = '',
+  ) =>
     db.execute(sql`INSERT INTO music_scrobbles (user_id, played_at, artist, track, album)
       VALUES (${userId}, ${at}::timestamptz, ${artist}, ${track}, ${album})`);
 
   beforeAll(async () => {
-    admin = new Pool({ connectionString: ADMIN_URL });
+    admin = new Pool({connectionString: ADMIN_URL});
     await admin.query(`DROP DATABASE IF EXISTS ${DB_NAME} WITH (FORCE)`);
     await admin.query(`CREATE DATABASE ${DB_NAME}`);
     const url = new URL(ADMIN_URL as string);
     url.pathname = `/${DB_NAME}`;
-    pool = new Pool({ connectionString: url.toString() });
+    pool = new Pool({connectionString: url.toString()});
     // A connection closed by the database at the end must not become an unhandled error.
     pool.on('error', () => undefined);
-    db = drizzle({ client: pool, casing: 'snake_case' });
-    await migrate(db, { migrationsFolder: MIGRATIONS });
-    service = new MusicHistoryStatsService(db, { get: () => 'Europe/Warsaw' } as never);
-    history = new MusicHistoryQueryService(db, { get: () => 'Europe/Warsaw' } as never);
+    db = drizzle({client: pool, casing: 'snake_case'});
+    await migrate(db, {migrationsFolder: MIGRATIONS});
+    service = new MusicHistoryStatsService(db, {
+      get: () => 'Europe/Warsaw',
+    } as never);
+    history = new MusicHistoryQueryService(db, {
+      get: () => 'Europe/Warsaw',
+    } as never);
   }, 60_000);
 
   afterAll(async () => {
@@ -92,8 +108,18 @@ describe.skipIf(!ADMIN_URL)('MusicHistoryStatsService', () => {
         ['2024-03-01T10:00:00Z', 'Muse', 'Hysteria', 'Absolution'],
         ['2024-03-02T10:00:00Z', 'Muse', 'Hysteria', 'Absolution'],
         ['2025-06-01T10:00:00Z', 'Muse', 'Hysteria', 'Absolution'],
-        ['2024-03-03T10:00:00Z', 'Muse', 'Starlight', 'Black Holes and Revelations'],
-        ['2025-06-02T10:00:00Z', 'Muse', 'Starlight', 'Black Holes and Revelations'],
+        [
+          '2024-03-03T10:00:00Z',
+          'Muse',
+          'Starlight',
+          'Black Holes and Revelations',
+        ],
+        [
+          '2025-06-02T10:00:00Z',
+          'Muse',
+          'Starlight',
+          'Black Holes and Revelations',
+        ],
         ['2025-06-03T10:00:00Z', 'Muse', 'Uprising'],
         ['2024-03-04T10:00:00Z', 'The Beatles', 'Yesterday', 'Help!'],
         // 23:30 UTC on Dec 31 is already Jan 1 in Warsaw.
@@ -103,13 +129,19 @@ describe.skipIf(!ADMIN_URL)('MusicHistoryStatsService', () => {
         await play(userId, at, artist, track, album);
       }
       // Another user's plays never get into the answer.
-      await play(await addUser(), '2025-01-01T10:00:00Z', 'Muse', 'Hysteria', 'Absolution');
+      await play(
+        await addUser(),
+        '2025-01-01T10:00:00Z',
+        'Muse',
+        'Hysteria',
+        'Absolution',
+      );
     });
 
     it('names the most played tracks of an artist, whatever the case of the name', async () => {
-      const result = await top(userId, { artist: 'muse', limit: 2 });
+      const result = await top(userId, {artist: 'muse', limit: 2});
       expect(result.plays).toBe(6);
-      expect(result.rows.map((row) => [row.track, row.plays])).toEqual([
+      expect(result.rows.map(row => [row.track, row.plays])).toEqual([
         ['Hysteria', 3],
         ['Starlight', 2],
       ]);
@@ -118,41 +150,61 @@ describe.skipIf(!ADMIN_URL)('MusicHistoryStatsService', () => {
     });
 
     it('finds an artist by a part of the name when nothing matches exactly', async () => {
-      const result = await top(userId, { artist: 'beatles' });
-      expect(result.rows).toMatchObject([{ artist: 'The Beatles', track: 'Yesterday', plays: 2 }]);
+      const result = await top(userId, {artist: 'beatles'});
+      expect(result.rows).toMatchObject([
+        {artist: 'The Beatles', track: 'Yesterday', plays: 2},
+      ]);
       // A name that matches exactly is not widened to the ones that contain it.
-      await play(userId, '2025-07-01T10:00:00Z', 'Muse Tribute Band', 'Hysteria');
-      expect((await top(userId, { artist: 'Muse' })).plays).toBe(6);
+      await play(
+        userId,
+        '2025-07-01T10:00:00Z',
+        'Muse Tribute Band',
+        'Hysteria',
+      );
+      expect((await top(userId, {artist: 'Muse'})).plays).toBe(6);
     });
 
     it('counts by artist and by album, a play without an album in none', async () => {
-      const artists = await top(userId, { by: 'artist' });
-      expect(artists.rows.slice(0, 2).map((row) => [row.artist, row.plays])).toEqual([
+      const artists = await top(userId, {by: 'artist'});
+      expect(
+        artists.rows.slice(0, 2).map(row => [row.artist, row.plays]),
+      ).toEqual([
         ['Muse', 6],
         ['The Beatles', 2],
       ]);
-      const albums = await top(userId, { by: 'album', artist: 'Muse' });
+      const albums = await top(userId, {by: 'album', artist: 'Muse'});
       expect(albums.plays).toBe(5);
-      expect(albums.rows.map((row) => [row.album, row.plays])).toEqual([
+      expect(albums.rows.map(row => [row.album, row.plays])).toEqual([
         ['Absolution', 3],
         ['Black Holes and Revelations', 2],
       ]);
     });
 
     it('keeps to the days asked for, in the time zone of the user', async () => {
-      const year = await top(userId, { artist: 'Muse', from: '2025-01-01', to: '2025-12-31' });
-      expect(year.rows.map((row) => [row.track, row.plays])).toEqual([
+      const year = await top(userId, {
+        artist: 'Muse',
+        from: '2025-01-01',
+        to: '2025-12-31',
+      });
+      expect(year.rows.map(row => [row.track, row.plays])).toEqual([
         ['Hysteria', 1],
         ['Starlight', 1],
         ['Uprising', 1],
       ]);
       // The play at 23:30 UTC on Dec 31 belongs to 2025 in Warsaw.
-      expect((await top(userId, { artist: 'The Beatles', from: '2025-01-01' })).plays).toBe(1);
-      expect((await top(userId, { artist: 'The Beatles', to: '2024-12-31' })).plays).toBe(1);
+      expect(
+        (await top(userId, {artist: 'The Beatles', from: '2025-01-01'})).plays,
+      ).toBe(1);
+      expect(
+        (await top(userId, {artist: 'The Beatles', to: '2024-12-31'})).plays,
+      ).toBe(1);
     });
 
     it('answers with nothing for what was never played', async () => {
-      expect(await top(userId, { artist: 'Nobody At All' })).toEqual({ plays: 0, rows: [] });
+      expect(await top(userId, {artist: 'Nobody At All'})).toEqual({
+        plays: 0,
+        rows: [],
+      });
     });
   });
 
@@ -181,14 +233,14 @@ describe.skipIf(!ADMIN_URL)('MusicHistoryStatsService', () => {
  */
 async function dropScratchDatabase(admin: Pool, name: string): Promise<void> {
   for (let attempt = 0; attempt < 100; attempt++) {
-    const { rows } = await admin.query<{ open: number }>(
+    const {rows} = await admin.query<{open: number}>(
       'SELECT count(*)::int AS open FROM pg_stat_activity WHERE datname = $1',
       [name],
     );
     if (rows[0].open === 0) {
       break;
     }
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise(resolve => setTimeout(resolve, 50));
   }
   await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
 }

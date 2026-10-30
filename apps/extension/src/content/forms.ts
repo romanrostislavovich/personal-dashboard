@@ -1,4 +1,4 @@
-import type { FieldKind } from '../shared/messages';
+import type {FieldKind} from '../shared/messages';
 
 /*
  * Login forms on a page: finding the fields, filling them, reading what was typed. Plain DOM,
@@ -19,7 +19,12 @@ export interface LoginFields {
 
 /** Whether a person can see and type into the field. */
 function isUsable(input: HTMLInputElement): boolean {
-  if (input.disabled || input.readOnly || input.type === 'hidden' || input.hidden) {
+  if (
+    input.disabled ||
+    input.readOnly ||
+    input.type === 'hidden' ||
+    input.hidden
+  ) {
     return false;
   }
   const style = input.ownerDocument.defaultView?.getComputedStyle(input);
@@ -31,7 +36,9 @@ function isUsable(input: HTMLInputElement): boolean {
 }
 
 export function passwordFields(root: ParentNode): HTMLInputElement[] {
-  return [...root.querySelectorAll<HTMLInputElement>('input[type="password"]')].filter(isUsable);
+  return [
+    ...root.querySelectorAll<HTMLInputElement>('input[type="password"]'),
+  ].filter(isUsable);
 }
 
 /**
@@ -41,20 +48,26 @@ export function passwordFields(root: ParentNode): HTMLInputElement[] {
  */
 export function findLoginFields(root: Document): LoginFields {
   const password = passwordFields(root)[0] ?? null;
-  return { username: usernameFor(password, password?.form ?? root), password };
+  return {username: usernameFor(password, password?.form ?? root), password};
 }
 
 /** The pair of a field: a password field and the login of its form, or a login and its password. */
-function loginFieldsAround(field: HTMLInputElement, root: Document): LoginFields {
+function loginFieldsAround(
+  field: HTMLInputElement,
+  root: Document,
+): LoginFields {
   const scope: ParentNode = field.form ?? root;
   if (field.type === 'password') {
-    return { username: usernameFor(field, scope), password: field };
+    return {username: usernameFor(field, scope), password: field};
   }
-  return { username: field, password: passwordFields(scope)[0] ?? null };
+  return {username: field, password: passwordFields(scope)[0] ?? null};
 }
 
 /** What a field is for; `null` — nothing the vault helps with (a search, a name, an address). */
-export function classifyField(input: HTMLInputElement, root: Document): FieldKind | null {
+export function classifyField(
+  input: HTMLInputElement,
+  root: Document,
+): FieldKind | null {
   if (!isUsable(input)) {
     return null;
   }
@@ -68,7 +81,9 @@ export function classifyField(input: HTMLInputElement, root: Document): FieldKin
     }
     // A change of password: the current one first, then the new one and its repeat.
     const fields = passwordFields(scope);
-    return fields.length >= 3 && fields[0] === input ? 'password' : 'new-password';
+    return fields.length >= 3 && fields[0] === input
+      ? 'password'
+      : 'new-password';
   }
   if (!TEXT_TYPES.has(input.type.toLowerCase())) {
     return null;
@@ -86,16 +101,20 @@ export function classifyField(input: HTMLInputElement, root: Document): FieldKin
  */
 function isSignupForm(scope: ParentNode): boolean {
   const passwords = passwordFields(scope);
-  if (passwords.some((input) => input.autocomplete === 'new-password')) {
+  if (passwords.some(input => input.autocomplete === 'new-password')) {
     return true;
   }
   if (passwords.length >= 2) {
     return true;
   }
   const words = [
-    ...scope.querySelectorAll<HTMLElement>('button, input[type="submit"], [role="button"], h1, h2'),
+    ...scope.querySelectorAll<HTMLElement>(
+      'button, input[type="submit"], [role="button"], h1, h2',
+    ),
   ]
-    .map((node) => (node instanceof HTMLInputElement ? node.value : (node.textContent ?? '')))
+    .map(node =>
+      node instanceof HTMLInputElement ? node.value : (node.textContent ?? ''),
+    )
     .join(' ');
   return SIGNUP_HINT.test(words);
 }
@@ -115,15 +134,19 @@ function usernameFor(
   scope: ParentNode,
 ): HTMLInputElement | null {
   const texts = [...scope.querySelectorAll<HTMLInputElement>('input')].filter(
-    (input) => TEXT_TYPES.has(input.type.toLowerCase()) && isUsable(input),
+    input => TEXT_TYPES.has(input.type.toLowerCase()) && isUsable(input),
   );
   const before = password
     ? texts.filter(
-        (input) => input.compareDocumentPosition(password) & Node.DOCUMENT_POSITION_FOLLOWING,
+        input =>
+          input.compareDocumentPosition(password) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
       )
     : texts;
   const named = before.filter(looksLikeLogin);
-  return password ? (named.at(-1) ?? before.at(-1) ?? null) : (named[0] ?? null);
+  return password
+    ? (named.at(-1) ?? before.at(-1) ?? null)
+    : (named[0] ?? null);
 }
 
 /** Fills the login form of the page; `false` — there is none. */
@@ -138,7 +161,9 @@ export function fillLogin(
   password: string,
   field?: HTMLInputElement | null,
 ): boolean {
-  const fields = field?.isConnected ? loginFieldsAround(field, root) : findLoginFields(root);
+  const fields = field?.isConnected
+    ? loginFieldsAround(field, root)
+    : findLoginFields(root);
   if (fields.username && username) {
     setValue(fields.username, username);
   }
@@ -154,10 +179,12 @@ export function fillLogin(
  */
 export function fillNewPassword(root: Document, password: string): boolean {
   const fields = passwordFields(root).filter(
-    (input) => input.autocomplete !== 'current-password' || passwordFields(root).length === 1,
+    input =>
+      input.autocomplete !== 'current-password' ||
+      passwordFields(root).length === 1,
   );
   const targets = fields.length > 2 ? fields.slice(-2) : fields;
-  targets.forEach((input) => setValue(input, password));
+  targets.forEach(input => setValue(input, password));
   return targets.length > 0;
 }
 
@@ -168,17 +195,22 @@ export function fillNewPassword(root: Document, password: string): boolean {
 export function readSubmitted(
   scope: ParentNode,
   root: Document,
-): { username: string; password: string } | null {
-  const passwords = passwordFields(scope).filter((input) => input.value);
+): {username: string; password: string} | null {
+  const passwords = passwordFields(scope).filter(input => input.value);
   const fields = findLoginFields(root);
   const password = passwords.at(-1)?.value ?? '';
   const username = (
-    fields.username && scope.contains(fields.username) ? fields.username.value : ''
+    fields.username && scope.contains(fields.username)
+      ? fields.username.value
+      : ''
   ).trim();
-  if (!password && !(username && fields.username && looksLikeLogin(fields.username))) {
+  if (
+    !password &&
+    !(username && fields.username && looksLikeLogin(fields.username))
+  ) {
     return null;
   }
-  return { username, password };
+  return {username, password};
 }
 
 /**
@@ -187,21 +219,27 @@ export function readSubmitted(
  */
 function setValue(input: HTMLInputElement, value: string): void {
   input.focus();
-  const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value')?.set;
+  const setter = Object.getOwnPropertyDescriptor(
+    Object.getPrototypeOf(input),
+    'value',
+  )?.set;
   if (setter) {
     setter.call(input, value);
   } else {
     input.value = value;
   }
-  input.dispatchEvent(new Event('input', { bubbles: true }));
-  input.dispatchEvent(new Event('change', { bubbles: true }));
+  input.dispatchEvent(new Event('input', {bubbles: true}));
+  input.dispatchEvent(new Event('change', {bubbles: true}));
 }
 
 function looksLikeLogin(input: HTMLInputElement): boolean {
   if (input.type === 'email' || /username|email/.test(input.autocomplete)) {
     return true;
   }
-  return [input.name, input.id, input.placeholder, input.getAttribute('aria-label') ?? ''].some(
-    (text) => LOGIN_HINT.test(text),
-  );
+  return [
+    input.name,
+    input.id,
+    input.placeholder,
+    input.getAttribute('aria-label') ?? '',
+  ].some(text => LOGIN_HINT.test(text));
 }

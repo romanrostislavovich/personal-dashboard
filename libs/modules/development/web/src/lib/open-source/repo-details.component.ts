@@ -1,11 +1,17 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { TrackedRepo, TrackedRepoUpdate } from '@pd/contracts';
-import { SparklineComponent } from '@pd/web-core';
+import {DatePipe, DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  output,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {TrackedRepo, TrackedRepoUpdate} from '@pd/contracts';
+import {SparklineComponent} from '@pd/web-core';
 
 /**
  * What a table row opens into: the description, the star chart, the release and the npm
@@ -27,7 +33,8 @@ import { SparklineComponent } from '@pd/web-core';
     @let r = repo();
     @if (r.syncError) {
       <p class="error">
-        <mat-icon inline>warning</mat-icon> {{ 'development.oss.syncError' | transloco }}:
+        <mat-icon inline>warning</mat-icon>
+        {{ 'development.oss.syncError' | transloco }}:
         {{ r.syncError }}
       </p>
     }
@@ -49,7 +56,9 @@ import { SparklineComponent } from '@pd/web-core';
             [label]="'development.oss.starsHistory' | transloco"
           />
         } @else {
-          <p class="hint">{{ 'development.oss.historyCollecting' | transloco }}</p>
+          <p class="hint">
+            {{ 'development.oss.historyCollecting' | transloco }}
+          </p>
         }
       </div>
 
@@ -62,9 +71,12 @@ import { SparklineComponent } from '@pd/web-core';
           <dt>{{ 'development.oss.release' | transloco }}</dt>
           <dd>
             @if (r.latestRelease; as release) {
-              <a [href]="r.htmlUrl + '/releases'" target="_blank" rel="noopener">{{
-                release.tag
-              }}</a>
+              <a
+                [href]="r.htmlUrl + '/releases'"
+                target="_blank"
+                rel="noopener"
+                >{{ release.tag }}</a
+              >
               · {{ release.publishedAt | date: 'd MMM y' }}
             } @else {
               —
@@ -98,15 +110,22 @@ import { SparklineComponent } from '@pd/web-core';
     </div>
 
     <div class="actions">
-      <mat-slide-toggle [checked]="r.notify" (change)="update.emit({ notify: $event.checked })">
+      <mat-slide-toggle
+        [checked]="r.notify"
+        (change)="update.emit({notify: $event.checked})"
+      >
         {{ 'development.oss.notify' | transloco }}
       </mat-slide-toggle>
-      <mat-slide-toggle [checked]="r.hidden" (change)="update.emit({ hidden: $event.checked })">
+      <mat-slide-toggle
+        [checked]="r.hidden"
+        (change)="update.emit({hidden: $event.checked})"
+      >
         {{ 'development.oss.hide' | transloco }}
       </mat-slide-toggle>
       <span class="spacer"></span>
       <a matButton [href]="r.htmlUrl" target="_blank" rel="noopener">
-        <mat-icon>open_in_new</mat-icon> {{ 'development.oss.openRepo' | transloco }}
+        <mat-icon>open_in_new</mat-icon>
+        {{ 'development.oss.openRepo' | transloco }}
       </a>
       <!-- A repository of the account would come back with the next sync: it is hidden instead. -->
       @if (r.relation === 'manual') {
@@ -186,6 +205,6 @@ export class RepoDetailsComponent {
   readonly remove = output<TrackedRepo>();
 
   protected readonly starsHistory = computed(() =>
-    this.repo().history.map((point) => ({ at: point.day, value: point.stars })),
+    this.repo().history.map(point => ({at: point.day, value: point.stars})),
   );
 }

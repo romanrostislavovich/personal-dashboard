@@ -1,6 +1,6 @@
-import { BackupFile, BackupProblem, RestoreCheck } from '@pd/contracts';
-import { readdir, readFile, stat, unlink } from 'node:fs/promises';
-import { join } from 'node:path';
+import {BackupFile, BackupProblem, RestoreCheck} from '@pd/contracts';
+import {readdir, readFile, stat, unlink} from 'node:fs/promises';
+import {join} from 'node:path';
 
 /** Daily dumps are named by their day (deploy/backup.sh), so names sort by age. */
 export const DUMP_NAME = /^dashboard-\d{4}-\d{2}-\d{2}\.dump$/;
@@ -26,13 +26,13 @@ export async function listDumps(folder: string): Promise<BackupFile[]> {
     return [];
   }
   const dumps = names
-    .filter((name) => DUMP_NAME.test(name))
+    .filter(name => DUMP_NAME.test(name))
     .sort()
     .reverse();
   return Promise.all(
-    dumps.map(async (name) => {
+    dumps.map(async name => {
       const info = await stat(join(folder, name));
-      return { name, size: info.size, createdAt: info.mtime.toISOString() };
+      return {name, size: info.size, createdAt: info.mtime.toISOString()};
     }),
   );
 }
@@ -44,9 +44,13 @@ export async function pruneDumps(folder: string, keep: number): Promise<void> {
   }
 }
 
-export async function readRestoreCheck(folder: string): Promise<RestoreCheck | null> {
+export async function readRestoreCheck(
+  folder: string,
+): Promise<RestoreCheck | null> {
   try {
-    return JSON.parse(await readFile(join(folder, RESTORE_CHECK_FILE), 'utf8')) as RestoreCheck;
+    return JSON.parse(
+      await readFile(join(folder, RESTORE_CHECK_FILE), 'utf8'),
+    ) as RestoreCheck;
   } catch {
     return null;
   }
@@ -59,9 +63,11 @@ export function backupProblems(
   check: RestoreCheck | null,
   now = new Date(),
 ): BackupProblem[] {
-  const hoursSince = (time: string) => (now.getTime() - new Date(time).getTime()) / HOUR;
+  const hoursSince = (time: string) =>
+    (now.getTime() - new Date(time).getTime()) / HOUR;
   const problems: BackupProblem[] = [];
-  const staleAfter = side === 'server' ? SERVER_STALE_HOURS : CLIENT_STALE_HOURS;
+  const staleAfter =
+    side === 'server' ? SERVER_STALE_HOURS : CLIENT_STALE_HOURS;
   if (!latest) {
     problems.push('missing');
   } else if (hoursSince(latest.createdAt) > staleAfter) {
@@ -69,7 +75,10 @@ export function backupProblems(
   }
   if (check && !check.ok) {
     problems.push('restore-failed');
-  } else if (side === 'server' && (!check || hoursSince(check.checkedAt) > CHECK_STALE_HOURS)) {
+  } else if (
+    side === 'server' &&
+    (!check || hoursSince(check.checkedAt) > CHECK_STALE_HOURS)
+  ) {
     // Only the server runs the check; the client merely repeats what the server said.
     problems.push('unchecked');
   }

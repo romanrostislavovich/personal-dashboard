@@ -1,5 +1,19 @@
-import { Body, Controller, Delete, Get, HttpCode, Post, Put, Query } from '@nestjs/common';
-import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
+import {
+  AuthUser,
+  CurrentUser,
+  ServerActions,
+  ZodValidationPipe,
+} from '@pd/api-core';
 import {
   WAKATIME_PERIODS,
   WakatimeKeyInput,
@@ -8,13 +22,15 @@ import {
   WakatimeSettings,
   WakatimeStats,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { WAKATIME_ACTIONS } from './wakatime.server-actions';
-import { WakatimeService } from './wakatime.service';
+import {z} from 'zod';
+import {WAKATIME_ACTIONS} from './wakatime.server-actions';
+import {WakatimeService} from './wakatime.service';
 
 const periodSchema = z.coerce
   .number()
-  .refine((days): days is WakatimePeriod => WAKATIME_PERIODS.includes(days as WakatimePeriod))
+  .refine((days): days is WakatimePeriod =>
+    WAKATIME_PERIODS.includes(days as WakatimePeriod),
+  )
   .default(7);
 
 /** Coding time from WakaTime. */
@@ -35,7 +51,8 @@ export class WakatimeController {
   @HttpCode(204)
   async connect(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(wakatimeKeyInputSchema)) input: WakatimeKeyInput,
+    @Body(new ZodValidationPipe(wakatimeKeyInputSchema))
+    input: WakatimeKeyInput,
   ): Promise<void> {
     await this.actions.run(user.id, WAKATIME_ACTIONS.connect, input);
   }

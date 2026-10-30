@@ -1,4 +1,4 @@
-import { MovieKind, MovieSearchResult } from '@pd/contracts';
+import {MovieKind, MovieSearchResult} from '@pd/contracts';
 
 const BASE = 'https://api.themoviedb.org/3';
 const POSTERS = 'https://image.tmdb.org/t/p/w185';
@@ -50,7 +50,7 @@ export class TmdbClient {
   /** Films and shows by a name; `kind` narrows it, `year` helps to pick. */
   async search(
     query: string,
-    options: { kind?: MovieKind; year?: number | null } = {},
+    options: {kind?: MovieKind; year?: number | null} = {},
   ): Promise<MovieSearchResult[]> {
     const path =
       options.kind === 'movie'
@@ -58,15 +58,15 @@ export class TmdbClient {
         : options.kind === 'tv'
           ? 'search/tv'
           : 'search/multi';
-    const params: Record<string, string> = { query, include_adult: 'false' };
+    const params: Record<string, string> = {query, include_adult: 'false'};
     if (options.year && options.kind === 'movie') {
       params['year'] = String(options.year);
     }
     if (options.year && options.kind === 'tv') {
       params['first_air_date_year'] = String(options.year);
     }
-    const answer = await this.get<{ results?: TmdbItem[] }>(path, params);
-    return (answer.results ?? []).flatMap((item) => {
+    const answer = await this.get<{results?: TmdbItem[]}>(path, params);
+    return (answer.results ?? []).flatMap(item => {
       const kind = options.kind ?? item.media_type;
       return kind === 'movie' || kind === 'tv' ? [result(item, kind)] : [];
     });
@@ -75,13 +75,14 @@ export class TmdbClient {
   async details(kind: MovieKind, tmdbId: number): Promise<TmdbDetails> {
     const item = await this.get<
       TmdbItem & {
-        genres?: { name: string }[];
+        genres?: {name: string}[];
         runtime?: number | null;
         episode_run_time?: number[];
       }
     >(`${kind}/${tmdbId}`, {});
     const found = result(item, kind);
-    const runtime = kind === 'movie' ? item.runtime : item.episode_run_time?.[0];
+    const runtime =
+      kind === 'movie' ? item.runtime : item.episode_run_time?.[0];
     return {
       tmdbId,
       kind,
@@ -89,29 +90,37 @@ export class TmdbClient {
       originalTitle: found.originalTitle,
       year: found.year,
       posterPath: item.poster_path ?? null,
-      genres: (item.genres ?? []).map((genre) => genre.name).filter(Boolean),
+      genres: (item.genres ?? []).map(genre => genre.name).filter(Boolean),
       runtimeMinutes: runtime || null,
     };
   }
 
-  private async get<T>(path: string, params: Record<string, string>): Promise<T> {
+  private async get<T>(
+    path: string,
+    params: Record<string, string>,
+  ): Promise<T> {
     const url = new URL(`${BASE}/${path}`);
     url.searchParams.set('language', this.language);
     for (const [name, value] of Object.entries(params)) {
       url.searchParams.set(name, value);
     }
-    const headers: Record<string, string> = { accept: 'application/json' };
+    const headers: Record<string, string> = {accept: 'application/json'};
     if (/^[0-9a-f]{32}$/i.test(this.key)) {
       url.searchParams.set('api_key', this.key);
     } else {
       headers['authorization'] = `Bearer ${this.key}`;
     }
-    const response = await fetch(url, { headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
+    const response = await fetch(url, {
+      headers,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
     if (response.status === 401) {
       throw new TmdbAuthError('TMDB refused the key');
     }
     if (!response.ok) {
-      throw new Error(`TMDB ${response.status}: ${(await response.text()).slice(0, 200)}`);
+      throw new Error(
+        `TMDB ${response.status}: ${(await response.text()).slice(0, 200)}`,
+      );
     }
     return (await response.json()) as T;
   }
@@ -119,8 +128,13 @@ export class TmdbClient {
 
 function result(item: TmdbItem, kind: MovieKind): MovieSearchResult {
   const date = kind === 'movie' ? item.release_date : item.first_air_date;
-  const title = (kind === 'movie' ? item.title : item.name) ?? item.title ?? item.name ?? '';
-  const original = (kind === 'movie' ? item.original_title : item.original_name) ?? null;
+  const title =
+    (kind === 'movie' ? item.title : item.name) ??
+    item.title ??
+    item.name ??
+    '';
+  const original =
+    (kind === 'movie' ? item.original_title : item.original_name) ?? null;
   return {
     tmdbId: item.id,
     kind,

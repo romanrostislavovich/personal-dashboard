@@ -1,7 +1,7 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { DB, Database, DemoService } from '@pd/api-core';
-import { diaryEntries } from './diary.schema';
-import { countWords } from './diary-text';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {DB, Database, DemoService} from '@pd/api-core';
+import {diaryEntries} from './diary.schema';
+import {countWords} from './diary-text';
 
 const ENTRIES = [
   'Ran 8 km before work, the river was foggy. #running',
@@ -27,9 +27,9 @@ export class DiaryDemo implements OnModuleInit {
   onModuleInit(): void {
     this.demo.register({
       module: 'diary',
-      seed: async ({ userId, daysAgo }) => {
+      seed: async ({userId, daysAgo}) => {
         await this.db.insert(diaryEntries).values(
-          Array.from({ length: DAYS }, (_, index) => {
+          Array.from({length: DAYS}, (_, index) => {
             const content = ENTRIES[index % ENTRIES.length];
             return {
               userId,
@@ -37,7 +37,9 @@ export class DiaryDemo implements OnModuleInit {
               content,
               words: countWords(content),
               mood: MOODS[index % MOODS.length],
-              tags: [...content.matchAll(/#([\p{L}\d_-]+)/gu)].map((match) => match[1]),
+              tags: [...content.matchAll(/#([\p{L}\d_-]+)/gu)].map(
+                match => match[1],
+              ),
             };
           }),
         );

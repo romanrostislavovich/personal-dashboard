@@ -57,7 +57,11 @@ li {
   }
 
   &.priority-1 {
-    border-left-color: color-mix(in srgb, var(--mat-sys-primary) 45%, transparent);
+    border-left-color: color-mix(
+      in srgb,
+      var(--mat-sys-primary) 45%,
+      transparent
+    );
   }
 
   &.priority-2 {

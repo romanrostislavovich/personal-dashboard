@@ -1,12 +1,24 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { GameAccount, SteamGame, steamIconUrl, SteamSummary } from '@pd/contracts';
-import { TimeAgoPipe } from '../time-ago.pipe';
+import {DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {
+  GameAccount,
+  SteamGame,
+  steamIconUrl,
+  SteamSummary,
+} from '@pd/contracts';
+import {TimeAgoPipe} from '../time-ago.pipe';
 
 interface Profile {
   account: GameAccount;
@@ -37,11 +49,17 @@ interface Profile {
           }
           <div class="who">
             @if (profile.summary; as s) {
-              <a class="name" [href]="s.profileUrl" target="_blank" rel="noopener">{{
-                s.personaName
-              }}</a>
+              <a
+                class="name"
+                [href]="s.profileUrl"
+                target="_blank"
+                rel="noopener"
+                >{{ s.personaName }}</a
+              >
               @if (s.level !== null) {
-                <span class="muted">{{ 'games.steam.level' | transloco: { level: s.level } }}</span>
+                <span class="muted">{{
+                  'games.steam.level' | transloco: {level: s.level}
+                }}</span>
               }
             } @else {
               <span class="name">{{ profile.account.displayName }}</span>
@@ -84,25 +102,37 @@ interface Profile {
                 <span class="label">{{ 'games.steam.hours' | transloco }}</span>
                 <span class="value"
                   >{{ hours(s.totals.minutes) | number: '1.0-0' }}
-                  <span class="unit">{{ 'games.steam.hoursUnit' | transloco }}</span></span
+                  <span class="unit">{{
+                    'games.steam.hoursUnit' | transloco
+                  }}</span></span
                 >
               </div>
               <div class="tile">
-                <span class="label">{{ 'games.steam.hours2Weeks' | transloco }}</span>
+                <span class="label">{{
+                  'games.steam.hours2Weeks' | transloco
+                }}</span>
                 <span class="value"
                   >{{ hours(s.totals.minutes2Weeks) | number: '1.0-1' }}
-                  <span class="unit">{{ 'games.steam.hoursUnit' | transloco }}</span></span
+                  <span class="unit">{{
+                    'games.steam.hoursUnit' | transloco
+                  }}</span></span
                 >
               </div>
               <div class="tile">
-                <span class="label">{{ 'games.steam.played' | transloco }}</span>
+                <span class="label">{{
+                  'games.steam.played' | transloco
+                }}</span>
                 <span class="value">{{ s.totals.played | number }}</span>
                 <span class="muted small">
-                  {{ 'games.steam.ofLibrary' | transloco: { count: s.totals.games } }}
+                  {{
+                    'games.steam.ofLibrary' | transloco: {count: s.totals.games}
+                  }}
                 </span>
               </div>
               <div class="tile">
-                <span class="label">{{ 'games.steam.achievements' | transloco }}</span>
+                <span class="label">{{
+                  'games.steam.achievements' | transloco
+                }}</span>
                 <span class="value">{{ s.totals.achievements | number }}</span>
               </div>
             </div>
@@ -112,10 +142,18 @@ interface Profile {
                 <thead>
                   <tr>
                     <th>{{ 'games.steam.game' | transloco }}</th>
-                    <th class="numeric">{{ 'games.steam.hours' | transloco }}</th>
-                    <th class="numeric">{{ 'games.steam.hours2Weeks' | transloco }}</th>
-                    <th class="numeric">{{ 'games.steam.achievements' | transloco }}</th>
-                    <th class="numeric">{{ 'games.steam.lastPlayed' | transloco }}</th>
+                    <th class="numeric">
+                      {{ 'games.steam.hours' | transloco }}
+                    </th>
+                    <th class="numeric">
+                      {{ 'games.steam.hours2Weeks' | transloco }}
+                    </th>
+                    <th class="numeric">
+                      {{ 'games.steam.achievements' | transloco }}
+                    </th>
+                    <th class="numeric">
+                      {{ 'games.steam.lastPlayed' | transloco }}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -123,26 +161,43 @@ interface Profile {
                     <tr>
                       <td class="game">
                         @if (icon(game); as src) {
-                          <img [src]="src" alt="" width="24" height="24" loading="lazy" />
+                          <img
+                            [src]="src"
+                            alt=""
+                            width="24"
+                            height="24"
+                            loading="lazy"
+                          />
                         }
-                        <a [href]="storeUrl(game)" target="_blank" rel="noopener">{{
-                          game.name
-                        }}</a>
+                        <a
+                          [href]="storeUrl(game)"
+                          target="_blank"
+                          rel="noopener"
+                          >{{ game.name }}</a
+                        >
                       </td>
-                      <td class="numeric">{{ hours(game.minutes) | number: '1.0-1' }}</td>
+                      <td class="numeric">
+                        {{ hours(game.minutes) | number: '1.0-1' }}
+                      </td>
                       <td class="numeric">
                         {{
-                          game.minutes2Weeks ? (hours(game.minutes2Weeks) | number: '1.0-1') : '—'
+                          game.minutes2Weeks
+                            ? (hours(game.minutes2Weeks) | number: '1.0-1')
+                            : '—'
                         }}
                       </td>
                       <td class="numeric">
                         {{
                           game.achievements
-                            ? game.achievements.unlocked + ' / ' + game.achievements.total
+                            ? game.achievements.unlocked +
+                              ' / ' +
+                              game.achievements.total
                             : '—'
                         }}
                       </td>
-                      <td class="numeric muted">{{ game.lastPlayedAt | timeAgo: lang() }}</td>
+                      <td class="numeric muted">
+                        {{ game.lastPlayedAt | timeAgo: lang() }}
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -278,7 +333,7 @@ export class SteamDashboardComponent {
   });
 
   protected readonly profiles = computed<Profile[]>(() =>
-    this.accounts().map((account) => ({
+    this.accounts().map(account => ({
       account,
       summary: account.summary?.game === 'steam' ? account.summary : null,
     })),

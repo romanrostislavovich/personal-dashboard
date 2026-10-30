@@ -1,4 +1,4 @@
-import { createSign } from 'node:crypto';
+import {createSign} from 'node:crypto';
 
 /*
  * Enable Banking's API (https://enablebanking.com/docs/api/reference/): every request carries
@@ -22,16 +22,16 @@ export interface EnableBankingKeys {
 export interface ProviderTransaction {
   entry_reference?: string | null;
   transaction_id?: string | null;
-  transaction_amount: { amount: string; currency: string };
+  transaction_amount: {amount: string; currency: string};
   credit_debit_indicator: 'CRDT' | 'DBIT';
   status?: string | null;
   booking_date?: string | null;
   value_date?: string | null;
   transaction_date?: string | null;
-  creditor?: { name?: string | null } | null;
-  debtor?: { name?: string | null } | null;
-  creditor_account?: { iban?: string | null } | null;
-  debtor_account?: { iban?: string | null } | null;
+  creditor?: {name?: string | null} | null;
+  debtor?: {name?: string | null} | null;
+  creditor_account?: {iban?: string | null} | null;
+  debtor_account?: {iban?: string | null} | null;
   remittance_information?: string[] | null;
 }
 
@@ -44,14 +44,14 @@ export interface ProviderBank {
 }
 
 export interface ProviderBalance {
-  balance_amount: { amount: string; currency: string };
+  balance_amount: {amount: string; currency: string};
   balance_type?: string | null;
   reference_date?: string | null;
 }
 
 export interface ProviderAccount {
   uid: string;
-  account_id?: { iban?: string | null } | null;
+  account_id?: {iban?: string | null} | null;
   name?: string | null;
   currency?: string | null;
 }
@@ -69,12 +69,12 @@ export class EnableBankingClient {
   constructor(private readonly keys: EnableBankingKeys) {}
 
   /** The application itself: answers only when the id and the key are right. */
-  application(): Promise<{ name?: string; redirect_urls?: string[] }> {
+  application(): Promise<{name?: string; redirect_urls?: string[]}> {
     return this.request('GET', '/application');
   }
 
   async banks(country: string): Promise<ProviderBank[]> {
-    const answer = await this.request<{ aspsps: ProviderBank[] }>(
+    const answer = await this.request<{aspsps: ProviderBank[]}>(
       'GET',
       `/aspsps?country=${encodeURIComponent(country)}&psu_type=personal`,
     );
@@ -88,10 +88,10 @@ export class EnableBankingClient {
     redirectUrl: string;
     state: string;
     validUntil: Date;
-  }): Promise<{ url: string }> {
+  }): Promise<{url: string}> {
     return this.request('POST', '/auth', {
-      access: { valid_until: input.validUntil.toISOString() },
-      aspsp: { name: input.bank, country: input.country },
+      access: {valid_until: input.validUntil.toISOString()},
+      aspsp: {name: input.bank, country: input.country},
       state: input.state,
       redirect_url: input.redirectUrl,
       psu_type: 'personal',
@@ -102,9 +102,9 @@ export class EnableBankingClient {
   createSession(code: string): Promise<{
     session_id: string;
     accounts: ProviderAccount[];
-    access?: { valid_until?: string };
+    access?: {valid_until?: string};
   }> {
-    return this.request('POST', '/sessions', { code });
+    return this.request('POST', '/sessions', {code});
   }
 
   async deleteSession(sessionId: string): Promise<void> {
@@ -113,7 +113,7 @@ export class EnableBankingClient {
 
   /** The balances of an account, by type (ISO 20022: `ITAV` — available now, `CLBD` — booked…). */
   async balances(accountUid: string): Promise<ProviderBalance[]> {
-    const answer = await this.request<{ balances?: ProviderBalance[] }>(
+    const answer = await this.request<{balances?: ProviderBalance[]}>(
       'GET',
       `/accounts/${encodeURIComponent(accountUid)}/balances`,
     );
@@ -121,19 +121,28 @@ export class EnableBankingClient {
   }
 
   /** Every page of the booked transactions of an account since a day. */
-  async transactions(accountUid: string, dateFrom: string): Promise<ProviderTransaction[]> {
+  async transactions(
+    accountUid: string,
+    dateFrom: string,
+  ): Promise<ProviderTransaction[]> {
     const all: ProviderTransaction[] = [];
     let continuation: string | undefined;
     // A guard: a bank that keeps giving pages is not followed for ever.
     for (let page = 0; page < 50; page++) {
-      const query = new URLSearchParams({ date_from: dateFrom, transaction_status: 'BOOK' });
+      const query = new URLSearchParams({
+        date_from: dateFrom,
+        transaction_status: 'BOOK',
+      });
       if (continuation) {
         query.set('continuation_key', continuation);
       }
       const answer = await this.request<{
         transactions?: ProviderTransaction[];
         continuation_key?: string | null;
-      }>('GET', `/accounts/${encodeURIComponent(accountUid)}/transactions?${query}`);
+      }>(
+        'GET',
+        `/accounts/${encodeURIComponent(accountUid)}/transactions?${query}`,
+      );
       all.push(...(answer.transactions ?? []));
       continuation = answer.continuation_key ?? undefined;
       if (!continuation) {
@@ -143,19 +152,26 @@ export class EnableBankingClient {
     return all;
   }
 
-  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  private async request<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
     const response = await fetch(`${ORIGIN}${path}`, {
       method,
       headers: {
         Authorization: `Bearer ${this.token()}`,
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...(body ? {'Content-Type': 'application/json'} : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     const text = await response.text();
     if (!response.ok) {
-      throw new EnableBankingError(response.status, errorMessage(response.status, text));
+      throw new EnableBankingError(
+        response.status,
+        errorMessage(response.status, text),
+      );
     }
     return (text ? JSON.parse(text) : {}) as T;
   }
@@ -167,8 +183,9 @@ export class EnableBankingClient {
 
 /** The JWT of a request: `kid` — the application, signed with its private key. */
 export function signToken(keys: EnableBankingKeys, now: number): string {
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
-  const header = encode({ typ: 'JWT', alg: 'RS256', kid: keys.appId });
+  const encode = (value: object) =>
+    Buffer.from(JSON.stringify(value)).toString('base64url');
+  const header = encode({typ: 'JWT', alg: 'RS256', kid: keys.appId});
   const body = encode({
     iss: 'enablebanking.com',
     aud: 'api.enablebanking.com',
@@ -185,9 +202,17 @@ export function signToken(keys: EnableBankingKeys, now: number): string {
 /** The provider's own words when it gives them (`message`, `detail`), the status otherwise. */
 function errorMessage(status: number, text: string): string {
   try {
-    const parsed = JSON.parse(text) as { message?: string; detail?: unknown; error?: string };
-    const detail = typeof parsed.detail === 'string' ? parsed.detail : undefined;
-    return [parsed.message ?? parsed.error, detail].filter(Boolean).join(': ') || `HTTP ${status}`;
+    const parsed = JSON.parse(text) as {
+      message?: string;
+      detail?: unknown;
+      error?: string;
+    };
+    const detail =
+      typeof parsed.detail === 'string' ? parsed.detail : undefined;
+    return (
+      [parsed.message ?? parsed.error, detail].filter(Boolean).join(': ') ||
+      `HTTP ${status}`
+    );
   } catch {
     return `HTTP ${status}`;
   }

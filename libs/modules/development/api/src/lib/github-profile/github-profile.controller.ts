@@ -1,8 +1,17 @@
-import { Controller, Get, HttpCode, Post, Query } from '@nestjs/common';
-import { AuthUser, CurrentUser, ServerActions, ZodValidationPipe } from '@pd/api-core';
-import { GithubContributionDay, GithubProfile, githubYearSchema } from '@pd/contracts';
-import { GITHUB_PROFILE_ACTIONS } from './github-profile.server-actions';
-import { GithubProfileService } from './github-profile.service';
+import {Controller, Get, HttpCode, Post, Query} from '@nestjs/common';
+import {
+  AuthUser,
+  CurrentUser,
+  ServerActions,
+  ZodValidationPipe,
+} from '@pd/api-core';
+import {
+  GithubContributionDay,
+  GithubProfile,
+  githubYearSchema,
+} from '@pd/contracts';
+import {GITHUB_PROFILE_ACTIONS} from './github-profile.server-actions';
+import {GithubProfileService} from './github-profile.service';
 
 /** Statistics of the GitHub account the token belongs to. */
 @Controller('development/github')
@@ -24,7 +33,11 @@ export class GithubProfileController {
     @CurrentUser() user: AuthUser,
     @Query('year', new ZodValidationPipe(githubYearSchema)) year: number,
   ): Promise<GithubContributionDay[]> {
-    return this.profiles.contributions(user.id, `${year}-01-01`, `${year}-12-31`);
+    return this.profiles.contributions(
+      user.id,
+      `${year}-01-01`,
+      `${year}-12-31`,
+    );
   }
 
   /** Refresh now without waiting for the hourly sync. */

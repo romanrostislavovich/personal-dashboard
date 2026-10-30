@@ -4,7 +4,7 @@
   <mat-button-toggle-group
     hideSingleSelectionIndicator
     [value]="f.view"
-    (change)="setFilter({ view: $event.value })"
+    (change)="setFilter({view: $event.value})"
   >
     <mat-button-toggle value="today">
       {{ 'tasks.todo.views.today' | transloco }} · {{ counts().today }}
@@ -15,7 +15,9 @@
     <mat-button-toggle value="all">
       {{ 'tasks.todo.views.all' | transloco }} · {{ counts().all }}
     </mat-button-toggle>
-    <mat-button-toggle value="done">{{ 'tasks.todo.views.done' | transloco }}</mat-button-toggle>
+    <mat-button-toggle value="done">{{
+      'tasks.todo.views.done' | transloco
+    }}</mat-button-toggle>
   </mat-button-toggle-group>
   <span class="spacer"></span>
   <button matButton="filled" (click)="open(null)">
@@ -26,11 +28,20 @@
 <div class="filters">
   <mat-form-field subscriptSizing="dynamic" class="list">
     <mat-label>{{ 'tasks.todo.list' | transloco }}</mat-label>
-    <mat-select [value]="f.listId" (selectionChange)="setFilter({ listId: $event.value })">
-      <mat-option [value]="null">{{ 'tasks.todo.allLists' | transloco }}</mat-option>
-      <mat-option value="inbox">{{ 'tasks.todo.inbox' | transloco }}</mat-option>
+    <mat-select
+      [value]="f.listId"
+      (selectionChange)="setFilter({listId: $event.value})"
+    >
+      <mat-option [value]="null">{{
+        'tasks.todo.allLists' | transloco
+      }}</mat-option>
+      <mat-option value="inbox">{{
+        'tasks.todo.inbox' | transloco
+      }}</mat-option>
       @for (list of lists.value(); track list.id) {
-        <mat-option [value]="list.id">{{ list.name }} · {{ list.open }}</mat-option>
+        <mat-option [value]="list.id"
+          >{{ list.name }} · {{ list.open }}</mat-option
+        >
       }
     </mat-select>
   </mat-form-field>
@@ -48,24 +59,33 @@
     <mat-label>{{ 'tasks.todo.horizon' | transloco }}</mat-label>
     <mat-select
       [value]="f.horizon ?? null"
-      (selectionChange)="setFilter({ horizon: $event.value })"
+      (selectionChange)="setFilter({horizon: $event.value})"
     >
-      <mat-option [value]="null">{{ 'tasks.todo.allHorizons' | transloco }}</mat-option>
+      <mat-option [value]="null">{{
+        'tasks.todo.allHorizons' | transloco
+      }}</mat-option>
       @for (h of horizons; track h) {
-        <mat-option [value]="h">{{ 'tasks.horizon.' + h | transloco }}</mat-option>
+        <mat-option [value]="h">{{
+          'tasks.horizon.' + h | transloco
+        }}</mat-option>
       }
     </mat-select>
   </mat-form-field>
   <mat-form-field subscriptSizing="dynamic" class="new-list">
     <mat-label>{{ 'tasks.todo.newList' | transloco }}</mat-label>
-    <input matInput #listName maxlength="60" (keydown.enter)="addList(listName)" />
+    <input
+      matInput
+      #listName
+      maxlength="60"
+      (keydown.enter)="addList(listName)"
+    />
   </mat-form-field>
 
   @if (tags().length) {
     <mat-chip-listbox
       [value]="f.tag"
       [attr.aria-label]="'tasks.todo.tags' | transloco"
-      (change)="setFilter({ tag: $event.value ?? null })"
+      (change)="setFilter({tag: $event.value ?? null})"
     >
       @for (tag of tags(); track tag) {
         <mat-chip-option [value]="tag">#{{ tag }}</mat-chip-option>
@@ -102,25 +122,33 @@
           }
           @if (task.dueDate) {
             <span [class.overdue]="overdue(task)">
-              <mat-icon inline>event</mat-icon> {{ task.dueDate | date: 'd MMM' }}
+              <mat-icon inline>event</mat-icon>
+              {{ task.dueDate | date: 'd MMM' }}
             </span>
           }
           @if (task.repeat) {
-            <mat-icon inline [attr.aria-label]="'tasks.repeat.label' | transloco">repeat</mat-icon>
+            <mat-icon
+              inline
+              [attr.aria-label]="'tasks.repeat.label' | transloco"
+              >repeat</mat-icon
+            >
           }
           @if (task.reminderAt) {
             <span>
-              <mat-icon inline>notifications</mat-icon> {{ task.reminderAt | date: 'd MMM, HH:mm' }}
+              <mat-icon inline>notifications</mat-icon>
+              {{ task.reminderAt | date: 'd MMM, HH:mm' }}
             </span>
           }
           @if (task.focusSeconds) {
             <span [matTooltip]="'tasks.todo.focusTime' | transloco">
-              <mat-icon inline>timer</mat-icon> {{ task.focusSeconds | pdDuration }}
+              <mat-icon inline>timer</mat-icon>
+              {{ task.focusSeconds | pdDuration }}
             </span>
           }
           @if (task.windowSeconds) {
             <span [matTooltip]="'tasks.todo.windowTime' | transloco">
-              <mat-icon inline>desktop_windows</mat-icon> {{ task.windowSeconds | pdDuration }}
+              <mat-icon inline>desktop_windows</mat-icon>
+              {{ task.windowSeconds | pdDuration }}
             </span>
           }
           @if (task.checklist.length) {

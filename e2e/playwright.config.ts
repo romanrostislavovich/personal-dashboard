@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import {defineConfig, devices} from '@playwright/test';
 
 /**
  * Smoke tests of the built app (e2e/README.md): the dashboard already runs at E2E_URL — the
@@ -16,11 +16,15 @@ export default defineConfig({
   retries: process.env['CI'] ? 1 : 0,
   timeout: 60_000,
   // A password is checked with bcrypt: on a busy runner a sign-in takes seconds.
-  expect: { timeout: 30_000 },
+  expect: {timeout: 30_000},
   outputDir: './test-results',
   // In CI a failure is also an annotation of the run (`github`), and the report is kept.
   reporter: process.env['CI']
-    ? [['github'], ['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]]
+    ? [
+        ['github'],
+        ['list'],
+        ['html', {open: 'never', outputFolder: 'playwright-report'}],
+      ]
     : 'list',
   use: {
     baseURL: process.env['E2E_URL'] ?? 'http://localhost:3300',
@@ -37,7 +41,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         // Locally the installed Chrome will do; CI installs Playwright's own Chromium.
-        ...(process.env['E2E_CHROME'] ? { channel: 'chrome' } : {}),
+        ...(process.env['E2E_CHROME'] ? {channel: 'chrome'} : {}),
       },
     },
   ],

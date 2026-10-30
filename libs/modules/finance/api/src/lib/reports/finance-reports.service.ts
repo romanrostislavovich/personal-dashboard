@@ -1,12 +1,12 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { AiService, DB, Database } from '@pd/api-core';
-import { FinanceReport } from '@pd/contracts';
-import { and, eq } from 'drizzle-orm';
-import { round } from '../currency/conversion';
-import { BudgetsService, monthRange } from '../budgets/budgets.service';
-import { financeReports } from '../finance.schema';
-import { SubscriptionsService } from '../recurring/subscriptions.service';
-import { TransactionsService } from '../transactions/transactions.service';
+import {Inject, Injectable} from '@nestjs/common';
+import {AiService, DB, Database} from '@pd/api-core';
+import {FinanceReport} from '@pd/contracts';
+import {and, eq} from 'drizzle-orm';
+import {round} from '../currency/conversion';
+import {BudgetsService, monthRange} from '../budgets/budgets.service';
+import {financeReports} from '../finance.schema';
+import {SubscriptionsService} from '../recurring/subscriptions.service';
+import {TransactionsService} from '../transactions/transactions.service';
 
 /** The months before the reported one its spending is compared with. */
 const HISTORY_MONTHS = 3;
@@ -39,7 +39,9 @@ export class FinanceReportsService {
     const [row] = await this.db
       .select()
       .from(financeReports)
-      .where(and(eq(financeReports.userId, userId), eq(financeReports.month, month)));
+      .where(
+        and(eq(financeReports.userId, userId), eq(financeReports.month, month)),
+      );
     return row ? toReport(row) : null;
   }
 
@@ -49,18 +51,27 @@ export class FinanceReportsService {
     if (!facts) {
       return null;
     }
-    const reply = (await this.ai.complete(userId, INSTRUCTION, JSON.stringify(facts), 'finance'))
+    const reply = (
+      await this.ai.complete(
+        userId,
+        INSTRUCTION,
+        JSON.stringify(facts),
+        'finance',
+      )
+    )
       .replace(/\r/g, '')
       .trim();
     const split = reply.indexOf('\n\n');
-    const summary = (split > 0 ? reply.slice(0, split) : reply).replace(/^#+\s*/, '').trim();
+    const summary = (split > 0 ? reply.slice(0, split) : reply)
+      .replace(/^#+\s*/, '')
+      .trim();
     const text = split > 0 ? reply.slice(split + 2).trim() : reply;
     const [row] = await this.db
       .insert(financeReports)
-      .values({ userId, month, summary, text })
+      .values({userId, month, summary, text})
       .onConflictDoUpdate({
         target: [financeReports.userId, financeReports.month],
-        set: { summary, text, createdAt: new Date() },
+        set: {summary, text, createdAt: new Date()},
       })
       .returning();
     return toReport(row);
@@ -71,13 +82,18 @@ export class FinanceReportsService {
    * there was written before the month ended.
    */
   async summaryOf(userId: string, month: string): Promise<string | null> {
-    if (!(await this.ai.canSee(userId, 'finance')) || !(await this.ai.isConfigured(userId))) {
+    if (
+      !(await this.ai.canSee(userId, 'finance')) ||
+      !(await this.ai.isConfigured(userId))
+    ) {
       return null;
     }
     const existing = await this.get(userId, month);
     const ended = `${monthRange(month).to}T23:59:59Z`;
     const report =
-      existing && existing.createdAt > ended ? existing : await this.generate(userId, month);
+      existing && existing.createdAt > ended
+        ? existing
+        : await this.generate(userId, month);
     return report?.summary ?? null;
   }
 
@@ -88,23 +104,28 @@ export class FinanceReportsService {
       return null;
     }
     const previous = shift(month, -1);
-    const history = Array.from({ length: HISTORY_MONTHS }, (_, index) => shift(month, -2 - index));
+    const history = Array.from({length: HISTORY_MONTHS}, (_, index) =>
+      shift(month, -2 - index),
+    );
     const [current, last, ...before] = await Promise.all(
-      [month, previous, ...history].map((key) =>
+      [month, previous, ...history].map(key =>
         this.transactions.expensesInMain(userId, monthRange(key)),
       ),
     );
     const average = new Map<string, number>();
-    for (const { byCategory } of before) {
+    for (const {byCategory} of before) {
       for (const [category, value] of byCategory) {
-        average.set(category, (average.get(category) ?? 0) + value / HISTORY_MONTHS);
+        average.set(
+          category,
+          (average.get(category) ?? 0) + value / HISTORY_MONTHS,
+        );
       }
     }
     const largest = (await this.transactions.list(userId, range))
-      .filter((t) => t.kind === 'expense' && t.mainAmount !== null)
+      .filter(t => t.kind === 'expense' && t.mainAmount !== null)
       .sort((a, b) => (b.mainAmount ?? 0) - (a.mainAmount ?? 0))
       .slice(0, LARGEST)
-      .map((t) => ({
+      .map(t => ({
         amount: t.mainAmount,
         category: t.category,
         note: t.note,
@@ -119,11 +140,13 @@ export class FinanceReportsService {
       byCategory: rounded(current.byCategory),
       lastMonthByCategory: rounded(last.byCategory),
       averageBeforeByCategory: rounded(average),
-      budgets: (await this.budgets.list(userId, month)).map(({ category, limit, spent }) => ({
-        category,
-        limit,
-        spent,
-      })),
+      budgets: (await this.budgets.list(userId, month)).map(
+        ({category, limit, spent}) => ({
+          category,
+          limit,
+          spent,
+        }),
+      ),
       subscriptionsPerMonth: subscriptions.perMonth,
       largestExpenses: largest,
     };
@@ -132,7 +155,9 @@ export class FinanceReportsService {
 
 function rounded(values: Map<string, number>): Record<string, number> {
   return Object.fromEntries(
-    [...values].sort((a, b) => b[1] - a[1]).map(([key, value]) => [key, round(value)]),
+    [...values]
+      .sort((a, b) => b[1] - a[1])
+      .map(([key, value]) => [key, round(value)]),
   );
 }
 

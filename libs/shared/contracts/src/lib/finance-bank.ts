@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /*
  * The bank directly (open banking, PSD2) through Enable Banking: the owner registers an
@@ -13,7 +13,10 @@ export const bankAppInputSchema = z.object({
     .string()
     .trim()
     .max(20_000)
-    .refine((key) => /-----BEGIN (RSA )?PRIVATE KEY-----/.test(key), 'Expected a PEM private key'),
+    .refine(
+      key => /-----BEGIN (RSA )?PRIVATE KEY-----/.test(key),
+      'Expected a PEM private key',
+    ),
 });
 export type BankAppInput = z.infer<typeof bankAppInputSchema>;
 
@@ -74,7 +77,7 @@ export const bankConnectInputSchema = z.object({
     .string()
     .trim()
     .length(2)
-    .transform((value) => value.toUpperCase()),
+    .transform(value => value.toUpperCase()),
   bank: z.string().trim().min(1).max(200),
   /** Confirming the access again: the connection whose session it replaces. */
   connectionId: z.uuid().optional(),
@@ -86,10 +89,10 @@ export const bankBanksQuerySchema = z.object({
     .string()
     .trim()
     .length(2)
-    .transform((value) => value.toUpperCase()),
+    .transform(value => value.toUpperCase()),
 });
 
-export const bankAccountUpdateSchema = z.object({ enabled: z.boolean() });
+export const bankAccountUpdateSchema = z.object({enabled: z.boolean()});
 export type BankAccountUpdate = z.infer<typeof bankAccountUpdateSchema>;
 
 export interface BankSyncResult {

@@ -1,5 +1,5 @@
-import { AccountLayout, AccountTheme, CalmSettings } from '@pd/contracts';
-import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {AccountLayout, AccountTheme, CalmSettings} from '@pd/contracts';
+import {jsonb, pgTable, text, timestamp, uuid} from 'drizzle-orm/pg-core';
 
 /**
  * Users. Even with a single user, all module data is
@@ -20,7 +20,7 @@ export const users = pgTable('users', {
   telegramChatId: text(),
   /** Quiet hours and soft overdue (see CalmSettings); `null` — never set, as before. */
   calm: jsonb().$type<CalmSettings>(),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
 });
 
 export type UserRow = typeof users.$inferSelect;

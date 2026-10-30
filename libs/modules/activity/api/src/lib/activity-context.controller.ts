@@ -10,7 +10,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, Public, ZodValidationPipe } from '@pd/api-core';
+import {AuthUser, CurrentUser, Public, ZodValidationPipe} from '@pd/api-core';
 import {
   TelemetryIngest,
   telemetryIngestSchema,
@@ -22,9 +22,9 @@ import {
   workstateQuerySchema,
   workstateRestoreRequestSchema,
 } from '@pd/contracts';
-import { DevicesService } from './devices.service';
-import { TelemetryService } from './telemetry.service';
-import { WorkstateService } from './workstate.service';
+import {DevicesService} from './devices.service';
+import {TelemetryService} from './telemetry.service';
+import {WorkstateService} from './workstate.service';
 
 @Controller('activity')
 export class ActivityContextController {
@@ -68,7 +68,10 @@ export class ActivityContextController {
 
   @Delete('telemetry/:id')
   @HttpCode(204)
-  removeTelemetry(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeTelemetry(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.telemetry.remove(user.id, id);
   }
 
@@ -105,7 +108,10 @@ export class ActivityContextController {
   }
 
   @Get('workstates/:id')
-  getWorkstate(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  getWorkstate(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.workstates.get(user.id, id);
   }
 
@@ -114,7 +120,8 @@ export class ActivityContextController {
   restoreWorkstate(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(workstateRestoreRequestSchema)) _body: Record<string, never>,
+    @Body(new ZodValidationPipe(workstateRestoreRequestSchema))
+    _body: Record<string, never>,
   ) {
     return this.workstates.restore(user.id, id, _body);
   }
@@ -127,7 +134,10 @@ export class ActivityContextController {
 
   @Delete('workstates/:id')
   @HttpCode(204)
-  removeWorkstate(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeWorkstate(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.workstates.remove(user.id, id);
   }
 

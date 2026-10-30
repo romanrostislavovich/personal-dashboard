@@ -1,13 +1,19 @@
-import { DatePipe, JsonPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { syncApi } from '@pd/client-core';
-import { SyncConflict, SyncParkedChange } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { errorStatus } from '../client/core-requests';
+import {DatePipe, JsonPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  output,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {syncApi} from '@pd/client-core';
+import {SyncConflict, SyncParkedChange} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {errorStatus} from '../client/core-requests';
 
 /** A field that differs between the two versions of a row. */
 interface Difference {
@@ -36,23 +42,32 @@ interface Difference {
         <div class="item">
           <div class="meta">
             <strong>{{ tableName(conflict.table) }}</strong>
-            · {{ conflict.createdAt | date: 'd MMM, HH:mm' }} · {{ reason(conflict.reason) }}
+            · {{ conflict.createdAt | date: 'd MMM, HH:mm' }} ·
+            {{ reason(conflict.reason) }}
           </div>
           <div class="versions">
             <div class="version">
-              <span class="label">{{ 'core.settings.sync.keptVersion' | transloco }}</span>
+              <span class="label">{{
+                'core.settings.sync.keptVersion' | transloco
+              }}</span>
               @for (diff of differences(conflict); track diff.field) {
                 <div class="field">
                   <span class="name">{{ diff.field }}</span>
                   <span class="value">{{ show(diff.kept) }}</span>
                 </div>
               }
-              <button matButton="tonal" (click)="keep(conflict)" [disabled]="busy()">
+              <button
+                matButton="tonal"
+                (click)="keep(conflict)"
+                [disabled]="busy()"
+              >
                 {{ 'core.settings.sync.keepThis' | transloco }}
               </button>
             </div>
             <div class="version">
-              <span class="label">{{ 'core.settings.sync.currentVersion' | transloco }}</span>
+              <span class="label">{{
+                'core.settings.sync.currentVersion' | transloco
+              }}</span>
               @if (conflict.current) {
                 @for (diff of differences(conflict); track diff.field) {
                   <div class="field">
@@ -61,7 +76,9 @@ interface Difference {
                   </div>
                 }
               } @else {
-                <p class="hint">{{ 'core.settings.sync.noCurrent' | transloco }}</p>
+                <p class="hint">
+                  {{ 'core.settings.sync.noCurrent' | transloco }}
+                </p>
               }
               <button matButton (click)="dismiss(conflict)" [disabled]="busy()">
                 {{ 'core.settings.sync.keepCurrent' | transloco }}
@@ -88,7 +105,9 @@ interface Difference {
             <p class="error">{{ change.error }}</p>
             @if (change.row) {
               <details>
-                <summary>{{ 'core.settings.sync.showRow' | transloco }}</summary>
+                <summary>
+                  {{ 'core.settings.sync.showRow' | transloco }}
+                </summary>
                 <pre>{{ change.row | json }}</pre>
               </details>
             }
@@ -194,14 +213,21 @@ export class SyncConflictsComponent {
   /** Only the fields that differ; with no current row, every field of the kept one. */
   protected differences(conflict: SyncConflict): Difference[] {
     const current = conflict.current ?? {};
-    const fields = [...new Set([...Object.keys(conflict.kept), ...Object.keys(current)])];
+    const fields = [
+      ...new Set([...Object.keys(conflict.kept), ...Object.keys(current)]),
+    ];
     return fields
       .filter(
-        (field) =>
+        field =>
           !conflict.current ||
-          JSON.stringify(conflict.kept[field]) !== JSON.stringify(current[field]),
+          JSON.stringify(conflict.kept[field]) !==
+            JSON.stringify(current[field]),
       )
-      .map((field) => ({ field, kept: conflict.kept[field], current: current[field] }));
+      .map(field => ({
+        field,
+        kept: conflict.kept[field],
+        current: current[field],
+      }));
   }
 
   protected show(value: unknown): string {
@@ -226,7 +252,10 @@ export class SyncConflictsComponent {
   }
 
   protected keep(conflict: SyncConflict): Promise<void> {
-    return this.run(() => this.sync.keepConflict(conflict.id), 'core.settings.sync.kept');
+    return this.run(
+      () => this.sync.keepConflict(conflict.id),
+      'core.settings.sync.kept',
+    );
   }
 
   protected dismiss(conflict: SyncConflict): Promise<void> {
@@ -234,18 +263,25 @@ export class SyncConflictsComponent {
   }
 
   protected dismissAll(): Promise<void> {
-    if (!confirm(this.transloco.translate('core.settings.sync.confirmDismissAll'))) {
+    if (
+      !confirm(this.transloco.translate('core.settings.sync.confirmDismissAll'))
+    ) {
       return Promise.resolve();
     }
     return this.run(() => this.sync.dismissAllConflicts());
   }
 
   protected discard(change: SyncParkedChange): Promise<void> {
-    return this.run(() => this.sync.discardParked({ table: change.table, pk: change.pk }));
+    return this.run(() =>
+      this.sync.discardParked({table: change.table, pk: change.pk}),
+    );
   }
 
   private async load(): Promise<void> {
-    const [conflicts, parked] = await Promise.all([this.sync.conflicts(), this.sync.parked()]);
+    const [conflicts, parked] = await Promise.all([
+      this.sync.conflicts(),
+      this.sync.parked(),
+    ]);
     this.conflicts.set(conflicts);
     this.parked.set(parked);
   }
@@ -259,7 +295,9 @@ export class SyncConflictsComponent {
       }
     } catch (error) {
       this.notify(
-        errorStatus(error) === 409 ? 'core.settings.sync.parentGone' : 'core.login.error',
+        errorStatus(error) === 409
+          ? 'core.settings.sync.parentGone'
+          : 'core.login.error',
       );
     } finally {
       this.busy.set(false);
@@ -269,6 +307,6 @@ export class SyncConflictsComponent {
   }
 
   private notify(key: string): void {
-    this.snackBar.open(this.transloco.translate(key), 'OK', { duration: 4000 });
+    this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 4000});
   }
 }

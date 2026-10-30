@@ -1,9 +1,14 @@
-import { CurrencyPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { RecurringPayment } from '@pd/contracts';
-import { Month, monthRange } from '@pd/web-core';
+import {CurrencyPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {RecurringPayment} from '@pd/contracts';
+import {Month, monthRange} from '@pd/web-core';
 
 /**
  * Recurring payments still to be charged this month — what is already "spoken for".
@@ -25,7 +30,8 @@ import { Month, monthRange } from '@pd/web-core';
     } @empty {
       <p class="empty">
         @if (hasActive()) {
-          <mat-icon inline>check_circle</mat-icon> {{ 'finance.upcoming.none' | transloco }}
+          <mat-icon inline>check_circle</mat-icon>
+          {{ 'finance.upcoming.none' | transloco }}
         } @else {
           {{ 'finance.upcoming.noPayments' | transloco }}
         }
@@ -95,11 +101,11 @@ export class UpcomingPaymentsComponent {
   readonly month = input.required<Month>();
 
   protected readonly upcoming = computed(() => {
-    const { from, to } = monthRange(this.month());
+    const {from, to} = monthRange(this.month());
     // A yearly payment only in its month; a free trial ending after this month costs nothing yet.
     return this.payments()
       .filter(
-        (p) =>
+        p =>
           p.isActive &&
           (!p.lastChargedOn || p.lastChargedOn < from) &&
           (p.period !== 'year' || p.monthOfYear === this.month().month) &&
@@ -108,13 +114,15 @@ export class UpcomingPaymentsComponent {
       .sort((a, b) => a.dayOfMonth - b.dayOfMonth);
   });
 
-  protected readonly hasActive = computed(() => this.payments().some((p) => p.isActive));
+  protected readonly hasActive = computed(() =>
+    this.payments().some(p => p.isActive),
+  );
 
   protected readonly totals = computed(() => {
     const byCurrency = new Map<string, number>();
     for (const p of this.upcoming()) {
       byCurrency.set(p.currency, (byCurrency.get(p.currency) ?? 0) + p.amount);
     }
-    return [...byCurrency].map(([currency, amount]) => ({ currency, amount }));
+    return [...byCurrency].map(([currency, amount]) => ({currency, amount}));
   });
 }

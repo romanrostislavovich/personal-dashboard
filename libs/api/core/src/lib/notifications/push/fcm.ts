@@ -1,7 +1,7 @@
-import { createSign } from 'node:crypto';
-import { fetchWithTimeout } from '../../net/outbound';
-import { PUSH_CHANNEL } from '@pd/contracts';
-import { DeliveryError } from '../notification-channel';
+import {createSign} from 'node:crypto';
+import {fetchWithTimeout} from '../../net/outbound';
+import {PUSH_CHANNEL} from '@pd/contracts';
+import {DeliveryError} from '../notification-channel';
 
 /**
  * Firebase Cloud Messaging (HTTP v1), the way Android delivers push notifications. The server
@@ -31,7 +31,7 @@ export function parseServiceAccount(json: string): ServiceAccount {
   } catch {
     throw new Error('Not JSON: paste the whole file Firebase gave');
   }
-  const { type, project_id, client_email, private_key } = data;
+  const {type, project_id, client_email, private_key} = data;
   if (
     type !== 'service_account' ||
     typeof project_id !== 'string' ||
@@ -41,14 +41,18 @@ export function parseServiceAccount(json: string): ServiceAccount {
   ) {
     throw new Error('Not the key of a Firebase service account');
   }
-  return { projectId: project_id, clientEmail: client_email, privateKey: private_key };
+  return {
+    projectId: project_id,
+    clientEmail: client_email,
+    privateKey: private_key,
+  };
 }
 
 /** What became of one notification to one phone. */
 export type FcmResult = 'sent' | 'gone';
 
 export class FcmClient {
-  private accessToken: { value: string; until: number } | null = null;
+  private accessToken: {value: string; until: number} | null = null;
 
   constructor(
     private readonly account: ServiceAccount,
@@ -67,18 +71,20 @@ export class FcmClient {
    */
   async send(
     deviceToken: string,
-    message: { title: string; body: string; data?: Record<string, string> },
+    message: {title: string; body: string; data?: Record<string, string>},
   ): Promise<FcmResult> {
     const body =
-      message.body.length > MAX_BODY ? `${message.body.slice(0, MAX_BODY)}…` : message.body;
+      message.body.length > MAX_BODY
+        ? `${message.body.slice(0, MAX_BODY)}…`
+        : message.body;
     return this.post(deviceToken, {
-      notification: { title: message.title, body },
+      notification: {title: message.title, body},
       data: message.data ?? {},
       // The app's own channel (MobilePushService makes it): Firebase's fallback one is
       // silent on MIUI.
       android: {
         priority: 'HIGH',
-        notification: { sound: 'default', channel_id: PUSH_CHANNEL },
+        notification: {sound: 'default', channel_id: PUSH_CHANNEL},
       },
     });
   }
@@ -87,11 +93,17 @@ export class FcmClient {
    * A data message only: the app draws the notification itself, with its buttons
    * (`PushMessagingService`), or takes one away. High priority, so Android wakes the app for it.
    */
-  async sendData(deviceToken: string, data: Record<string, string>): Promise<FcmResult> {
-    return this.post(deviceToken, { data, android: { priority: 'HIGH' } });
+  async sendData(
+    deviceToken: string,
+    data: Record<string, string>,
+  ): Promise<FcmResult> {
+    return this.post(deviceToken, {data, android: {priority: 'HIGH'}});
   }
 
-  private async post(deviceToken: string, message: Record<string, unknown>): Promise<FcmResult> {
+  private async post(
+    deviceToken: string,
+    message: Record<string, unknown>,
+  ): Promise<FcmResult> {
     const response = await this.http(
       `https://fcm.googleapis.com/v1/projects/${this.account.projectId}/messages:send`,
       {
@@ -100,13 +112,17 @@ export class FcmClient {
           Authorization: `Bearer ${await this.token()}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: { token: deviceToken, ...message } }),
+        body: JSON.stringify({message: {token: deviceToken, ...message}}),
       },
     );
     if (response.ok) {
       return 'sent';
     }
-    return fcmFailure(response.status, await response.text(), response.headers.get('retry-after'));
+    return fcmFailure(
+      response.status,
+      await response.text(),
+      response.headers.get('retry-after'),
+    );
   }
 
   private async token(): Promise<string> {
@@ -115,7 +131,7 @@ export class FcmClient {
     }
     const response = await this.http(TOKEN_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: new URLSearchParams({
         grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
         assertion: signedJwt(this.account),
@@ -142,20 +158,27 @@ export class FcmClient {
 /** The assertion of the OAuth exchange: a JWT signed with the service account's key (RS256). */
 export function signedJwt(account: ServiceAccount, now = Date.now()): string {
   const issuedAt = Math.floor(now / 1000);
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
-  const unsigned = `${encode({ alg: 'RS256', typ: 'JWT' })}.${encode({
+  const encode = (value: object) =>
+    Buffer.from(JSON.stringify(value)).toString('base64url');
+  const unsigned = `${encode({alg: 'RS256', typ: 'JWT'})}.${encode({
     iss: account.clientEmail,
     scope: SCOPE,
     aud: TOKEN_URL,
     iat: issuedAt,
     exp: issuedAt + 3600,
   })}`;
-  const signature = createSign('RSA-SHA256').update(unsigned).sign(account.privateKey);
+  const signature = createSign('RSA-SHA256')
+    .update(unsigned)
+    .sign(account.privateKey);
   return `${unsigned}.${signature.toString('base64url')}`;
 }
 
 /** FCM's error → forget the phone, or try again later (see DeliveryError). */
-export function fcmFailure(status: number, text: string, retryAfter: string | null): FcmResult {
+export function fcmFailure(
+  status: number,
+  text: string,
+  retryAfter: string | null,
+): FcmResult {
   // The token is unknown (404 UNREGISTERED), broken (400) or of another project (403 mismatch).
   const tokenGone =
     status === 404 ||
@@ -166,6 +189,7 @@ export function fcmFailure(status: number, text: string, retryAfter: string | nu
   }
   const seconds = Number(retryAfter);
   throw new DeliveryError(`Firebase ${status}: ${text.slice(0, 200)}`, {
-    retryAfterMs: Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : undefined,
+    retryAfterMs:
+      Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : undefined,
   });
 }

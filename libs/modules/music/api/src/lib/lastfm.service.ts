@@ -5,8 +5,8 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database, SecretsService } from '@pd/api-core';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, DB, Database, SecretsService} from '@pd/api-core';
 import {
   LastfmSettingsInput,
   MusicStats,
@@ -15,16 +15,16 @@ import {
   NowPlaying,
   todayIn,
 } from '@pd/contracts';
-import { and, desc, eq, gt, isNotNull, max, min, sql } from 'drizzle-orm';
+import {and, desc, eq, gt, isNotNull, max, min, sql} from 'drizzle-orm';
 import {
   LastfmAuthError,
   LastfmClient,
   LastfmTrack,
   LastfmUnavailableError,
 } from './clients/lastfm.client';
-import { musicSettings, MusicSettingsRow, scrobbles } from './music.schema';
-import { fillPlaysByDay } from './plays-by-day';
-import { scrobbleId } from './scrobble-id';
+import {musicSettings, MusicSettingsRow, scrobbles} from './music.schema';
+import {fillPlaysByDay} from './plays-by-day';
+import {scrobbleId} from './scrobble-id';
 
 const API_KEY_SECRET = 'music.lastfm.api-key';
 /** On connect, pull the last 30 days of history, not all of it. */
@@ -39,7 +39,10 @@ const CACHE_TTL_MS = 10 * 60 * 1000;
 @Injectable()
 export class LastfmService {
   private readonly logger = new Logger(LastfmService.name);
-  private readonly cache = new Map<string, { expiresAt: number; value: unknown }>();
+  private readonly cache = new Map<
+    string,
+    {expiresAt: number; value: unknown}
+  >();
 
   constructor(
     @Inject(DB) private readonly db: Database,
@@ -56,7 +59,10 @@ export class LastfmService {
   }
 
   /** Connect: check the "user + key" pair and pull the history right away. */
-  async connect(userId: string, { username, apiKey }: LastfmSettingsInput): Promise<void> {
+  async connect(
+    userId: string,
+    {username, apiKey}: LastfmSettingsInput,
+  ): Promise<void> {
     try {
       await new LastfmClient(apiKey, username).getTotalScrobbles();
     } catch (error) {
@@ -68,11 +74,15 @@ export class LastfmService {
     await this.secrets.set(userId, API_KEY_SECRET, apiKey);
     await this.db
       .insert(musicSettings)
-      .values({ userId, lastfmUsername: username })
+      .values({userId, lastfmUsername: username})
       .onConflictDoUpdate({
         target: musicSettings.userId,
         // Another account (or a reconnect) — check again that the whole history is here.
-        set: { lastfmUsername: username, lastError: null, historyImportedAt: null },
+        set: {
+          lastfmUsername: username,
+          lastError: null,
+          historyImportedAt: null,
+        },
       });
     this.clearCache(userId);
     await this.sync(userId);
@@ -83,7 +93,7 @@ export class LastfmService {
     await this.secrets.delete(userId, API_KEY_SECRET);
     await this.db
       .update(musicSettings)
-      .set({ lastfmUsername: null, lastError: null })
+      .set({lastfmUsername: null, lastError: null})
       .where(eq(musicSettings.userId, userId));
     this.clearCache(userId);
   }
@@ -95,14 +105,16 @@ export class LastfmService {
       return;
     }
     try {
-      const [{ latest }] = await this.db
-        .select({ latest: max(scrobbles.playedAt) })
+      const [{latest}] = await this.db
+        .select({latest: max(scrobbles.playedAt)})
         .from(scrobbles)
         .where(eq(scrobbles.userId, userId));
-      const from = latest ?? new Date(Date.now() - INITIAL_HISTORY_DAYS * 24 * 60 * 60 * 1000);
+      const from =
+        latest ??
+        new Date(Date.now() - INITIAL_HISTORY_DAYS * 24 * 60 * 60 * 1000);
 
       for (let page = 1; page <= MAX_PAGES_PER_SYNC; page++) {
-        const result = await client.getRecentTracks({ from, page });
+        const result = await client.getRecentTracks({from, page});
         await this.save(userId, result.tracks);
         if (page >= result.totalPages) {
           break;
@@ -111,21 +123,24 @@ export class LastfmService {
       await this.setSyncResult(userId, null);
     } catch (error) {
       this.logger.warn(`Last.fm sync failed for ${userId}: ${error}`);
-      await this.setSyncResult(userId, error instanceof Error ? error.message : String(error));
+      await this.setSyncResult(
+        userId,
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 
   /** All users with Last.fm connected (for the background job). */
   async connectedUserIds(): Promise<string[]> {
     const rows = await this.db
-      .select({ userId: musicSettings.userId })
+      .select({userId: musicSettings.userId})
       .from(musicSettings)
       .where(isNotNull(musicSettings.lastfmUsername));
-    return rows.map((row) => row.userId);
+    return rows.map(row => row.userId);
   }
 
   async stats(userId: string): Promise<MusicStats> {
-    const timeZone = this.config.get('APP_TIMEZONE', { infer: true });
+    const timeZone = this.config.get('APP_TIMEZONE', {infer: true});
     const today = todayIn(timeZone);
     const since = new Date(Date.now() - (STATS_DAYS + 1) * 24 * 60 * 60 * 1000);
 
@@ -151,7 +166,7 @@ export class LastfmService {
       totalScrobbles: await this.totalScrobbles(userId).catch(() => null),
       today: playsByDay.at(-1)?.plays ?? 0,
       playsByDay,
-      recent: recent.map((r) => ({
+      recent: recent.map(r => ({
         track: r.track,
         artist: r.artist,
         album: r.album,
@@ -163,10 +178,15 @@ export class LastfmService {
   /** Total Last.fm scrobbles of all time; `null` if Last.fm is not connected. */
   async totalScrobbles(userId: string): Promise<number | null> {
     const client = await this.clientFor(userId);
-    return client ? this.cached(userId, 'total', () => client.getTotalScrobbles()) : null;
+    return client
+      ? this.cached(userId, 'total', () => client.getTotalScrobbles())
+      : null;
   }
 
-  async tops(userId: string, period: MusicTopPeriod): Promise<MusicTops | null> {
+  async tops(
+    userId: string,
+    period: MusicTopPeriod,
+  ): Promise<MusicTops | null> {
     const client = await this.clientFor(userId);
     if (!client) {
       return null;
@@ -177,7 +197,7 @@ export class LastfmService {
         client.getTop('tracks', period),
         client.getTop('albums', period),
       ]);
-      return { period, artists, tracks, albums };
+      return {period, artists, tracks, albums};
     });
   }
 
@@ -189,15 +209,15 @@ export class LastfmService {
     }
     // Asked every half a minute while the page is open: Last.fm stumbling is "nothing plays".
     const tracks = await client
-      .getRecentTracks({ limit: 1 })
-      .then((page) => page.tracks)
-      .catch((error) => {
+      .getRecentTracks({limit: 1})
+      .then(page => page.tracks)
+      .catch(error => {
         if (error instanceof LastfmUnavailableError) {
           return [];
         }
         throw error;
       });
-    const current = tracks.find((t) => t.playedAt === null);
+    const current = tracks.find(t => t.playedAt === null);
     return current
       ? {
           source: 'lastfm',
@@ -218,12 +238,14 @@ export class LastfmService {
    * Returns how many plays the page had.
    */
   async save(userId: string, tracks: LastfmTrack[]): Promise<number> {
-    const played = tracks.filter((t): t is LastfmTrack & { playedAt: Date } => t.playedAt !== null);
+    const played = tracks.filter(
+      (t): t is LastfmTrack & {playedAt: Date} => t.playedAt !== null,
+    );
     if (played.length > 0) {
       await this.db
         .insert(scrobbles)
         .values(
-          played.map((t) => ({
+          played.map(t => ({
             id: scrobbleId(userId, t.playedAt, t.track),
             userId,
             playedAt: t.playedAt,
@@ -244,8 +266,8 @@ export class LastfmService {
 
   /** The oldest stored play: the history import continues from there into the past. */
   async oldestPlay(userId: string): Promise<Date | null> {
-    const [{ oldest }] = await this.db
-      .select({ oldest: min(scrobbles.playedAt) })
+    const [{oldest}] = await this.db
+      .select({oldest: min(scrobbles.playedAt)})
       .from(scrobbles)
       .where(eq(scrobbles.userId, userId));
     return oldest;
@@ -259,14 +281,21 @@ export class LastfmService {
       : null;
   }
 
-  private async setSyncResult(userId: string, lastError: string | null): Promise<void> {
+  private async setSyncResult(
+    userId: string,
+    lastError: string | null,
+  ): Promise<void> {
     await this.db
       .update(musicSettings)
-      .set({ lastSyncedAt: new Date(), lastError })
+      .set({lastSyncedAt: new Date(), lastError})
       .where(eq(musicSettings.userId, userId));
   }
 
-  private async cached<T>(userId: string, key: string, load: () => Promise<T>): Promise<T> {
+  private async cached<T>(
+    userId: string,
+    key: string,
+    load: () => Promise<T>,
+  ): Promise<T> {
     const cacheKey = `${userId}:${key}`;
     const hit = this.cache.get(cacheKey);
     if (hit && hit.expiresAt > Date.now()) {
@@ -274,7 +303,7 @@ export class LastfmService {
     }
     try {
       const value = await load();
-      this.cache.set(cacheKey, { expiresAt: Date.now() + CACHE_TTL_MS, value });
+      this.cache.set(cacheKey, {expiresAt: Date.now() + CACHE_TTL_MS, value});
       return value;
     } catch (error) {
       if (!(error instanceof LastfmUnavailableError)) {

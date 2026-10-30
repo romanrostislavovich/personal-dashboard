@@ -1,6 +1,6 @@
-import { PersonNote } from './links';
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {PersonNote} from './links';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 export const REMINDER_DAY_OPTIONS = [0, 1, 3, 7, 14, 30] as const;
 
@@ -34,18 +34,23 @@ export const birthdayInputSchema = z
     /** How many days in advance to remind of the day of memory: 0 — on the day itself. */
     memorialRemindDaysBefore: remindDays.default(MEMORIAL_REMINDER_DEFAULT),
   })
-  .refine((input) => isWholeDate(input.month, input.day), {
+  .refine(input => isWholeDate(input.month, input.day), {
     message: 'Invalid day for this month',
     path: ['day'],
   })
-  .refine((input) => isWholeDate(input.deathMonth, input.deathDay), {
+  .refine(input => isWholeDate(input.deathMonth, input.deathDay), {
     message: 'Invalid day for this month',
     path: ['deathDay'],
   })
-  .refine((input) => input.month != null || input.deathMonth != null, {
-    message: 'A birthday or a day of death is needed',
-    path: ['day'],
-  });
+  .refine(
+    input =>
+      (input.month !== null && input.month !== undefined) ||
+      (input.deathMonth !== null && input.deathMonth !== undefined),
+    {
+      message: 'A birthday or a day of death is needed',
+      path: ['day'],
+    },
+  );
 export type BirthdayInput = z.input<typeof birthdayInputSchema>;
 
 export interface Birthday {
@@ -129,9 +134,20 @@ export function daysUntilNearest(person: UpcomingBirthday): number {
 }
 
 /** A day and a month together or not at all, and a day the month has. */
-function isWholeDate(monthOf: number | null | undefined, dayOf: number | null | undefined) {
-  if (monthOf == null || dayOf == null) {
-    return monthOf == null && dayOf == null;
+function isWholeDate(
+  monthOf: number | null | undefined,
+  dayOf: number | null | undefined,
+) {
+  if (
+    monthOf === null ||
+    monthOf === undefined ||
+    dayOf === null ||
+    dayOf === undefined
+  ) {
+    return (
+      (monthOf === null || monthOf === undefined) &&
+      (dayOf === null || dayOf === undefined)
+    );
   }
   return dayOf <= maxDayInMonth(monthOf);
 }

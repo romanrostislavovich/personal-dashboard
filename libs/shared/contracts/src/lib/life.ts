@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 // The life timeline (a day across every module) and the summaries of a month or a year.
 // Texts are translation keys of the modules: the server knows no language for them.
@@ -48,10 +48,13 @@ export interface LifeSummary {
 
 const LOCAL_DATE = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
-export const lifeDayQuerySchema = z.object({ day: LOCAL_DATE });
+export const lifeDayQuerySchema = z.object({day: LOCAL_DATE});
 export type LifeDayQuery = z.infer<typeof lifeDayQuerySchema>;
 
-export const lifeSummaryQuerySchema = z.object({ from: LOCAL_DATE, to: LOCAL_DATE });
+export const lifeSummaryQuerySchema = z.object({
+  from: LOCAL_DATE,
+  to: LOCAL_DATE,
+});
 export type LifeSummaryQuery = z.infer<typeof lifeSummaryQuerySchema>;
 
 // --- The AI's story of a month or a year ---

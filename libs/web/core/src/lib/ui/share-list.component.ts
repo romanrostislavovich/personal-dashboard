@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
 
 export interface Share {
   name: string;
@@ -75,7 +80,7 @@ export class ShareListComponent {
   /** Bars are relative to the first (largest) item, so small ones stay visible. */
   protected readonly scaled = computed(() => {
     const items = this.items();
-    const max = Math.max(1, ...items.map((item) => item.value));
-    return items.map((item) => ({ ...item, percent: (item.value / max) * 100 }));
+    const max = Math.max(1, ...items.map(item => item.value));
+    return items.map(item => ({...item, percent: (item.value / max) * 100}));
   });
 }

@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ServerActions } from '@pd/api-core';
-import { soundcloudConnectSchema } from '@pd/contracts';
-import { SoundcloudService } from './soundcloud.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {ServerActions} from '@pd/api-core';
+import {soundcloudConnectSchema} from '@pd/contracts';
+import {SoundcloudService} from './soundcloud.service';
 
 /** SoundCloud requests run on the server (see ServerActions). */
 export const SOUNDCLOUD_ACTIONS = {
@@ -21,7 +21,7 @@ export class SoundcloudServerActions implements OnModuleInit {
       this.soundcloud.connect(userId, soundcloudConnectSchema.parse(args)),
     );
     // The news are for the hourly job's notifications; a manual refresh returns nothing.
-    this.actions.register(SOUNDCLOUD_ACTIONS.sync, async (userId) => {
+    this.actions.register(SOUNDCLOUD_ACTIONS.sync, async userId => {
       await this.soundcloud.sync(userId);
     });
   }

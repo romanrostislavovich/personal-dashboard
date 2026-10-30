@@ -1,11 +1,14 @@
-import { WebDashboardModule } from '@pd/web-core';
+import {WebDashboardModule} from '@pd/web-core';
 
 /** Web part of the Weather module. Plugged in at apps/web/src/app/modules.ts. */
 export const weatherModule: WebDashboardModule = {
   id: 'weather',
-  nav: { labelKey: 'weather.title', icon: 'partly_cloudy_day', menu: false },
+  nav: {labelKey: 'weather.title', icon: 'partly_cloudy_day', menu: false},
   loadRoutes: async () => [
-    { path: '', loadComponent: () => import('./weather.page').then((m) => m.WeatherPage) },
+    {
+      path: '',
+      loadComponent: () => import('./weather.page').then(m => m.WeatherPage),
+    },
   ],
   translations: {
     en: () => import('./i18n/en.json'),
@@ -15,7 +18,8 @@ export const weatherModule: WebDashboardModule = {
     {
       id: 'weather.today',
       size: 'small',
-      loadComponent: () => import('./weather.widget').then((m) => m.WeatherWidget),
+      loadComponent: () =>
+        import('./weather.widget').then(m => m.WeatherWidget),
     },
   ],
 };

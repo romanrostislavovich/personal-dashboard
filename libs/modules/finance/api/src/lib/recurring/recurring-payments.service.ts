@@ -1,6 +1,6 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database, ProjectsService } from '@pd/api-core';
+import {Inject, Injectable, NotFoundException} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, DB, Database, ProjectsService} from '@pd/api-core';
 import {
   DateParts,
   RecurringPayment,
@@ -8,18 +8,20 @@ import {
   todayIn,
   toLocalDate,
 } from '@pd/contracts';
-import { and, asc, desc, eq, ilike, min, or } from 'drizzle-orm';
-import { z } from 'zod';
+import {and, asc, desc, eq, ilike, min, or} from 'drizzle-orm';
+import {z} from 'zod';
 import {
   RecurringPaymentRow,
   recurringPayments,
   recurringPrices,
   transactions,
 } from '../finance.schema';
-import { contractDates } from './contract-dates';
-import { dueChargeDate } from './due-charge-date';
+import {contractDates} from './contract-dates';
+import {dueChargeDate} from './due-charge-date';
 
-export type ValidRecurringPaymentInput = z.output<typeof recurringPaymentInputSchema>;
+export type ValidRecurringPaymentInput = z.output<
+  typeof recurringPaymentInputSchema
+>;
 
 @Injectable()
 export class RecurringPaymentsService {
@@ -40,10 +42,10 @@ export class RecurringPaymentsService {
         .orderBy(desc(recurringPrices.changedOn)),
     ]);
     const firstCharges = await this.firstCharges(userId, rows);
-    return rows.map((row) =>
+    return rows.map(row =>
       toRecurringPayment(
         row,
-        prices.filter((price) => price.recurringPaymentId === row.id),
+        prices.filter(price => price.recurringPaymentId === row.id),
         today,
         firstCharges.get(row.id) ?? null,
       ),
@@ -59,9 +61,11 @@ export class RecurringPaymentsService {
     rows: RecurringPaymentRow[],
   ): Promise<Map<string, string>> {
     const found = new Map<string, string>();
-    for (const row of rows.filter((one) => one.contractMonths && !one.contractStartedOn)) {
+    for (const row of rows.filter(
+      one => one.contractMonths && !one.contractStartedOn,
+    )) {
       const [first] = await this.db
-        .select({ day: min(transactions.occurredOn) })
+        .select({day: min(transactions.occurredOn)})
         .from(transactions)
         .where(
           and(
@@ -89,16 +93,22 @@ export class RecurringPaymentsService {
       .orderBy(asc(recurringPayments.dayOfMonth), asc(recurringPayments.name));
   }
 
-  async create(userId: string, input: ValidRecurringPaymentInput): Promise<RecurringPayment> {
+  async create(
+    userId: string,
+    input: ValidRecurringPaymentInput,
+  ): Promise<RecurringPayment> {
     if (input.projectId) {
       await this.projects.assertOwned(userId, input.projectId);
     }
     // No backdated charges: if this month's charge day has already passed,
     // this month counts as paid; the first automatic charge will be next month.
-    const lastChargedOn = dueChargeDate({ ...input, lastChargedOn: null }, this.today());
+    const lastChargedOn = dueChargeDate(
+      {...input, lastChargedOn: null},
+      this.today(),
+    );
     const [row] = await this.db
       .insert(recurringPayments)
-      .values({ userId, ...normalized(input), lastChargedOn })
+      .values({userId, ...normalized(input), lastChargedOn})
       .returning();
     return toRecurringPayment(row, [], toLocalDate(this.today()));
   }
@@ -114,11 +124,13 @@ export class RecurringPaymentsService {
     const [current] = await this.db
       .select()
       .from(recurringPayments)
-      .where(and(eq(recurringPayments.id, id), eq(recurringPayments.userId, userId)));
+      .where(
+        and(eq(recurringPayments.id, id), eq(recurringPayments.userId, userId)),
+      );
     if (!current) {
       throw new NotFoundException();
     }
-    await this.db.transaction(async (tx) => {
+    await this.db.transaction(async tx => {
       // A new price keeps the old one in the history ("was 9.99 until October").
       if (current.amount !== input.amount) {
         await tx.insert(recurringPrices).values({
@@ -130,24 +142,40 @@ export class RecurringPaymentsService {
       }
       await tx
         .update(recurringPayments)
-        .set({ ...normalized(input), noticedAmount: null })
-        .where(and(eq(recurringPayments.id, id), eq(recurringPayments.userId, userId)));
+        .set({...normalized(input), noticedAmount: null})
+        .where(
+          and(
+            eq(recurringPayments.id, id),
+            eq(recurringPayments.userId, userId),
+          ),
+        );
     });
-    return (await this.list(userId)).find((payment) => payment.id === id) as RecurringPayment;
+    return (await this.list(userId)).find(
+      payment => payment.id === id,
+    ) as RecurringPayment;
   }
 
   async remove(userId: string, id: string): Promise<void> {
     await this.db
       .delete(recurringPayments)
-      .where(and(eq(recurringPayments.id, id), eq(recurringPayments.userId, userId)));
+      .where(
+        and(eq(recurringPayments.id, id), eq(recurringPayments.userId, userId)),
+      );
   }
 
   /** Remembers what was reported, so each fact is told once. */
   async markNoticed(
     id: string,
-    fields: { trialNotifiedFor?: string; noticedAmount?: number; datesNotified?: string[] },
+    fields: {
+      trialNotifiedFor?: string;
+      noticedAmount?: number;
+      datesNotified?: string[];
+    },
   ): Promise<void> {
-    await this.db.update(recurringPayments).set(fields).where(eq(recurringPayments.id, id));
+    await this.db
+      .update(recurringPayments)
+      .set(fields)
+      .where(eq(recurringPayments.id, id));
   }
 
   /** Makes all of the user's due payments and returns the ones made. */
@@ -161,7 +189,7 @@ export class RecurringPaymentsService {
         continue;
       }
       // The transaction and the charge mark are written atomically to avoid duplicates.
-      await this.db.transaction(async (tx) => {
+      await this.db.transaction(async tx => {
         await tx.insert(transactions).values({
           userId,
           projectId: payment.projectId,
@@ -175,16 +203,16 @@ export class RecurringPaymentsService {
         });
         await tx
           .update(recurringPayments)
-          .set({ lastChargedOn: chargeDate })
+          .set({lastChargedOn: chargeDate})
           .where(eq(recurringPayments.id, payment.id));
       });
-      charged.push({ ...payment, lastChargedOn: chargeDate });
+      charged.push({...payment, lastChargedOn: chargeDate});
     }
     return charged;
   }
 
   today(): DateParts {
-    return todayIn(this.config.get('APP_TIMEZONE', { infer: true }));
+    return todayIn(this.config.get('APP_TIMEZONE', {infer: true}));
   }
 }
 
@@ -203,12 +231,12 @@ function normalized(input: ValidRecurringPaymentInput) {
 
 /** A name as a literal inside an ILIKE pattern. */
 function likeEscaped(value: string): string {
-  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
+  return value.replace(/[\\%_]/g, char => `\\${char}`);
 }
 
 function toRecurringPayment(
   row: RecurringPaymentRow,
-  prices: { amount: number; changedOn: string }[],
+  prices: {amount: number; changedOn: string}[],
   today: string,
   firstCharge: string | null = null,
 ): RecurringPayment {
@@ -225,7 +253,7 @@ function toRecurringPayment(
     projectId: row.projectId,
     isActive: row.isActive,
     lastChargedOn: row.lastChargedOn,
-    priceHistory: prices.map(({ amount, changedOn }) => ({ amount, changedOn })),
+    priceHistory: prices.map(({amount, changedOn}) => ({amount, changedOn})),
     contractStartedOn: row.contractStartedOn,
     contractMonths: row.contractMonths,
     noticeDays: row.noticeDays,

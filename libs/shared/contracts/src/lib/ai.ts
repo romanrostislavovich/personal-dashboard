@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { AI_ATTACHMENT_MAX_CHARS, AI_MAX_ATTACHMENTS } from './ai-attachments';
+import {z} from 'zod';
+import {AI_ATTACHMENT_MAX_CHARS, AI_MAX_ATTACHMENTS} from './ai-attachments';
 
 /**
  * Any OpenAI-compatible API. Presets fill in the default address and model,
@@ -8,11 +8,14 @@ import { AI_ATTACHMENT_MAX_CHARS, AI_MAX_ATTACHMENTS } from './ai-attachments';
 export const AI_PROVIDERS = ['deepseek', 'openai', 'ollama', 'custom'] as const;
 export type AiProvider = (typeof AI_PROVIDERS)[number];
 
-export const AI_PROVIDER_PRESETS: Record<AiProvider, { baseUrl: string; model: string }> = {
-  deepseek: { baseUrl: 'https://api.deepseek.com', model: 'deepseek-flash' },
-  openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-6-luna' },
-  ollama: { baseUrl: 'http://localhost:11434/v1', model: '' },
-  custom: { baseUrl: '', model: '' },
+export const AI_PROVIDER_PRESETS: Record<
+  AiProvider,
+  {baseUrl: string; model: string}
+> = {
+  deepseek: {baseUrl: 'https://api.deepseek.com', model: 'deepseek-flash'},
+  openai: {baseUrl: 'https://api.openai.com/v1', model: 'gpt-6-luna'},
+  ollama: {baseUrl: 'http://localhost:11434/v1', model: ''},
+  custom: {baseUrl: '', model: ''},
 };
 
 /**
@@ -35,9 +38,14 @@ export const aiConnectionInputSchema = z
   })
   .refine(
     // A limit in money is counted from the prices.
-    (input) =>
-      input.monthlyLimit == null || (input.priceInput != null && input.priceOutput != null),
-    { message: 'A monthly limit needs both prices', path: ['monthlyLimit'] },
+    input =>
+      input.monthlyLimit === null ||
+      input.monthlyLimit === undefined ||
+      (input.priceInput !== null &&
+        input.priceInput !== undefined &&
+        input.priceOutput !== null &&
+        input.priceOutput !== undefined),
+    {message: 'A monthly limit needs both prices', path: ['monthlyLimit']},
   );
 export type AiConnectionInput = z.infer<typeof aiConnectionInputSchema>;
 
@@ -62,7 +70,7 @@ export interface AiConnection {
   priceOutput: number | null;
   monthlyLimit: number | null;
   /** On the user's own clock. */
-  usage: { today: AiUsageTotals; month: AiUsageTotals };
+  usage: {today: AiUsageTotals; month: AiUsageTotals};
 }
 
 /** When the morning digest is sent until the user picks another time. */
@@ -127,7 +135,7 @@ export const aiPreferencesSchema = z.object({
    */
   moduleConnections: z
     .record(z.string().trim().min(1).max(50), z.uuid())
-    .refine((map) => Object.keys(map).length <= 50, 'Too many sections')
+    .refine(map => Object.keys(map).length <= 50, 'Too many sections')
     .optional(),
   /**
    * Sections with a connection of their own that outside AI clients (MCP: Claude Desktop,
@@ -191,7 +199,7 @@ export const aiChatRequestSchema = z
     content: z.string().trim().max(20_000),
     attachments: z.array(aiAttachmentSchema).max(AI_MAX_ATTACHMENTS).optional(),
   })
-  .refine((request) => request.content || request.attachments?.length, {
+  .refine(request => request.content || request.attachments?.length, {
     message: 'Write a message or attach a file',
   });
 export type AiChatRequest = z.infer<typeof aiChatRequestSchema>;
@@ -229,7 +237,9 @@ export interface AiMemory {
   createdAt: string;
 }
 
-export const aiMemoryInputSchema = z.object({ text: z.string().trim().min(1).max(500) });
+export const aiMemoryInputSchema = z.object({
+  text: z.string().trim().min(1).max(500),
+});
 export type AiMemoryInput = z.infer<typeof aiMemoryInputSchema>;
 
 /** One thing found by meaning in the user's history (`GET /api/ai/recall?q=`). */

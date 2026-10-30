@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 /** Contributions of one day, as on the GitHub profile calendar. */
 export interface GithubContributionDay {
@@ -63,7 +63,7 @@ export interface GithubProfile {
   /** The last 7 days, today included. */
   week: number;
   /** Days in a row with a contribution; today without one does not break the current streak. */
-  streak: { current: number; longest: number };
+  streak: {current: number; longest: number};
   busiestDay: GithubContributionDay | null;
 
   /** Newest first. */

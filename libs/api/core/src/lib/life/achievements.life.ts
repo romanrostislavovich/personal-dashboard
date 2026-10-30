@@ -1,10 +1,10 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { LifeCard } from '@pd/contracts';
-import { and, count, eq, gte, lt } from 'drizzle-orm';
-import { unlockedAchievements } from '../achievements/achievements.schema';
-import { DB, Database } from '../database/database.module';
-import { UsersService } from '../users/users.service';
-import { LifeService, localDaysRange } from './life.service';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {LifeCard} from '@pd/contracts';
+import {and, count, eq, gte, lt} from 'drizzle-orm';
+import {unlockedAchievements} from '../achievements/achievements.schema';
+import {DB, Database} from '../database/database.module';
+import {UsersService} from '../users/users.service';
+import {LifeService, localDaysRange} from './life.service';
 
 /** The achievements unlocked in a period, for its summary. */
 @Injectable()
@@ -19,12 +19,12 @@ export class AchievementsLife implements OnModuleInit {
     this.life.register({
       module: 'achievements',
       period: async (userId, period): Promise<LifeCard[]> => {
-        const { start, end } = localDaysRange(
+        const {start, end} = localDaysRange(
           this.users.timeZoneOf(await this.users.findById(userId)),
           period,
         );
         const [row] = await this.db
-          .select({ unlocked: count() })
+          .select({unlocked: count()})
           .from(unlockedAchievements)
           .where(
             and(

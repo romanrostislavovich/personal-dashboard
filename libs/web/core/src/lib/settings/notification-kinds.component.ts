@@ -1,11 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { MUTABLE_CHANNELS, MutableChannel, NO_CALM } from '@pd/contracts';
-import { AuthService } from '../auth/auth.service';
-import { DASHBOARD_MODULES } from '../dashboard-module';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
+import {MatCardModule} from '@angular/material/card';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {MUTABLE_CHANNELS, MutableChannel, NO_CALM} from '@pd/contracts';
+import {AuthService} from '../auth/auth.service';
+import {DASHBOARD_MODULES} from '../dashboard-module';
 
 interface Kind {
   /** The section's id, as notifications name their source. */
@@ -27,14 +32,20 @@ interface Kind {
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>tune</mat-icon>
-        <mat-card-title>{{ 'core.settings.kinds.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'core.settings.kinds.hint' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'core.settings.kinds.title' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'core.settings.kinds.hint' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <div class="row head">
           <span></span>
           @for (channel of channels; track channel) {
-            <span class="channel">{{ 'core.settings.kinds.' + channel | transloco }}</span>
+            <span class="channel">{{
+              'core.settings.kinds.' + channel | transloco
+            }}</span>
           }
         </div>
         @for (kind of kinds; track kind.id) {
@@ -92,26 +103,30 @@ export class NotificationKindsComponent {
   /** Every section of the menu, then the dashboard's own messages (sync, backups, security). */
   protected readonly kinds: Kind[] = [
     ...inject(DASHBOARD_MODULES)
-      .filter((module) => module.nav)
-      .map((module) => ({
+      .filter(module => module.nav)
+      .map(module => ({
         id: module.id,
         labelKey: module.nav?.labelKey ?? module.id,
         icon: module.nav?.icon ?? 'notifications',
       })),
-    { id: 'core', labelKey: 'core.settings.kinds.core', icon: 'dashboard' },
+    {id: 'core', labelKey: 'core.settings.kinds.core', icon: 'dashboard'},
   ];
 
   protected isMuted(section: string, channel: MutableChannel): boolean {
     return (this.calm().muted?.[section] ?? []).includes(channel);
   }
 
-  protected set(section: string, channel: MutableChannel, on: boolean): Promise<void> {
-    const muted = { ...(this.calm().muted ?? {}) };
-    const left = (muted[section] ?? []).filter((one) => one !== channel);
+  protected set(
+    section: string,
+    channel: MutableChannel,
+    on: boolean,
+  ): Promise<void> {
+    const muted = {...(this.calm().muted ?? {})};
+    const left = (muted[section] ?? []).filter(one => one !== channel);
     muted[section] = on ? left : [...left, channel];
     if (!muted[section].length) {
       delete muted[section];
     }
-    return this.auth.updateProfile({ calm: { ...this.calm(), muted } });
+    return this.auth.updateProfile({calm: {...this.calm(), muted}});
   }
 }

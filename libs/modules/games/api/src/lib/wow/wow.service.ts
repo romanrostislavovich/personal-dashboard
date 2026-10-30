@@ -1,6 +1,11 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database, SecretsService } from '@pd/api-core';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, DB, Database, SecretsService} from '@pd/api-core';
 import {
   addDays,
   todayIn,
@@ -12,8 +17,8 @@ import {
   WowToken,
   WowVersion,
 } from '@pd/contracts';
-import { and, asc, desc, eq, gte, sql } from 'drizzle-orm';
-import { gameAccounts, GameAccountRow, wowAchievements } from '../games.schema';
+import {and, asc, desc, eq, gte, sql} from 'drizzle-orm';
+import {gameAccounts, GameAccountRow, wowAchievements} from '../games.schema';
 import {
   BattlenetAuthError,
   BattlenetClient,
@@ -22,8 +27,8 @@ import {
   WowProfile,
 } from './battlenet.client';
 
-import { WowNews, wowNews } from './wow-news';
-import { wowDays, wowDetails, wowTokenDays } from './wow.schema';
+import {WowNews, wowNews} from './wow-news';
+import {wowDays, wowDetails, wowTokenDays} from './wow.schema';
 
 const CREDENTIALS_SECRET = 'games.wow.credentials';
 const RECENT_ACHIEVEMENTS = 10;
@@ -49,7 +54,10 @@ export class WowService {
     return this.secrets.has(userId, CREDENTIALS_SECRET);
   }
 
-  async saveCredentials(userId: string, input: WowCredentialsInput): Promise<void> {
+  async saveCredentials(
+    userId: string,
+    input: WowCredentialsInput,
+  ): Promise<void> {
     try {
       await new BattlenetClient(input.clientId, input.clientSecret).verify();
     } catch (error) {
@@ -66,7 +74,7 @@ export class WowService {
     if (!stored) {
       throw new BadRequestException('Battle.net credentials are not set');
     }
-    const { clientId, clientSecret } = JSON.parse(stored) as WowCredentialsInput;
+    const {clientId, clientSecret} = JSON.parse(stored) as WowCredentialsInput;
     return new BattlenetClient(clientId, clientSecret);
   }
 
@@ -77,7 +85,7 @@ export class WowService {
   async sync(account: GameAccountRow): Promise<WowSyncResult> {
     const client = await this.clientFor(account.userId);
     const ref = parseRef(account.externalId);
-    const [{ profile, details }, completed] = await Promise.all([
+    const [{profile, details}, completed] = await Promise.all([
       client.getCharacter(ref),
       client.getCompletedAchievements(ref),
     ]);
@@ -92,7 +100,7 @@ export class WowService {
         ? await this.db
             .insert(wowAchievements)
             .values(
-              completed.map((a) => ({
+              completed.map(a => ({
                 accountId: account.id,
                 achievementId: a.id,
                 name: a.name,
@@ -100,31 +108,39 @@ export class WowService {
               })),
             )
             .onConflictDoNothing()
-            .returning({ achievementId: wowAchievements.achievementId })
+            .returning({achievementId: wowAchievements.achievementId})
         : [];
 
     // On the first sync every achievement is "new"; no notification for those.
     const isFirstSync = account.lastSyncedAt === null;
-    const insertedIds = new Set(inserted.map((row) => row.achievementId));
+    const insertedIds = new Set(inserted.map(row => row.achievementId));
     return {
       profile,
-      newAchievements: isFirstSync ? [] : completed.filter((a) => insertedIds.has(a.id)),
+      newAchievements: isFirstSync
+        ? []
+        : completed.filter(a => insertedIds.has(a.id)),
       news,
     };
   }
 
   /** Switches the notifications of one character. */
-  async setNotify(userId: string, accountId: string, notify: boolean): Promise<void> {
+  async setNotify(
+    userId: string,
+    accountId: string,
+    notify: boolean,
+  ): Promise<void> {
     const [account] = await this.db
-      .select({ id: gameAccounts.id })
+      .select({id: gameAccounts.id})
       .from(gameAccounts)
-      .where(and(eq(gameAccounts.id, accountId), eq(gameAccounts.userId, userId)));
+      .where(
+        and(eq(gameAccounts.id, accountId), eq(gameAccounts.userId, userId)),
+      );
     const [row] = account
       ? await this.db
           .update(wowDetails)
-          .set({ notify })
+          .set({notify})
           .where(eq(wowDetails.accountId, accountId))
-          .returning({ accountId: wowDetails.accountId })
+          .returning({accountId: wowDetails.accountId})
       : [];
     if (!row) {
       throw new NotFoundException('Character not found');
@@ -148,7 +164,7 @@ export class WowService {
         region,
         price: latest.price,
         updatedAt: latest.updatedAt.toISOString(),
-        history: days.map(({ day, price }) => ({ day, price })),
+        history: days.map(({day, price}) => ({day, price})),
       };
     });
   }
@@ -168,10 +184,10 @@ export class WowService {
       .where(eq(wowDetails.accountId, account.id));
     await this.db
       .insert(wowDetails)
-      .values({ accountId: account.id, details })
+      .values({accountId: account.id, details})
       .onConflictDoUpdate({
         target: wowDetails.accountId,
-        set: { details, updatedAt: new Date() },
+        set: {details, updatedAt: new Date()},
         // Read every half an hour: a character that did not change stays untouched, otherwise
         // the row would be sent again by the sync between instances.
         setWhere: sql`${wowDetails.details} IS DISTINCT FROM ${JSON.stringify(details)}::jsonb`,
@@ -188,7 +204,7 @@ export class WowService {
     const d = wowDays;
     await this.db
       .insert(d)
-      .values({ accountId: account.id, day: this.today(), ...point })
+      .values({accountId: account.id, day: this.today(), ...point})
       .onConflictDoUpdate({
         target: [d.accountId, d.day],
         set: point,
@@ -211,7 +227,7 @@ export class WowService {
     const t = wowTokenDays;
     await this.db
       .insert(t)
-      .values({ userId, region, day: this.today(), ...token })
+      .values({userId, region, day: this.today(), ...token})
       .onConflictDoUpdate({
         target: [t.userId, t.region, t.day],
         set: token,
@@ -220,7 +236,7 @@ export class WowService {
   }
 
   private today(): string {
-    return toLocalDate(todayIn(this.config.get('APP_TIMEZONE', { infer: true })));
+    return toLocalDate(todayIn(this.config.get('APP_TIMEZONE', {infer: true})));
   }
 
   async summary(account: GameAccountRow): Promise<WowSummary | null> {
@@ -234,8 +250,8 @@ export class WowService {
       .where(eq(wowAchievements.accountId, account.id))
       .orderBy(desc(wowAchievements.completedAt))
       .limit(RECENT_ACHIEVEMENTS);
-    const [{ total }] = await this.db
-      .select({ total: sql<number>`count(*)::int` })
+    const [{total}] = await this.db
+      .select({total: sql<number>`count(*)::int`})
       .from(wowAchievements)
       .where(eq(wowAchievements.accountId, account.id));
 
@@ -244,7 +260,10 @@ export class WowService {
       .from(wowDetails)
       .where(eq(wowDetails.accountId, account.id));
     const since = toLocalDate(
-      addDays(todayIn(this.config.get('APP_TIMEZONE', { infer: true })), -HISTORY_DAYS),
+      addDays(
+        todayIn(this.config.get('APP_TIMEZONE', {infer: true})),
+        -HISTORY_DAYS,
+      ),
     );
     const history = await this.db
       .select()
@@ -256,13 +275,13 @@ export class WowService {
       game: 'wow',
       version: parseRef(account.externalId).version,
       details: extra?.details ?? null,
-      history: history.map(({ accountId: _accountId, ...point }) => point),
+      history: history.map(({accountId: _accountId, ...point}) => point),
       notify: extra?.notify ?? true,
       ...profile,
       // Profiles saved before the class id was stored get it with the next sync.
       classId: profile.classId ?? null,
       totalAchievements: total,
-      recentAchievements: recent.map((a) => ({
+      recentAchievements: recent.map(a => ({
         id: a.achievementId,
         name: a.name,
         completedAt: a.completedAt.toISOString(),

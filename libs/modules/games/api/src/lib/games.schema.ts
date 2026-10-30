@@ -1,5 +1,5 @@
-import { users } from '@pd/api-core/schema';
-import { GAMES } from '@pd/contracts';
+import {users} from '@pd/api-core/schema';
+import {GAMES} from '@pd/contracts';
 import {
   bigint,
   boolean,
@@ -29,21 +29,21 @@ export const gameAccounts = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     game: gameEnum().notNull(),
     externalId: text().notNull(),
     displayName: text().notNull(),
     /** The latest profile snapshot (different for each game, see DotaProfile / WowProfile). */
     profile: jsonb().$type<Record<string, unknown>>(),
-    lastSyncedAt: timestamp({ withTimezone: true }),
+    lastSyncedAt: timestamp({withTimezone: true}),
     /** When the full match history was last downloaded from OpenDota (Dota; refreshed once a day). */
-    historySyncedAt: timestamp({ withTimezone: true }),
+    historySyncedAt: timestamp({withTimezone: true}),
     /** When the whole match history was walked on Steam (Dota); after that the newest page is enough. */
-    steamHistorySyncedAt: timestamp({ withTimezone: true }),
+    steamHistorySyncedAt: timestamp({withTimezone: true}),
     lastError: text(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  (table) => [unique().on(table.userId, table.game, table.externalId)],
+  table => [unique().on(table.userId, table.game, table.externalId)],
 );
 
 /**
@@ -57,8 +57,8 @@ export const dotaMatches = pgTable(
   {
     accountId: uuid()
       .notNull()
-      .references(() => gameAccounts.id, { onDelete: 'cascade' }),
-    matchId: bigint({ mode: 'number' }).notNull(),
+      .references(() => gameAccounts.id, {onDelete: 'cascade'}),
+    matchId: bigint({mode: 'number'}).notNull(),
     heroId: integer().notNull(),
     /** `null` — the result is not known (yet): the match is not counted as a win or a loss. */
     won: boolean(),
@@ -66,7 +66,7 @@ export const dotaMatches = pgTable(
     deaths: integer(),
     assists: integer(),
     durationSec: integer(),
-    startedAt: timestamp({ withTimezone: true }).notNull(),
+    startedAt: timestamp({withTimezone: true}).notNull(),
     /** https://github.com/odota/dotaconstants — game_mode.json (23 = Turbo). */
     gameMode: integer(),
     /** lobby_type.json: 0 = unranked matchmaking, 7 = ranked. */
@@ -82,10 +82,10 @@ export const dotaMatches = pgTable(
     /** 0 — stayed until the end. */
     leaverStatus: integer(),
     /** When Steam was asked for the details: a match it has none for is not asked about again. */
-    detailsCheckedAt: timestamp({ withTimezone: true }),
+    detailsCheckedAt: timestamp({withTimezone: true}),
   },
-  (table) => [
-    primaryKey({ columns: [table.accountId, table.matchId] }),
+  table => [
+    primaryKey({columns: [table.accountId, table.matchId]}),
     index().on(table.accountId, table.startedAt),
   ],
 );
@@ -99,20 +99,20 @@ export const steamGames = pgTable(
   {
     accountId: uuid()
       .notNull()
-      .references(() => gameAccounts.id, { onDelete: 'cascade' }),
+      .references(() => gameAccounts.id, {onDelete: 'cascade'}),
     appId: integer().notNull(),
     name: text().notNull(),
     iconHash: text(),
     playtimeMinutes: integer().notNull().default(0),
     playtime2WeeksMinutes: integer().notNull().default(0),
-    lastPlayedAt: timestamp({ withTimezone: true }),
+    lastPlayedAt: timestamp({withTimezone: true}),
     /** `null` — the game has no achievements, or they were not read yet. */
     achievementsUnlocked: integer(),
     achievementsTotal: integer(),
     /** The playtime at which the achievements were last read: they are re-read once it grows. */
     achievementsPlaytime: integer(),
   },
-  (table) => [primaryKey({ columns: [table.accountId, table.appId] })],
+  table => [primaryKey({columns: [table.accountId, table.appId]})],
 );
 
 /**
@@ -125,16 +125,16 @@ export const steamPlayDays = pgTable(
   {
     userId: uuid()
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, {onDelete: 'cascade'}),
     accountId: uuid()
       .notNull()
-      .references(() => gameAccounts.id, { onDelete: 'cascade' }),
+      .references(() => gameAccounts.id, {onDelete: 'cascade'}),
     appId: integer().notNull(),
-    day: date({ mode: 'string' }).notNull(),
+    day: date({mode: 'string'}).notNull(),
     minutes: integer().notNull(),
   },
-  (table) => [
-    primaryKey({ columns: [table.accountId, table.appId, table.day] }),
+  table => [
+    primaryKey({columns: [table.accountId, table.appId, table.day]}),
     index().on(table.userId, table.day),
   ],
 );
@@ -145,12 +145,12 @@ export const wowAchievements = pgTable(
   {
     accountId: uuid()
       .notNull()
-      .references(() => gameAccounts.id, { onDelete: 'cascade' }),
+      .references(() => gameAccounts.id, {onDelete: 'cascade'}),
     achievementId: integer().notNull(),
     name: text().notNull(),
-    completedAt: timestamp({ withTimezone: true }).notNull(),
+    completedAt: timestamp({withTimezone: true}).notNull(),
   },
-  (table) => [primaryKey({ columns: [table.accountId, table.achievementId] })],
+  table => [primaryKey({columns: [table.accountId, table.achievementId]})],
 );
 
 export type GameAccountRow = typeof gameAccounts.$inferSelect;

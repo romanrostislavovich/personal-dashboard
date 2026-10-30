@@ -1,15 +1,20 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { IntegrationGuideComponent } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { ActivityApi } from '../activity.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {IntegrationGuideComponent} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {ActivityApi} from '../activity.api';
 
 /**
  * Google for Activity → Places, in Settings → Integrations: the Places key (kept on the server)
@@ -35,7 +40,9 @@ import { ActivityApi } from '../activity.api';
       <mat-card-header>
         <mat-icon mat-card-avatar>map</mat-icon>
         <mat-card-title>Google Maps · Google Places</mat-card-title>
-        <mat-card-subtitle>{{ 'activity.google.subtitle' | transloco }}</mat-card-subtitle>
+        <mat-card-subtitle>{{
+          'activity.google.subtitle' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content class="content">
         @if (settings.value(); as s) {
@@ -51,12 +58,16 @@ import { ActivityApi } from '../activity.api';
             } @else {
               <form class="form" [formGroup]="form" (ngSubmit)="save(which)">
                 <mat-form-field subscriptSizing="dynamic">
-                  <mat-label>{{ 'activity.google.' + which + 'Key' | transloco }}</mat-label>
+                  <mat-label>{{
+                    'activity.google.' + which + 'Key' | transloco
+                  }}</mat-label>
                   <input
                     matInput
                     type="password"
                     autocomplete="off"
-                    [formControlName]="which === 'places' ? 'placesKey' : 'mapsKey'"
+                    [formControlName]="
+                      which === 'places' ? 'placesKey' : 'mapsKey'
+                    "
                   />
                 </mat-form-field>
                 <button matButton="filled" type="submit" [disabled]="busy()">
@@ -106,24 +117,35 @@ export class GooglePlacesIntegration {
   protected readonly kinds = ['places', 'maps'] as const;
   protected readonly settings = this.api.placesSettings();
   protected readonly busy = signal(false);
-  protected readonly form = inject(NonNullableFormBuilder).group({ placesKey: '', mapsKey: '' });
+  protected readonly form = inject(NonNullableFormBuilder).group({
+    placesKey: '',
+    mapsKey: '',
+  });
 
   async save(which: 'places' | 'maps'): Promise<void> {
-    const value = this.form.getRawValue()[which === 'places' ? 'placesKey' : 'mapsKey'].trim();
+    const value = this.form
+      .getRawValue()
+      [which === 'places' ? 'placesKey' : 'mapsKey'].trim();
     if (value.length < 20) {
       return;
     }
     this.busy.set(true);
     try {
       await firstValueFrom(
-        this.api.saveGoogleKeys(which === 'places' ? { placesKey: value } : { mapsKey: value }),
+        this.api.saveGoogleKeys(
+          which === 'places' ? {placesKey: value} : {mapsKey: value},
+        ),
       );
       this.form.reset();
       this.settings.reload();
     } catch {
-      this.snackBar.open(this.transloco.translate('activity.google.invalid'), 'OK', {
-        duration: 6000,
-      });
+      this.snackBar.open(
+        this.transloco.translate('activity.google.invalid'),
+        'OK',
+        {
+          duration: 6000,
+        },
+      );
     } finally {
       this.busy.set(false);
     }

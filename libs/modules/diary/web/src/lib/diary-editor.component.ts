@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import {DatePipe} from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -15,13 +15,13 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {
   DIARY_MARK_EMOJIS,
   DIARY_PHOTO_MAX_BYTES,
@@ -31,16 +31,20 @@ import {
   TextEdit,
   unmarkAt,
 } from '@pd/contracts';
-import { OfflineService } from '@pd/web-core';
-import { Editor } from '@tiptap/core';
-import { firstValueFrom } from 'rxjs';
-import { DiaryApi } from './diary.api';
-import { DiaryPhotosComponent } from './diary-photos.component';
-import { questionOfTheDay } from './diary-questions';
-import { diaryEditorExtensions, entryMarkdown } from './editor/diary-markdown';
-import { photoIdFromSrc, photoIdsIn, photoSrc } from './editor/diary-images';
-import { FORMAT_ACTIONS, FormatAction, TABLE_ACTIONS } from './editor/format-actions';
-import { MOOD_EMOJI } from './mood';
+import {OfflineService} from '@pd/web-core';
+import {Editor} from '@tiptap/core';
+import {firstValueFrom} from 'rxjs';
+import {DiaryApi} from './diary.api';
+import {DiaryPhotosComponent} from './diary-photos.component';
+import {questionOfTheDay} from './diary-questions';
+import {diaryEditorExtensions, entryMarkdown} from './editor/diary-markdown';
+import {photoIdFromSrc, photoIdsIn, photoSrc} from './editor/diary-images';
+import {
+  FORMAT_ACTIONS,
+  FormatAction,
+  TABLE_ACTIONS,
+} from './editor/format-actions';
+import {MOOD_EMOJI} from './mood';
 
 /** Pause in typing after which the entry is saved. */
 const AUTOSAVE_DELAY_MS = 1200;
@@ -54,7 +58,7 @@ interface Snapshot {
 }
 
 /** What the editor shows for a day without an entry. */
-const NO_ENTRY = { content: '', mood: null, updatedAt: null };
+const NO_ENTRY = {content: '', mood: null, updatedAt: null};
 
 type EditorMode = 'visual' | 'markdown';
 
@@ -80,7 +84,9 @@ type EditorMode = 'visual' | 'markdown';
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title class="title">{{ day() | date: 'EEEE, d MMMM y' }}</mat-card-title>
+        <mat-card-title class="title">{{
+          day() | date: 'EEEE, d MMMM y'
+        }}</mat-card-title>
         <mat-card-subtitle class="status" [class.error]="status() === 'error'">
           @switch (status()) {
             @case ('saving') {
@@ -92,7 +98,8 @@ type EditorMode = 'visual' | 'markdown';
             @default {
               @if (savedAt(); as at) {
                 <mat-icon inline>cloud_done</mat-icon>
-                {{ 'diary.editor.savedAt' | transloco }} {{ at | date: 'HH:mm' }}
+                {{ 'diary.editor.savedAt' | transloco }}
+                {{ at | date: 'HH:mm' }}
               } @else {
                 {{ 'diary.editor.empty' | transloco }}
               }
@@ -100,7 +107,12 @@ type EditorMode = 'visual' | 'markdown';
           }
         </mat-card-subtitle>
         @if (entry.value()) {
-          <button matButton type="button" class="delete-entry" (click)="remove()">
+          <button
+            matButton
+            type="button"
+            class="delete-entry"
+            (click)="remove()"
+          >
             <mat-icon>delete</mat-icon> {{ 'diary.deleteEntry' | transloco }}
           </button>
         }
@@ -108,7 +120,11 @@ type EditorMode = 'visual' | 'markdown';
 
       <mat-card-content>
         <div class="toolbar">
-          <div class="moods" role="radiogroup" [attr.aria-label]="'diary.editor.mood' | transloco">
+          <div
+            class="moods"
+            role="radiogroup"
+            [attr.aria-label]="'diary.editor.mood' | transloco"
+          >
             @for (value of moods; track value) {
               <button
                 matIconButton
@@ -130,16 +146,22 @@ type EditorMode = 'visual' | 'markdown';
             hideSingleSelectionIndicator
           >
             <mat-button-toggle value="visual">
-              <mat-icon>edit_note</mat-icon> {{ 'diary.editor.visual' | transloco }}
+              <mat-icon>edit_note</mat-icon>
+              {{ 'diary.editor.visual' | transloco }}
             </mat-button-toggle>
             <mat-button-toggle value="markdown">
-              <mat-icon>code</mat-icon> {{ 'diary.editor.markdown' | transloco }}
+              <mat-icon>code</mat-icon>
+              {{ 'diary.editor.markdown' | transloco }}
             </mat-button-toggle>
           </mat-button-toggle-group>
         </div>
 
         <!-- mousedown is prevented so the text selection survives the click -->
-        <div class="marks" role="toolbar" [attr.aria-label]="'diary.editor.toolbar' | transloco">
+        <div
+          class="marks"
+          role="toolbar"
+          [attr.aria-label]="'diary.editor.toolbar' | transloco"
+        >
           @if (mode() === 'visual') {
             @for (action of formatActions; track action.id) {
               <button
@@ -149,7 +171,9 @@ type EditorMode = 'visual' | 'markdown';
                 [class.active]="isActive(action)"
                 [attr.aria-pressed]="isActive(action)"
                 [matTooltip]="'diary.editor.format.' + action.id | transloco"
-                [attr.aria-label]="'diary.editor.format.' + action.id | transloco"
+                [attr.aria-label]="
+                  'diary.editor.format.' + action.id | transloco
+                "
                 (mousedown)="$event.preventDefault()"
                 (click)="format(action)"
               >
@@ -199,14 +223,18 @@ type EditorMode = 'visual' | 'markdown';
 
         @if (mode() === 'visual' && inTable()) {
           <div class="marks table-tools" role="toolbar">
-            <span class="table-label">{{ 'diary.editor.format.table' | transloco }}:</span>
+            <span class="table-label"
+              >{{ 'diary.editor.format.table' | transloco }}:</span
+            >
             @for (action of tableActions; track action.id) {
               <button
                 matIconButton
                 type="button"
                 class="format"
                 [matTooltip]="'diary.editor.format.' + action.id | transloco"
-                [attr.aria-label]="'diary.editor.format.' + action.id | transloco"
+                [attr.aria-label]="
+                  'diary.editor.format.' + action.id | transloco
+                "
                 (mousedown)="$event.preventDefault()"
                 (click)="format(action)"
               >
@@ -222,18 +250,29 @@ type EditorMode = 'visual' | 'markdown';
         @if (!content().trim()) {
           <div class="starter">
             @if (template()) {
-              <button matButton="tonal" type="button" (click)="insertTemplate()">
-                <mat-icon>article</mat-icon> {{ 'diary.editor.insertTemplate' | transloco }}
+              <button
+                matButton="tonal"
+                type="button"
+                (click)="insertTemplate()"
+              >
+                <mat-icon>article</mat-icon>
+                {{ 'diary.editor.insertTemplate' | transloco }}
               </button>
             }
             <div class="question">
-              <span class="question-label">💭 {{ 'diary.editor.question' | transloco }}</span>
+              <span class="question-label"
+                >💭 {{ 'diary.editor.question' | transloco }}</span
+              >
               <span class="question-text">{{ question() }}</span>
               <span class="question-actions">
                 <button matButton type="button" (click)="answer()">
                   {{ 'diary.editor.answer' | transloco }}
                 </button>
-                <button matButton type="button" (click)="questionShift.set(questionShift() + 1)">
+                <button
+                  matButton
+                  type="button"
+                  (click)="questionShift.set(questionShift() + 1)"
+                >
                   {{ 'diary.editor.anotherQuestion' | transloco }}
                 </button>
               </span>
@@ -387,7 +426,8 @@ type EditorMode = 'visual' | 'markdown';
       box-sizing: border-box;
       padding: 12px 14px;
       border-radius: 14px;
-      border: 1px dashed color-mix(in srgb, var(--mat-sys-primary) 45%, var(--pd-border));
+      border: 1px dashed
+        color-mix(in srgb, var(--mat-sys-primary) 45%, var(--pd-border));
     }
     .question-label {
       font: 600 0.7rem / 1.2 var(--pd-font);
@@ -517,8 +557,10 @@ export class DiaryEditorComponent {
   private readonly api = inject(DiaryApi);
   private readonly transloco = inject(TranslocoService);
   private readonly injector = inject(Injector);
-  private readonly textarea = viewChild<ElementRef<HTMLTextAreaElement>>('text');
-  private readonly visualHost = viewChild.required<ElementRef<HTMLElement>>('visual');
+  private readonly textarea =
+    viewChild<ElementRef<HTMLTextAreaElement>>('text');
+  private readonly visualHost =
+    viewChild.required<ElementRef<HTMLElement>>('visual');
 
   protected readonly moods = MOODS;
   protected readonly moodEmoji = MOOD_EMOJI;
@@ -534,7 +576,11 @@ export class DiaryEditorComponent {
   protected readonly savedAt = signal<string | null>(null);
   protected readonly questionShift = signal(0);
   protected readonly question = computed(() =>
-    questionOfTheDay(this.day(), this.transloco.getActiveLang(), this.questionShift()),
+    questionOfTheDay(
+      this.day(),
+      this.transloco.getActiveLang(),
+      this.questionShift(),
+    ),
   );
   /** Photos placed in the text: the photo strip below does not repeat them. */
   protected readonly photosInText = computed(() => photoIdsIn(this.content()));
@@ -567,7 +613,7 @@ export class DiaryEditorComponent {
       if (this.entry.status() !== 'resolved') {
         return;
       }
-      const { content, mood, updatedAt } = this.entry.value() ?? NO_ENTRY;
+      const {content, mood, updatedAt} = this.entry.value() ?? NO_ENTRY;
       untracked(() => {
         this.content.set(content);
         this.mood.set(mood);
@@ -601,7 +647,9 @@ export class DiaryEditorComponent {
     inject(DestroyRef).onDestroy(() => {
       void this.flush();
       this.editor?.destroy();
-      this.photoUrls.forEach((url) => void url.then(URL.revokeObjectURL, () => undefined));
+      this.photoUrls.forEach(
+        url => void url.then(URL.revokeObjectURL, () => undefined),
+      );
     });
   }
 
@@ -672,8 +720,10 @@ export class DiaryEditorComponent {
   protected mark(emoji: string): void {
     const textarea = this.textarea()?.nativeElement;
     if (this.mode() === 'markdown' && textarea) {
-      const { selectionStart, selectionEnd } = textarea;
-      this.applyEdit(markSelection(this.content(), selectionStart, selectionEnd, emoji));
+      const {selectionStart, selectionEnd} = textarea;
+      this.applyEdit(
+        markSelection(this.content(), selectionStart, selectionEnd, emoji),
+      );
     } else {
       this.editor?.chain().focus().setDiaryMark(emoji).run();
     }
@@ -751,7 +801,7 @@ export class DiaryEditorComponent {
    * where they were dropped), one after another.
    */
   private async insertPhotos(files: File[], position?: number): Promise<void> {
-    const images = files.filter((file) => file.type.startsWith('image/'));
+    const images = files.filter(file => file.type.startsWith('image/'));
     if (!this.editor || images.length === 0) {
       return;
     }
@@ -761,7 +811,9 @@ export class DiaryEditorComponent {
     try {
       for (const file of images) {
         if (file.size > DIARY_PHOTO_MAX_BYTES) {
-          this.photoError.set(this.transloco.translate('diary.photos.tooLarge'));
+          this.photoError.set(
+            this.transloco.translate('diary.photos.tooLarge'),
+          );
           continue;
         }
         const photo = await firstValueFrom(this.api.uploadPhoto(day, file));
@@ -770,12 +822,14 @@ export class DiaryEditorComponent {
         }
         const chain = this.editor.chain().focus();
         (position === undefined ? chain : chain.setTextSelection(position))
-          .setImage({ src: photoSrc(photo.id), alt: '' })
+          .setImage({src: photoSrc(photo.id), alt: ''})
           .run();
         position = undefined;
       }
     } catch {
-      this.photoError.set(this.transloco.translate('diary.photos.uploadFailed'));
+      this.photoError.set(
+        this.transloco.translate('diary.photos.uploadFailed'),
+      );
     } finally {
       this.uploading.set(false);
     }
@@ -789,7 +843,9 @@ export class DiaryEditorComponent {
     }
     let url = this.photoUrls.get(src);
     if (!url) {
-      url = firstValueFrom(this.api.photoBlob(id)).then((blob) => URL.createObjectURL(blob));
+      url = firstValueFrom(this.api.photoBlob(id)).then(blob =>
+        URL.createObjectURL(blob),
+      );
       this.photoUrls.set(src, url);
     }
     return url;
@@ -800,15 +856,15 @@ export class DiaryEditorComponent {
       element: this.visualHost().nativeElement,
       extensions: diaryEditorExtensions({
         placeholder: () => this.transloco.translate('diary.editor.placeholder'),
-        loadImage: (src) => this.loadImage(src),
+        loadImage: src => this.loadImage(src),
       }),
       content: this.content(),
       contentType: 'markdown',
-      onUpdate: ({ editor }) => {
+      onUpdate: ({editor}) => {
         this.content.set(entryMarkdown(editor));
         this.scheduleSave();
       },
-      onTransaction: () => this.editorState.update((value) => value + 1),
+      onTransaction: () => this.editorState.update(value => value + 1),
       editorProps: {
         // Ctrl+S / Cmd+S saves right away, as in the Markdown source.
         handleKeyDown: (_view, event) => {
@@ -822,7 +878,7 @@ export class DiaryEditorComponent {
         // A pasted or dropped picture becomes a photo of the day, right where it was put.
         handlePaste: (_view, event) => {
           const files = [...(event.clipboardData?.files ?? [])];
-          if (!files.some((file) => file.type.startsWith('image/'))) {
+          if (!files.some(file => file.type.startsWith('image/'))) {
             return false;
           }
           void this.insertPhotos(files);
@@ -830,11 +886,14 @@ export class DiaryEditorComponent {
         },
         handleDrop: (view, event, _slice, moved) => {
           const files = [...(event.dataTransfer?.files ?? [])];
-          if (moved || !files.some((file) => file.type.startsWith('image/'))) {
+          if (moved || !files.some(file => file.type.startsWith('image/'))) {
             return false;
           }
           event.preventDefault();
-          const at = view.posAtCoords({ left: event.clientX, top: event.clientY });
+          const at = view.posAtCoords({
+            left: event.clientX,
+            top: event.clientY,
+          });
           void this.insertPhotos(files, at?.pos);
           return true;
         },
@@ -847,7 +906,10 @@ export class DiaryEditorComponent {
    * only opened is never re-saved, so its Markdown stays exactly as it was written.
    */
   private setEditorContent(content: string): void {
-    this.editor?.commands.setContent(content, { contentType: 'markdown', emitUpdate: false });
+    this.editor?.commands.setContent(content, {
+      contentType: 'markdown',
+      emitUpdate: false,
+    });
   }
 
   /** Replaces the whole entry (a template, a question) and puts the cursor at the end. */
@@ -881,7 +943,7 @@ export class DiaryEditorComponent {
           textarea?.setSelectionRange(start, end);
         }
       },
-      { injector: this.injector },
+      {injector: this.injector},
     );
   }
 }

@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from '@pd/api-core';
+import {fetchWithTimeout} from '@pd/api-core';
 
 /**
  * The search of YouTube Music, as its own site asks it (there is no public API): the first
@@ -8,10 +8,16 @@ import { fetchWithTimeout } from '@pd/api-core';
 const SEARCH = 'https://music.youtube.com/youtubei/v1/search?prettyPrint=false';
 /** The "Songs" filter of the search, as the site sends it. */
 const SONGS_ONLY = 'EgWKAQIIAWoKEAkQBRAKEAMQBA%3D%3D';
-const CLIENT = { clientName: 'WEB_REMIX', clientVersion: '1.20250101.01.00', hl: 'en' };
+const CLIENT = {
+  clientName: 'WEB_REMIX',
+  clientVersion: '1.20250101.01.00',
+  hl: 'en',
+};
 
 /** The link of the song on YouTube Music; `null` — none found. */
-export async function findOnYoutubeMusic(query: string): Promise<string | null> {
+export async function findOnYoutubeMusic(
+  query: string,
+): Promise<string | null> {
   const response = await fetchWithTimeout(SEARCH, {
     method: 'POST',
     headers: {
@@ -19,7 +25,11 @@ export async function findOnYoutubeMusic(query: string): Promise<string | null> 
       Origin: 'https://music.youtube.com',
       'User-Agent': 'Mozilla/5.0',
     },
-    body: JSON.stringify({ context: { client: CLIENT }, query, params: SONGS_ONLY }),
+    body: JSON.stringify({
+      context: {client: CLIENT},
+      query,
+      params: SONGS_ONLY,
+    }),
   });
   if (!response.ok) {
     throw new Error(`YouTube Music ${response.status}`);

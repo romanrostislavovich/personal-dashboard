@@ -1,4 +1,4 @@
-import { WebDashboardModule } from '@pd/web-core';
+import {WebDashboardModule} from '@pd/web-core';
 
 /**
  * Web part of Habits: what one quits or cuts down, with the run of clean days. Plugged in at
@@ -6,9 +6,12 @@ import { WebDashboardModule } from '@pd/web-core';
  */
 export const habitsModule: WebDashboardModule = {
   id: 'habits',
-  nav: { labelKey: 'habits.title', icon: 'spa', group: 'me' },
+  nav: {labelKey: 'habits.title', icon: 'spa', group: 'me'},
   loadRoutes: async () => [
-    { path: '', loadComponent: () => import('./habits.page').then((m) => m.HabitsPage) },
+    {
+      path: '',
+      loadComponent: () => import('./habits.page').then(m => m.HabitsPage),
+    },
   ],
   translations: {
     en: () => import('./i18n/en.json'),
@@ -18,7 +21,7 @@ export const habitsModule: WebDashboardModule = {
     {
       id: 'habits.streaks',
       size: 'small',
-      loadComponent: () => import('./habits.widget').then((m) => m.HabitsWidget),
+      loadComponent: () => import('./habits.widget').then(m => m.HabitsWidget),
     },
   ],
 };

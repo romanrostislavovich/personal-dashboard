@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { Router } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Toast, ToastService } from './toast.service';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {Router} from '@angular/router';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {Toast, ToastService} from './toast.service';
 
 /** Renders the toasts in the bottom-right corner (announced to screen readers). */
 @Component({
@@ -99,8 +99,13 @@ import { Toast, ToastService } from './toast.service';
       height: 48px;
       border-radius: 14px;
       font-size: 26px;
-      background: color-mix(in srgb, var(--rarity) 20%, var(--mat-sys-surface-container));
-      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rarity) 55%, transparent);
+      background: color-mix(
+        in srgb,
+        var(--rarity) 20%,
+        var(--mat-sys-surface-container)
+      );
+      box-shadow: inset 0 0 0 1px
+        color-mix(in srgb, var(--rarity) 55%, transparent);
     }
     .text {
       display: flex;

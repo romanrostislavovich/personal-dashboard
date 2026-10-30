@@ -1,4 +1,4 @@
-import { filterTransactions, totalsByCategory } from './transaction-report';
+import {filterTransactions, totalsByCategory} from './transaction-report';
 
 const t = (
   kind: 'income' | 'expense',
@@ -7,7 +7,7 @@ const t = (
   note: string | null = null,
   currency = 'PLN',
   mainAmount: number | null = amount,
-) => ({ kind, category, amount, currency, note, mainAmount });
+) => ({kind, category, amount, currency, note, mainAmount});
 
 const list = [
   t('expense', 'Продукты', 11.8, 'Żabka'),
@@ -20,18 +20,24 @@ const list = [
 
 describe('filterTransactions', () => {
   it('finds by a part of the comment, however it is typed', () => {
-    expect(filterTransactions(list, { search: 'zabka' }).map((x) => x.note)).toEqual(['Żabka']);
-    expect(filterTransactions(list, { search: ' TAXI ' }).map((x) => x.note)).toEqual([
-      'Taxi Bolt',
-    ]);
+    expect(
+      filterTransactions(list, {search: 'zabka'}).map(x => x.note),
+    ).toEqual(['Żabka']);
+    expect(
+      filterTransactions(list, {search: ' TAXI '}).map(x => x.note),
+    ).toEqual(['Taxi Bolt']);
     // The category is searched too.
-    expect(filterTransactions(list, { search: 'host' })).toHaveLength(2);
+    expect(filterTransactions(list, {search: 'host'})).toHaveLength(2);
   });
 
   it('narrows by the category and the kind', () => {
-    expect(filterTransactions(list, { category: 'продукты' })).toHaveLength(2);
-    expect(filterTransactions(list, { kind: 'income' }).map((x) => x.category)).toEqual(['Salary']);
-    expect(filterTransactions(list, { category: 'Продукты', search: 'lidl' })).toHaveLength(1);
+    expect(filterTransactions(list, {category: 'продукты'})).toHaveLength(2);
+    expect(
+      filterTransactions(list, {kind: 'income'}).map(x => x.category),
+    ).toEqual(['Salary']);
+    expect(
+      filterTransactions(list, {category: 'Продукты', search: 'lidl'}),
+    ).toHaveLength(1);
     expect(filterTransactions(list, {})).toHaveLength(list.length);
   });
 });
@@ -44,7 +50,7 @@ describe('totalsByCategory', () => {
         category: 'Продукты',
         count: 2,
         mainAmount: 261.8,
-        amounts: { PLN: 261.8 },
+        amounts: {PLN: 261.8},
         unconverted: 0,
       },
       {
@@ -53,7 +59,7 @@ describe('totalsByCategory', () => {
         count: 2,
         // The dollar one has no rate: counted, shown as recorded, left out of the main amount.
         mainAmount: 86,
-        amounts: { EUR: 20, USD: 5 },
+        amounts: {EUR: 20, USD: 5},
         unconverted: 1,
       },
       {
@@ -61,7 +67,7 @@ describe('totalsByCategory', () => {
         category: 'Транспорт',
         count: 1,
         mainAmount: 30,
-        amounts: { PLN: 30 },
+        amounts: {PLN: 30},
         unconverted: 0,
       },
       {
@@ -69,7 +75,7 @@ describe('totalsByCategory', () => {
         category: 'Salary',
         count: 1,
         mainAmount: 9000,
-        amounts: { PLN: 9000 },
+        amounts: {PLN: 9000},
         unconverted: 0,
       },
     ]);

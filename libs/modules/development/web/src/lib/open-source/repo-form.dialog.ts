@@ -1,14 +1,27 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { TrackedRepo } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { errorStatus } from '@pd/web-core';
-import { OpenSourceApi } from './open-source.api';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {TrackedRepo} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {errorStatus} from '@pd/web-core';
+import {OpenSourceApi} from './open-source.api';
 
 /** Errors the server explains: not found, already in the list, a wrong package name. */
 const ERROR_KEYS: Record<number, string> = {
@@ -34,7 +47,10 @@ const ERROR_KEYS: Record<number, string> = {
   ],
   template: `
     <h2 mat-dialog-title>
-      {{ (repo ? 'development.oss.editNpm' : 'development.oss.addTitle') | transloco }}
+      {{
+        (repo ? 'development.oss.editNpm' : 'development.oss.addTitle')
+          | transloco
+      }}
     </h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content class="form">
@@ -61,7 +77,11 @@ const ERROR_KEYS: Record<number, string> = {
         <button matButton type="button" mat-dialog-close>
           {{ 'core.actions.cancel' | transloco }}
         </button>
-        <button matButton="filled" type="submit" [disabled]="form.invalid || saving()">
+        <button
+          matButton="filled"
+          type="submit"
+          [disabled]="form.invalid || saving()"
+        >
           {{ (repo ? 'core.actions.save' : 'core.actions.add') | transloco }}
         </button>
       </mat-dialog-actions>
@@ -98,20 +118,22 @@ export class RepoFormDialog {
   protected readonly error = signal<string | null>(null);
 
   protected async save(): Promise<void> {
-    const { repo, npmPackage } = this.form.getRawValue();
+    const {repo, npmPackage} = this.form.getRawValue();
     const packageName = npmPackage.trim() || null;
     this.saving.set(true);
     this.error.set(null);
     try {
       await firstValueFrom(
         this.repo
-          ? this.api.updateRepo(this.repo.id, { npmPackage: packageName })
-          : this.api.addRepo({ repo, npmPackage: packageName }),
+          ? this.api.updateRepo(this.repo.id, {npmPackage: packageName})
+          : this.api.addRepo({repo, npmPackage: packageName}),
       );
       this.dialogRef.close(true);
     } catch (error) {
       // For an existing repository a 400 can only be about the package name.
-      const key = this.repo ? 'development.errors.npmName' : ERROR_KEYS[errorStatus(error)];
+      const key = this.repo
+        ? 'development.errors.npmName'
+        : ERROR_KEYS[errorStatus(error)];
       this.error.set(key ?? 'development.errors.generic');
     } finally {
       this.saving.set(false);

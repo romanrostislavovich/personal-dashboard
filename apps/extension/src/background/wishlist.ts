@@ -1,8 +1,8 @@
-import { financeApi } from '@pd/client-core';
-import { ProductInfo, readProductPage, Wish } from '@pd/contracts';
-import { PageCommand, PageHtml, WishPopupState } from '../shared/messages';
-import { signedInClient } from './account';
-import { activeTab } from './fill';
+import {financeApi} from '@pd/client-core';
+import {ProductInfo, readProductPage, Wish} from '@pd/contracts';
+import {PageCommand, PageHtml, WishPopupState} from '../shared/messages';
+import {signedInClient} from './account';
+import {activeTab} from './fill';
 
 /*
  * The wishlist in one click: the product of the page in front is read here, in the browser —
@@ -12,9 +12,9 @@ import { activeTab } from './fill';
 
 /** The product of a tab, as its page describes it (JSON-LD, Open Graph, microdata). */
 async function productOf(tabId: number): Promise<ProductInfo | null> {
-  const command: PageCommand = { type: 'product' };
+  const command: PageCommand = {type: 'product'};
   const page = (await chrome.tabs
-    .sendMessage(tabId, command, { frameId: 0 })
+    .sendMessage(tabId, command, {frameId: 0})
     .catch(() => null)) as PageHtml | null;
   if (!page?.html) {
     return null;
@@ -54,7 +54,8 @@ export async function wishPopupState(): Promise<WishPopupState | null> {
     return null;
   }
   const api = financeApi((await signedInClient()).api);
-  const wish = (await api.wishlist()).find((one) => samePage(one.url, tab.url)) ?? null;
+  const wish =
+    (await api.wishlist()).find(one => samePage(one.url, tab.url)) ?? null;
   if (wish && product.price !== null) {
     await notePrice(api, wish, product);
   }
@@ -69,13 +70,20 @@ export async function wishPopupState(): Promise<WishPopupState | null> {
 }
 
 /** A price seen on the page in front is the wish's price of today (no message about it). */
-async function notePrice(api: ReturnType<typeof financeApi>, wish: Wish, product: ProductInfo) {
+async function notePrice(
+  api: ReturnType<typeof financeApi>,
+  wish: Wish,
+  product: ProductInfo,
+) {
   const currency = product.currency ?? wish.currency;
-  if (product.price === null || (product.price === wish.price && currency === wish.currency)) {
+  if (
+    product.price === null ||
+    (product.price === wish.price && currency === wish.currency)
+  ) {
     return;
   }
   await api
-    .saveWish({ url: wish.url, price: product.price, currency }, wish.id)
+    .saveWish({url: wish.url, price: product.price, currency}, wish.id)
     .catch(() => undefined);
 }
 
@@ -92,6 +100,7 @@ export async function addWish(): Promise<Wish> {
     name: product?.name?.slice(0, 200) ?? null,
     price: product?.price ?? null,
     currency: product?.currency ?? null,
-    imageUrl: product?.image && /^https?:/.test(product.image) ? product.image : null,
+    imageUrl:
+      product?.image && /^https?:/.test(product.image) ? product.image : null,
   });
 }

@@ -6,17 +6,17 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { passwordStrength } from '@pd/client-core';
-import { VaultSession } from './vault-session.service';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {passwordStrength} from '@pd/client-core';
+import {VaultSession} from './vault-session.service';
 
 const MIN_MASTER_LENGTH = 12;
 
@@ -42,25 +42,36 @@ const MIN_MASTER_LENGTH = 12;
     <mat-card appearance="outlined" class="card">
       @if (recoveryKey(); as key) {
         <mat-card-header>
-          <mat-card-title>🔑 {{ 'vault.recovery.title' | transloco }}</mat-card-title>
+          <mat-card-title
+            >🔑 {{ 'vault.recovery.title' | transloco }}</mat-card-title
+          >
         </mat-card-header>
         <mat-card-content class="content">
           <p>{{ 'vault.recovery.hint' | transloco }}</p>
           <code class="key">{{ key }}</code>
           <div class="actions">
             <button matButton="tonal" (click)="copy(key)">
-              <mat-icon>content_copy</mat-icon> {{ 'vault.recovery.copy' | transloco }}
+              <mat-icon>content_copy</mat-icon>
+              {{ 'vault.recovery.copy' | transloco }}
             </button>
             <button matButton="tonal" (click)="download(key)">
-              <mat-icon>download</mat-icon> {{ 'vault.recovery.download' | transloco }}
+              <mat-icon>download</mat-icon>
+              {{ 'vault.recovery.download' | transloco }}
             </button>
           </div>
-          <mat-checkbox [checked]="saved()" (change)="saved.set($event.checked)">
+          <mat-checkbox
+            [checked]="saved()"
+            (change)="saved.set($event.checked)"
+          >
             {{ 'vault.recovery.saved' | transloco }}
           </mat-checkbox>
         </mat-card-content>
         <mat-card-actions align="end">
-          <button matButton="filled" [disabled]="!saved()" (click)="done.emit()">
+          <button
+            matButton="filled"
+            [disabled]="!saved()"
+            (click)="done.emit()"
+          >
             {{ 'vault.recovery.continue' | transloco }}
           </button>
         </mat-card-actions>
@@ -104,7 +115,11 @@ const MIN_MASTER_LENGTH = 12;
           }
         </mat-card-content>
         <mat-card-actions align="end">
-          <button matButton="filled" [disabled]="!!problem() || busy()" (click)="create()">
+          <button
+            matButton="filled"
+            [disabled]="!!problem() || busy()"
+            (click)="create()"
+          >
             {{ 'vault.setup.create' | transloco }}
           </button>
         </mat-card-actions>
@@ -158,7 +173,9 @@ export class VaultSetupComponent {
   protected readonly busy = signal(false);
   protected readonly recoveryKey = signal<string | null>(null);
   protected readonly saved = signal(false);
-  protected readonly strength = computed(() => passwordStrength(this.master()).strength);
+  protected readonly strength = computed(
+    () => passwordStrength(this.master()).strength,
+  );
   /** Why the vault cannot be made yet (a translation key); `null` — it can. */
   protected readonly problem = computed(() => {
     if (this.master().length < MIN_MASTER_LENGTH) {
@@ -187,7 +204,7 @@ export class VaultSetupComponent {
 
   protected download(key: string): void {
     const text = `Personal Dashboard — the recovery key of the password vault\n${location.origin}\n\n${key}\n`;
-    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+    const url = URL.createObjectURL(new Blob([text], {type: 'text/plain'}));
     const link = document.createElement('a');
     link.href = url;
     link.download = 'personal-dashboard-recovery-key.txt';

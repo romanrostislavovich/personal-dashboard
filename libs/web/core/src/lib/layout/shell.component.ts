@@ -1,5 +1,5 @@
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { NgTemplateOutlet } from '@angular/common';
+import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
+import {NgTemplateOutlet} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -9,25 +9,31 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { errorStatus } from '../client/core-requests';
-import { ToastService } from '../toast/toast.service';
-import { filter, map } from 'rxjs';
-import { AuthService } from '../auth/auth.service';
-import { RealtimeNotifier } from '../realtime/realtime-notifier';
-import { ToastHostComponent } from '../toast/toast-host.component';
-import { DASHBOARD_MODULES, NAV_GROUPS, NavGroupId } from '../dashboard-module';
-import { CommandPaletteComponent } from '../palette/command-palette.component';
-import { OfflineService } from '../offline/offline.service';
-import { InboxBellComponent } from '../inbox/inbox-bell.component';
-import { LayoutService } from './layout.service';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDialog} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSidenavModule} from '@angular/material/sidenav';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {errorStatus} from '../client/core-requests';
+import {ToastService} from '../toast/toast.service';
+import {filter, map} from 'rxjs';
+import {AuthService} from '../auth/auth.service';
+import {RealtimeNotifier} from '../realtime/realtime-notifier';
+import {ToastHostComponent} from '../toast/toast-host.component';
+import {DASHBOARD_MODULES, NAV_GROUPS, NavGroupId} from '../dashboard-module';
+import {CommandPaletteComponent} from '../palette/command-palette.component';
+import {OfflineService} from '../offline/offline.service';
+import {InboxBellComponent} from '../inbox/inbox-bell.component';
+import {LayoutService} from './layout.service';
 
 interface NavItem {
   path: string;
@@ -84,7 +90,7 @@ export class ShellComponent {
   constructor() {
     // Live events (new achievements, notifications) while the dashboard is open.
     void this.auth.config().then(
-      (config) => this.demo.set(config.demo),
+      config => this.demo.set(config.demo),
       () => undefined,
     );
     // In a demo some actions are refused by the server (403): say so instead of doing nothing.
@@ -98,7 +104,9 @@ export class ShellComponent {
       }
     };
     window.addEventListener('unhandledrejection', refused);
-    inject(DestroyRef).onDestroy(() => window.removeEventListener('unhandledrejection', refused));
+    inject(DestroyRef).onDestroy(() =>
+      window.removeEventListener('unhandledrejection', refused),
+    );
     inject(RealtimeNotifier).start();
   }
 
@@ -108,7 +116,11 @@ export class ShellComponent {
   /** Ctrl+K (⌘K on a Mac) from anywhere opens the command palette. */
   @HostListener('document:keydown', ['$event'])
   protected onKey(event: KeyboardEvent): void {
-    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'k') {
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      !event.altKey &&
+      event.key.toLowerCase() === 'k'
+    ) {
       event.preventDefault();
       this.openPalette();
     }
@@ -116,14 +128,16 @@ export class ShellComponent {
 
   protected openPalette(): void {
     if (
-      this.dialog.openDialogs.some((d) => d.componentInstance instanceof CommandPaletteComponent)
+      this.dialog.openDialogs.some(
+        d => d.componentInstance instanceof CommandPaletteComponent,
+      )
     ) {
       return;
     }
     this.dialog.open(CommandPaletteComponent, {
       width: '640px',
       maxWidth: '94vw',
-      position: { top: '12vh' },
+      position: {top: '12vh'},
       autoFocus: 'first-tabbable',
       panelClass: 'pd-palette-panel',
     });
@@ -131,16 +145,22 @@ export class ShellComponent {
 
   /** "Roman Rostislavovich" → "RR"; a single word gives its first two letters. */
   protected readonly initials = computed(() => {
-    const words = (this.auth.user()?.displayName ?? '').trim().split(/\s+/).filter(Boolean);
-    const letters = words.length > 1 ? words[0][0] + words[1][0] : (words[0] ?? '?').slice(0, 2);
+    const words = (this.auth.user()?.displayName ?? '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    const letters =
+      words.length > 1
+        ? words[0][0] + words[1][0]
+        : (words[0] ?? '?').slice(0, 2);
     return letters.toUpperCase();
   });
 
   protected readonly isMobile = toSignal(
     inject(BreakpointObserver)
       .observe(Breakpoints.Handset)
-      .pipe(map((state) => state.matches)),
-    { initialValue: false },
+      .pipe(map(state => state.matches)),
+    {initialValue: false},
   );
 
   private readonly modules = inject(DASHBOARD_MODULES);
@@ -150,53 +170,56 @@ export class ShellComponent {
   /** The address now, for the group of the open page: it is never folded. */
   private readonly url = toSignal(
     this.router.events.pipe(
-      filter((event) => event instanceof NavigationEnd),
+      filter(event => event instanceof NavigationEnd),
       map(() => this.router.url),
     ),
-    { initialValue: this.router.url },
+    {initialValue: this.router.url},
   );
   protected readonly folded = signal<ReadonlySet<NavGroupId>>(readFolded());
 
   /** The sections in the menu the user did not hide (Settings → Appearance). */
   private readonly visible = computed(() =>
-    this.modules.filter((module) => module.nav.menu !== false && !this.layout.isHidden(module.id)),
+    this.modules.filter(
+      module => module.nav.menu !== false && !this.layout.isHidden(module.id),
+    ),
   );
 
   /** Home and the sections without a group. */
   protected readonly mainNav = computed<NavItem[]>(() => [
-    { path: '/', labelKey: 'core.nav.dashboard', icon: 'dashboard' },
+    {path: '/', labelKey: 'core.nav.dashboard', icon: 'dashboard'},
     ...this.visible()
-      .filter((module) => !module.nav.group)
-      .map((module) => ({ path: `/${module.id}`, ...module.nav })),
+      .filter(module => !module.nav.group)
+      .map(module => ({path: `/${module.id}`, ...module.nav})),
   ]);
 
   /** The groups with something in them, in the order of NAV_GROUPS; Projects is in Work. */
   protected readonly groups = computed<NavGroup[]>(() =>
-    NAV_GROUPS.filter((id) => id !== 'bottom')
-      .map((id) => ({
+    NAV_GROUPS.filter(id => id !== 'bottom')
+      .map(id => ({
         id,
         icon: GROUP_ICONS[id],
         items: [
           ...(id === 'work' ? [PROJECTS] : []),
           ...this.visible()
-            .filter((module) => module.nav.group === id)
-            .map((module) => ({ path: `/${module.id}`, ...module.nav })),
+            .filter(module => module.nav.group === id)
+            .map(module => ({path: `/${module.id}`, ...module.nav})),
         ],
       }))
-      .filter((group) => group.items.length > 0),
+      .filter(group => group.items.length > 0),
   );
 
   protected readonly bottomNav = computed<NavItem[]>(() => [
     ...this.visible()
-      .filter((module) => module.nav.group === 'bottom')
-      .map((module) => ({ path: `/${module.id}`, ...module.nav })),
-    { path: '/settings', labelKey: 'core.nav.settings', icon: 'settings' },
+      .filter(module => module.nav.group === 'bottom')
+      .map(module => ({path: `/${module.id}`, ...module.nav})),
+    {path: '/settings', labelKey: 'core.nav.settings', icon: 'settings'},
   ]);
 
   /** A group is open unless folded — and always while one of its pages is open. */
   protected isOpen(group: NavGroup): boolean {
     return (
-      !this.folded().has(group.id) || group.items.some((item) => this.url().startsWith(item.path))
+      !this.folded().has(group.id) ||
+      group.items.some(item => this.url().startsWith(item.path))
     );
   }
 
@@ -224,7 +247,9 @@ const PROJECTS: NavItem = {
 
 function readFolded(): ReadonlySet<NavGroupId> {
   try {
-    const saved = JSON.parse(localStorage.getItem(FOLDED_KEY) ?? '[]') as unknown;
+    const saved = JSON.parse(
+      localStorage.getItem(FOLDED_KEY) ?? '[]',
+    ) as unknown;
     return new Set(Array.isArray(saved) ? (saved as NavGroupId[]) : []);
   } catch {
     return new Set();

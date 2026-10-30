@@ -19,11 +19,11 @@ import {
   ProjectOverviewQuery,
   projectOverviewQuerySchema,
 } from '@pd/contracts';
-import { z } from 'zod';
-import { AuthUser, CurrentUser } from '../auth/current-user.decorator';
-import { ZodValidationPipe } from '../validation/zod-validation.pipe';
-import { ProjectOverviewService } from '../links/project-overview.service';
-import { ProjectsService } from './projects.service';
+import {z} from 'zod';
+import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
+import {ZodValidationPipe} from '../validation/zod-validation.pipe';
+import {ProjectOverviewService} from '../links/project-overview.service';
+import {ProjectsService} from './projects.service';
 
 type ProjectInput = z.output<typeof projectInputSchema>;
 
@@ -44,7 +44,8 @@ export class ProjectsController {
   overview(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Query(new ZodValidationPipe(projectOverviewQuerySchema)) query: ProjectOverviewQuery,
+    @Query(new ZodValidationPipe(projectOverviewQuerySchema))
+    query: ProjectOverviewQuery,
   ): Promise<ProjectOverview> {
     return this.overviews.overview(user.id, id, query);
   }
@@ -54,7 +55,8 @@ export class ProjectsController {
   months(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Query(new ZodValidationPipe(projectMonthsQuerySchema)) query: ProjectMonthsQuery,
+    @Query(new ZodValidationPipe(projectMonthsQuerySchema))
+    query: ProjectMonthsQuery,
   ): Promise<ProjectMonth[]> {
     return this.overviews.months(user.id, id, query.months);
   }
@@ -78,7 +80,10 @@ export class ProjectsController {
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.projects.remove(user.id, id);
   }
 }

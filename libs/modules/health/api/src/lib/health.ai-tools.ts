@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AiService, NO_PARAMETERS } from '@pd/api-core';
-import { HealthService } from './health.service';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AiService, NO_PARAMETERS} from '@pd/api-core';
+import {HealthService} from './health.service';
 
 /**
  * The assistant's access to Health: reading the history. Health can be switched off for the AI
@@ -32,7 +32,7 @@ export class HealthAiTools implements OnModuleInit {
         'diagnosed with X", "what do I take now". Tell the facts as recorded; never diagnose, ' +
         'never advise on treatment or doses — that is for a doctor.',
       parameters: NO_PARAMETERS,
-      handler: (userId) => this.health.record(userId),
+      handler: userId => this.health.record(userId),
     });
   }
 }

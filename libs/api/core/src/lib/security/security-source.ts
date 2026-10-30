@@ -1,4 +1,4 @@
-import { SecurityArea, SecuritySeverity } from '@pd/contracts';
+import {SecurityArea, SecuritySeverity} from '@pd/contracts';
 
 /** A problem a source's rules see, in the user's language. */
 export interface FoundProblem {

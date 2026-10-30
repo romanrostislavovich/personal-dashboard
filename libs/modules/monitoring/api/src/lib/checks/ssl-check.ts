@@ -1,11 +1,11 @@
-import { assertPublicHost } from '@pd/api-core';
-import { connect } from 'node:tls';
+import {assertPublicHost} from '@pd/api-core';
+import {connect} from 'node:tls';
 
 const TIMEOUT_MS = 10_000;
 
 /** The site's SSL certificate expiry date. `null` for http:// or if it could not be determined. */
 export async function fetchSslExpiry(url: string): Promise<Date | null> {
-  const { protocol, hostname, port } = new URL(url);
+  const {protocol, hostname, port} = new URL(url);
   if (protocol !== 'https:') {
     return null;
   }
@@ -16,7 +16,7 @@ export async function fetchSslExpiry(url: string): Promise<Date | null> {
     return null;
   }
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const socket = connect({
       host: hostname,
       port: Number(port) || 443,

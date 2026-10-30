@@ -1,9 +1,15 @@
-import { app, Menu, MenuItemConstructorOptions, nativeImage, Tray } from 'electron';
-import { join } from 'node:path';
-import { FocusStatus } from './activity/focus-timer';
-import { TrackerStatus } from './activity/tracker';
-import { UpdateState } from './update/updater';
-import { workstateMessages } from './workstates/messages';
+import {
+  app,
+  Menu,
+  MenuItemConstructorOptions,
+  nativeImage,
+  Tray,
+} from 'electron';
+import {join} from 'node:path';
+import {FocusStatus} from './activity/focus-timer';
+import {TrackerStatus} from './activity/tracker';
+import {UpdateState} from './update/updater';
+import {workstateMessages} from './workstates/messages';
 
 export interface TrayActions {
   show: () => void;
@@ -25,7 +31,7 @@ export interface TrayActions {
     install: () => void;
   };
   focus: {
-    status: () => FocusStatus & { available: boolean };
+    status: () => FocusStatus & {available: boolean};
     start: () => void;
     /** Stops a focus part or skips a break. */
     stop: () => void;
@@ -36,7 +42,7 @@ export interface TrayActions {
     pause: (minutes: number | null) => void;
   };
   telemetry: {
-    status: () => { enabled: boolean; available: boolean };
+    status: () => {enabled: boolean; available: boolean};
     set: (enabled: boolean) => void;
   };
   smartBreak: TrayActions['telemetry'];
@@ -55,7 +61,7 @@ export interface TrayActions {
 export function createTray(actions: TrayActions): () => void {
   const icon = nativeImage
     .createFromPath(join(__dirname, 'assets', 'icon.png'))
-    .resize({ width: 16, height: 16 });
+    .resize({width: 16, height: 16});
   const tray = new Tray(icon);
 
   const refresh = () => {
@@ -70,23 +76,23 @@ export function createTray(actions: TrayActions): () => void {
     );
     tray.setContextMenu(
       Menu.buildFromTemplate([
-        { label: 'Открыть', click: actions.show },
-        { type: 'separator' },
+        {label: 'Открыть', click: actions.show},
+        {type: 'separator'},
         ...activityItems(status, actions.activity.pause),
         ...focusItems(actions.focus),
         ...contextItems(actions),
-        { type: 'separator' },
+        {type: 'separator'},
         {
           label: 'Запускать вместе с системой',
           type: 'checkbox',
           checked: actions.startWithSystem.enabled(),
-          click: (item) => actions.startWithSystem.set(item.checked),
+          click: item => actions.startWithSystem.set(item.checked),
         },
-        { label: 'Сменить адрес сервера…', click: actions.changeServer },
-        { type: 'separator' },
+        {label: 'Сменить адрес сервера…', click: actions.changeServer},
+        {type: 'separator'},
         ...updateItems(actions.update),
-        { type: 'separator' },
-        { label: 'Выход', click: actions.quit },
+        {type: 'separator'},
+        {label: 'Выход', click: actions.quit},
       ]),
     );
   };
@@ -101,20 +107,20 @@ function contextItems(actions: TrayActions): MenuItemConstructorOptions[] {
   const telemetry = actions.telemetry.status();
   const smart = actions.smartBreak.status();
   return [
-    { type: 'separator' },
+    {type: 'separator'},
     {
       label: messages.telemetry,
       type: 'checkbox',
       checked: telemetry.enabled,
       enabled: telemetry.available || telemetry.enabled,
-      click: (item) => actions.telemetry.set(item.checked),
+      click: item => actions.telemetry.set(item.checked),
     },
     {
       label: messages.smartBreak,
       type: 'checkbox',
       checked: smart.enabled,
       enabled: smart.available || smart.enabled,
-      click: (item) => actions.smartBreak.set(item.checked),
+      click: item => actions.smartBreak.set(item.checked),
     },
     {
       label: messages.capture,
@@ -131,12 +137,14 @@ function contextItems(actions: TrayActions): MenuItemConstructorOptions[] {
       enabled: telemetry.available,
       click: actions.workstates.chooseIde,
     },
-    { label: messages.clear, click: actions.workstates.clear },
+    {label: messages.clear, click: actions.workstates.clear},
   ];
 }
 
 /** The version of the shell and what its updater is doing. */
-function updateItems(update: TrayActions['update']): MenuItemConstructorOptions[] {
+function updateItems(
+  update: TrayActions['update'],
+): MenuItemConstructorOptions[] {
   const version: MenuItemConstructorOptions = {
     label: `Версия ${app.getVersion()} (${update.version()})`,
     enabled: false,
@@ -148,29 +156,40 @@ function updateItems(update: TrayActions['update']): MenuItemConstructorOptions[
     case 'ready':
       return [
         version,
-        { label: `Обновление ${state.version} готово — перезапустить`, click: update.install },
+        {
+          label: `Обновление ${state.version} готово — перезапустить`,
+          click: update.install,
+        },
       ];
     case 'checking':
-      return [version, { label: 'Проверка обновлений…', enabled: false }];
+      return [version, {label: 'Проверка обновлений…', enabled: false}];
     case 'reinstall':
       return [
         version,
-        { label: 'Новая версия требует переустановки приложения', enabled: false },
-        { label: 'Проверить ещё раз', click: update.check },
+        {
+          label: 'Новая версия требует переустановки приложения',
+          enabled: false,
+        },
+        {label: 'Проверить ещё раз', click: update.check},
       ];
     case 'error':
       return [
         version,
-        { label: 'Обновления: сервер не ответил', enabled: false },
-        { label: 'Проверить ещё раз', click: update.check },
+        {label: 'Обновления: сервер не ответил', enabled: false},
+        {label: 'Проверить ещё раз', click: update.check},
       ];
     case 'idle': {
       const checkedAt = update.checkedAt();
-      const time = checkedAt?.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+      const time = checkedAt?.toLocaleTimeString('ru', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
       return [
         version,
-        ...(time ? [{ label: `Обновлений нет (проверено в ${time})`, enabled: false }] : []),
-        { label: 'Проверить обновления', click: update.check },
+        ...(time
+          ? [{label: `Обновлений нет (проверено в ${time})`, enabled: false}]
+          : []),
+        {label: 'Проверить обновления', click: update.check},
       ];
     }
   }
@@ -188,17 +207,17 @@ function focusItems(focus: TrayActions['focus']): MenuItemConstructorOptions[] {
   switch (status.phase) {
     case 'focus':
       return [
-        { label: `Фокус: осталось ${left} мин`, enabled: false },
-        { label: 'Остановить фокус', click: focus.stop },
+        {label: `Фокус: осталось ${left} мин`, enabled: false},
+        {label: 'Остановить фокус', click: focus.stop},
       ];
     case 'short-break':
     case 'long-break':
       return [
-        { label: `Перерыв: осталось ${left} мин`, enabled: false },
-        { label: 'Пропустить перерыв', click: focus.stop },
+        {label: `Перерыв: осталось ${left} мин`, enabled: false},
+        {label: 'Пропустить перерыв', click: focus.stop},
       ];
     case 'idle':
-      return [{ label: 'Начать фокус', click: focus.start }];
+      return [{label: 'Начать фокус', click: focus.start}];
   }
 }
 
@@ -208,25 +227,29 @@ function activityItems(
   pause: (minutes: number | null) => void,
 ): MenuItemConstructorOptions[] {
   if (!status.supported) {
-    return [{ label: 'Активность: не поддерживается в этой системе', enabled: false }];
+    return [
+      {label: 'Активность: не поддерживается в этой системе', enabled: false},
+    ];
   }
   if (!status.deviceId) {
-    return [{ label: 'Активность: включи в разделе «Активность»', enabled: false }];
+    return [
+      {label: 'Активность: включи в разделе «Активность»', enabled: false},
+    ];
   }
   if (status.paused) {
     return [
-      { label: 'Активность: на паузе', enabled: false },
-      { label: 'Возобновить запись', click: () => pause(null) },
+      {label: 'Активность: на паузе', enabled: false},
+      {label: 'Возобновить запись', click: () => pause(null)},
     ];
   }
   return [
-    { label: 'Активность: записывается', enabled: false },
+    {label: 'Активность: записывается', enabled: false},
     {
       label: 'Пауза',
       submenu: [
-        { label: 'На 15 минут', click: () => pause(15) },
-        { label: 'На час', click: () => pause(60) },
-        { label: 'До возобновления', click: () => pause(0) },
+        {label: 'На 15 минут', click: () => pause(15)},
+        {label: 'На час', click: () => pause(60)},
+        {label: 'До возобновления', click: () => pause(0)},
       ],
     },
   ];

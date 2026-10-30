@@ -1,9 +1,14 @@
-import { shell } from 'electron';
-import { execFile } from 'node:child_process';
+import {shell} from 'electron';
+import {execFile} from 'node:child_process';
 
 /** The cleanups the app does with a button (DISK_FIXES in contracts). */
 export type DiskFix =
-  'npm-cache' | 'yarn-cache' | 'pip-cache' | 'nuget-cache' | 'docker-prune' | 'storage-settings';
+  | 'npm-cache'
+  | 'yarn-cache'
+  | 'pip-cache'
+  | 'nuget-cache'
+  | 'docker-prune'
+  | 'storage-settings';
 
 export interface FixResult {
   ok: boolean;
@@ -19,7 +24,10 @@ const TIMEOUT_MS = 10 * 60_000;
  * the page names a fix, the app runs its own command for it. npm, yarn and pip are batch
  * files on Windows, hence `cmd /c`.
  */
-const COMMANDS: Record<Exclude<DiskFix, 'storage-settings'>, [string, string[]]> = {
+const COMMANDS: Record<
+  Exclude<DiskFix, 'storage-settings'>,
+  [string, string[]]
+> = {
   'npm-cache': ['cmd.exe', ['/d', '/c', 'npm', 'cache', 'clean', '--force']],
   'yarn-cache': ['cmd.exe', ['/d', '/c', 'yarn', 'cache', 'clean']],
   'pip-cache': ['cmd.exe', ['/d', '/c', 'pip', 'cache', 'purge']],
@@ -31,11 +39,11 @@ const COMMANDS: Record<Exclude<DiskFix, 'storage-settings'>, [string, string[]]>
 export async function runFix(fix: DiskFix): Promise<FixResult> {
   if (fix === 'storage-settings') {
     await shell.openExternal('ms-settings:storagesense');
-    return { ok: true, output: '' };
+    return {ok: true, output: ''};
   }
   const command = COMMANDS[fix];
   if (!command) {
-    return { ok: false, output: 'Unknown cleanup' };
+    return {ok: false, output: 'Unknown cleanup'};
   }
   return run(command[0], command[1]);
 }
@@ -44,7 +52,7 @@ export async function runFix(fix: DiskFix): Promise<FixResult> {
 export function emptyRecycleBin(mount: string): Promise<FixResult> {
   const letter = /^([A-Za-z]):$/.exec(mount)?.[1];
   if (!letter) {
-    return Promise.resolve({ ok: false, output: 'Not a disk' });
+    return Promise.resolve({ok: false, output: 'Not a disk'});
   }
   return run('powershell.exe', [
     '-NoProfile',
@@ -55,14 +63,22 @@ export function emptyRecycleBin(mount: string): Promise<FixResult> {
 }
 
 function run(file: string, args: string[]): Promise<FixResult> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     execFile(
       file,
       args,
-      { windowsHide: true, timeout: TIMEOUT_MS, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024 },
+      {
+        windowsHide: true,
+        timeout: TIMEOUT_MS,
+        encoding: 'utf8',
+        maxBuffer: 4 * 1024 * 1024,
+      },
       (error, stdout, stderr) => {
         const output = `${stdout}\n${stderr}`.trim().slice(-400);
-        resolve({ ok: !error, output: error && !output ? error.message : output });
+        resolve({
+          ok: !error,
+          output: error && !output ? error.message : output,
+        });
       },
     );
   });

@@ -1,7 +1,11 @@
-import { InjectionToken } from '@angular/core';
-import { browserStorage, createDashboardClient, DashboardClient } from '@pd/client-core';
-import { mobileReadCache } from '../mobile/idb-read-cache';
-import { apiBaseUrl, isMobileApp } from '../mobile/mobile-app';
+import {InjectionToken} from '@angular/core';
+import {
+  browserStorage,
+  createDashboardClient,
+  DashboardClient,
+} from '@pd/client-core';
+import {mobileReadCache} from '../mobile/idb-read-cache';
+import {apiBaseUrl, isMobileApp} from '../mobile/mobile-app';
 
 /**
  * The client core (`@pd/client-core`) for the web app: the API on the same origin, the session in
@@ -12,28 +16,31 @@ import { apiBaseUrl, isMobileApp } from '../mobile/mobile-app';
  * In the Android app the API is the server the user named, and the refresh token is kept by the
  * app (no cookie reaches the server from https://localhost); there is no service worker either.
  */
-export const DASHBOARD_CLIENT = new InjectionToken<DashboardClient>('DashboardClient', {
-  providedIn: 'root',
-  factory: () => {
-    forgetLegacyToken();
-    if (isMobileApp()) {
+export const DASHBOARD_CLIENT = new InjectionToken<DashboardClient>(
+  'DashboardClient',
+  {
+    providedIn: 'root',
+    factory: () => {
+      forgetLegacyToken();
+      if (isMobileApp()) {
+        return createDashboardClient({
+          baseUrl: apiBaseUrl(),
+          storage: browserStorage(),
+          refreshTokenIn: 'storage',
+          // Reading without a connection: no service worker here (offline-read.interceptor.ts).
+          readCache: mobileReadCache(),
+        });
+      }
       return createDashboardClient({
-        baseUrl: apiBaseUrl(),
+        baseUrl: '',
         storage: browserStorage(),
-        refreshTokenIn: 'storage',
-        // Reading without a connection: no service worker here (offline-read.interceptor.ts).
-        readCache: mobileReadCache(),
+        // The refresh token stays in an httpOnly cookie: page scripts (an XSS) cannot read it.
+        refreshTokenIn: 'cookie',
+        fetch: pastServiceWorker,
       });
-    }
-    return createDashboardClient({
-      baseUrl: '',
-      storage: browserStorage(),
-      // The refresh token stays in an httpOnly cookie: page scripts (an XSS) cannot read it.
-      refreshTokenIn: 'cookie',
-      fetch: pastServiceWorker,
-    });
+    },
   },
-});
+);
 
 /** Before sessions, a 30-day access token was kept in localStorage — readable by any script. */
 function forgetLegacyToken(): void {
@@ -49,11 +56,19 @@ function forgetLegacyToken(): void {
  * not an answer to save, so it goes around the worker (`ngsw-bypass`).
  */
 const pastServiceWorker: typeof fetch = (input, init) => {
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+  const url =
+    typeof input === 'string'
+      ? input
+      : input instanceof URL
+        ? input.href
+        : input.url;
   return url.includes('/api/events')
     ? fetch(input, {
         ...init,
-        headers: { ...(init?.headers as Record<string, string>), 'ngsw-bypass': 'true' },
+        headers: {
+          ...(init?.headers as Record<string, string>),
+          'ngsw-bypass': 'true',
+        },
       })
     : fetch(input, init);
 };

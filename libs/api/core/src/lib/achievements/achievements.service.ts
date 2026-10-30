@@ -6,26 +6,33 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Achievement, RARITY_XP } from '@pd/contracts';
-import { and, eq, inArray } from 'drizzle-orm';
-import { debounceTime, groupBy, mergeMap, Subscription } from 'rxjs';
-import { AppConfig } from '../config/env';
-import { DB, Database } from '../database/database.module';
-import { coreMessages } from '../i18n/core.messages';
-import { localize } from '../i18n/locale';
-import { NotificationsService } from '../notifications/notifications.service';
-import { RealtimeService } from '../realtime/realtime.service';
-import { UserActivityService } from '../realtime/user-activity.service';
-import { forEachUser } from '../scheduler/for-each-user';
-import { SchedulerService } from '../scheduler/scheduler.service';
-import { ServerActions } from '../sync/server-actions';
-import { UsersService } from '../users/users.service';
-import { AchievementMetric, AchievementTier, tierRarity } from './achievement-metric';
-import { unlockedAchievements } from './achievements.schema';
-import { dashboardAchievementMetrics, markActiveDay } from './dashboard.achievements';
-import { metaAchievementMetrics } from './meta.achievements';
-import { achievementId, newlyUnlockedTiers } from './newly-unlocked';
+import {ConfigService} from '@nestjs/config';
+import {Achievement, RARITY_XP} from '@pd/contracts';
+import {and, eq, inArray} from 'drizzle-orm';
+import {debounceTime, groupBy, mergeMap, Subscription} from 'rxjs';
+import {AppConfig} from '../config/env';
+import {DB, Database} from '../database/database.module';
+import {coreMessages} from '../i18n/core.messages';
+import {localize} from '../i18n/locale';
+import {NotificationsService} from '../notifications/notifications.service';
+import {RealtimeService} from '../realtime/realtime.service';
+import {UserActivityService} from '../realtime/user-activity.service';
+import {forEachUser} from '../scheduler/for-each-user';
+import {SchedulerService} from '../scheduler/scheduler.service';
+import {ServerActions} from '../sync/server-actions';
+import {UsersService} from '../users/users.service';
+import {
+  AchievementMetric,
+  AchievementTier,
+  tierRarity,
+} from './achievement-metric';
+import {unlockedAchievements} from './achievements.schema';
+import {
+  dashboardAchievementMetrics,
+  markActiveDay,
+} from './dashboard.achievements';
+import {metaAchievementMetrics} from './meta.achievements';
+import {achievementId, newlyUnlockedTiers} from './newly-unlocked';
 
 interface UnlockedTier {
   metric: AchievementMetric;
@@ -52,7 +59,9 @@ const MEASURED_AT_ONCE = 6;
  * over its copy of the data to show it on the page.
  */
 @Injectable()
-export class AchievementsService implements OnModuleInit, OnApplicationBootstrap, OnModuleDestroy {
+export class AchievementsService
+  implements OnModuleInit, OnApplicationBootstrap, OnModuleDestroy
+{
   private readonly logger = new Logger(AchievementsService.name);
   private readonly metrics: AchievementMetric[] = [];
   private activitySubscription: Subscription | null = null;
@@ -69,8 +78,8 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     private readonly activity: UserActivityService,
     private readonly actions: ServerActions,
   ) {
-    this.isSyncClient = config.get('SYNC_MODE', { infer: true }) === 'client';
-    this.timeZone = config.get('APP_TIMEZONE', { infer: true });
+    this.isSyncClient = config.get('SYNC_MODE', {infer: true}) === 'client';
+    this.timeZone = config.get('APP_TIMEZONE', {infer: true});
   }
 
   register(metric: AchievementMetric): void {
@@ -78,14 +87,14 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
   }
 
   onModuleInit(): void {
-    this.actions.register(RECOUNT_ACTION, (userId) => this.recount(userId));
+    this.actions.register(RECOUNT_ACTION, userId => this.recount(userId));
     this.scheduler.register({
       name: 'achievements.evaluate',
       cron: '40 * * * *',
       // Counted from the demo data too: nothing outside is asked.
       demo: true,
       handler: async () =>
-        forEachUser('achievements.evaluate', await this.users.findAll(), (user) =>
+        forEachUser('achievements.evaluate', await this.users.findAll(), user =>
           this.evaluate(user.id),
         ),
     });
@@ -96,13 +105,19 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     // One debounced check per user after their changes (a change also makes the day active).
     this.activitySubscription = this.activity.activity$
       .pipe(
-        groupBy((userId) => userId),
-        mergeMap((userActivity) => userActivity.pipe(debounceTime(ACTIVITY_DEBOUNCE_MS))),
+        groupBy(userId => userId),
+        mergeMap(userActivity =>
+          userActivity.pipe(debounceTime(ACTIVITY_DEBOUNCE_MS)),
+        ),
       )
-      .subscribe((userId) => {
+      .subscribe(userId => {
         markActiveDay(this.db, userId, this.timeZone)
           .then(() => this.evaluate(userId))
-          .catch((error) => this.logger.warn(`Achievements check for ${userId} failed: ${error}`));
+          .catch(error =>
+            this.logger.warn(
+              `Achievements check for ${userId} failed: ${error}`,
+            ),
+          );
       });
   }
 
@@ -129,10 +144,10 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
    */
   async list(userId: string): Promise<Achievement[]> {
     await markActiveDay(this.db, userId, this.timeZone);
-    const { values, unlocked } = await this.evaluate(userId);
+    const {values, unlocked} = await this.evaluate(userId);
     const locale = (await this.users.findById(userId))?.locale;
 
-    return this.metrics.flatMap((metric) =>
+    return this.metrics.flatMap(metric =>
       metric.tiers.map((tier, index) =>
         this.toAchievement(metric, tier, index, locale, {
           progress: values.get(metric.id) ?? 0,
@@ -151,28 +166,30 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
       .select()
       .from(unlockedAchievements)
       .where(eq(unlockedAchievements.userId, userId));
-    const unlocked = new Map(rows.map((row) => [row.achievementId, row.unlockedAt]));
+    const unlocked = new Map(
+      rows.map(row => [row.achievementId, row.unlockedAt]),
+    );
     const values = new Map<string, number>();
     const now = new Date();
 
     if (this.isSyncClient) {
       // Progress only; unlocking is the server's job (see the class comment).
       await this.measure(userId, this.metrics, values);
-      return { values, unlocked };
+      return {values, unlocked};
     }
 
     // Meta achievements go second: they count what the first pass has just unlocked.
     const fresh = [
       ...(await this.unlockPass(
         userId,
-        this.metrics.filter((m) => !m.countsAchievements),
+        this.metrics.filter(m => !m.countsAchievements),
         unlocked,
         values,
         now,
       )),
       ...(await this.unlockPass(
         userId,
-        this.metrics.filter((m) => m.countsAchievements),
+        this.metrics.filter(m => m.countsAchievements),
         unlocked,
         values,
         now,
@@ -182,7 +199,7 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
       await this.announce(userId, fresh, values, now);
     }
 
-    return { values, unlocked };
+    return {values, unlocked};
   }
 
   /**
@@ -194,27 +211,30 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
   async recount(userId: string): Promise<void> {
     await this.takeBack(
       userId,
-      this.metrics.filter((m) => !m.countsAchievements),
+      this.metrics.filter(m => !m.countsAchievements),
     );
     await this.takeBack(
       userId,
-      this.metrics.filter((m) => m.countsAchievements),
+      this.metrics.filter(m => m.countsAchievements),
     );
     // What is still earned (or newly earned under the new rules) is unlocked as usual.
     await this.evaluate(userId);
   }
 
   /** Deletes unlocked tiers the metrics no longer reach. A metric that failed is left alone. */
-  private async takeBack(userId: string, metrics: AchievementMetric[]): Promise<void> {
+  private async takeBack(
+    userId: string,
+    metrics: AchievementMetric[],
+  ): Promise<void> {
     const values = new Map<string, number>();
     await this.measure(userId, metrics, values);
-    const lost = metrics.flatMap((metric) => {
+    const lost = metrics.flatMap(metric => {
       const value = values.get(metric.id);
       return value === undefined
         ? []
         : metric.tiers
-            .filter((tier) => value < tier.goal)
-            .map((tier) => achievementId(metric, tier));
+            .filter(tier => value < tier.goal)
+            .map(tier => achievementId(metric, tier));
     });
     if (lost.length > 0) {
       await this.db
@@ -243,8 +263,12 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
       if (value === undefined) {
         continue;
       }
-      for (const tier of newlyUnlockedTiers(metric, value, new Set(unlocked.keys()))) {
-        candidates.push({ metric, tier, index: metric.tiers.indexOf(tier) });
+      for (const tier of newlyUnlockedTiers(
+        metric,
+        value,
+        new Set(unlocked.keys()),
+      )) {
+        candidates.push({metric, tier, index: metric.tiers.indexOf(tier)});
       }
     }
 
@@ -255,17 +279,21 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     const inserted = await this.db
       .insert(unlockedAchievements)
       .values(
-        candidates.map(({ metric, tier }) => ({
+        candidates.map(({metric, tier}) => ({
           userId,
           achievementId: achievementId(metric, tier),
           unlockedAt: now,
         })),
       )
       .onConflictDoNothing()
-      .returning({ id: unlockedAchievements.achievementId });
-    const insertedIds = new Set(inserted.map((row) => row.id));
-    candidates.forEach(({ metric, tier }) => unlocked.set(achievementId(metric, tier), now));
-    return candidates.filter(({ metric, tier }) => insertedIds.has(achievementId(metric, tier)));
+      .returning({id: unlockedAchievements.achievementId});
+    const insertedIds = new Set(inserted.map(row => row.id));
+    candidates.forEach(({metric, tier}) =>
+      unlocked.set(achievementId(metric, tier), now),
+    );
+    return candidates.filter(({metric, tier}) =>
+      insertedIds.has(achievementId(metric, tier)),
+    );
   }
 
   /**
@@ -289,7 +317,7 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
         }
       }
     };
-    await Promise.all(Array.from({ length: MEASURED_AT_ONCE }, worker));
+    await Promise.all(Array.from({length: MEASURED_AT_ONCE}, worker));
   }
 
   /** Live event for open dashboards and one message for Telegram. */
@@ -300,20 +328,21 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     unlockedAt: Date,
   ): Promise<void> {
     const locale = (await this.users.findById(userId))?.locale;
-    const achievements = fresh.map(({ metric, tier, index }) =>
+    const achievements = fresh.map(({metric, tier, index}) =>
       this.toAchievement(metric, tier, index, locale, {
         progress: values.get(metric.id) ?? tier.goal,
         unlockedAt,
       }),
     );
-    this.realtime.emit(userId, { type: 'achievements', achievements });
+    this.realtime.emit(userId, {type: 'achievements', achievements});
 
     const text = coreMessages(locale);
     await this.notifications.send(userId, {
       title: text.achievementsTitle,
       body: achievements
         .map(
-          (a) => `${a.icon} ${a.title} — ${a.description}\n${text.rarity[a.rarity]} · +${a.xp} XP`,
+          a =>
+            `${a.icon} ${a.title} — ${a.description}\n${text.rarity[a.rarity]} · +${a.xp} XP`,
         )
         .join('\n\n'),
       source: 'achievements',
@@ -325,7 +354,7 @@ export class AchievementsService implements OnModuleInit, OnApplicationBootstrap
     tier: AchievementTier,
     index: number,
     locale: string | undefined,
-    state: { progress: number; unlockedAt: Date | null },
+    state: {progress: number; unlockedAt: Date | null},
   ): Achievement {
     const rarity = tierRarity(metric, index);
     return {

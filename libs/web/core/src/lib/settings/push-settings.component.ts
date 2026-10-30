@@ -1,19 +1,19 @@
-import { DatePipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { CORE_READS, pushApi } from '@pd/client-core';
-import { PushStatus } from '@pd/contracts';
-import { DASHBOARD_CLIENT } from '../client/dashboard-client';
-import { isMobileApp } from '../mobile/mobile-app';
-import { MobilePushService } from '../mobile/mobile-push.service';
-import { DeviceOnlyComponent } from './device-only.component';
-import { IntegrationGuideComponent } from '../ui/integration-guide.component';
-import { ServerKeyComponent, ServerKeyField } from '../ui/server-key.component';
+import {DatePipe} from '@angular/common';
+import {httpResource} from '@angular/common/http';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {CORE_READS, pushApi} from '@pd/client-core';
+import {PushStatus} from '@pd/contracts';
+import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {isMobileApp} from '../mobile/mobile-app';
+import {MobilePushService} from '../mobile/mobile-push.service';
+import {DeviceOnlyComponent} from './device-only.component';
+import {IntegrationGuideComponent} from '../ui/integration-guide.component';
+import {ServerKeyComponent, ServerKeyField} from '../ui/server-key.component';
 
 /**
  * Push notifications on the phone (the Android app), next to Telegram: the owner sets the
@@ -36,8 +36,12 @@ import { ServerKeyComponent, ServerKeyField } from '../ui/server-key.component';
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>notifications_active</mat-icon>
-        <mat-card-title>{{ 'core.settings.push.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'core.settings.push.description' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'core.settings.push.title' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'core.settings.push.description' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @if (status.value(); as s) {
@@ -62,7 +66,9 @@ import { ServerKeyComponent, ServerKeyField } from '../ui/server-key.component';
             <!-- Switched on per phone: the rest of the card is the server's. -->
             <pd-device-only kind="phone" />
             @if (inApp) {
-              <p class="hint">{{ 'core.settings.push.phone.' + phone.state() | transloco }}</p>
+              <p class="hint">
+                {{ 'core.settings.push.phone.' + phone.state() | transloco }}
+              </p>
             }
           }
           @if (s.owner) {
@@ -143,7 +149,7 @@ export class PushSettingsComponent {
     },
   ];
   protected readonly saveKey = (values: Record<string, string>) =>
-    this.push.setKey({ serviceAccount: values['serviceAccount'] });
+    this.push.setKey({serviceAccount: values['serviceAccount']});
   protected readonly removeKey = () => this.push.removeKey();
 
   protected async enable(): Promise<void> {
@@ -167,7 +173,7 @@ export class PushSettingsComponent {
         ok ? 'core.settings.push.testSent' : 'core.settings.push.testFailed',
       ),
       'OK',
-      { duration: 4000 },
+      {duration: 4000},
     );
     this.status.reload();
   }

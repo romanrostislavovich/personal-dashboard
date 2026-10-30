@@ -1,7 +1,13 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { achievementTier, achievementTiers, AchievementsService, DB, Database } from '@pd/api-core';
-import { and, count, eq, isNotNull, SQL, sql } from 'drizzle-orm';
-import { BudgetsService } from './budgets/budgets.service';
+import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
+import {
+  achievementTier,
+  achievementTiers,
+  AchievementsService,
+  DB,
+  Database,
+} from '@pd/api-core';
+import {and, count, eq, isNotNull, SQL, sql} from 'drizzle-orm';
+import {BudgetsService} from './budgets/budgets.service';
 import {
   costSources,
   financeReceipts,
@@ -9,8 +15,8 @@ import {
   transactions,
   wishes,
 } from './finance.schema';
-import { SubscriptionsService } from './recurring/subscriptions.service';
-import { TransactionsService } from './transactions/transactions.service';
+import {SubscriptionsService} from './recurring/subscriptions.service';
+import {TransactionsService} from './transactions/transactions.service';
 
 /** How far back the budgets are checked month by month. */
 const BUDGET_MONTHS_BACK = 12;
@@ -42,12 +48,12 @@ export class FinanceAchievements implements OnModuleInit {
     this.achievements.register({
       id: 'finance.budget-months',
       module: 'finance',
-      measure: (userId) => this.monthsWithinBudgets(userId),
+      measure: userId => this.monthsWithinBudgets(userId),
       tiers: achievementTiers(
         [
           1,
           '🎯',
-          { en: 'Within the budget', ru: 'В рамках бюджета' },
+          {en: 'Within the budget', ru: 'В рамках бюджета'},
           {
             en: 'A whole month without going over any budget',
             ru: 'Целый месяц без превышения бюджетов',
@@ -56,7 +62,7 @@ export class FinanceAchievements implements OnModuleInit {
         [
           3,
           '📏',
-          { en: 'Disciplined', ru: 'Дисциплина' },
+          {en: 'Disciplined', ru: 'Дисциплина'},
           {
             en: '3 months in a row without going over any budget',
             ru: '3 месяца подряд без превышения бюджетов',
@@ -65,7 +71,7 @@ export class FinanceAchievements implements OnModuleInit {
         [
           12,
           '🏦',
-          { en: 'A year on budget', ru: 'Год по бюджету' },
+          {en: 'A year on budget', ru: 'Год по бюджету'},
           {
             en: '12 months in a row without going over any budget',
             ru: '12 месяцев подряд без превышения бюджетов',
@@ -77,12 +83,12 @@ export class FinanceAchievements implements OnModuleInit {
     this.achievements.register({
       id: 'finance.positive-months',
       module: 'finance',
-      measure: (userId) => this.positiveMonths(userId),
+      measure: userId => this.positiveMonths(userId),
       tiers: achievementTiers(
         [
           3,
           '📈',
-          { en: 'In the black', ru: 'В плюсе' },
+          {en: 'In the black', ru: 'В плюсе'},
           {
             en: '3 months in a row with more income than expenses',
             ru: '3 месяца подряд доходы больше расходов',
@@ -91,7 +97,7 @@ export class FinanceAchievements implements OnModuleInit {
         [
           6,
           '💹',
-          { en: 'Half a year in the black', ru: 'Полгода в плюсе' },
+          {en: 'Half a year in the black', ru: 'Полгода в плюсе'},
           {
             en: '6 months in a row with more income than expenses',
             ru: '6 месяцев подряд доходы больше расходов',
@@ -100,7 +106,7 @@ export class FinanceAchievements implements OnModuleInit {
         [
           12,
           '🏛️',
-          { en: 'A year in the black', ru: 'Год в плюсе' },
+          {en: 'A year in the black', ru: 'Год в плюсе'},
           {
             en: '12 months in a row with more income than expenses',
             ru: '12 месяцев подряд доходы больше расходов',
@@ -112,9 +118,9 @@ export class FinanceAchievements implements OnModuleInit {
     this.achievements.register({
       id: 'finance.receipts',
       module: 'finance',
-      measure: async (userId) => {
+      measure: async userId => {
         const [row] = await this.db
-          .select({ value: count() })
+          .select({value: count()})
           .from(financeReceipts)
           .where(eq(financeReceipts.userId, userId));
         return row?.value ?? 0;
@@ -123,7 +129,7 @@ export class FinanceAchievements implements OnModuleInit {
         [
           1,
           '📸',
-          { en: 'Snap the receipt', ru: 'Щёлк — и чек' },
+          {en: 'Snap the receipt', ru: 'Щёлк — и чек'},
           {
             en: 'A photo of a receipt became an expense',
             ru: 'Фото чека превратилось в расход',
@@ -132,14 +138,14 @@ export class FinanceAchievements implements OnModuleInit {
         [
           10,
           '🧾',
-          { en: 'Receipt collector', ru: 'Собиратель чеков' },
-          { en: '10 receipts read from photos', ru: '10 чеков прочитано с фото' },
+          {en: 'Receipt collector', ru: 'Собиратель чеков'},
+          {en: '10 receipts read from photos', ru: '10 чеков прочитано с фото'},
         ],
         [
           50,
           '🗃️',
-          { en: 'Paperless', ru: 'Без бумажек' },
-          { en: '50 receipts read from photos', ru: '50 чеков прочитано с фото' },
+          {en: 'Paperless', ru: 'Без бумажек'},
+          {en: '50 receipts read from photos', ru: '50 чеков прочитано с фото'},
         ],
       ),
     });
@@ -154,15 +160,15 @@ export class FinanceAchievements implements OnModuleInit {
     this.achievements.register({
       id: 'finance.subscriptions-used',
       module: 'finance',
-      measure: async (userId) => {
-        const { usage } = await this.subscriptions.summary(userId);
-        return usage.some((item) => item.unused) ? 0 : usage.length;
+      measure: async userId => {
+        const {usage} = await this.subscriptions.summary(userId);
+        return usage.some(item => item.unused) ? 0 : usage.length;
       },
       tiers: [
         achievementTier(
           2,
           '♻️',
-          { en: 'Nothing wasted', ru: 'Ничего зря' },
+          {en: 'Nothing wasted', ru: 'Ничего зря'},
           {
             en: 'Two or more subscriptions whose use is known, and every one of them was used in the last 30 days',
             ru: 'Две и больше подписок, использование которых известно, — и каждой пользовались за последние 30 дней',
@@ -177,25 +183,34 @@ export class FinanceAchievements implements OnModuleInit {
     this.achievements.register({
       id: 'finance.months-tracked',
       module: 'finance',
-      measure: (userId) => this.monthsWithTransactions(userId),
+      measure: userId => this.monthsWithTransactions(userId),
       tiers: [
         achievementTier(
           1,
           '🧾',
-          { en: 'First month tracked', ru: 'Первый месяц учёта' },
-          { en: 'Transactions in at least 1 month', ru: 'Операции хотя бы за 1 месяц' },
+          {en: 'First month tracked', ru: 'Первый месяц учёта'},
+          {
+            en: 'Transactions in at least 1 month',
+            ru: 'Операции хотя бы за 1 месяц',
+          },
         ),
         achievementTier(
           3,
           '📊',
-          { en: 'Counting habit', ru: 'Привычка считать' },
-          { en: 'Transactions in 3 different months', ru: 'Операции за 3 разных месяца' },
+          {en: 'Counting habit', ru: 'Привычка считать'},
+          {
+            en: 'Transactions in 3 different months',
+            ru: 'Операции за 3 разных месяца',
+          },
         ),
         achievementTier(
           12,
           '🗓️',
-          { en: 'A year of tracking', ru: 'Год учёта' },
-          { en: 'Transactions in 12 different months', ru: 'Операции за 12 разных месяцев' },
+          {en: 'A year of tracking', ru: 'Год учёта'},
+          {
+            en: 'Transactions in 12 different months',
+            ru: 'Операции за 12 разных месяцев',
+          },
         ),
       ],
     });
@@ -203,25 +218,26 @@ export class FinanceAchievements implements OnModuleInit {
     this.achievements.register({
       id: 'finance.transactions',
       module: 'finance',
-      measure: (userId) => this.count(transactions, eq(transactions.userId, userId)),
+      measure: userId =>
+        this.count(transactions, eq(transactions.userId, userId)),
       tiers: achievementTiers(
         [
           50,
           '📒',
-          { en: 'Bookkeeper', ru: 'Бухгалтер' },
-          { en: '50 transactions recorded', ru: '50 записанных операций' },
+          {en: 'Bookkeeper', ru: 'Бухгалтер'},
+          {en: '50 transactions recorded', ru: '50 записанных операций'},
         ],
         [
           500,
           '🧾',
-          { en: 'Accountant', ru: 'Счетовод' },
-          { en: '500 transactions recorded', ru: '500 записанных операций' },
+          {en: 'Accountant', ru: 'Счетовод'},
+          {en: '500 transactions recorded', ru: '500 записанных операций'},
         ],
         [
           2000,
           '📚',
-          { en: 'Chief accountant', ru: 'Главбух' },
-          { en: '2,000 transactions recorded', ru: '2 000 записанных операций' },
+          {en: 'Chief accountant', ru: 'Главбух'},
+          {en: '2,000 transactions recorded', ru: '2 000 записанных операций'},
         ],
       ),
     });
@@ -232,34 +248,47 @@ export class FinanceAchievements implements OnModuleInit {
     this.achievements.register({
       id: 'finance.recurring',
       module: 'finance',
-      measure: (userId) =>
+      measure: userId =>
         this.count(
           recurringPayments,
-          and(eq(recurringPayments.userId, userId), eq(recurringPayments.isActive, true)),
+          and(
+            eq(recurringPayments.userId, userId),
+            eq(recurringPayments.isActive, true),
+          ),
         ),
       tiers: achievementTiers([
         3,
         '🔁',
-        { en: 'On autopilot', ru: 'На автопилоте' },
-        { en: '3 active recurring payments', ru: '3 активных регулярных платежа' },
+        {en: 'On autopilot', ru: 'На автопилоте'},
+        {
+          en: '3 active recurring payments',
+          ru: '3 активных регулярных платежа',
+        },
       ]),
     });
     this.achievements.register({
       id: 'finance.cost-sources',
       module: 'finance',
-      measure: (userId) => this.count(costSources, eq(costSources.userId, userId)),
+      measure: userId =>
+        this.count(costSources, eq(costSources.userId, userId)),
       tiers: achievementTiers(
         [
           1,
           '🤖',
-          { en: 'Automation', ru: 'Автоматизация' },
-          { en: 'Connect automatic cost import', ru: 'Подключить автоимпорт затрат' },
+          {en: 'Automation', ru: 'Автоматизация'},
+          {
+            en: 'Connect automatic cost import',
+            ru: 'Подключить автоимпорт затрат',
+          },
         ],
         [
           3,
           '🏭',
-          { en: 'Cost control', ru: 'Контроль затрат' },
-          { en: '3 connected cost sources', ru: '3 подключённых источника затрат' },
+          {en: 'Cost control', ru: 'Контроль затрат'},
+          {
+            en: '3 connected cost sources',
+            ru: '3 подключённых источника затрат',
+          },
         ],
       ),
     });
@@ -270,20 +299,26 @@ export class FinanceAchievements implements OnModuleInit {
     this.achievements.register({
       id: 'finance.wishes-bought',
       module: 'finance',
-      measure: (userId) =>
-        this.count(wishes, and(eq(wishes.userId, userId), isNotNull(wishes.boughtAt))),
+      measure: userId =>
+        this.count(
+          wishes,
+          and(eq(wishes.userId, userId), isNotNull(wishes.boughtAt)),
+        ),
       tiers: achievementTiers(
         [
           1,
           '🎁',
-          { en: 'A wish come true', ru: 'Мечта сбылась' },
-          { en: 'Buy something from the wishlist', ru: 'Купить что-нибудь из списка желаний' },
+          {en: 'A wish come true', ru: 'Мечта сбылась'},
+          {
+            en: 'Buy something from the wishlist',
+            ru: 'Купить что-нибудь из списка желаний',
+          },
         ],
         [
           10,
           '🛍️',
-          { en: 'Patient buyer', ru: 'Терпеливый покупатель' },
-          { en: '10 wishes bought', ru: '10 купленных желаний' },
+          {en: 'Patient buyer', ru: 'Терпеливый покупатель'},
+          {en: '10 wishes bought', ru: '10 купленных желаний'},
         ],
       ),
     });
@@ -300,7 +335,7 @@ export class FinanceAchievements implements OnModuleInit {
       if (!budgets.length || !(await this.hasTransactions(userId, month))) {
         break;
       }
-      if (budgets.some((budget) => budget.spent > budget.limit)) {
+      if (budgets.some(budget => budget.spent > budget.limit)) {
         break;
       }
       kept++;
@@ -311,14 +346,14 @@ export class FinanceAchievements implements OnModuleInit {
   /** The longest run of finished months in a row with more income than expenses. */
   private async positiveMonths(userId: string): Promise<number> {
     const [lastFinished] = finishedMonths(1);
-    const { months } = await this.transactionsService.cashFlowInMain(userId, {
+    const {months} = await this.transactionsService.cashFlowInMain(userId, {
       from: '1970-01-01',
       to: lastDayOf(lastFinished),
     });
     let best = 0;
     let run = 0;
     let previous: string | null = null;
-    for (const { month, income, expense } of months) {
+    for (const {month, income, expense} of months) {
       const follows = previous !== null && nextMonth(previous) === month;
       run = income > expense ? (follows ? run + 1 : 1) : 0;
       best = Math.max(best, run);
@@ -327,9 +362,12 @@ export class FinanceAchievements implements OnModuleInit {
     return best;
   }
 
-  private async hasTransactions(userId: string, month: string): Promise<boolean> {
+  private async hasTransactions(
+    userId: string,
+    month: string,
+  ): Promise<boolean> {
     const [row] = await this.db
-      .select({ value: count() })
+      .select({value: count()})
       .from(transactions)
       .where(
         and(
@@ -351,10 +389,17 @@ export class FinanceAchievements implements OnModuleInit {
   }
 
   private async count(
-    table: typeof transactions | typeof recurringPayments | typeof costSources | typeof wishes,
+    table:
+      | typeof transactions
+      | typeof recurringPayments
+      | typeof costSources
+      | typeof wishes,
     where: SQL | undefined,
   ): Promise<number> {
-    const [row] = await this.db.select({ value: count() }).from(table).where(where);
+    const [row] = await this.db
+      .select({value: count()})
+      .from(table)
+      .where(where);
     return row?.value ?? 0;
   }
 }
@@ -362,8 +407,10 @@ export class FinanceAchievements implements OnModuleInit {
 /** The finished months (`YYYY-MM`), the last one first. */
 function finishedMonths(howMany: number): string[] {
   const now = new Date();
-  return Array.from({ length: howMany }, (_, index) => {
-    const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1 - index, 1));
+  return Array.from({length: howMany}, (_, index) => {
+    const day = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1 - index, 1),
+    );
     return day.toISOString().slice(0, 7);
   });
 }

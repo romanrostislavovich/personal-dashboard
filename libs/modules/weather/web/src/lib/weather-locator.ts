@@ -1,7 +1,7 @@
-import { inject, Injectable } from '@angular/core';
-import { WeatherLocation } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { WeatherApi } from './weather.api';
+import {inject, Injectable} from '@angular/core';
+import {WeatherLocation} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {WeatherApi} from './weather.api';
 
 /** Remembered per browser: the automatic attempt (and a refusal) happens once. */
 const AUTO_TRIED_KEY = 'pd.weather.autoLocated';
@@ -17,7 +17,7 @@ const POSITION_OPTIONS: PositionOptions = {
  * The browser asks for permission; without it (or in the desktop app, which has no location
  * service) the city is simply chosen in the search as before.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class WeatherLocator {
   private readonly api = inject(WeatherApi);
   private detecting: Promise<WeatherLocation | null> | null = null;
@@ -43,7 +43,7 @@ export class WeatherLocator {
     if (!position) {
       return null;
     }
-    const { latitude, longitude } = position.coords;
+    const {latitude, longitude} = position.coords;
     try {
       const place = await firstValueFrom(this.api.placeAt(latitude, longitude));
       return await firstValueFrom(this.api.setLocation(place));
@@ -57,8 +57,12 @@ function currentPosition(): Promise<GeolocationPosition | null> {
   if (typeof navigator === 'undefined' || !navigator.geolocation) {
     return Promise.resolve(null);
   }
-  return new Promise((resolve) =>
-    navigator.geolocation.getCurrentPosition(resolve, () => resolve(null), POSITION_OPTIONS),
+  return new Promise(resolve =>
+    navigator.geolocation.getCurrentPosition(
+      resolve,
+      () => resolve(null),
+      POSITION_OPTIONS,
+    ),
   );
 }
 

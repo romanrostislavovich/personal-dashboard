@@ -1,6 +1,6 @@
-import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig, DB, Database, SecretsService } from '@pd/api-core';
+import {BadRequestException, Inject, Injectable, Logger} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, DB, Database, SecretsService} from '@pd/api-core';
 import {
   addDays,
   DateParts,
@@ -14,16 +14,31 @@ import {
   WakatimeShare,
   WakatimeStats,
 } from '@pd/contracts';
-import { and, asc, between, eq, gte, isNotNull, max, min, sql, sum } from 'drizzle-orm';
-import { codingTotals, fillDays, sumShares, syncStart } from './coding-stats';
+import {
+  and,
+  asc,
+  between,
+  eq,
+  gte,
+  isNotNull,
+  max,
+  min,
+  sql,
+  sum,
+} from 'drizzle-orm';
+import {codingTotals, fillDays, sumShares, syncStart} from './coding-stats';
 import {
   WakatimeAuthError,
   WakatimeClient,
   WakatimePlanError,
   WakatimeSummaryDay,
 } from './wakatime.client';
-import { wakatimeDayBreakdown, wakatimeDays, wakatimeSettings } from './wakatime.schema';
-import { WakatimeSpansService } from './wakatime-spans.service';
+import {
+  wakatimeDayBreakdown,
+  wakatimeDays,
+  wakatimeSettings,
+} from './wakatime.schema';
+import {WakatimeSpansService} from './wakatime-spans.service';
 
 const API_KEY_SECRET = 'development.wakatime-key';
 /** Rows of a "top projects / languages / editors" list. */
@@ -68,10 +83,10 @@ export class WakatimeService {
     await this.secrets.set(userId, API_KEY_SECRET, apiKey);
     await this.db
       .insert(wakatimeSettings)
-      .values({ userId, username })
+      .values({userId, username})
       .onConflictDoUpdate({
         target: wakatimeSettings.userId,
-        set: { username, syncError: null },
+        set: {username, syncError: null},
       });
     await this.sync(userId);
   }
@@ -81,17 +96,17 @@ export class WakatimeService {
     await this.secrets.delete(userId, API_KEY_SECRET);
     await this.db
       .update(wakatimeSettings)
-      .set({ username: null, syncError: null })
+      .set({username: null, syncError: null})
       .where(eq(wakatimeSettings.userId, userId));
   }
 
   /** All users with WakaTime connected (for the background job). */
   async connectedUserIds(): Promise<string[]> {
     const rows = await this.db
-      .select({ userId: wakatimeSettings.userId })
+      .select({userId: wakatimeSettings.userId})
       .from(wakatimeSettings)
       .where(isNotNull(wakatimeSettings.username));
-    return rows.map((row) => row.userId);
+    return rows.map(row => row.userId);
   }
 
   /**
@@ -110,7 +125,7 @@ export class WakatimeService {
       const days = await client
         .getSummaries(syncStart(await this.lastSavedDay(userId), today), end)
         // A plan that gives less history than the window still gives today.
-        .catch((error) => {
+        .catch(error => {
           if (error instanceof WakatimePlanError) {
             return client.getSummaries(end, end);
           }
@@ -120,12 +135,15 @@ export class WakatimeService {
       await this.spans.sync(
         userId,
         client,
-        days.map((day) => day.day),
+        days.map(day => day.day),
       );
       await this.setSyncResult(userId, null);
     } catch (error) {
       this.logger.warn(`WakaTime sync failed for ${userId}: ${error}`);
-      await this.setSyncResult(userId, error instanceof Error ? error.message : String(error));
+      await this.setSyncResult(
+        userId,
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 
@@ -140,7 +158,10 @@ export class WakatimeService {
     const top = (kind: WakatimeBreakdown) =>
       this.shares(userId, kind, toLocalDate(from), toLocalDate(today));
     const [allTime] = await this.db
-      .select({ seconds: sum(wakatimeDays.totalSeconds), since: min(wakatimeDays.day) })
+      .select({
+        seconds: sum(wakatimeDays.totalSeconds),
+        since: min(wakatimeDays.day),
+      })
       .from(wakatimeDays)
       .where(eq(wakatimeDays.userId, userId));
 
@@ -152,16 +173,24 @@ export class WakatimeService {
       languages: await top('language'),
       editors: await top('editor'),
       operatingSystems: await top('os'),
-      allTime: { seconds: Number(allTime?.seconds ?? 0), since: allTime?.since ?? null },
+      allTime: {
+        seconds: Number(allTime?.seconds ?? 0),
+        since: allTime?.since ?? null,
+      },
     };
   }
 
   /** Saved days of a period, oldest first; days without coding are not in the list. */
   days(userId: string, from: LocalDate, to: LocalDate): Promise<WakatimeDay[]> {
     return this.db
-      .select({ day: wakatimeDays.day, seconds: wakatimeDays.totalSeconds })
+      .select({day: wakatimeDays.day, seconds: wakatimeDays.totalSeconds})
       .from(wakatimeDays)
-      .where(and(eq(wakatimeDays.userId, userId), between(wakatimeDays.day, from, to)))
+      .where(
+        and(
+          eq(wakatimeDays.userId, userId),
+          between(wakatimeDays.day, from, to),
+        ),
+      )
       .orderBy(asc(wakatimeDays.day));
   }
 
@@ -179,7 +208,10 @@ export class WakatimeService {
     limit = TOP_LIMIT,
   ): Promise<WakatimeShare[]> {
     const rows = await this.db
-      .select({ name: wakatimeDayBreakdown.name, seconds: wakatimeDayBreakdown.seconds })
+      .select({
+        name: wakatimeDayBreakdown.name,
+        seconds: wakatimeDayBreakdown.seconds,
+      })
       .from(wakatimeDayBreakdown)
       .where(
         and(
@@ -197,33 +229,49 @@ export class WakatimeService {
     kind: WakatimeBreakdown,
     minSeconds: number,
   ): Promise<number> {
-    const shares = await this.shares(userId, kind, '0001-01-01', '9999-12-31', Infinity);
-    return shares.filter((share) => share.seconds >= minSeconds).length;
+    const shares = await this.shares(
+      userId,
+      kind,
+      '0001-01-01',
+      '9999-12-31',
+      Infinity,
+    );
+    return shares.filter(share => share.seconds >= minSeconds).length;
   }
 
   today(): DateParts {
-    return todayIn(this.config.get('APP_TIMEZONE', { infer: true }));
+    return todayIn(this.config.get('APP_TIMEZONE', {infer: true}));
   }
 
-  private async save(userId: string, days: WakatimeSummaryDay[]): Promise<void> {
+  private async save(
+    userId: string,
+    days: WakatimeSummaryDay[],
+  ): Promise<void> {
     if (days.length === 0) {
       return;
     }
-    const from = days.reduce((first, day) => (day.day < first ? day.day : first), days[0].day);
-    const breakdown = days.flatMap(({ day, breakdown: items }) =>
-      items.map((item) => ({ userId, day, ...item })),
+    const from = days.reduce(
+      (first, day) => (day.day < first ? day.day : first),
+      days[0].day,
     );
-    const fresh = new Set(breakdown.map(({ day, kind, name }) => `${day}|${kind}|${name}`));
+    const breakdown = days.flatMap(({day, breakdown: items}) =>
+      items.map(item => ({userId, day, ...item})),
+    );
+    const fresh = new Set(
+      breakdown.map(({day, kind, name}) => `${day}|${kind}|${name}`),
+    );
 
-    await this.db.transaction(async (tx) => {
+    await this.db.transaction(async tx => {
       // The same days are re-read every hour: only rows that changed are written, otherwise
       // each of them would be sent again by the sync between instances.
       await tx
         .insert(wakatimeDays)
-        .values(days.map(({ day, totalSeconds }) => ({ userId, day, totalSeconds })))
+        .values(
+          days.map(({day, totalSeconds}) => ({userId, day, totalSeconds})),
+        )
         .onConflictDoUpdate({
           target: [wakatimeDays.userId, wakatimeDays.day],
-          set: { totalSeconds: sql`excluded.total_seconds` },
+          set: {totalSeconds: sql`excluded.total_seconds`},
           setWhere: sql`${wakatimeDays.totalSeconds} <> excluded.total_seconds`,
         });
       if (breakdown.length > 0) {
@@ -237,7 +285,7 @@ export class WakatimeService {
               wakatimeDayBreakdown.kind,
               wakatimeDayBreakdown.name,
             ],
-            set: { seconds: sql`excluded.seconds` },
+            set: {seconds: sql`excluded.seconds`},
             setWhere: sql`${wakatimeDayBreakdown.seconds} <> excluded.seconds`,
           });
       }
@@ -246,10 +294,18 @@ export class WakatimeService {
       const saved = await tx
         .select()
         .from(wakatimeDayBreakdown)
-        .where(and(eq(wakatimeDayBreakdown.userId, userId), gte(wakatimeDayBreakdown.day, from)));
-      const fetchedDays = new Set(days.map((day) => day.day));
+        .where(
+          and(
+            eq(wakatimeDayBreakdown.userId, userId),
+            gte(wakatimeDayBreakdown.day, from),
+          ),
+        );
+      const fetchedDays = new Set(days.map(day => day.day));
       for (const row of saved) {
-        if (fetchedDays.has(row.day) && !fresh.has(`${row.day}|${row.kind}|${row.name}`)) {
+        if (
+          fetchedDays.has(row.day) &&
+          !fresh.has(`${row.day}|${row.kind}|${row.name}`)
+        ) {
           await tx
             .delete(wakatimeDayBreakdown)
             .where(
@@ -267,16 +323,19 @@ export class WakatimeService {
 
   private async lastSavedDay(userId: string): Promise<LocalDate | null> {
     const [row] = await this.db
-      .select({ day: max(wakatimeDays.day) })
+      .select({day: max(wakatimeDays.day)})
       .from(wakatimeDays)
       .where(eq(wakatimeDays.userId, userId));
     return row?.day ?? null;
   }
 
-  private async setSyncResult(userId: string, syncError: string | null): Promise<void> {
+  private async setSyncResult(
+    userId: string,
+    syncError: string | null,
+  ): Promise<void> {
     await this.db
       .update(wakatimeSettings)
-      .set({ syncError, ...(syncError ? {} : { lastSyncedAt: new Date() }) })
+      .set({syncError, ...(syncError ? {} : {lastSyncedAt: new Date()})})
       .where(eq(wakatimeSettings.userId, userId));
   }
 }

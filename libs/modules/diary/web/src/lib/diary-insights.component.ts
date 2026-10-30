@@ -1,8 +1,14 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { DiaryInsights } from '@pd/contracts';
-import { moodColor, MOOD_EMOJI } from './mood';
+import {DecimalPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  output,
+} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {DiaryInsights} from '@pd/contracts';
+import {moodColor, MOOD_EMOJI} from './mood';
 
 const TAGS_SHOWN = 5;
 
@@ -22,7 +28,10 @@ const TAGS_SHOWN = 5;
         @if (hasWeekdayData()) {
           <div class="bars">
             @for (d of data.moodByWeekday; track d.weekday) {
-              <div class="bar-column" [title]="(d.average | number: '1.1-1') ?? ''">
+              <div
+                class="bar-column"
+                [title]="(d.average | number: '1.1-1') ?? ''"
+              >
                 <span class="bar-value">
                   {{ d.average === null ? '—' : (d.average | number: '1.1-1') }}
                 </span>
@@ -52,7 +61,11 @@ const TAGS_SHOWN = 5;
           <ul class="tags">
             @for (t of tags(); track t.tag) {
               <li>
-                <button type="button" class="tag" (click)="tagSelect.emit(t.tag)">
+                <button
+                  type="button"
+                  class="tag"
+                  (click)="tagSelect.emit(t.tag)"
+                >
                   #{{ t.tag }}
                 </button>
                 <span class="meter">
@@ -61,7 +74,10 @@ const TAGS_SHOWN = 5;
                     [style.background]="color(t.average)"
                   ></span>
                 </span>
-                <span class="score">{{ emoji(t.average) }} {{ t.average | number: '1.1-1' }}</span>
+                <span class="score"
+                  >{{ emoji(t.average) }}
+                  {{ t.average | number: '1.1-1' }}</span
+                >
               </li>
             }
           </ul>
@@ -171,7 +187,7 @@ export class DiaryInsightsComponent {
   readonly tagSelect = output<string>();
 
   protected readonly hasWeekdayData = computed(() =>
-    this.insights().moodByWeekday.some((d) => d.average !== null),
+    this.insights().moodByWeekday.some(d => d.average !== null),
   );
 
   /** The best tags first, then the worst — the middle is the least interesting. */

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 
 /**
  * A project is a site or service you run (for example, ai-text-guard.com).
@@ -29,6 +29,9 @@ export interface Project {
 }
 
 /** Closed — its closing day has come; a day still ahead is only the plan. */
-export function isProjectClosed(project: Pick<Project, 'closedOn'>, today: string): boolean {
+export function isProjectClosed(
+  project: Pick<Project, 'closedOn'>,
+  today: string,
+): boolean {
   return project.closedOn !== null && project.closedOn <= today;
 }

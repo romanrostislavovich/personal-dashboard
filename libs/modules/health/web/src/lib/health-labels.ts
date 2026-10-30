@@ -1,9 +1,9 @@
-import { inject, Pipe, PipeTransform } from '@angular/core';
-import { TranslocoService } from '@jsverse/transloco';
-import { HEALTH_SPECIALITIES } from '@pd/contracts';
+import {inject, Pipe, PipeTransform} from '@angular/core';
+import {TranslocoService} from '@jsverse/transloco';
+import {HEALTH_SPECIALITIES} from '@pd/contracts';
 
 /** A speciality of the list in the user's language; one typed by hand as it is. */
-@Pipe({ name: 'pdSpeciality', pure: false })
+@Pipe({name: 'pdSpeciality', pure: false})
 export class SpecialityPipe implements PipeTransform {
   private readonly transloco = inject(TranslocoService);
 
@@ -18,7 +18,7 @@ export class SpecialityPipe implements PipeTransform {
 }
 
 /** `PL` → "Poland" in the user's language. */
-@Pipe({ name: 'pdCountry', pure: false })
+@Pipe({name: 'pdCountry', pure: false})
 export class CountryPipe implements PipeTransform {
   private readonly transloco = inject(TranslocoService);
 
@@ -29,7 +29,7 @@ export class CountryPipe implements PipeTransform {
 
 export function countryName(code: string, language: string): string {
   try {
-    return new Intl.DisplayNames([language], { type: 'region' }).of(code) ?? code;
+    return new Intl.DisplayNames([language], {type: 'region'}).of(code) ?? code;
   } catch {
     return code;
   }
@@ -50,4 +50,5 @@ export function today(): string {
 }
 
 /** An emptied field is "nothing", not an empty string, for the server. */
-export const orNull = (value: string | null | undefined) => value?.trim() || null;
+export const orNull = (value: string | null | undefined) =>
+  value?.trim() || null;

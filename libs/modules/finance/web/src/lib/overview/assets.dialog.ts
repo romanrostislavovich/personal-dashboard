@@ -1,17 +1,26 @@
-import { CurrencyPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { Asset, ASSET_KINDS, AssetKind, LIQUID_ASSET_KINDS } from '@pd/contracts';
-import { firstValueFrom } from 'rxjs';
-import { FinanceApi } from '../finance.api';
+import {CurrencyPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MAT_DIALOG_DATA, MatDialogModule} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {Asset, ASSET_KINDS, AssetKind, LIQUID_ASSET_KINDS} from '@pd/contracts';
+import {firstValueFrom} from 'rxjs';
+import {FinanceApi} from '../finance.api';
 
 /**
  * What one owns or owes besides the bank accounts: cash, another bank, a deposit, investments,
@@ -41,7 +50,9 @@ import { FinanceApi } from '../finance.api';
           <li>
             <span class="name">
               {{ asset.name }}
-              <small>{{ 'finance.assets.kinds.' + asset.kind | transloco }}</small>
+              <small>{{
+                'finance.assets.kinds.' + asset.kind | transloco
+              }}</small>
             </span>
             <span class="amount">{{
               asset.amount | currency: asset.currency : 'symbol' : '1.0-2'
@@ -66,7 +77,10 @@ import { FinanceApi } from '../finance.api';
 
       <form [formGroup]="form" (ngSubmit)="save()" class="form">
         <h3>
-          {{ (editing() ? 'finance.assets.editTitle' : 'finance.assets.addTitle') | transloco }}
+          {{
+            (editing() ? 'finance.assets.editTitle' : 'finance.assets.addTitle')
+              | transloco
+          }}
         </h3>
         <div class="row">
           <mat-form-field>
@@ -79,7 +93,10 @@ import { FinanceApi } from '../finance.api';
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'finance.assets.kind' | transloco }}</mat-label>
-            <mat-select formControlName="kind" (valueChange)="kindChanged($event)">
+            <mat-select
+              formControlName="kind"
+              (valueChange)="kindChanged($event)"
+            >
               @for (kind of kinds; track kind) {
                 <mat-option [value]="kind">{{
                   'finance.assets.kinds.' + kind | transloco
@@ -91,7 +108,13 @@ import { FinanceApi } from '../finance.api';
         <div class="row">
           <mat-form-field>
             <mat-label>{{ 'finance.amount' | transloco }}</mat-label>
-            <input matInput type="number" min="0" step="0.01" formControlName="amount" />
+            <input
+              matInput
+              type="number"
+              min="0"
+              step="0.01"
+              formControlName="amount"
+            />
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'finance.currency' | transloco }}</mat-label>
@@ -107,14 +130,22 @@ import { FinanceApi } from '../finance.api';
               {{ 'core.actions.cancel' | transloco }}
             </button>
           }
-          <button matButton="filled" type="submit" [disabled]="form.invalid || busy()">
-            {{ (editing() ? 'core.actions.save' : 'core.actions.add') | transloco }}
+          <button
+            matButton="filled"
+            type="submit"
+            [disabled]="form.invalid || busy()"
+          >
+            {{
+              (editing() ? 'core.actions.save' : 'core.actions.add') | transloco
+            }}
           </button>
         </div>
       </form>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button matButton mat-dialog-close>{{ 'finance.letter.close' | transloco }}</button>
+      <button matButton mat-dialog-close>
+        {{ 'finance.letter.close' | transloco }}
+      </button>
     </mat-dialog-actions>
   `,
   styles: `
@@ -172,7 +203,10 @@ export class AssetsDialog {
     name: ['', Validators.required],
     kind: ['cash' as AssetKind],
     amount: [null as number | null, [Validators.required, Validators.min(0)]],
-    currency: [this.currency, [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)]],
+    currency: [
+      this.currency,
+      [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)],
+    ],
     liquid: [true],
   });
 
@@ -209,7 +243,11 @@ export class AssetsDialog {
     try {
       await firstValueFrom(
         this.api.saveAsset(
-          { ...value, amount: Number(value.amount), currency: value.currency.toUpperCase() },
+          {
+            ...value,
+            amount: Number(value.amount),
+            currency: value.currency.toUpperCase(),
+          },
           this.editing() ?? undefined,
         ),
       );

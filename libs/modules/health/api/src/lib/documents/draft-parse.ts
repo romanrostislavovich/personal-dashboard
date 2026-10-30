@@ -1,4 +1,4 @@
-import { HealthDocumentDraft, healthDocumentDraftSchema } from '@pd/contracts';
+import {HealthDocumentDraft, healthDocumentDraftSchema} from '@pd/contracts';
 
 /**
  * The draft out of the AI's answer: its JSON, even inside a code fence or after a sentence;
@@ -26,9 +26,13 @@ export function parseDraft(answer: string): HealthDocumentDraft | null {
  */
 export function answerShape(answer: string): string {
   try {
-    const json = JSON.parse(answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1));
+    const json = JSON.parse(
+      answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1),
+    );
     return Object.entries(json as Record<string, unknown>)
-      .map(([key, value]) => (Array.isArray(value) ? `${key}[${value.length}]` : key))
+      .map(([key, value]) =>
+        Array.isArray(value) ? `${key}[${value.length}]` : key,
+      )
       .join(', ');
   } catch {
     return `no JSON (${answer.length} characters)`;
@@ -41,7 +45,8 @@ const isObject = (value: unknown): value is Json =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /** The first of the keys that is there, for a field the AI named in its own way. */
-const pick = (item: Json, keys: string[]) => keys.map((key) => item[key]).find(Boolean);
+const pick = (item: Json, keys: string[]) =>
+  keys.map(key => item[key]).find(Boolean);
 
 /**
  * The shapes the models answer in besides the asked one: a list under another name
@@ -56,33 +61,42 @@ function normalized(json: unknown): unknown {
     const value = pick(json, keys);
     return Array.isArray(value) ? value : undefined;
   };
-  const diagnoses = list(['diagnoses', 'diagnosis', 'conditions'])?.map((item) => {
-    if (typeof item === 'string') {
-      const coded = /^\s*([A-Z]\d{2}(?:\.\d{1,2})?)\s*[-–:]?\s*(.*)$/.exec(item);
-      return coded ? { code: coded[1], title: coded[2] || item } : { title: item };
-    }
-    return isObject(item)
-      ? { ...item, title: pick(item, ['title', 'name', 'diagnosis', 'text']) }
-      : item;
-  });
+  const diagnoses = list(['diagnoses', 'diagnosis', 'conditions'])?.map(
+    item => {
+      if (typeof item === 'string') {
+        const coded = /^\s*([A-Z]\d{2}(?:\.\d{1,2})?)\s*[-–:]?\s*(.*)$/.exec(
+          item,
+        );
+        return coded
+          ? {code: coded[1], title: coded[2] || item}
+          : {title: item};
+      }
+      return isObject(item)
+        ? {...item, title: pick(item, ['title', 'name', 'diagnosis', 'text'])}
+        : item;
+    },
+  );
   const medications = list([
     'medications',
     'medication',
     'medicines',
     'prescriptions',
     'drugs',
-  ])?.map((item) => {
+  ])?.map(item => {
     if (typeof item === 'string') {
-      return { name: item };
+      return {name: item};
     }
     return isObject(item)
-      ? { ...item, name: pick(item, ['name', 'title', 'drug', 'medicine', 'medication']) }
+      ? {
+          ...item,
+          name: pick(item, ['name', 'title', 'drug', 'medicine', 'medication']),
+        }
       : item;
   });
   return {
     ...json,
-    ...(diagnoses ? { diagnoses } : {}),
-    ...(medications ? { medications } : {}),
+    ...(diagnoses ? {diagnoses} : {}),
+    ...(medications ? {medications} : {}),
   };
 }
 
@@ -90,9 +104,9 @@ function normalized(json: unknown): unknown {
 function withoutEmptyLines(draft: HealthDocumentDraft): HealthDocumentDraft {
   return {
     ...draft,
-    diagnoses: draft.diagnoses.filter((d) => d.title),
-    medications: draft.medications.filter((m) => m.name),
-    labValues: draft.labValues.filter((v) => v.name && v.result),
+    diagnoses: draft.diagnoses.filter(d => d.title),
+    medications: draft.medications.filter(m => m.name),
+    labValues: draft.labValues.filter(v => v.name && v.result),
   };
 }
 
@@ -160,7 +174,9 @@ export function parseLabs(answer: string): {
   const draft = parseDraft(answer);
   let orderedTests = 0;
   try {
-    const json = JSON.parse(answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1));
+    const json = JSON.parse(
+      answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1),
+    );
     orderedTests = Number.isInteger(json.orderedTests) ? json.orderedTests : 0;
   } catch {
     // No JSON: nothing ordered either.

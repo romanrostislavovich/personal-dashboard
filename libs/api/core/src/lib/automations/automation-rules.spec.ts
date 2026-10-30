@@ -1,5 +1,5 @@
-import { AutomationCatalog } from '@pd/contracts';
-import { fillTemplate, paramsError, parseDraft } from './automation-rules';
+import {AutomationCatalog} from '@pd/contracts';
+import {fillTemplate, paramsError, parseDraft} from './automation-rules';
 
 const catalog: AutomationCatalog = {
   triggers: [
@@ -7,14 +7,14 @@ const catalog: AutomationCatalog = {
       id: 'monitoring.down',
       module: 'monitoring',
       labelKey: 'monitoring.automations.down',
-      params: [{ name: 'site', type: 'text', labelKey: 'x' }],
+      params: [{name: 'site', type: 'text', labelKey: 'x'}],
       variables: ['site', 'error'],
     },
     {
       id: 'core.daily',
       module: 'core',
       labelKey: 'core.automations.daily',
-      params: [{ name: 'time', type: 'time', labelKey: 'x', required: true }],
+      params: [{name: 'time', type: 'time', labelKey: 'x', required: true}],
       variables: [],
     },
   ],
@@ -24,14 +24,20 @@ const catalog: AutomationCatalog = {
       module: 'tasks',
       labelKey: 'tasks.automations.create',
       params: [
-        { name: 'title', type: 'text', labelKey: 'x', required: true, template: true },
+        {
+          name: 'title',
+          type: 'text',
+          labelKey: 'x',
+          required: true,
+          template: true,
+        },
         {
           name: 'due',
           type: 'select',
           labelKey: 'x',
           options: [
-            { value: 'none', labelKey: 'x' },
-            { value: 'today', labelKey: 'x' },
+            {value: 'none', labelKey: 'x'},
+            {value: 'today', labelKey: 'x'},
           ],
         },
       ],
@@ -42,7 +48,10 @@ const catalog: AutomationCatalog = {
 describe('fillTemplate', () => {
   it('fills the placeholders it knows and keeps the rest', () => {
     expect(
-      fillTemplate('{{site}} is down: {{ error }} {{other}}', { site: 'a.com', error: '502' }),
+      fillTemplate('{{site}} is down: {{ error }} {{other}}', {
+        site: 'a.com',
+        error: '502',
+      }),
     ).toBe('a.com is down: 502 {{other}}');
   });
 });
@@ -53,10 +62,14 @@ describe('paramsError', () => {
 
   it('checks required fields, times, numbers and choices', () => {
     expect(paramsError(daily.params, {})).toMatch(/required/);
-    expect(paramsError(daily.params, { time: '25:00' })).toMatch(/HH:MM/);
-    expect(paramsError(daily.params, { time: '07:30' })).toBeNull();
-    expect(paramsError(task.params, { title: 'Fix it', due: 'someday' })).toMatch(/one of/);
-    expect(paramsError(task.params, { title: 'Fix it', color: 'red' })).toMatch(/not a field/);
+    expect(paramsError(daily.params, {time: '25:00'})).toMatch(/HH:MM/);
+    expect(paramsError(daily.params, {time: '07:30'})).toBeNull();
+    expect(paramsError(task.params, {title: 'Fix it', due: 'someday'})).toMatch(
+      /one of/,
+    );
+    expect(paramsError(task.params, {title: 'Fix it', color: 'red'})).toMatch(
+      /not a field/,
+    );
   });
 });
 
@@ -71,19 +84,25 @@ describe('parseDraft', () => {
         trigger: 'monitoring.down',
         triggerParams: {},
         action: 'tasks.create',
-        actionParams: { title: 'Fix {{site}}', due: 'today' },
+        actionParams: {title: 'Fix {{site}}', due: 'today'},
         isActive: true,
       },
     });
   });
 
   it('passes on what the AI could not do and rejects unknown ids', () => {
-    expect(parseDraft('{"error":"There is no weather trigger"}', catalog)).toEqual({
+    expect(
+      parseDraft('{"error":"There is no weather trigger"}', catalog),
+    ).toEqual({
       error: 'There is no weather trigger',
     });
-    expect(parseDraft('{"trigger":"weather.rain","action":"tasks.create"}', catalog)).toEqual({
+    expect(
+      parseDraft('{"trigger":"weather.rain","action":"tasks.create"}', catalog),
+    ).toEqual({
       error: expect.stringMatching(/does not exist/),
     });
-    expect(parseDraft('Sorry, I cannot.', catalog)).toEqual({ error: 'Sorry, I cannot.' });
+    expect(parseDraft('Sorry, I cannot.', catalog)).toEqual({
+      error: 'Sorry, I cannot.',
+    });
   });
 });

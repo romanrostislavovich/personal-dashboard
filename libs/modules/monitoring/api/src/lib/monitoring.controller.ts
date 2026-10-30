@@ -8,10 +8,10 @@ import {
   ParseUUIDPipe,
   Post,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
-import { MonitorInput, monitorInputSchema } from '@pd/contracts';
-import { CheckerService } from './checker.service';
-import { MonitorsService } from './monitors.service';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
+import {MonitorInput, monitorInputSchema} from '@pd/contracts';
+import {CheckerService} from './checker.service';
+import {MonitorsService} from './monitors.service';
 
 @Controller('monitoring')
 export class MonitoringController {
@@ -37,7 +37,10 @@ export class MonitoringController {
 
   @Delete('monitors/:id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.monitors.remove(user.id, id);
   }
 }

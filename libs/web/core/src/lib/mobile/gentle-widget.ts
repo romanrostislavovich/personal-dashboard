@@ -1,5 +1,5 @@
-import { registerPlugin } from '@capacitor/core';
-import { isMobileApp } from './mobile-app';
+import {registerPlugin} from '@capacitor/core';
+import {isMobileApp} from './mobile-app';
 
 /** What the home-screen widget of the gentle day shows, already in the user's language. */
 export interface GentleWidgetText {
@@ -12,13 +12,17 @@ export interface GentleWidgetText {
   stale: string;
 }
 
-const widget = registerPlugin<{ update(text: GentleWidgetText): Promise<void> }>('GentleWidget');
+const widget = registerPlugin<{update(text: GentleWidgetText): Promise<void>}>(
+  'GentleWidget',
+);
 
 /**
  * Tells the Android app's home-screen widget (GentleWidgetPlugin in apps/mobile) what to show.
  * Nothing in a browser, nor in an app built before the widget.
  */
-export async function showOnGentleWidget(text: GentleWidgetText): Promise<void> {
+export async function showOnGentleWidget(
+  text: GentleWidgetText,
+): Promise<void> {
   if (!isMobileApp()) {
     return;
   }

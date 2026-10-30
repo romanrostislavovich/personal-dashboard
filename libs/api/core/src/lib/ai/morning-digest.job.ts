@@ -1,15 +1,15 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { LocalDate } from '@pd/contracts';
-import { AppConfig } from '../config/env';
-import { coreMessages } from '../i18n/core.messages';
-import { NotificationsService } from '../notifications/notifications.service';
-import { SchedulerService } from '../scheduler/scheduler.service';
-import { UsersService } from '../users/users.service';
-import { AiConnectionsService } from './ai-connections.service';
-import { AiService } from './ai.service';
-import { DigestChange } from './digest-changes';
-import { MorningDigestService } from './morning-digest.service';
+import {Inject, Injectable, Logger, OnModuleInit} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {LocalDate} from '@pd/contracts';
+import {AppConfig} from '../config/env';
+import {coreMessages} from '../i18n/core.messages';
+import {NotificationsService} from '../notifications/notifications.service';
+import {SchedulerService} from '../scheduler/scheduler.service';
+import {UsersService} from '../users/users.service';
+import {AiConnectionsService} from './ai-connections.service';
+import {AiService} from './ai.service';
+import {DigestChange} from './digest-changes';
+import {MorningDigestService} from './morning-digest.service';
 
 export const MORNING_DIGEST_INSTRUCTION = [
   "You write the user's morning digest for Telegram. You get JSON: today's date and sections,",
@@ -33,7 +33,7 @@ export function digestRequest(
 ): string {
   return JSON.stringify({
     today,
-    sections: changes.map(({ section, facts, previous }) => ({
+    sections: changes.map(({section, facts, previous}) => ({
       id: section.id,
       description: section.description,
       facts,
@@ -72,11 +72,11 @@ export class MorningDigestJob implements OnModuleInit {
   }
 
   private async sendAll(): Promise<void> {
-    for (const { userId, today } of await this.connections.usersWithDigestDue()) {
+    for (const {userId, today} of await this.connections.usersWithDigestDue()) {
       // Marked before sending: a failing provider gets one attempt a day, not one every run.
       await this.connections.markDigestDay(userId, today);
       // One user's failing provider (no balance, a bad key) must not cancel everyone else's digest.
-      await this.send(userId, today).catch((error) =>
+      await this.send(userId, today).catch(error =>
         this.logger.error(`Morning digest failed for ${userId}: ${error}`),
       );
     }
@@ -94,7 +94,8 @@ export class MorningDigestJob implements OnModuleInit {
       digestRequest(today, changes),
     );
     await this.notifications.send(userId, {
-      title: coreMessages((await this.users.findById(userId))?.locale).morningDigestTitle,
+      title: coreMessages((await this.users.findById(userId))?.locale)
+        .morningDigestTitle,
       body: reply,
       source: 'ai',
     });

@@ -1,12 +1,14 @@
-import { z } from 'zod';
-import { LocalDate } from './local-date';
+import {z} from 'zod';
+import {LocalDate} from './local-date';
 
 /**
  * The profile from what the user pasted: its link (`https://soundcloud.com/name`, with or
  * without a page after it) or the bare name of the address. `null` — not a profile.
  */
 export function soundcloudProfileName(value: string): string | null {
-  const link = value.trim().match(/^(?:https?:\/\/)?(?:www\.|m\.)?soundcloud\.com\/([^/?#]+)/i);
+  const link = value
+    .trim()
+    .match(/^(?:https?:\/\/)?(?:www\.|m\.)?soundcloud\.com\/([^/?#]+)/i);
   const name = (link ? link[1] : value.trim()).toLowerCase();
   return /^[a-z0-9_-]{2,60}$/.test(name) ? name : null;
 }
@@ -17,7 +19,10 @@ export const soundcloudConnectSchema = z.object({
     .string()
     .trim()
     .max(200)
-    .refine((value) => soundcloudProfileName(value) !== null, 'Expected a SoundCloud profile'),
+    .refine(
+      value => soundcloudProfileName(value) !== null,
+      'Expected a SoundCloud profile',
+    ),
   /** The sign-in token of the account: private tracks are read with it. Optional. */
   token: z.string().trim().min(10).max(300).nullish(),
 });
@@ -67,7 +72,7 @@ export interface SoundcloudTrack extends SoundcloudCounters {
   downloads: number;
   notify: boolean;
   /** Growth of plays over 7 and 30 days (from the saved history). */
-  playsDelta: { week: number; month: number };
+  playsDelta: {week: number; month: number};
   /** The last 30 days, for the chart. */
   history: SoundcloudPoint[];
 }
@@ -82,7 +87,7 @@ export interface SoundcloudStats {
   /** Followers gained over 7 days. */
   followersWeek: number;
   totals: SoundcloudCounters;
-  playsDelta: { week: number; month: number };
+  playsDelta: {week: number; month: number};
   /** All tracks added up, the last 30 days. */
   history: SoundcloudPoint[];
   /** The most played first. */

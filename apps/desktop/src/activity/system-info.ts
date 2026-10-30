@@ -1,7 +1,7 @@
-import { app } from 'electron';
-import { execFile } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import {app} from 'electron';
+import {execFile} from 'node:child_process';
+import {readFileSync, writeFileSync} from 'node:fs';
+import {join} from 'node:path';
 
 /** What Windows tells about the computer beyond the basics (ActivitySystem in contracts). */
 export type SystemInfo = Record<string, unknown>;
@@ -25,17 +25,32 @@ export class SystemInfoReader {
     }
     // PowerShell cannot run a file from inside the app's archive: the script is copied out.
     const script = join(app.getPath('userData'), 'system-info.ps1');
-    writeFileSync(script, readFileSync(join(__dirname, 'assets', 'system-info.ps1')));
-    const args = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script];
+    writeFileSync(
+      script,
+      readFileSync(join(__dirname, 'assets', 'system-info.ps1')),
+    );
+    const args = [
+      '-NoProfile',
+      '-NonInteractive',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      script,
+    ];
     if (Date.now() - this.batteryReportAt >= BATTERY_REPORT_EVERY_MS) {
       args.push('-BatteryReport');
       this.batteryReportAt = Date.now();
     }
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       execFile(
         'powershell.exe',
         args,
-        { windowsHide: true, timeout: TIMEOUT_MS, encoding: 'utf8', maxBuffer: 1024 * 1024 },
+        {
+          windowsHide: true,
+          timeout: TIMEOUT_MS,
+          encoding: 'utf8',
+          maxBuffer: 1024 * 1024,
+        },
         (error, stdout) => {
           try {
             resolve(error ? null : (JSON.parse(stdout.trim()) as SystemInfo));

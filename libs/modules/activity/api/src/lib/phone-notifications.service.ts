@@ -1,14 +1,14 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DB, Database, UsersService } from '@pd/api-core';
+import {Inject, Injectable} from '@nestjs/common';
+import {DB, Database, UsersService} from '@pd/api-core';
 import {
   LocalDate,
   PhoneNotificationInput,
   PhoneNotificationsQuery,
   PhoneNotificationsSummary,
 } from '@pd/contracts';
-import { and, desc, eq, gte, lt, sql } from 'drizzle-orm';
-import { ActivityDeviceRow } from './activity.schema';
-import { activityPhoneNotifications } from './phone-notifications.schema';
+import {and, desc, eq, gte, lt, sql} from 'drizzle-orm';
+import {ActivityDeviceRow} from './activity.schema';
+import {activityPhoneNotifications} from './phone-notifications.schema';
 
 /** Notifications with their text in the summary. */
 const LATEST = 30;
@@ -25,8 +25,11 @@ export class PhoneNotificationsService {
     private readonly users: UsersService,
   ) {}
 
-  async ingest(device: ActivityDeviceRow, items: PhoneNotificationInput[]): Promise<number> {
-    const rows = items.map((item) => ({
+  async ingest(
+    device: ActivityDeviceRow,
+    items: PhoneNotificationInput[],
+  ): Promise<number> {
+    const rows = items.map(item => ({
       userId: device.userId,
       deviceId: device.id,
       app: item.app,
@@ -41,7 +44,7 @@ export class PhoneNotificationsService {
         .insert(activityPhoneNotifications)
         .values(rows.slice(i, i + INSERT_CHUNK))
         .onConflictDoNothing()
-        .returning({ id: activityPhoneNotifications.id });
+        .returning({id: activityPhoneNotifications.id});
       saved += inserted.length;
     }
     return saved;
@@ -49,7 +52,7 @@ export class PhoneNotificationsService {
 
   async summary(
     userId: string,
-    { from, to }: PhoneNotificationsQuery,
+    {from, to}: PhoneNotificationsQuery,
   ): Promise<PhoneNotificationsSummary> {
     const zone = this.users.timeZoneOf(await this.users.findById(userId));
     // The user's own days: from the start of `from` to the end of `to` where they live.
@@ -97,14 +100,14 @@ export class PhoneNotificationsService {
       .orderBy(desc(activityPhoneNotifications.postedAt))
       .limit(LATEST);
 
-    const byHour = Array.from({ length: 24 }, () => 0);
-    hours.forEach((row) => (byHour[row.hour] = row.count));
+    const byHour = Array.from({length: 24}, () => 0);
+    hours.forEach(row => (byHour[row.hour] = row.count));
     return {
       total: byApp.reduce((sum, row) => sum + row.count, 0),
       byApp,
       byHour,
       byDay: days,
-      latest: latest.map((row) => ({
+      latest: latest.map(row => ({
         app: row.app,
         appName: row.appName,
         title: row.title,

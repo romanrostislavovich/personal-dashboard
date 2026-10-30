@@ -1,5 +1,5 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AutomationsService } from '@pd/api-core';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AutomationsService} from '@pd/api-core';
 
 /** Activity in the rules "if X, then Y": a daily limit is reached. */
 @Injectable()

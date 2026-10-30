@@ -1,8 +1,13 @@
-import { CurrencyPipe, PercentPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { CashFlowMonth, relativeChange } from './finance-stats';
+import {CurrencyPipe, PercentPipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {CashFlowMonth, relativeChange} from './finance-stats';
 
 interface Tile {
   key: 'income' | 'expense' | 'left';
@@ -25,10 +30,18 @@ interface Tile {
     @for (tile of tiles(); track tile.key) {
       <div class="tile">
         <span class="label">{{ 'finance.kpi.' + tile.key | transloco }}</span>
-        <span class="value">{{ tile.value | currency: currency() : 'symbol' : '1.0-0' }}</span>
+        <span class="value">{{
+          tile.value | currency: currency() : 'symbol' : '1.0-0'
+        }}</span>
         @if (tile.change !== null) {
-          <span class="change" [class.good]="tile.good" [class.bad]="!tile.good">
-            <mat-icon inline>{{ tile.change >= 0 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+          <span
+            class="change"
+            [class.good]="tile.good"
+            [class.bad]="!tile.good"
+          >
+            <mat-icon inline>{{
+              tile.change >= 0 ? 'arrow_upward' : 'arrow_downward'
+            }}</mat-icon>
             @if (abs(tile.change) <= MAX_SHARE) {
               {{ abs(tile.change) | percent }}
             } @else {
@@ -40,7 +53,10 @@ interface Tile {
           <!-- Without income there is no savings rate; the empty line keeps tiles aligned. -->
           <span class="change">
             @if (savingsRate() !== null) {
-              {{ 'finance.kpi.savingsRate' | transloco: { rate: (savingsRate() | percent) } }}
+              {{
+                'finance.kpi.savingsRate'
+                  | transloco: {rate: (savingsRate() | percent)}
+              }}
             }
           </span>
         } @else {
@@ -127,13 +143,19 @@ export class FinanceKpisComponent {
         good: (expenseChange ?? 0) <= 0,
       },
       // A change of "what is left" misleads around zero, so the savings rate is shown instead.
-      { key: 'left', value: left, change: null, diff: 0, good: left >= leftBefore },
+      {
+        key: 'left',
+        value: left,
+        change: null,
+        diff: 0,
+        good: left >= leftBefore,
+      },
     ];
   });
 
   /** The share of income that was not spent. */
   protected readonly savingsRate = computed(() => {
-    const { income, expense } = this.current();
+    const {income, expense} = this.current();
     return income > 0 ? Math.max(income - expense, 0) / income : null;
   });
 

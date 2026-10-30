@@ -5,26 +5,30 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AiActionOutcome, AiChatMessage } from '@pd/contracts';
-import { AppConfig } from '../config/env';
-import { coreMessages } from '../i18n/core.messages';
-import { LinksService } from '../links/links.service';
-import { UsersService } from '../users/users.service';
-import { AiActionsService } from './ai-actions.service';
-import { AiConnectionsService } from './ai-connections.service';
-import { completionSystem, PromptOptions, systemPrompt } from './ai-prompt';
-import { AiTool } from './ai-tool';
-import { withAttachments } from './attachment-text';
-import { claimsChange, FAKE_CHANGE_CORRECTION } from './claims-change';
-import { DeviceToolsService } from '../devices/device-tools.service';
-import { AiLimitError, AiUsageService } from './ai-usage.service';
-import { AiUndoService } from './ai-undo.service';
-import { AiMemoryService } from './ai-memory.service';
-import { UndoData } from './ai-undo';
-import { AiRequestError, ChatConnection, ChatMessage } from './openai-compatible.client';
-import { callKey, PendingConfirmations } from './pending-confirmations';
-import { runToolLoop } from './tool-loop';
+import {ConfigService} from '@nestjs/config';
+import {AiActionOutcome, AiChatMessage} from '@pd/contracts';
+import {AppConfig} from '../config/env';
+import {coreMessages} from '../i18n/core.messages';
+import {LinksService} from '../links/links.service';
+import {UsersService} from '../users/users.service';
+import {AiActionsService} from './ai-actions.service';
+import {AiConnectionsService} from './ai-connections.service';
+import {completionSystem, PromptOptions, systemPrompt} from './ai-prompt';
+import {AiTool} from './ai-tool';
+import {withAttachments} from './attachment-text';
+import {claimsChange, FAKE_CHANGE_CORRECTION} from './claims-change';
+import {DeviceToolsService} from '../devices/device-tools.service';
+import {AiLimitError, AiUsageService} from './ai-usage.service';
+import {AiUndoService} from './ai-undo.service';
+import {AiMemoryService} from './ai-memory.service';
+import {UndoData} from './ai-undo';
+import {
+  AiRequestError,
+  ChatConnection,
+  ChatMessage,
+} from './openai-compatible.client';
+import {callKey, PendingConfirmations} from './pending-confirmations';
+import {runToolLoop} from './tool-loop';
 
 /** How many times in a row the model may call tools before answering (look up → change → check). */
 const MAX_TOOL_ROUNDS = 8;
@@ -96,18 +100,20 @@ export class AiService {
    * Puts back what one change of the assistant did (the log in the AI settings, or "undo"
    * in a conversation). Refuses when the data was changed again since.
    */
-  async undoAction(userId: string, actionId: string): Promise<{ tool: string }> {
+  async undoAction(userId: string, actionId: string): Promise<{tool: string}> {
     const action = await this.actions.undoable(userId, actionId);
     await this.undos.undo(userId, action.undo);
     await this.actions.markUndone(userId, actionId);
-    return { tool: action.tool };
+    return {tool: action.tool};
   }
 
   registerTool(tool: AiTool): void {
-    tool.undoTables?.forEach((table) => AiUndoService.check(table));
+    tool.undoTables?.forEach(table => AiUndoService.check(table));
     if (tool.confirm && !tool.writes) {
       // Otherwise it would be offered where the user cannot confirm anything.
-      throw new Error(`AI tool ${tool.name}: \`confirm\` requires \`writes: true\``);
+      throw new Error(
+        `AI tool ${tool.name}: \`confirm\` requires \`writes: true\``,
+      );
     }
     this.tools.push(tool);
   }
@@ -122,10 +128,13 @@ export class AiService {
    * The tools an outside client may use: those of the modules it may see (see
    * AiConnectionsService.hiddenFromOutside), and with a `read` token only the ones that read.
    */
-  async outsideTools(userId: string, scope: 'read' | 'write'): Promise<AiTool[]> {
+  async outsideTools(
+    userId: string,
+    scope: 'read' | 'write',
+  ): Promise<AiTool[]> {
     const hidden = new Set(await this.connections.hiddenFromOutside(userId));
     return this.toolsOf(userId).filter(
-      (tool) => !hidden.has(tool.module) && (scope === 'write' || !tool.writes),
+      tool => !hidden.has(tool.module) && (scope === 'write' || !tool.writes),
     );
   }
 
@@ -139,18 +148,28 @@ export class AiService {
     name: string,
     args: Record<string, unknown>,
     scope: 'read' | 'write',
-  ): Promise<{ output: string; isError: boolean }> {
-    const tool = (await this.outsideTools(userId, scope)).find((one) => one.name === name);
+  ): Promise<{output: string; isError: boolean}> {
+    const tool = (await this.outsideTools(userId, scope)).find(
+      one => one.name === name,
+    );
     if (!tool) {
-      return { output: JSON.stringify({ error: `No tool ${name} for this token` }), isError: true };
+      return {
+        output: JSON.stringify({error: `No tool ${name} for this token`}),
+        isError: true,
+      };
     }
-    const { output } = await this.runTool(userId, tool, JSON.stringify(args), ++this.turns);
-    return { output, isError: output.startsWith('{"error"') };
+    const {output} = await this.runTool(
+      userId,
+      tool,
+      JSON.stringify(args),
+      ++this.turns,
+    );
+    return {output, isError: output.startsWith('{"error"')};
   }
 
   /** Modules that give the AI data: the ones the user can switch off in the AI settings. */
   modules(): string[] {
-    return [...new Set(this.tools.map((tool) => tool.module))].sort();
+    return [...new Set(this.tools.map(tool => tool.module))].sort();
   }
 
   /** Whether the user lets the AI see this module's data. */
@@ -177,9 +196,13 @@ export class AiService {
    * Chat with access to module data: the model requests tools,
    * we run them and return the results until it gives an answer.
    */
-  async ask(userId: string, history: AiChatMessage[], options: AskOptions = {}): Promise<AiAnswer> {
+  async ask(
+    userId: string,
+    history: AiChatMessage[],
+    options: AskOptions = {},
+  ): Promise<AiAnswer> {
     const connection = await this.requireConnection(userId);
-    const hasAttachments = history.some((message) => message.attachments?.length);
+    const hasAttachments = history.some(message => message.attachments?.length);
     const user = await this.users.findById(userId);
     const messages: ChatMessage[] = [
       {
@@ -192,7 +215,7 @@ export class AiService {
           memories: await this.memories.list(userId),
         }),
       },
-      ...history.map(({ role, content, attachments }) => ({
+      ...history.map(({role, content, attachments}) => ({
         role,
         content: withAttachments(content, attachments),
       })),
@@ -200,7 +223,7 @@ export class AiService {
     // A section with a connection of its own keeps its data away from the chat's one.
     const hidden = new Set(await this.hiddenFromShared(userId));
     const tools = this.toolsOf(userId).filter(
-      (tool) => !hidden.has(tool.module) && (options.allowWrites || !tool.writes),
+      tool => !hidden.has(tool.module) && (options.allowWrites || !tool.writes),
     );
     const turn = ++this.turns;
     /** Write tools that changed data in this turn. */
@@ -213,7 +236,12 @@ export class AiService {
         complete: (current, definitions) =>
           this.usage.complete(userId, connection, current, definitions),
         runTool: async (tool, rawArgs) => {
-          const { output, changed, asks } = await this.runTool(userId, tool, rawArgs, turn);
+          const {output, changed, asks} = await this.runTool(
+            userId,
+            tool,
+            rawArgs,
+            turn,
+          );
           if (changed && tool) {
             changes.push(tool.name);
           }
@@ -225,14 +253,18 @@ export class AiService {
     try {
       const first = await run(messages);
       // "Recorded!" without a write tool call means nothing was saved: make the model fix it.
-      if (!options.allowWrites || changes.length > 0 || !claimsChange(first.reply)) {
-        return { ...first, awaitsConfirmation: asked };
+      if (
+        !options.allowWrites ||
+        changes.length > 0 ||
+        !claimsChange(first.reply)
+      ) {
+        return {...first, awaitsConfirmation: asked};
       }
-      this.logger.warn(`AI claimed a change without a tool call; asking again`);
+      this.logger.warn('AI claimed a change without a tool call; asking again');
       const second = await run([
         ...messages,
-        { role: 'assistant', content: first.reply },
-        { role: 'user', content: FAKE_CHANGE_CORRECTION },
+        {role: 'assistant', content: first.reply},
+        {role: 'user', content: FAKE_CHANGE_CORRECTION},
       ]);
       return {
         reply: second.reply,
@@ -260,23 +292,31 @@ export class AiService {
       throw new ForbiddenException(`AI access to ${module} is off`);
     }
     const own = module ? await this.connections.ofModule(userId, module) : null;
-    const light = !own && options.light ? await this.connections.light(userId) : null;
+    const light =
+      !own && options.light ? await this.connections.light(userId) : null;
     const connection = own || light || (await this.requireConnection(userId));
-    const language = options.keepLanguage ? null : await this.languageOf(userId);
+    const language = options.keepLanguage
+      ? null
+      : await this.languageOf(userId);
     const messages: ChatMessage[] = [
-      { role: 'system', content: completionSystem(instruction, language) },
-      { role: 'user', content },
+      {role: 'system', content: completionSystem(instruction, language)},
+      {role: 'user', content},
     ];
     if (light) {
       try {
-        return (await this.usage.complete(userId, light, messages)).content ?? '';
+        return (
+          (await this.usage.complete(userId, light, messages)).content ?? ''
+        );
       } catch (error) {
         // The local model is off (the computer sleeps): the work is not lost, the active
         // connection does it.
         this.logger.warn(
           `The light-task connection failed (${String(error)}); the active one answers`,
         );
-        return this.complete(userId, instruction, content, module, { ...options, light: false });
+        return this.complete(userId, instruction, content, module, {
+          ...options,
+          light: false,
+        });
       }
     }
     try {
@@ -321,14 +361,16 @@ export class AiService {
       return null;
     }
     const system = await this.withLanguage(userId, instruction, options);
-    const content = (Array.isArray(image) ? image : [image]).map((one) => ({
+    const content = (Array.isArray(image) ? image : [image]).map(one => ({
       type: 'image_url' as const,
-      image_url: { url: `data:${one.mimeType};base64,${one.data.toString('base64')}` },
+      image_url: {
+        url: `data:${one.mimeType};base64,${one.data.toString('base64')}`,
+      },
     }));
     try {
       const reply = await this.usage.complete(userId, connection, [
-        { role: 'system', content: system },
-        { role: 'user', content },
+        {role: 'system', content: system},
+        {role: 'user', content},
       ]);
       return reply.content ?? '';
     } catch (error) {
@@ -352,12 +394,14 @@ export class AiService {
   private async withLanguage(
     userId: string,
     instruction: string,
-    { keepLanguage }: CompleteOptions,
+    {keepLanguage}: CompleteOptions,
   ): Promise<string> {
     if (keepLanguage) {
       return instruction;
     }
-    const language = coreMessages((await this.users.findById(userId))?.locale).aiLanguage;
+    const language = coreMessages(
+      (await this.users.findById(userId))?.locale,
+    ).aiLanguage;
     return `${instruction} Always answer in ${language}.`;
   }
 
@@ -372,13 +416,17 @@ export class AiService {
     tool: AiTool | undefined,
     rawArgs: string,
     turn: number,
-  ): Promise<{ output: string; changed: boolean; asks?: boolean }> {
+  ): Promise<{output: string; changed: boolean; asks?: boolean}> {
     if (!tool) {
-      return { output: JSON.stringify({ error: 'Unknown tool' }), changed: false };
+      return {output: JSON.stringify({error: 'Unknown tool'}), changed: false};
     }
     let args: Record<string, unknown> = {};
     // Changes go to the log (AiActionsService); reads are not worth it.
-    const log = (outcome: AiActionOutcome, error?: string, undo?: UndoData | null) =>
+    const log = (
+      outcome: AiActionOutcome,
+      error?: string,
+      undo?: UndoData | null,
+    ) =>
       tool.writes
         ? this.actions.record(userId, {
             tool: tool.name,
@@ -393,7 +441,11 @@ export class AiService {
       args = rawArgs ? (JSON.parse(rawArgs) as Record<string, unknown>) : {};
       if (
         tool.confirm &&
-        !this.confirmations.confirmOrRequest(userId, callKey(tool.name, args), turn)
+        !this.confirmations.confirmOrRequest(
+          userId,
+          callKey(tool.name, args),
+          turn,
+        )
       ) {
         const willAffect = await tool.confirm(userId, args);
         await log('asked');
@@ -404,11 +456,14 @@ export class AiService {
         };
       }
       // A change that names its tables can be undone: the rows are read around the call.
-      const { value, undo } = tool.undoTables?.length
-        ? await this.undos.capture(userId, tool.undoTables, () => tool.handler(userId, args))
-        : { value: await tool.handler(userId, args), undo: null };
+      const {value, undo} = tool.undoTables?.length
+        ? await this.undos.capture(userId, tool.undoTables, () =>
+            tool.handler(userId, args),
+          )
+        : {value: await tool.handler(userId, args), undo: null};
       await log('done', undefined, undo);
-      const result = value === undefined ? '{"done":true}' : JSON.stringify(value);
+      const result =
+        value === undefined ? '{"done":true}' : JSON.stringify(value);
       // A cut answer must not pass for a whole one: the model would answer from a part of the
       // data as if it were all of it ("no such track in your top").
       const output =
@@ -419,12 +474,12 @@ export class AiService {
             'tool again with a filter, a shorter period or a smaller limit, or use a more ' +
             'specific tool.]'
           : result;
-      return { output, changed: Boolean(tool.writes) };
+      return {output, changed: Boolean(tool.writes)};
     } catch (error) {
       this.logger.warn(`AI tool ${tool.name} failed: ${error}`);
       const message = error instanceof Error ? error.message : String(error);
       await log('failed', message);
-      return { output: JSON.stringify({ error: message }), changed: false };
+      return {output: JSON.stringify({error: message}), changed: false};
     }
   }
 

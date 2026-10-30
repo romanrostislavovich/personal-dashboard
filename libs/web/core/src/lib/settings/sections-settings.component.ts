@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { DASHBOARD_MODULES } from '../dashboard-module';
-import { LayoutService } from '../layout/layout.service';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {DASHBOARD_MODULES} from '../dashboard-module';
+import {LayoutService} from '../layout/layout.service';
 
 /**
  * Which sections are in the menu. A hidden section also leaves the home page; its data keeps
@@ -18,8 +18,12 @@ import { LayoutService } from '../layout/layout.service';
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-icon mat-card-avatar>view_sidebar</mat-icon>
-        <mat-card-title>{{ 'core.settings.sections.title' | transloco }}</mat-card-title>
-        <mat-card-subtitle>{{ 'core.settings.sections.hint' | transloco }}</mat-card-subtitle>
+        <mat-card-title>{{
+          'core.settings.sections.title' | transloco
+        }}</mat-card-title>
+        <mat-card-subtitle>{{
+          'core.settings.sections.hint' | transloco
+        }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content class="list">
         @for (module of modules; track module.id) {

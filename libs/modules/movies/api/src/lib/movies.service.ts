@@ -1,5 +1,5 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DB, Database, SecretsService, UsersService } from '@pd/api-core';
+import {Inject, Injectable, NotFoundException} from '@nestjs/common';
+import {DB, Database, SecretsService, UsersService} from '@pd/api-core';
 import {
   MovieSettings,
   MoviesStatus,
@@ -12,7 +12,7 @@ import {
   WatchViewInput,
   zonedDateTime,
 } from '@pd/contracts';
-import { and, desc, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import {and, desc, eq, inArray, isNotNull, isNull, or, sql} from 'drizzle-orm';
 import {
   movieSettings,
   movieTitles,
@@ -20,8 +20,8 @@ import {
   movieViews,
   MovieViewRow,
 } from './movies.schema';
-import { posterUrl } from './tmdb.client';
-import { isVideoSite } from './watch-title';
+import {posterUrl} from './tmdb.client';
+import {isVideoSite} from './watch-title';
 
 export const TMDB_KEY_SECRET = 'movies.tmdb-key';
 
@@ -30,7 +30,7 @@ const MIN_FILM_SECONDS = 10 * 60;
 /** A video this short on YouTube is a Short. */
 const MIN_VIDEO_SECONDS = 60;
 
-const DEFAULT_SETTINGS: MovieSettings = { track: true, ignoredSites: [] };
+const DEFAULT_SETTINGS: MovieSettings = {track: true, ignoredSites: []};
 
 /**
  * Movies and TV shows: the views the extension sends, the titles they are of, the ratings and
@@ -46,28 +46,39 @@ export class MoviesService {
 
   async settings(userId: string): Promise<MovieSettings> {
     const [row] = await this.db
-      .select({ track: movieSettings.track, ignoredSites: movieSettings.ignoredSites })
+      .select({
+        track: movieSettings.track,
+        ignoredSites: movieSettings.ignoredSites,
+      })
       .from(movieSettings)
       .where(eq(movieSettings.userId, userId));
     return row ?? DEFAULT_SETTINGS;
   }
 
   /** A site newly left alone loses its views: the user did not want them kept. */
-  async setSettings(userId: string, settings: MovieSettings): Promise<MovieSettings> {
+  async setSettings(
+    userId: string,
+    settings: MovieSettings,
+  ): Promise<MovieSettings> {
     const ignoredSites = [...new Set(settings.ignoredSites)];
     await this.db
       .insert(movieSettings)
-      .values({ userId, track: settings.track, ignoredSites })
+      .values({userId, track: settings.track, ignoredSites})
       .onConflictDoUpdate({
         target: movieSettings.userId,
-        set: { track: settings.track, ignoredSites },
+        set: {track: settings.track, ignoredSites},
       });
     if (ignoredSites.length) {
       await this.db
         .delete(movieViews)
-        .where(and(eq(movieViews.userId, userId), inArray(movieViews.site, ignoredSites)));
+        .where(
+          and(
+            eq(movieViews.userId, userId),
+            inArray(movieViews.site, ignoredSites),
+          ),
+        );
     }
-    return { track: settings.track, ignoredSites };
+    return {track: settings.track, ignoredSites};
   }
 
   async ignoreSite(userId: string, site: string): Promise<MovieSettings> {
@@ -79,8 +90,8 @@ export class MoviesService {
   }
 
   async status(userId: string): Promise<MoviesStatus> {
-    const [{ unknown }] = await this.db
-      .select({ unknown: sql<number>`count(*)::int` })
+    const [{unknown}] = await this.db
+      .select({unknown: sql<number>`count(*)::int`})
       .from(movieViews)
       .where(
         and(
@@ -122,17 +133,22 @@ export class MoviesService {
               eq(movieViews.userId, userId),
               inArray(
                 movieViews.id,
-                views.map((view) => view.id),
+                views.map(view => view.id),
               ),
             ),
           )
       : [];
-    const before = new Map(known.map((row) => [row.id, row]));
+    const before = new Map(known.map(row => [row.id, row]));
     for (const view of views) {
-      if (ignored.has(view.site) || [...ignored].some((site) => view.site.endsWith(`.${site}`))) {
+      if (
+        ignored.has(view.site) ||
+        [...ignored].some(site => view.site.endsWith(`.${site}`))
+      ) {
         continue;
       }
-      const shortest = isVideoSite(view.site) ? MIN_VIDEO_SECONDS : MIN_FILM_SECONDS;
+      const shortest = isVideoSite(view.site)
+        ? MIN_VIDEO_SECONDS
+        : MIN_FILM_SECONDS;
       if (view.durationSeconds !== null && view.durationSeconds < shortest) {
         continue;
       }
@@ -147,7 +163,7 @@ export class MoviesService {
         watchedSeconds: view.watchedSeconds,
         positionSeconds: view.positionSeconds,
         durationSeconds: view.durationSeconds,
-        ...(retry ? { hints, name, resolvedAt: null } : {}),
+        ...(retry ? {hints, name, resolvedAt: null} : {}),
       };
       await this.db
         .insert(movieViews)
@@ -169,7 +185,9 @@ export class MoviesService {
         });
     }
     // A film grown past most of its length is seen now.
-    const titles = new Set(known.flatMap((row) => (row.titleId ? [row.titleId] : [])));
+    const titles = new Set(
+      known.flatMap(row => (row.titleId ? [row.titleId] : [])),
+    );
     for (const titleId of titles) {
       await this.markSeenIfWatched(userId, titleId);
     }
@@ -177,7 +195,10 @@ export class MoviesService {
   }
 
   /** `history` — what was watched, newest first; `want` — the list to watch. */
-  async titles(userId: string, list: 'history' | 'want'): Promise<MovieTitle[]> {
+  async titles(
+    userId: string,
+    list: 'history' | 'want',
+  ): Promise<MovieTitle[]> {
     const t = movieTitles;
     const rows = await this.db
       .select()
@@ -217,7 +238,7 @@ export class MoviesService {
   }
 
   async views(userId: string, query: MovieViewsQuery): Promise<MovieView[]> {
-    const { kind, limit } = movieViewsQuerySchema.parse(query);
+    const {kind, limit} = movieViewsQuerySchema.parse(query);
     const v = movieViews;
     const rows = await this.db
       .select()
@@ -235,8 +256,12 @@ export class MoviesService {
     return rows.map(toView);
   }
 
-  async update(userId: string, id: string, patch: MovieTitleUpdate): Promise<MovieTitle> {
-    const set: Partial<MovieTitleRow> = { updatedAt: new Date() };
+  async update(
+    userId: string,
+    id: string,
+    patch: MovieTitleUpdate,
+  ): Promise<MovieTitle> {
+    const set: Partial<MovieTitleRow> = {updatedAt: new Date()};
     if (patch.rating !== undefined) {
       set.rating = patch.rating;
     }
@@ -256,7 +281,7 @@ export class MoviesService {
       .update(movieTitles)
       .set(set)
       .where(and(eq(movieTitles.userId, userId), eq(movieTitles.id, id)))
-      .returning({ id: movieTitles.id });
+      .returning({id: movieTitles.id});
     if (!row) {
       throw new NotFoundException();
     }
@@ -267,7 +292,7 @@ export class MoviesService {
   async remove(userId: string, id: string): Promise<void> {
     await this.db
       .update(movieViews)
-      .set({ dismissed: true })
+      .set({dismissed: true})
       .where(and(eq(movieViews.userId, userId), eq(movieViews.titleId, id)));
     await this.db
       .delete(movieTitles)
@@ -278,7 +303,7 @@ export class MoviesService {
   async dismiss(userId: string, viewId: string): Promise<void> {
     const view = await this.view(userId, viewId);
     const same = await this.db
-      .select({ id: movieViews.id, name: movieViews.name })
+      .select({id: movieViews.id, name: movieViews.name})
       .from(movieViews)
       .where(
         and(
@@ -288,11 +313,16 @@ export class MoviesService {
           eq(movieViews.dismissed, false),
         ),
       );
-    const ids = same.filter((row) => row.name === view.name).map((row) => row.id);
+    const ids = same.filter(row => row.name === view.name).map(row => row.id);
     await this.db
       .update(movieViews)
-      .set({ dismissed: true })
-      .where(and(eq(movieViews.userId, userId), inArray(movieViews.id, [view.id, ...ids])));
+      .set({dismissed: true})
+      .where(
+        and(
+          eq(movieViews.userId, userId),
+          inArray(movieViews.id, [view.id, ...ids]),
+        ),
+      );
   }
 
   async view(userId: string, id: string): Promise<MovieViewRow> {
@@ -325,8 +355,12 @@ export class MoviesService {
         lastAt: sql<Date | null>`max(${movieViews.endedAt})`,
       })
       .from(movieViews)
-      .where(and(eq(movieViews.titleId, titleId), eq(movieViews.dismissed, false)));
-    const length = title.runtimeMinutes ? title.runtimeMinutes * 60 : seen.longest;
+      .where(
+        and(eq(movieViews.titleId, titleId), eq(movieViews.dismissed, false)),
+      );
+    const length = title.runtimeMinutes
+      ? title.runtimeMinutes * 60
+      : seen.longest;
     if (!length || !seen.lastAt || seen.seconds < length * 0.6) {
       return;
     }
@@ -342,7 +376,10 @@ export class MoviesService {
   }
 
   /** The titles with what their views tell: time, episodes, the last one. */
-  private async withViews(userId: string, rows: MovieTitleRow[]): Promise<MovieTitle[]> {
+  private async withViews(
+    userId: string,
+    rows: MovieTitleRow[],
+  ): Promise<MovieTitle[]> {
     if (!rows.length) {
       return [];
     }
@@ -364,13 +401,13 @@ export class MoviesService {
           eq(v.dismissed, false),
           inArray(
             v.titleId,
-            rows.map((row) => row.id),
+            rows.map(row => row.id),
           ),
         ),
       )
       .groupBy(v.titleId);
-    const byTitle = new Map(stats.map((row) => [row.titleId, row]));
-    return rows.map((row) => {
+    const byTitle = new Map(stats.map(row => [row.titleId, row]));
+    return rows.map(row => {
       const seen = byTitle.get(row.id);
       const [season, episode] = seen?.lastEpisode?.split(':').map(Number) ?? [];
       return {
@@ -389,8 +426,10 @@ export class MoviesService {
         note: row.note,
         watchedSeconds: seen?.seconds ?? 0,
         episodes: seen?.episodes ?? 0,
-        lastWatchedAt: seen?.lastAt ? new Date(seen.lastAt).toISOString() : null,
-        lastEpisode: episode ? { season, episode } : null,
+        lastWatchedAt: seen?.lastAt
+          ? new Date(seen.lastAt).toISOString()
+          : null,
+        lastEpisode: episode ? {season, episode} : null,
       };
     });
   }
@@ -400,7 +439,9 @@ export class MoviesService {
     return this.db
       .select()
       .from(movieViews)
-      .where(and(isNull(movieViews.resolvedAt), eq(movieViews.dismissed, false)))
+      .where(
+        and(isNull(movieViews.resolvedAt), eq(movieViews.dismissed, false)),
+      )
       .orderBy(movieViews.startedAt)
       .limit(limit);
   }

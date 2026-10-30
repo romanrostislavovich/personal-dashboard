@@ -1,20 +1,20 @@
-import { DiaryDemo } from './diary.demo';
-import { DiaryEncryption } from './diary.encryption';
-import { Module } from '@nestjs/common';
-import { DiaryAutomations } from './diary.automations';
-import { DiaryLife } from './diary.life';
-import { DiaryLinks } from './diary.links';
-import { DiaryExport } from './diary.export';
-import { DiarySearch } from './diary.search';
-import { DiaryAchievements } from './diary.achievements';
-import { DiaryAiTools } from './diary.ai-tools';
-import { DiaryDigest } from './diary.digest';
-import { DiaryPhotosService } from './diary-photos.service';
-import { DiarySummaryService } from './diary-summary.service';
-import { DiaryController } from './diary.controller';
-import { DiaryJobs } from './diary.jobs';
-import { DiaryService } from './diary.service';
-import { DiaryRecall } from './diary.recall';
+import {DiaryDemo} from './diary.demo';
+import {DiaryEncryption} from './diary.encryption';
+import {Module} from '@nestjs/common';
+import {DiaryAutomations} from './diary.automations';
+import {DiaryLife} from './diary.life';
+import {DiaryLinks} from './diary.links';
+import {DiaryExport} from './diary.export';
+import {DiarySearch} from './diary.search';
+import {DiaryAchievements} from './diary.achievements';
+import {DiaryAiTools} from './diary.ai-tools';
+import {DiaryDigest} from './diary.digest';
+import {DiaryPhotosService} from './diary-photos.service';
+import {DiarySummaryService} from './diary-summary.service';
+import {DiaryController} from './diary.controller';
+import {DiaryJobs} from './diary.jobs';
+import {DiaryService} from './diary.service';
+import {DiaryRecall} from './diary.recall';
 
 /**
  * Personal diary: one entry per day (markdown), mood, tags from hashtags, emoji marks,

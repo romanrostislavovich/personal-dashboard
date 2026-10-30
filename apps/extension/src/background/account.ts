@@ -1,8 +1,12 @@
-import { ApiError, createDashboardClient, DashboardClient } from '@pd/client-core';
-import { ExtensionError, SignInResult } from '../shared/messages';
-import { chromeStore } from './storage';
-import { clearTelemetryConsent, telemetryExclusive } from './telemetry-state';
-import { clearWorkstatePreview } from './workstate-state';
+import {
+  ApiError,
+  createDashboardClient,
+  DashboardClient,
+} from '@pd/client-core';
+import {ExtensionError, SignInResult} from '../shared/messages';
+import {chromeStore} from './storage';
+import {clearTelemetryConsent, telemetryExclusive} from './telemetry-state';
+import {clearWorkstatePreview} from './workstate-state';
 
 /** The dashboard's address, kept after signing out so the next sign-in has it filled in. */
 const SERVER_KEY = 'server';
@@ -12,7 +16,7 @@ const ACCESS_KEY = 'accessToken';
 const local = chromeStore(chrome.storage.local);
 const session = chromeStore(chrome.storage.session);
 
-let current: { server: string; client: Promise<DashboardClient> } | null = null;
+let current: {server: string; client: Promise<DashboardClient>} | null = null;
 
 export function serverUrl(): Promise<string | null> {
   return local.get(SERVER_KEY);
@@ -29,7 +33,7 @@ export async function dashboard(): Promise<DashboardClient | null> {
     return null;
   }
   if (current?.server !== server) {
-    current = { server, client: connect(server) };
+    current = {server, client: connect(server)};
   }
   return current.client;
 }
@@ -60,12 +64,18 @@ export async function signIn(
     await checkServer(server);
     await local.set(SERVER_KEY, server);
     const client = await signedOutClient();
-    const result = await call(() => client.signIn({ email, password }), 'wrong-password');
-    return result.status === 'signed-in' ? { status: 'signed-in' } : result;
+    const result = await call(
+      () => client.signIn({email, password}),
+      'wrong-password',
+    );
+    return result.status === 'signed-in' ? {status: 'signed-in'} : result;
   });
 }
 
-export async function completeSignIn(challengeToken: string, code: string): Promise<void> {
+export async function completeSignIn(
+  challengeToken: string,
+  code: string,
+): Promise<void> {
   clearWorkstatePreview();
   return telemetryExclusive(async () => {
     clearWorkstatePreview();
@@ -96,7 +106,10 @@ async function connect(server: string): Promise<DashboardClient> {
     await client.session.start(saved);
   }
   client.session.subscribe(
-    (token) => void (token ? session.set(ACCESS_KEY, token) : session.remove(ACCESS_KEY)),
+    token =>
+      void (token
+        ? session.set(ACCESS_KEY, token)
+        : session.remove(ACCESS_KEY)),
   );
   return client;
 }
@@ -140,7 +153,7 @@ async function checkServer(server: string): Promise<void> {
   } catch {
     throw new ExtensionError('not-dashboard');
   }
-  if ((body as { status?: unknown } | null)?.status !== 'ok') {
+  if ((body as {status?: unknown} | null)?.status !== 'ok') {
     throw new ExtensionError('not-dashboard');
   }
 }
@@ -154,7 +167,9 @@ async function call<T>(
     return await work();
   } catch (error) {
     if (error instanceof ApiError) {
-      throw new ExtensionError(error.status === 401 || error.status === 400 ? refused : 'failed');
+      throw new ExtensionError(
+        error.status === 401 || error.status === 400 ? refused : 'failed',
+      );
     }
     throw new ExtensionError('unreachable');
   }

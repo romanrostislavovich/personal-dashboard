@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {Injectable, Logger, OnModuleInit} from '@nestjs/common';
 import {
   forEachUser,
   NotificationsService,
@@ -6,10 +6,10 @@ import {
   TelegramBotService,
   UsersService,
 } from '@pd/api-core';
-import { diaryMessages } from './diary.messages';
-import { DiarySummaryService } from './diary-summary.service';
-import { DiaryPhotosService } from './diary-photos.service';
-import { DiaryService } from './diary.service';
+import {diaryMessages} from './diary.messages';
+import {DiarySummaryService} from './diary-summary.service';
+import {DiaryPhotosService} from './diary-photos.service';
+import {DiaryService} from './diary.service';
 
 const MOOD_EMOJI = ['', '😞', '😕', '😐', '🙂', '😄'];
 /** Telegram rejects messages longer than 4096 characters. */
@@ -80,15 +80,20 @@ export class DiaryJobs implements OnModuleInit {
         en: diaryMessages('en').todayDescription,
         ru: diaryMessages('ru').todayDescription,
       },
-      handler: async (user) => {
+      handler: async user => {
         const entry = await this.diary.todayEntry(user.id);
         if (!entry?.content.trim() && !entry?.mood) {
           return diaryMessages(user.locale).todayEmpty;
         }
-        const text = [entry.mood ? MOOD_EMOJI[entry.mood] : '', entry.content.trim()]
+        const text = [
+          entry.mood ? MOOD_EMOJI[entry.mood] : '',
+          entry.content.trim(),
+        ]
           .filter(Boolean)
           .join('\n\n');
-        return text.length > TELEGRAM_MAX_LENGTH ? `${text.slice(0, TELEGRAM_MAX_LENGTH)}…` : text;
+        return text.length > TELEGRAM_MAX_LENGTH
+          ? `${text.slice(0, TELEGRAM_MAX_LENGTH)}…`
+          : text;
       },
     });
 
@@ -105,7 +110,7 @@ export class DiaryJobs implements OnModuleInit {
         }
         return diaryMessages(user.locale).photoSaved;
       },
-      { id: 'diary', label: { en: '📔 To the diary', ru: '📔 В дневник' } },
+      {id: 'diary', label: {en: '📔 To the diary', ru: '📔 В дневник'}},
     );
 
     // The buttons under the evening question: `dmood:<day>:<1–5>`. The day is in the button, so
@@ -116,7 +121,12 @@ export class DiaryJobs implements OnModuleInit {
         const [day, value] = payload.split(':');
         const mood = Number(value);
         const replies = diaryMessages(user.locale);
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Number.isInteger(mood) || mood < 1 || mood > 5) {
+        if (
+          !/^\d{4}-\d{2}-\d{2}$/.test(day) ||
+          !Number.isInteger(mood) ||
+          mood < 1 ||
+          mood > 5
+        ) {
           return replies.moodUsage;
         }
         await this.diary.setMood(user.id, day, mood);
@@ -138,7 +148,7 @@ export class DiaryJobs implements OnModuleInit {
 
     this.telegram.registerAction({
       name: WEEKLY_ACTION,
-      handler: async (user) => {
+      handler: async user => {
         const text = diaryMessages(user.locale);
         return {
           reply: text.weeklyAnswerAsk,
@@ -163,7 +173,10 @@ export class DiaryJobs implements OnModuleInit {
   async sendWeeklySummaries(): Promise<void> {
     for (const userId of await this.diary.usersWithWeeklySummary()) {
       try {
-        const review = await this.summaries.weeklyReview(userId, this.diary.lastWeek());
+        const review = await this.summaries.weeklyReview(
+          userId,
+          this.diary.lastWeek(),
+        );
         if (!review) {
           continue;
         }
@@ -174,7 +187,7 @@ export class DiaryJobs implements OnModuleInit {
           body: review,
           source: 'diary',
           // The answers to its questions go to today's entry.
-          actions: [{ label: text.weeklyAnswer, action: `${WEEKLY_ACTION}:a` }],
+          actions: [{label: text.weeklyAnswer, action: `${WEEKLY_ACTION}:a`}],
         });
       } catch (error) {
         // For example, the AI is not configured — skip this user, send to the rest.
@@ -187,7 +200,7 @@ export class DiaryJobs implements OnModuleInit {
     await forEachUser(
       'diary.evening-reminder',
       await this.diary.usersToRemind(),
-      async (userId) => {
+      async userId => {
         const user = await this.users.findById(userId);
         const text = diaryMessages(user?.locale ?? 'en');
         const day = this.diary.todayDate();
@@ -196,7 +209,7 @@ export class DiaryJobs implements OnModuleInit {
           body: text.reminderBody,
           source: 'diary',
           // One tap rates the day; the bot then asks for a few words.
-          actions: [1, 2, 3, 4, 5].map((mood) => ({
+          actions: [1, 2, 3, 4, 5].map(mood => ({
             label: MOOD_EMOJI[mood],
             action: `dmood:${day}:${mood}`,
           })),

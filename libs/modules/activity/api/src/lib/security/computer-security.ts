@@ -1,6 +1,6 @@
-import { FoundProblem } from '@pd/api-core';
-import { ActivitySystem } from '@pd/contracts';
-import { ComputerSecurityMessages } from './computer-security.messages';
+import {FoundProblem} from '@pd/api-core';
+import {ActivitySystem} from '@pd/contracts';
+import {ComputerSecurityMessages} from './computer-security.messages';
 
 /** A computer with the desktop app, as it last told about itself. */
 export interface ComputerFacts {
@@ -26,39 +26,39 @@ export function computerProblems(
   text: ComputerSecurityMessages,
   now: Date,
 ): FoundProblem[] {
-  const { name, antivirus, protection } = computer;
+  const {name, protection} = computer;
   const key = (problem: string) => `${computer.id}.${problem}`;
   if (!computer.reportedAt) {
     return []; // Registered and never heard from: nothing is known, nothing to claim.
   }
-  const silentDays = Math.floor((now.getTime() - Date.parse(computer.reportedAt)) / 86_400_000);
+  const silentDays = Math.floor(
+    (now.getTime() - Date.parse(computer.reportedAt)) / 86_400_000,
+  );
   if (silentDays >= SILENT_DAYS) {
-    return [{ key: key('silent'), severity: 'info', ...text.silent(name, silentDays) }];
+    return [
+      {key: key('silent'), severity: 'info', ...text.silent(name, silentDays)},
+    ];
   }
 
   const problems: FoundProblem[] = [];
-  if (antivirus && (!antivirus.enabled || !antivirus.realtime)) {
-    problems.push({ key: key('antivirus-off'), severity: 'high', ...text.antivirusOff(name) });
-  } else if (antivirus && antivirus.signatureAgeDays >= SIGNATURES_OLD_DAYS) {
-    problems.push({
-      key: key('signatures-old'),
-      severity: 'medium',
-      ...text.signaturesOld(name, antivirus.signatureAgeDays),
-    });
-  }
-  const off = (protection?.firewall ?? []).filter((item) => !item.enabled);
+  problems.push(...antivirusProblems(computer, key, text));
+  const off = (protection?.firewall ?? []).filter(item => !item.enabled);
   if (off.length) {
     problems.push({
       key: key('firewall-off'),
       severity: 'high',
       ...text.firewallOff(
         name,
-        off.map((item) => item.profile),
+        off.map(item => item.profile),
       ),
     });
   }
   if (protection?.diskEncrypted === false) {
-    problems.push({ key: key('not-encrypted'), severity: 'low', ...text.notEncrypted(name) });
+    problems.push({
+      key: key('not-encrypted'),
+      severity: 'low',
+      ...text.notEncrypted(name),
+    });
   }
   const sinceUpdate = protection?.daysSinceUpdate;
   if (sinceUpdate !== undefined && sinceUpdate >= UPDATES_OLD_DAYS) {
@@ -69,13 +69,48 @@ export function computerProblems(
     });
   }
   if (protection?.restartPending) {
-    problems.push({ key: key('restart-pending'), severity: 'low', ...text.restartPending(name) });
+    problems.push({
+      key: key('restart-pending'),
+      severity: 'low',
+      ...text.restartPending(name),
+    });
   }
   if (protection?.locksWhenIdle === false) {
-    problems.push({ key: key('no-idle-lock'), severity: 'info', ...text.noIdleLock(name) });
+    problems.push({
+      key: key('no-idle-lock'),
+      severity: 'info',
+      ...text.noIdleLock(name),
+    });
   }
   if (protection?.uac === false) {
-    problems.push({ key: key('uac-off'), severity: 'medium', ...text.uacOff(name) });
+    problems.push({
+      key: key('uac-off'),
+      severity: 'medium',
+      ...text.uacOff(name),
+    });
+  }
+  return problems;
+}
+
+/** The antivirus: off, or its signatures too old. */
+function antivirusProblems(
+  {name, antivirus}: ComputerFacts,
+  key: (problem: string) => string,
+  text: ComputerSecurityMessages,
+): FoundProblem[] {
+  const problems: FoundProblem[] = [];
+  if (antivirus && (!antivirus.enabled || !antivirus.realtime)) {
+    problems.push({
+      key: key('antivirus-off'),
+      severity: 'high',
+      ...text.antivirusOff(name),
+    });
+  } else if (antivirus && antivirus.signatureAgeDays >= SIGNATURES_OLD_DAYS) {
+    problems.push({
+      key: key('signatures-old'),
+      severity: 'medium',
+      ...text.signaturesOld(name, antivirus.signatureAgeDays),
+    });
   }
   return problems;
 }

@@ -8,7 +8,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { AuthUser, CurrentUser, ZodValidationPipe } from '@pd/api-core';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
 import {
   HealthIntakeAnswer,
   healthIntakeAnswerSchema,
@@ -17,7 +17,7 @@ import {
   healthProfileInputSchema,
   healthVaccinationInputSchema,
 } from '@pd/contracts';
-import { IntakesService } from '../intakes/intakes.service';
+import {IntakesService} from '../intakes/intakes.service';
 import {
   ProfileService,
   ValidAllergyInput,
@@ -40,7 +40,8 @@ export class ProfileController {
   @Put('profile')
   saveProfile(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(healthProfileInputSchema)) input: ValidProfileInput,
+    @Body(new ZodValidationPipe(healthProfileInputSchema))
+    input: ValidProfileInput,
   ) {
     return this.profiles.saveProfile(user.id, input);
   }
@@ -50,7 +51,8 @@ export class ProfileController {
   @Post('allergies')
   addAllergy(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(healthAllergyInputSchema)) input: ValidAllergyInput,
+    @Body(new ZodValidationPipe(healthAllergyInputSchema))
+    input: ValidAllergyInput,
   ) {
     return this.profiles.saveAllergy(user.id, input);
   }
@@ -59,14 +61,18 @@ export class ProfileController {
   updateAllergy(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(healthAllergyInputSchema)) input: ValidAllergyInput,
+    @Body(new ZodValidationPipe(healthAllergyInputSchema))
+    input: ValidAllergyInput,
   ) {
     return this.profiles.saveAllergy(user.id, input, id);
   }
 
   @Delete('allergies/:id')
   @HttpCode(204)
-  removeAllergy(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeAllergy(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.profiles.removeAllergy(user.id, id);
   }
 
@@ -75,7 +81,8 @@ export class ProfileController {
   @Post('vaccinations')
   addVaccination(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(healthVaccinationInputSchema)) input: ValidVaccinationInput,
+    @Body(new ZodValidationPipe(healthVaccinationInputSchema))
+    input: ValidVaccinationInput,
   ) {
     return this.profiles.saveVaccination(user.id, input);
   }
@@ -84,14 +91,18 @@ export class ProfileController {
   updateVaccination(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(healthVaccinationInputSchema)) input: ValidVaccinationInput,
+    @Body(new ZodValidationPipe(healthVaccinationInputSchema))
+    input: ValidVaccinationInput,
   ) {
     return this.profiles.saveVaccination(user.id, input, id);
   }
 
   @Delete('vaccinations/:id')
   @HttpCode(204)
-  removeVaccination(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeVaccination(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.profiles.removeVaccination(user.id, id);
   }
 
@@ -100,7 +111,8 @@ export class ProfileController {
   @Post('operations')
   addOperation(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(healthOperationInputSchema)) input: ValidOperationInput,
+    @Body(new ZodValidationPipe(healthOperationInputSchema))
+    input: ValidOperationInput,
   ) {
     return this.profiles.saveOperation(user.id, input);
   }
@@ -109,14 +121,18 @@ export class ProfileController {
   updateOperation(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(healthOperationInputSchema)) input: ValidOperationInput,
+    @Body(new ZodValidationPipe(healthOperationInputSchema))
+    input: ValidOperationInput,
   ) {
     return this.profiles.saveOperation(user.id, input, id);
   }
 
   @Delete('operations/:id')
   @HttpCode(204)
-  removeOperation(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+  removeOperation(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.profiles.removeOperation(user.id, id);
   }
 
@@ -127,7 +143,8 @@ export class ProfileController {
   answerIntake(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(healthIntakeAnswerSchema)) input: HealthIntakeAnswer,
+    @Body(new ZodValidationPipe(healthIntakeAnswerSchema))
+    input: HealthIntakeAnswer,
   ) {
     return this.intakes.answer(user.id, id, input.status);
   }

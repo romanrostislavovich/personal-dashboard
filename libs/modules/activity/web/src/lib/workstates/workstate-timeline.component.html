@@ -11,20 +11,42 @@
       <fieldset [disabled]="busy()">
         <mat-form-field>
           <mat-label>{{ 'activity.workstates.note' | transloco }}</mat-label>
-          <textarea matInput name="note" [(ngModel)]="note" maxlength="160" rows="2"></textarea>
+          <textarea
+            matInput
+            name="note"
+            [(ngModel)]="note"
+            maxlength="160"
+            rows="2"
+          ></textarea>
         </mat-form-field>
         <div class="row">
           <mat-form-field>
-            <mat-label>{{ 'activity.workstates.projectPath' | transloco }}</mat-label>
-            <input matInput name="projectPath" [(ngModel)]="projectPath" maxlength="160" />
+            <mat-label>{{
+              'activity.workstates.projectPath' | transloco
+            }}</mat-label>
+            <input
+              matInput
+              name="projectPath"
+              [(ngModel)]="projectPath"
+              maxlength="160"
+            />
           </mat-form-field>
           <mat-form-field>
-            <mat-label>{{ 'activity.workstates.gitBranch' | transloco }}</mat-label>
-            <input matInput name="gitBranch" [(ngModel)]="gitBranch" maxlength="160" />
+            <mat-label>{{
+              'activity.workstates.gitBranch' | transloco
+            }}</mat-label>
+            <input
+              matInput
+              name="gitBranch"
+              [(ngModel)]="gitBranch"
+              maxlength="160"
+            />
           </mat-form-field>
         </div>
         <mat-form-field>
-          <mat-label>{{ 'activity.workstates.browserUrls' | transloco }}</mat-label>
+          <mat-label>{{
+            'activity.workstates.browserUrls' | transloco
+          }}</mat-label>
           <textarea
             matInput
             name="browserUrls"
@@ -36,14 +58,21 @@
         </mat-form-field>
       </fieldset>
       @if (captureError()) {
-        <p role="alert">{{ 'activity.workstates.invalidCapture' | transloco }}</p>
+        <p role="alert">
+          {{ 'activity.workstates.invalidCapture' | transloco }}
+        </p>
       }
       <div class="row">
         <button matButton="filled" type="submit" [disabled]="busy()">
           {{ 'activity.workstates.save' | transloco }}
         </button>
         @if (desktop) {
-          <button matButton="outlined" type="button" [disabled]="busy()" (click)="quickCapture()">
+          <button
+            matButton="outlined"
+            type="button"
+            [disabled]="busy()"
+            (click)="quickCapture()"
+          >
             {{ 'activity.workstates.quickCapture' | transloco }}
           </button>
         }
@@ -75,12 +104,21 @@
     <mat-label>{{ 'activity.workstates.to' | transloco }}</mat-label>
     <input matInput type="datetime-local" name="to" [(ngModel)]="to" />
   </mat-form-field>
-  <button matButton="filled" type="submit">{{ 'activity.workstates.apply' | transloco }}</button>
-  <button matButton type="button" (click)="refresh()" [disabled]="timeline.isLoading()">
+  <button matButton="filled" type="submit">
+    {{ 'activity.workstates.apply' | transloco }}
+  </button>
+  <button
+    matButton
+    type="button"
+    (click)="refresh()"
+    [disabled]="timeline.isLoading()"
+  >
     {{ 'activity.workstates.refresh' | transloco }}
   </button>
 </form>
-<p class="hint">{{ 'activity.workstates.timezone' | transloco: { timezone: timezone } }}</p>
+<p class="hint">
+  {{ 'activity.workstates.timezone' | transloco: {timezone: timezone} }}
+</p>
 @if (filterError()) {
   <p role="alert">{{ 'activity.workstates.invalidRange' | transloco }}</p>
 }
@@ -94,7 +132,9 @@
     <mat-card appearance="outlined">
       <mat-card-content>
         <h3>
-          <time [attr.datetime]="item.capturedAt">{{ item.capturedAt | date: 'medium' }}</time>
+          <time [attr.datetime]="item.capturedAt">{{
+            item.capturedAt | date: 'medium'
+          }}</time>
         </h3>
         <dl>
           @if (item.capture.activeApp) {
@@ -129,19 +169,35 @@
           }
         </dl>
         <div class="row">
-          <button matButton="outlined" [disabled]="busy()" (click)="preview(item.id)">
+          <button
+            matButton="outlined"
+            [disabled]="busy()"
+            (click)="preview(item.id)"
+          >
             {{ 'activity.workstates.preview' | transloco }}
           </button>
-          <button matButton [disabled]="busy()" (click)="pendingDelete.set(item.id)">
+          <button
+            matButton
+            [disabled]="busy()"
+            (click)="pendingDelete.set(item.id)"
+          >
             {{ 'activity.workstates.delete' | transloco }}
           </button>
         </div>
         @if (pendingDelete() === item.id) {
           <p>{{ 'activity.workstates.confirmDelete' | transloco }}</p>
-          <button matButton="filled" [disabled]="busy()" (click)="remove(item.id)">
+          <button
+            matButton="filled"
+            [disabled]="busy()"
+            (click)="remove(item.id)"
+          >
             {{ 'activity.workstates.confirm' | transloco }}
           </button>
-          <button matButton [disabled]="busy()" (click)="pendingDelete.set(null)">
+          <button
+            matButton
+            [disabled]="busy()"
+            (click)="pendingDelete.set(null)"
+          >
             {{ 'activity.workstates.cancel' | transloco }}
           </button>
         }
@@ -150,14 +206,18 @@
   } @empty {
     <p role="status">
       {{
-        (current.nextCursor ? 'activity.workstates.emptyPage' : 'activity.workstates.empty')
-          | transloco
+        (current.nextCursor
+          ? 'activity.workstates.emptyPage'
+          : 'activity.workstates.empty'
+        ) | transloco
       }}
     </p>
   }
   <div class="row">
     @if (query().before) {
-      <button matButton (click)="first()">{{ 'activity.workstates.first' | transloco }}</button>
+      <button matButton (click)="first()">
+        {{ 'activity.workstates.first' | transloco }}
+      </button>
     }
     @if (current.nextCursor) {
       <button matButton="outlined" (click)="next()">
@@ -185,14 +245,18 @@
             @switch (action.kind) {
               @case ('openUrl') {
                 @if (safeUrl(action.url); as url) {
-                  <a [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+                  <a [href]="url" target="_blank" rel="noopener noreferrer">{{
+                    url
+                  }}</a>
                 }
               }
               @case ('openProject') {
-                {{ 'activity.workstates.projectPath' | transloco }}: {{ action.path }}
+                {{ 'activity.workstates.projectPath' | transloco }}:
+                {{ action.path }}
               }
               @case ('reference') {
-                {{ 'activity.workstates.' + action.field | transloco }}: {{ action.text }}
+                {{ 'activity.workstates.' + action.field | transloco }}:
+                {{ action.text }}
               }
             }
           </li>
@@ -214,7 +278,7 @@
             (result.canceled
               ? 'activity.workstates.resumeCanceled'
               : 'activity.workstates.resumeResult'
-            ) | transloco: { opened: result.opened, failed: result.failed }
+            ) | transloco: {opened: result.opened, failed: result.failed}
           }}
         </p>
       }

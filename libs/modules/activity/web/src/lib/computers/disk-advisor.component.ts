@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import {DatePipe, DecimalPipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -10,21 +10,21 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { DiskAdvice, DiskSuggestion } from '@pd/contracts';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {DiskAdvice, DiskSuggestion} from '@pd/contracts';
 import {
   desktopBridge,
   DesktopDiskStatus,
   DesktopFixResult,
   DesktopTrashResult,
 } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { ActivityApi } from '../activity.api';
+import {firstValueFrom} from 'rxjs';
+import {ActivityApi} from '../activity.api';
 
 const GB = 1024 ** 3;
 const POLL_MS = 1000;
@@ -32,7 +32,7 @@ const POLL_MS = 1000;
 const FRESH_MS = 10 * 60_000;
 
 /** What happened to one suggestion: moved, cleaned, or why not. */
-type Outcome = { ok: boolean; text: string };
+type Outcome = {ok: boolean; text: string};
 
 /**
  * Disk cleanup of this computer: the desktop app scans a disk (started from the disk's row of
@@ -58,7 +58,8 @@ type Outcome = { ok: boolean; text: string };
 })
 export class DiskAdvisorComponent {
   /** Every disk of this computer: the AI may suggest moving things to another one. */
-  readonly disks = input.required<{ mount: string; total: number; free: number }[]>();
+  readonly disks =
+    input.required<{mount: string; total: number; free: number}[]>();
   /** The card is of the computer the page is opened on: only then is there a disk to clean. */
   readonly active = input(false);
 
@@ -69,7 +70,7 @@ export class DiskAdvisorComponent {
   readonly disk = computed(() => (this.active() ? this.bridge : null));
   protected readonly gb = GB;
 
-  protected readonly status = signal<DesktopDiskStatus>({ state: 'idle' });
+  protected readonly status = signal<DesktopDiskStatus>({state: 'idle'});
   protected readonly advice = signal<DiskAdvice | null>(null);
   protected readonly thinking = signal(false);
   protected readonly picked = signal<ReadonlySet<string>>(new Set());
@@ -83,11 +84,13 @@ export class DiskAdvisorComponent {
   private timer: ReturnType<typeof setInterval> | null = null;
 
   /** A scan or the AI is running: the analyze buttons of the card wait. */
-  readonly busy = computed(() => this.status().state === 'scanning' || this.thinking());
+  readonly busy = computed(
+    () => this.status().state === 'scanning' || this.thinking(),
+  );
 
   protected readonly pickedBytes = computed(() =>
     (this.advice()?.suggestions ?? [])
-      .filter((item) => this.picked().has(item.path))
+      .filter(item => this.picked().has(item.path))
       .reduce((sum, item) => sum + item.bytes, 0),
   );
 
@@ -127,7 +130,9 @@ export class DiskAdvisorComponent {
 
   /** The picked ones; the app refuses protected paths anyway, the user confirms the list. */
   protected async trashPicked(): Promise<void> {
-    const items = (this.advice()?.suggestions ?? []).filter((item) => this.picked().has(item.path));
+    const items = (this.advice()?.suggestions ?? []).filter(item =>
+      this.picked().has(item.path),
+    );
     await this.trash(items);
   }
 
@@ -141,7 +146,9 @@ export class DiskAdvisorComponent {
     if (!item.fix || !run) {
       return;
     }
-    const question = this.transloco.translate(`activity.disk.fixes.${item.fix}.confirm`);
+    const question = this.transloco.translate(
+      `activity.disk.fixes.${item.fix}.confirm`,
+    );
     if (item.fix !== 'storage-settings' && !confirm(question)) {
       return;
     }
@@ -171,7 +178,10 @@ export class DiskAdvisorComponent {
   protected async emptyRecycleBin(): Promise<void> {
     const mount = this.mountScanned();
     const empty = this.disk()?.emptyRecycleBin;
-    if (!empty || !confirm(this.transloco.translate('activity.disk.confirmEmpty', { mount }))) {
+    if (
+      !empty ||
+      !confirm(this.transloco.translate('activity.disk.confirmEmpty', {mount}))
+    ) {
       return;
     }
     const result = await empty();
@@ -193,7 +203,7 @@ export class DiskAdvisorComponent {
     this.picked.set(new Set());
     this.trashed.set(false);
     this.binMessage.set(null);
-    this.status.set({ state: 'idle' });
+    this.status.set({state: 'idle'});
   }
 
   /** The scan the panel shows, and whether it is too old to ask the AI about. */
@@ -205,7 +215,8 @@ export class DiskAdvisorComponent {
     return {
       at: status.scannedAt,
       mount: status.report.mount,
-      stale: !this.advice() && Date.now() - Date.parse(status.scannedAt) >= FRESH_MS,
+      stale:
+        !this.advice() && Date.now() - Date.parse(status.scannedAt) >= FRESH_MS,
     };
   });
 
@@ -215,32 +226,42 @@ export class DiskAdvisorComponent {
 
   private async trash(items: DiskSuggestion[]): Promise<void> {
     const list = items
-      .map((item) => `• ${item.path} (${(item.bytes / GB).toFixed(1)} GB)`)
+      .map(item => `• ${item.path} (${(item.bytes / GB).toFixed(1)} GB)`)
       .join('\n');
     const disk = this.disk();
     if (
       !disk ||
       !items.length ||
-      !confirm(`${this.transloco.translate('activity.disk.confirm')}\n\n${list}`)
+      !confirm(
+        `${this.transloco.translate('activity.disk.confirm')}\n\n${list}`,
+      )
     ) {
       return;
     }
     this.working.set(items.length === 1 ? items[0].path : '*');
     try {
-      const results: DesktopTrashResult[] = await disk.trash(items.map((item) => item.path));
+      const results: DesktopTrashResult[] = await disk.trash(
+        items.map(item => item.path),
+      );
       for (const result of results) {
         this.setOutcome(result.path, {
           ok: result.ok,
           text: result.ok
             ? this.transloco.translate('activity.disk.moved')
-            : this.transloco.translate(`activity.disk.reasons.${result.reason}`),
+            : this.transloco.translate(
+                `activity.disk.reasons.${result.reason}`,
+              ),
         });
       }
-      if (results.some((result) => result.ok)) {
+      if (results.some(result => result.ok)) {
         this.trashed.set(true);
       }
-      const done = new Set(results.filter((result) => result.ok).map((result) => result.path));
-      this.picked.set(new Set([...this.picked()].filter((path) => !done.has(path))));
+      const done = new Set(
+        results.filter(result => result.ok).map(result => result.path),
+      );
+      this.picked.set(
+        new Set([...this.picked()].filter(path => !done.has(path))),
+      );
     } finally {
       this.working.set(null);
     }
@@ -272,16 +293,25 @@ export class DiskAdvisorComponent {
     }
     if (status.advice) {
       this.advice.set(status.advice);
-    } else if (!status.scannedAt || Date.now() - Date.parse(status.scannedAt) < FRESH_MS) {
+    } else if (
+      !status.scannedAt ||
+      Date.now() - Date.parse(status.scannedAt) < FRESH_MS
+    ) {
       await this.ask(status);
     }
   }
 
-  private async ask(status: Extract<DesktopDiskStatus, { state: 'done' }>): Promise<void> {
+  private async ask(
+    status: Extract<DesktopDiskStatus, {state: 'done'}>,
+  ): Promise<void> {
     this.thinking.set(true);
     try {
-      const otherDisks = this.disks().filter((disk) => disk.mount !== status.report.mount);
-      const advice = await firstValueFrom(this.api.diskAdvice({ ...status.report, otherDisks }));
+      const otherDisks = this.disks().filter(
+        disk => disk.mount !== status.report.mount,
+      );
+      const advice = await firstValueFrom(
+        this.api.diskAdvice({...status.report, otherDisks}),
+      );
       this.advice.set(advice);
       await this.disk()?.keepAdvice?.(advice);
     } finally {

@@ -1,12 +1,19 @@
-import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { firstValueFrom } from 'rxjs';
-import { LifeApi } from './life.api';
+import {DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {firstValueFrom} from 'rxjs';
+import {LifeApi} from './life.api';
 
 /** The AI's story of a month or a year, written on request (or by itself on the 1st). */
 @Component({
@@ -27,7 +34,10 @@ import { LifeApi } from './life.api';
         <mat-card-title>{{ 'life.story.title' | transloco }}</mat-card-title>
         @if (story(); as s) {
           <mat-card-subtitle>
-            {{ 'life.story.written' | transloco: { date: (s.createdAt | date: 'd MMM, HH:mm') } }}
+            {{
+              'life.story.written'
+                | transloco: {date: (s.createdAt | date: 'd MMM, HH:mm')}
+            }}
           </mat-card-subtitle>
         }
       </mat-card-header>
@@ -47,7 +57,9 @@ import { LifeApi } from './life.api';
       <mat-card-actions align="end">
         <button matButton (click)="write()" [disabled]="writing()">
           <mat-icon>{{ story() ? 'refresh' : 'auto_awesome' }}</mat-icon>
-          {{ (story() ? 'life.story.rewrite' : 'life.story.write') | transloco }}
+          {{
+            (story() ? 'life.story.rewrite' : 'life.story.write') | transloco
+          }}
         </button>
       </mat-card-actions>
     </mat-card>
@@ -86,7 +98,7 @@ export class StoryCardComponent {
     this.error.set(false);
     this.nothing.set(false);
     try {
-      const { story } = await firstValueFrom(this.api.writeStory(this.period()));
+      const {story} = await firstValueFrom(this.api.writeStory(this.period()));
       this.nothing.set(!story);
       this.kept.reload();
     } catch {

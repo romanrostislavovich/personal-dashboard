@@ -1,18 +1,25 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Wish, WishInput } from '@pd/contracts';
-import { SparklineComponent, SparklinePoint } from '@pd/web-core';
-import { firstValueFrom } from 'rxjs';
-import { FinanceApi } from '../finance.api';
-import { WishFormData, WishFormDialog } from './wish-form.dialog';
-import { priceTrend, shopName } from './wish-view';
+import {CurrencyPipe, DatePipe} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatDialog} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {Wish, WishInput} from '@pd/contracts';
+import {SparklineComponent, SparklinePoint} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {FinanceApi} from '../finance.api';
+import {WishFormData, WishFormDialog} from './wish-form.dialog';
+import {priceTrend, shopName} from './wish-view';
 
 /**
  * The wishlist: products to buy one day. Each card shows the price the shop asks now, how it
@@ -35,7 +42,11 @@ import { priceTrend, shopName } from './wish-view';
   template: `
     <div class="actions">
       <p class="hint">{{ 'finance.wishlist.hint' | transloco }}</p>
-      <button matButton="filled" [disabled]="busy() !== null" (click)="openForm()">
+      <button
+        matButton="filled"
+        [disabled]="busy() !== null"
+        (click)="openForm()"
+      >
         <mat-icon>add</mat-icon> {{ 'finance.wishlist.add' | transloco }}
       </button>
     </div>
@@ -49,13 +60,20 @@ import { priceTrend, shopName } from './wish-view';
         <mat-card appearance="outlined" [class.bought]="wish.boughtAt">
           <mat-card-header>
             @if (wish.imageUrl) {
-              <img mat-card-avatar [src]="wish.imageUrl" alt="" loading="lazy" />
+              <img
+                mat-card-avatar
+                [src]="wish.imageUrl"
+                alt=""
+                loading="lazy"
+              />
             } @else {
               <mat-icon mat-card-avatar>redeem</mat-icon>
             }
             <mat-card-title>{{ wish.name }}</mat-card-title>
             <mat-card-subtitle>
-              <a [href]="wish.url" target="_blank" rel="noopener noreferrer">{{ shop(wish) }}</a>
+              <a [href]="wish.url" target="_blank" rel="noopener noreferrer">{{
+                shop(wish)
+              }}</a>
               @if (wish.boughtAt) {
                 · {{ 'finance.wishlist.bought' | transloco }}
                 {{ wish.boughtAt | date: 'd MMM y' }}
@@ -63,7 +81,7 @@ import { priceTrend, shopName } from './wish-view';
                 ·
                 {{
                   'finance.wishlist.checked'
-                    | transloco: { date: (wish.checkedAt | date: 'd MMM, HH:mm') }
+                    | transloco: {date: (wish.checkedAt | date: 'd MMM, HH:mm')}
                 }}
               }
             </mat-card-subtitle>
@@ -71,19 +89,33 @@ import { priceTrend, shopName } from './wish-view';
           <mat-card-content>
             <div class="amounts">
               @if (wish.price !== null && wish.currency) {
-                <span class="price">{{ wish.price | currency: wish.currency }}</span>
+                <span class="price">{{
+                  wish.price | currency: wish.currency
+                }}</span>
                 @if (trend(wish); as t) {
-                  <span class="change" [class.down]="t.down" [class.up]="!t.down">
-                    <mat-icon inline>{{ t.down ? 'south_east' : 'north_east' }}</mat-icon>
+                  <span
+                    class="change"
+                    [class.down]="t.down"
+                    [class.up]="!t.down"
+                  >
+                    <mat-icon inline>{{
+                      t.down ? 'south_east' : 'north_east'
+                    }}</mat-icon>
                     {{ t.percent }}%
                   </span>
                   <span class="was">{{
                     'finance.wishlist.was'
-                      | transloco: { amount: (wish.previousPrice | currency: wish.currency) }
+                      | transloco
+                        : {
+                            amount:
+                              (wish.previousPrice | currency: wish.currency),
+                          }
                   }}</span>
                 }
               } @else {
-                <span class="no-price">{{ 'finance.wishlist.noPrice' | transloco }}</span>
+                <span class="no-price">{{
+                  'finance.wishlist.noPrice' | transloco
+                }}</span>
               }
             </div>
             @if (
@@ -98,11 +130,15 @@ import { priceTrend, shopName } from './wish-view';
                     | transloco
                       : {
                           lowest: (wish.lowestPrice | currency: wish.currency),
-                          highest: (wish.highestPrice | currency: wish.currency),
+                          highest:
+                            (wish.highestPrice | currency: wish.currency),
                         }
                 }}
                 @if (wish.price === wish.lowestPrice) {
-                  · <span class="down">{{ 'finance.wishlist.lowestNow' | transloco }}</span>
+                  ·
+                  <span class="down">{{
+                    'finance.wishlist.lowestNow' | transloco
+                  }}</span>
                 }
               </p>
             }
@@ -117,7 +153,9 @@ import { priceTrend, shopName } from './wish-view';
                     | transloco
                       : {
                           left: (budget.left | currency: budget.currency),
-                          after: (abs(budget.afterBuying) | currency: budget.currency),
+                          after:
+                            (abs(budget.afterBuying)
+                            | currency: budget.currency),
                         }
                 }}
               </p>
@@ -125,13 +163,18 @@ import { priceTrend, shopName } from './wish-view';
             @if (wish.recipient) {
               <p class="note">
                 <mat-icon inline>redeem</mat-icon>
-                {{ 'finance.wishlist.giftFor' | transloco: { name: wish.recipient } }}
+                {{
+                  'finance.wishlist.giftFor' | transloco: {name: wish.recipient}
+                }}
               </p>
             }
             @if (wish.checkError && !wish.boughtAt) {
               <p class="warning">
                 <mat-icon inline>warning</mat-icon>
-                {{ 'finance.wishlist.unreadable' | transloco: { error: wish.checkError } }}
+                {{
+                  'finance.wishlist.unreadable'
+                    | transloco: {error: wish.checkError}
+                }}
               </p>
             }
             @if (wish.note) {
@@ -148,7 +191,9 @@ import { priceTrend, shopName } from './wish-view';
                     [label]="'finance.wishlist.history' | transloco"
                   />
                 } @else if (!history.isLoading()) {
-                  <p class="hint">{{ 'finance.wishlist.noHistory' | transloco }}</p>
+                  <p class="hint">
+                    {{ 'finance.wishlist.noHistory' | transloco }}
+                  </p>
                 }
               </div>
             }
@@ -160,8 +205,10 @@ import { priceTrend, shopName } from './wish-view';
             <button matButton (click)="setBought(wish, !wish.boughtAt)">
               <mat-icon>{{ wish.boughtAt ? 'undo' : 'check' }}</mat-icon>
               {{
-                (wish.boughtAt ? 'finance.wishlist.unmarkBought' : 'finance.wishlist.markBought')
-                  | transloco
+                (wish.boughtAt
+                  ? 'finance.wishlist.unmarkBought'
+                  : 'finance.wishlist.markBought'
+                ) | transloco
               }}
             </button>
             @if (!wish.boughtAt) {
@@ -305,7 +352,7 @@ export class WishlistTabComponent {
   protected readonly open = signal<string | null>(null);
   protected readonly history = this.api.wishPrices(this.open);
   protected readonly points = computed<SparklinePoint[]>(() =>
-    this.history.value().map(({ day, price }) => ({ at: day, value: price })),
+    this.history.value().map(({day, price}) => ({at: day, value: price})),
   );
 
   /** A page is being read: the id of the wish, or `adding` for a new one. */
@@ -316,20 +363,22 @@ export class WishlistTabComponent {
   protected readonly shop = shopName;
 
   protected toggleHistory(id: string): void {
-    this.open.update((current) => (current === id ? null : id));
+    this.open.update(current => (current === id ? null : id));
   }
 
   protected async openForm(wish?: Wish): Promise<void> {
     const input = await firstValueFrom(
       this.dialog
         .open<WishFormDialog, WishFormData, WishInput>(WishFormDialog, {
-          data: { wish: wish ?? null, currency: this.currency() },
+          data: {wish: wish ?? null, currency: this.currency()},
         })
         .afterClosed(),
     );
     if (input) {
       // A new wish waits for the shop's page: seconds, not an instant.
-      await this.reading(wish?.id ?? this.adding, () => this.api.saveWish(input, wish?.id));
+      await this.reading(wish?.id ?? this.adding, () =>
+        this.api.saveWish(input, wish?.id),
+      );
     }
   }
 
@@ -353,13 +402,22 @@ export class WishlistTabComponent {
   }
 
   protected async remove(wish: Wish): Promise<void> {
-    if (confirm(this.transloco.translate('finance.wishlist.confirmDelete', { name: wish.name }))) {
+    if (
+      confirm(
+        this.transloco.translate('finance.wishlist.confirmDelete', {
+          name: wish.name,
+        }),
+      )
+    ) {
       await firstValueFrom(this.api.removeWish(wish.id));
       this.wishes.reload();
     }
   }
 
-  private async reading(id: string, request: () => ReturnType<FinanceApi['checkWish']>) {
+  private async reading(
+    id: string,
+    request: () => ReturnType<FinanceApi['checkWish']>,
+  ) {
     this.busy.set(id);
     try {
       await firstValueFrom(request());

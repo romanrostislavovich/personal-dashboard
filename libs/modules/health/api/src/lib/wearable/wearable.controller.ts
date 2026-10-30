@@ -25,7 +25,7 @@ import {
   wearableDaysQuerySchema,
   WearableStatus,
 } from '@pd/contracts';
-import { WearableService } from './wearable.service';
+import {WearableService} from './wearable.service';
 
 /** The band through the Google Health API: `/api/medical/wearable`. */
 @Controller('medical/wearable')
@@ -43,7 +43,8 @@ export class WearableController {
   @Get('days')
   days(
     @CurrentUser() user: AuthUser,
-    @Query(new ZodValidationPipe(wearableDaysQuerySchema)) query: WearableDaysQuery,
+    @Query(new ZodValidationPipe(wearableDaysQuerySchema))
+    query: WearableDaysQuery,
   ): Promise<WearableDay[]> {
     return this.wearable.days(user.id, query);
   }
@@ -53,7 +54,8 @@ export class WearableController {
   @HttpCode(204)
   async setApp(
     @CurrentUser() user: AuthUser,
-    @Body(new ZodValidationPipe(googleHealthAppInputSchema)) input: GoogleHealthAppInput,
+    @Body(new ZodValidationPipe(googleHealthAppInputSchema))
+    input: GoogleHealthAppInput,
   ): Promise<void> {
     await this.keys.assertOwner(user.id);
     await this.wearable.setApp(input.clientId, input.clientSecret);
@@ -67,8 +69,8 @@ export class WearableController {
   }
 
   @Post('connect')
-  async connect(@CurrentUser() user: AuthUser): Promise<{ url: string }> {
-    return { url: await this.wearable.connectUrl(user.id) };
+  async connect(@CurrentUser() user: AuthUser): Promise<{url: string}> {
+    return {url: await this.wearable.connectUrl(user.id)};
   }
 
   /** Google returns the browser here after sign-in; the user is identified by `state`. */
@@ -76,7 +78,7 @@ export class WearableController {
   @Get('callback')
   @Redirect()
   async callback(@Query('code') code?: string, @Query('state') state?: string) {
-    return { url: await this.wearable.handleCallback(code, state) };
+    return {url: await this.wearable.handleCallback(code, state)};
   }
 
   /** Read the new days now, not with the next hour's run. */

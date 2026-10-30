@@ -1,6 +1,6 @@
-import { pickMessages } from '@pd/api-core';
-import { ProjectChange } from '@pd/contracts';
-import { MonitorNotice, SslNotice } from './checker.service';
+import {pickMessages} from '@pd/api-core';
+import {ProjectChange} from '@pd/contracts';
+import {MonitorNotice, SslNotice} from './checker.service';
 
 /** Module notification texts; the language is picked by `user.locale`. */
 const messages = {
@@ -70,7 +70,11 @@ function describeError(
   return known[error] ? `${known[error]} (${error})` : error;
 }
 
-function formatDuration(ms: number, minutesUnit: string, hoursUnit: string): string {
+function formatDuration(
+  ms: number,
+  minutesUnit: string,
+  hoursUnit: string,
+): string {
   const minutes = Math.max(1, Math.round(ms / 60_000));
   if (minutes < 60) {
     return `${minutes} ${minutesUnit}`;

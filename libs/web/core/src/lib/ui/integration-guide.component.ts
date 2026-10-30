@@ -1,6 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { TranslocoPipe } from '@jsverse/transloco';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
+import {MatIconModule} from '@angular/material/icon';
+import {TranslocoPipe} from '@jsverse/transloco';
 
 /**
  * "How to connect": the steps of getting a key or a token, folded under an integration card.
@@ -29,7 +34,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
       </ol>
       @if (link(); as url) {
         <a [href]="url" target="_blank" rel="noopener">
-          {{ 'core.settings.guide.open' | transloco: { site: host() } }}
+          {{ 'core.settings.guide.open' | transloco: {site: host()} }}
           <mat-icon inline>open_in_new</mat-icon>
         </a>
       }
@@ -76,7 +81,10 @@ export class IntegrationGuideComponent {
   readonly title = input<string>();
 
   protected readonly keys = computed(() =>
-    Array.from({ length: this.steps() }, (_, index) => `${this.guide()}.${index + 1}`),
+    Array.from(
+      {length: this.steps()},
+      (_, index) => `${this.guide()}.${index + 1}`,
+    ),
   );
 
   /** `https://www.last.fm/api/account/create` → `last.fm`. */
