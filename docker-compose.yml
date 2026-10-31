@@ -38,8 +38,11 @@ services:
       DATABASE_URL: postgres://dashboard:dashboard@db:5432/dashboard
       # A sync client keeps copies of the server's daily dumps here (docs/deploy.md, "Backups").
       BACKUP_COPY_DIR: /backups
+      # The daily open copy: the data as JSON lines, Markdown and CSV (docs/deploy.md).
+      OPEN_EXPORT_DIR: /exports
     volumes:
       - ./backups:/backups
+      - ./exports:/exports
     ports:
       - '3300:3300'
     depends_on:

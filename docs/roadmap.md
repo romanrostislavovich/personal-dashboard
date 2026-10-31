@@ -397,8 +397,9 @@ assistant as a tutor that knows the materials of the courses.
 - ✅ **Sync across versions** (2026-10-31) — a peer whose migrations are the start of yours is
   accepted, the status says "the server is N migrations ahead", rows of the newer schema wait in
   `sync.parked`; migrations that went apart stop it and are reported after 15 minutes (docs/sync.md)
-- **Data portability and open formats** — continuous standardized export (Markdown, JSON-LD,
-  CSV/Parquet) for vendor independence and offline accessibility without running the backend
+- ✅ **Data portability and open formats** (2026-10-31) — a daily open copy in `OPEN_EXPORT_DIR`
+  (`./exports` of the local instance): the rows as JSON lines, the diary in Markdown, finance in
+  CSV, the photos — read without the dashboard, importable back as a ZIP (docs/deploy.md, "An open copy")
 - ✅ **`updatedAt` on what a user edits** (2026-10-31) — tasks, transactions, recurring payments,
   wishes, birthdays, projects and life events keep when the user (or the assistant) last changed
   them, shown as "Edited 31 Oct, 14:32" in their forms; the last save wins (the owner's choice: no

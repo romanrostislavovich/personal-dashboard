@@ -135,6 +135,11 @@ const envSchema = z
     BACKUP_COPY_DIR: z.string().default('backups'),
     /** Client: how many copies to keep. */
     BACKUP_COPY_KEEP: z.coerce.number().int().min(1).default(14),
+    /**
+     * Where the daily open export goes (docs/deploy.md, "An open copy"): every user's data as
+     * files read without the dashboard. Unset — none is made.
+     */
+    OPEN_EXPORT_DIR: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.SYNC_MODE !== 'off' && !env.SYNC_TOKEN) {

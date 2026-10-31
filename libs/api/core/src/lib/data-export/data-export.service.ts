@@ -9,6 +9,7 @@ import {
 } from '../crypto/encrypted-columns';
 import {DB, Database} from '../database/database.module';
 import {
+  ArchiveSink,
   ArchiveWriter,
   binaryPath,
   FileReference,
@@ -63,8 +64,12 @@ export class DataExportService {
   }
 
   /** Writes the archive of a user's data into `output` and ends it. */
-  async write(userId: string, output: Writable): Promise<void> {
-    const archive = new ArchiveWriter(output);
+  write(userId: string, output: Writable): Promise<void> {
+    return this.writeInto(userId, new ArchiveWriter(output));
+  }
+
+  /** The same files into any sink: a ZIP, or a folder (OpenExportService). */
+  async writeInto(userId: string, archive: ArchiveSink): Promise<void> {
     // One snapshot: rows that reference each other are exported as they were at one moment.
     await this.db.transaction(
       async tx => {
@@ -111,7 +116,7 @@ export class DataExportService {
   /** The rows of a table as lines of JSON, then its binary columns as files. */
   private async writeTable(
     tx: Transaction,
-    archive: ArchiveWriter,
+    archive: ArchiveSink,
     table: ExportTable,
     mine: SQL,
   ): Promise<void> {

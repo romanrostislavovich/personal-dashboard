@@ -62,6 +62,8 @@ vitest.config.*.timestamp*
 deploy/backups/
 # copies of the server's dumps on the sync client (BACKUP_COPY_DIR)
 /backups/
+# the daily open copy of the data (OPEN_EXPORT_DIR)
+/exports/
 # your server's address for deploy.sh
 deploy/deploy.local.env
 # the key the Android app is signed with (its password is in deploy.local.env)

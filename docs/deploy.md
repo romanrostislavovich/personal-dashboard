@@ -217,6 +217,17 @@ docker compose start app
 Without the last `psql` line the computer would not notice the restore and would not send back
 what changed after the dump.
 
+## An open copy
+
+With `OPEN_EXPORT_DIR` set, every user's data is also written there once a day as plain files —
+read, searched and kept without the dashboard (and without PostgreSQL): `<user>/data/<table>.jsonl`
+(the rows, one JSON object a line), `<user>/diary/*.md` (the entries in Markdown),
+`<user>/finance/*.csv` (for a spreadsheet), `<user>/files/…` (photos). It is the layout of
+Settings → Data → Export: the contents of `<user>/` packed into a ZIP import back. A new copy takes the old
+one's place whole. The local instance writes it to `./exports` of the repository (a timer:
+2 minutes after the start, then every 24 hours); a server — at 04:30 as a job. Like the dumps,
+it holds your data unencrypted, the diary too: keep the folder private.
+
 ## The security agent on the server
 
 The dashboard runs in a container and cannot see the host. `deploy.sh` therefore uploads

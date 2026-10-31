@@ -1,6 +1,8 @@
 import {Unzip, UnzipInflate, Zip, ZipDeflate} from 'fflate';
 import {once} from 'node:events';
 import {createReadStream} from 'node:fs';
+import {mkdir, open} from 'node:fs/promises';
+import {dirname, join} from 'node:path';
 import {Writable} from 'node:stream';
 
 /**
@@ -69,8 +71,21 @@ export function csvLine(values: unknown[]): string {
   );
 }
 
+/** Where the files of an archive go: a ZIP (ArchiveWriter) or a folder (FolderWriter). */
+export interface ArchiveSink {
+  /** One file; `write` hands its content over piece by piece. */
+  file(
+    path: string,
+    write: (
+      push: (content: string | Uint8Array) => Promise<void>,
+    ) => Promise<void>,
+    options?: {compress?: boolean},
+  ): Promise<void>;
+  end(): Promise<void>;
+}
+
 /** Writes a ZIP into a stream file by file, waiting for the stream when it cannot keep up. */
-export class ArchiveWriter {
+export class ArchiveWriter implements ArchiveSink {
   private failure: Error | null = null;
   private readonly zip = new Zip((error, chunk) => {
     if (error) {
@@ -114,6 +129,38 @@ export class ArchiveWriter {
     if (this.output.writableNeedDrain) {
       await once(this.output, 'drain');
     }
+  }
+}
+
+/**
+ * The same layout as files of a folder (the daily open export, OpenExportService): read without
+ * the dashboard — the rows as JSON lines, the diary as Markdown, finance as CSV.
+ */
+export class FolderWriter implements ArchiveSink {
+  constructor(private readonly folder: string) {}
+
+  async file(
+    path: string,
+    write: (
+      push: (content: string | Uint8Array) => Promise<void>,
+    ) => Promise<void>,
+  ): Promise<void> {
+    const target = join(this.folder, ...path.split('/'));
+    await mkdir(dirname(target), {recursive: true});
+    const handle = await open(target, 'w');
+    try {
+      await write(async content => {
+        await handle.write(
+          typeof content === 'string' ? Buffer.from(content) : content,
+        );
+      });
+    } finally {
+      await handle.close();
+    }
+  }
+
+  async end(): Promise<void> {
+    // Every file is closed as it is written.
   }
 }
 
