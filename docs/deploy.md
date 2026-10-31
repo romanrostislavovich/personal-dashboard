@@ -113,6 +113,12 @@ docker compose logs -f app
 Open `https://<DOMAIN>/api/health` — it answers `{"status":"ok"}`. The database is empty for now:
 your user and data arrive with the first sync.
 
+The log is one JSON object a line (`LOG_FORMAT=text` in `.env` for the coloured lines). Every
+line of one request or one run of a background job carries the same `traceId` — the request's is
+also in its `X-Request-Id` response header — so `docker compose logs app | grep <id>` shows all of
+it. The numbers (requests, job runs, memory, the AI's tokens, notifications, sync) are in
+**Settings → System → Metrics**.
+
 ## 6. Connect your computer
 
 In the computer's `.env` (see [sync.md](sync.md)):

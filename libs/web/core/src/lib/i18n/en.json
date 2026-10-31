@@ -366,7 +366,22 @@
       "refresh": "Refresh",
       "clear": "Clear",
       "since": "Repeats since",
-      "logEmpty": "Nothing here — the server has no complaints."
+      "logEmpty": "Nothing here — the server has no complaints.",
+      "metrics": {
+        "title": "Metrics",
+        "since": "Requests and job runs are counted since the server started: {{time}}",
+        "requests": "Requests",
+        "serverErrors": "server errors: {{count}}",
+        "jobs": "Background job runs",
+        "failures": "failed: {{count}}",
+        "memory": "Memory",
+        "ai": "AI today",
+        "aiValue": "{{requests}} requests · {{tokens}} tokens",
+        "notifications": "Notifications in 24 h",
+        "notificationsValue": "delivered {{sent}} · failed {{failed}} · waiting {{waiting}}",
+        "sync": "Sync",
+        "syncValue": "last {{time}} · to send {{pending}} · waiting for related {{parked}}"
+      }
     },
     "guide": {
       "title": "How to connect",

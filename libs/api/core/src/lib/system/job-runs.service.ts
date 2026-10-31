@@ -2,7 +2,9 @@ import {Inject, Injectable} from '@nestjs/common';
 import {SystemJob} from '@pd/contracts';
 import {asc, eq, sql} from 'drizzle-orm';
 import {DB, Database} from '../database/database.module';
+import {processCounters} from './process-counters';
 import {systemJobRuns} from './system.schema';
+import {newTraceId, withTrace} from './trace';
 
 const MAX_ERROR = 1000;
 
@@ -22,8 +24,11 @@ export class JobRunsService {
     const startedAt = new Date();
     await this.save(job, {lastStartedAt: startedAt});
     try {
-      await run();
+      // The run's log lines carry its id and name, like a request's (see Trace).
+      await withTrace({id: newTraceId(), job: job.name}, run);
+      processCounters.job(false);
     } catch (error) {
+      processCounters.job(true);
       await this.save(job, {
         lastError: (error instanceof Error
           ? error.message

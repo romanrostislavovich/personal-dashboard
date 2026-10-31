@@ -16,12 +16,13 @@ import {CORE_READS, systemApi} from '@pd/client-core';
 import {SystemJob, SystemLogLevel, SystemStatus} from '@pd/contracts';
 import {errorStatus} from '../client/core-requests';
 import {DASHBOARD_CLIENT} from '../client/dashboard-client';
+import {SystemMetricsComponent} from './system-metrics.component';
 
 type LevelFilter = SystemLogLevel | 'all';
 
 /**
- * How the instance is doing: background jobs with their last runs and the log of errors and
- * warnings — what used to be visible only in `docker compose logs`. Only the owner sees it.
+ * How the instance is doing: its numbers (metrics), background jobs with their last runs and the
+ * log of errors and warnings — what used to be visible only in `docker compose logs`. Only the owner sees it.
  */
 @Component({
   selector: 'pd-system-settings',
@@ -33,11 +34,14 @@ type LevelFilter = SystemLogLevel | 'all';
     MatCardModule,
     MatIconModule,
     TranslocoPipe,
+    SystemMetricsComponent,
   ],
   template: `
     @if (forbidden()) {
       <p class="hint">{{ 'core.settings.system.ownerOnly' | transloco }}</p>
     } @else if (status.value(); as s) {
+      <pd-system-metrics [metrics]="s.metrics" />
+
       <mat-card appearance="outlined">
         <mat-card-header>
           <mat-card-title

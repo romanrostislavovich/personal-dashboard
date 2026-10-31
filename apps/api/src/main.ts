@@ -2,7 +2,7 @@ import {Logger} from '@nestjs/common';
 import {ConfigService} from '@nestjs/config';
 import {NestFactory} from '@nestjs/core';
 import {NestExpressApplication} from '@nestjs/platform-express';
-import {AppConfig, SystemLogger} from '@pd/api-core';
+import {AppConfig, SystemLogger, traceRequests} from '@pd/api-core';
 import {AppModule} from './app.module';
 
 async function bootstrap() {
@@ -12,6 +12,8 @@ async function bootstrap() {
   });
   // The AI chat sends its whole history, and it may include the text of attached files.
   app.useBodyParser('json', {limit: '5mb'});
+  // First: an id for every request, carried by its log lines (and counted for Settings → System).
+  app.use(traceRequests);
   app.setGlobalPrefix('api');
   // Behind Caddy (a private address): the client's address comes from X-Forwarded-For, and
   // `request.secure` from X-Forwarded-Proto — the sign-in throttle and the cookie need both.

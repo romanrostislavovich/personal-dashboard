@@ -97,6 +97,7 @@ import {SecretsService} from './secrets/secrets.service';
 import {ServerKeysService} from './server-keys/server-keys.service';
 import {JobRunsService} from './system/job-runs.service';
 import {SystemController} from './system/system.controller';
+import {SystemMetricsService} from './system/system-metrics.service';
 import {SystemLogService} from './system/system-log.service';
 import {UnhandledErrorsFilter} from './system/unhandled-errors.filter';
 import {ServerActions} from './sync/server-actions';
@@ -242,6 +243,7 @@ import {UserActivityService} from './realtime/user-activity.service';
     SyncConflictsService,
     BackupService,
     JobRunsService,
+    SystemMetricsService,
     SystemLogService,
     // Errors nobody caught are logged with their request (see the filter).
     {provide: APP_FILTER, useClass: UnhandledErrorsFilter},

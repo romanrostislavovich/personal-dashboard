@@ -403,8 +403,9 @@ assistant as a tutor that knows the materials of the courses.
   wishes, birthdays, projects and life events keep when the user (or the assistant) last changed
   them, shown as "Edited 31 Oct, 14:32" in their forms; the last save wins (the owner's choice: no
   If-Match)
-- **Observability** — JSON logs in production with a request or job id; `/metrics` (job runs,
-  AI calls and tokens, sync lag, failed notifications)
+- ✅ **Observability** (2026-10-31) — JSON logs in production with a request or job id
+  (`X-Request-Id`); the numbers — requests and their p95, job runs, memory, AI calls and tokens,
+  sync, failed notifications — in Settings → System → Metrics (the owner's choice: no Prometheus)
 - **Loading and errors are not "empty"** — a shared `<pd-resource-state>`: a list shows "No …
   yet" today while it loads or after a failed request; the actions of the AI page report errors
 - **Accessibility** — `aria-label` on the 28 icon-only buttons without one, the accessibility rules
