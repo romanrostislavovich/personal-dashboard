@@ -422,8 +422,8 @@ assistant as a tutor that knows the materials of the courses.
   and the desktop app (the span builder, the window rules — checked against `isMeetingTitle` of
   contracts — the focus timer); the desktop app is linted too, its three most tangled functions
   split
-- **CI and tooling** — the Nx cache kept between runs, `format:check`, `.nvmrc` / `engines`,
-  `affected` and `typecheck` scripts
+- ✅ **CI and tooling** (2026-10-31) — the Nx cache kept between CI runs, `format:check` in CI,
+  `.nvmrc` / `engines`, `npm run affected` and `npm run typecheck` (tools/typecheck.mjs)
 - **A module generator** — `nx g @pd/tools:module`: the api and web libraries, contracts, the
   requests of the client core, i18n and the registration in one command instead of ten steps
 

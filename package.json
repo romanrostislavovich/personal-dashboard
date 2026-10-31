@@ -29,10 +29,17 @@
     "test": "nx run-many -t test",
     "ai:eval": "vitest run -c vitest.evals.mts",
     "lint": "nx run-many -t lint",
+    "typecheck": "node tools/typecheck.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "affected": "nx affected -t lint test build",
     "desktop:package": "nx package desktop",
     "e2e": "playwright test -c e2e/playwright.config.ts"
   },
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "dependencies": {
     "@angular/cdk": "^22.2.0",
     "@angular/common": "22.2.3",

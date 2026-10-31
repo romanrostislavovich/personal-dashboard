@@ -39,13 +39,24 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: 'npm'
 
       # --ignore-scripts: the Electron binary is not needed for checks.
       - run: npm ci --ignore-scripts
 
       - uses: nrwl/nx-set-shas@v5
+
+      # Nx's local cache between runs: a project whose inputs did not change is not linted,
+      # tested or built again. Keyed by the commit, restored from the newest one before it.
+      - uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            nx-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+
+      - run: npm run format:check
 
       - run: npx nx affected -t lint test build
 
@@ -79,7 +90,7 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: 'npm'
 
       - run: npm ci --ignore-scripts

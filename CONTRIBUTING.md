@@ -18,6 +18,9 @@ npm run dev              # API on :3300, web on http://localhost:4200
 | `npm run db:up`             | Start PostgreSQL in Docker                           |
 | `npm run db:generate`       | Create an SQL migration after changing `*.schema.ts` |
 | `npm test` / `npm run lint` | Tests / linter for all projects                      |
+| `npm run affected`          | Lint, tests and build of what changed since `main`   |
+| `npm run typecheck`         | Types of every library (`-- libs/x/y` for some)      |
+| `npm run format:check`      | Formatting of the whole repository, as CI checks it  |
 | `npm run build`             | Production build of API and web                      |
 | `npm run desktop:package`   | Build a desktop installer                            |
 
@@ -30,11 +33,12 @@ fit together and has a step-by-step guide to writing a module.
 ## Before opening a pull request
 
 ```bash
-npm run lint
-npm test
-npm run build
-npx prettier --check "apps/**/*.{ts,html,scss}" "libs/**/*.{ts,html,scss,json}"
+npm run affected
+npm run typecheck
+npm run format:check
 ```
+
+Node 24 (`.nvmrc`).
 
 - If you changed a `*.schema.ts`, run `npm run db:generate` and commit the migration.
 - UI texts go to `i18n/en.json` **and** `i18n/ru.json` of the module (keys must match);
