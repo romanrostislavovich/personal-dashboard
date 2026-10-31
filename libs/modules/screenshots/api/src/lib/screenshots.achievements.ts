@@ -44,7 +44,7 @@ export class ScreenshotsAchievements implements OnModuleInit {
         [
           500,
           '🎞️',
-          {en: 'The chronicler', ru: 'Летописец'},
+          {en: 'Screen archivist', ru: 'Архивариус экрана'},
           {en: '500 screenshots', ru: '500 скриншотов'},
         ],
         [

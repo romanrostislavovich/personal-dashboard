@@ -280,7 +280,7 @@ export class DotaAchievements implements OnModuleInit {
       [
         60,
         '⏳',
-        {en: 'Marathon', ru: 'Марафон'},
+        {en: 'Endless match', ru: 'Бесконечный матч'},
         {en: 'A 60-minute match', ru: 'Матч на 60 минут'},
       ],
       [
@@ -317,7 +317,7 @@ export class DotaAchievements implements OnModuleInit {
       [
         5,
         '🧓',
-        {en: 'Old-timer', ru: 'Старожил'},
+        {en: 'Veteran of the Ancients', ru: 'Ветеран Древних'},
         {en: '5 years since the first match', ru: '5 лет с первого матча'},
       ],
       [

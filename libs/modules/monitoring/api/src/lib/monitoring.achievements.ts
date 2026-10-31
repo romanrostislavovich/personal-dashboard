@@ -102,7 +102,7 @@ export class MonitoringAchievements implements OnModuleInit {
         [
           10,
           '📡',
-          {en: 'Mission control', ru: 'Центр управления'},
+          {en: 'Lighthouse keeper', ru: 'Смотритель маяка'},
           {en: '10 monitored addresses', ru: '10 адресов под мониторингом'},
         ],
       ),

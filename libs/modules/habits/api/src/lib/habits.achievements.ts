@@ -98,7 +98,7 @@ export class HabitsAchievements implements OnModuleInit {
         [
           50,
           '🦾',
-          {en: 'A regular', ru: 'Завсегдатай'},
+          {en: 'Gym regular', ru: 'Свой в зале'},
           {en: '50 days at the gym', ru: '50 дней в спортзале'},
         ],
         [
@@ -116,7 +116,7 @@ export class HabitsAchievements implements OnModuleInit {
         [
           500,
           '🏆',
-          {en: 'Half a thousand', ru: 'Полтысячи'},
+          {en: 'Half a thousand workouts', ru: 'Полтысячи тренировок'},
           {en: '500 days at the gym', ru: '500 дней в спортзале'},
         ],
       ),

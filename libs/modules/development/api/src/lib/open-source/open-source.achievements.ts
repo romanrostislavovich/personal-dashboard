@@ -130,7 +130,7 @@ export class OpenSourceAchievements implements OnModuleInit {
         [
           5,
           '📦',
-          {en: 'Portfolio', ru: 'Портфолио'},
+          {en: 'Showcase', ru: 'Витрина'},
           {
             en: '5 public repositories of your own, forks aside',
             ru: '5 своих публичных репозиториев, не считая форков',

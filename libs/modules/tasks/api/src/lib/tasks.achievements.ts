@@ -170,7 +170,7 @@ export class TasksAchievements implements OnModuleInit {
         [
           40,
           '🧠',
-          {en: 'Deep work', ru: 'Глубокая работа'},
+          {en: 'A focused month', ru: 'Месяц сосредоточенности'},
           {
             en: '40 hours of focus sessions on the tasks of the last month',
             ru: '40 часов фокус-сессий по задачам последнего месяца',
@@ -199,7 +199,7 @@ export class TasksAchievements implements OnModuleInit {
         [
           20,
           '🌪️',
-          {en: 'Whirlwind', ru: 'Ураган'},
+          {en: 'Hurricane', ru: 'Ураган'},
           {en: '20 tasks done in one day', ru: '20 задач за один день'},
         ],
       ),
@@ -231,7 +231,7 @@ export class TasksAchievements implements OnModuleInit {
         [
           100,
           '🗿',
-          {en: 'Unstoppable', ru: 'Не остановить'},
+          {en: 'No stopping', ru: 'Не остановить'},
           {
             en: 'A task done 100 days in a row',
             ru: '100 дней подряд с выполненной задачей',
@@ -326,7 +326,7 @@ export class TasksAchievements implements OnModuleInit {
         [
           500,
           '🕰️',
-          {en: 'Like clockwork', ru: 'Как часы'},
+          {en: 'Sharper than chimes', ru: 'Точнее курантов'},
           {
             en: '500 reminders dealt with',
             ru: '500 напоминаний, по которым всё сделано',
