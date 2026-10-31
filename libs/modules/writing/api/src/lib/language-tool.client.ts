@@ -44,17 +44,7 @@ export async function checkWithLanguageTool(
   baseUrl: string,
   request: LanguageToolRequest,
 ): Promise<{language: string; issues: WritingIssue[]}> {
-  const body = new URLSearchParams({
-    text: request.text,
-    language: request.language,
-    // Told as English, the text is checked as the user's English.
-    preferredVariants: request.englishVariant,
-    ...(request.picky ? {level: 'picky'} : {}),
-    ...(request.disabledRules.length
-      ? {disabledRules: request.disabledRules.join(',')}
-      : {}),
-    ...(request.motherTongue ? {motherTongue: request.motherTongue} : {}),
-  });
+  const body = checkBody(request);
   const response = await fetchWithTimeout(
     `${baseUrl.replace(/\/+$/, '')}/v2/check`,
     {method: 'POST', body},
@@ -79,6 +69,24 @@ export async function checkWithLanguageTool(
       ruleId: match.rule.id,
     })),
   };
+}
+
+/** The form of `/v2/check`. */
+export function checkBody(request: LanguageToolRequest): URLSearchParams {
+  return new URLSearchParams({
+    text: request.text,
+    language: request.language,
+    // Told as English, the text is checked as the user's English. LanguageTool takes the
+    // variants only with `auto` (a 400 otherwise): a language given is checked as given.
+    ...(request.language === 'auto'
+      ? {preferredVariants: request.englishVariant}
+      : {}),
+    ...(request.picky ? {level: 'picky'} : {}),
+    ...(request.disabledRules.length
+      ? {disabledRules: request.disabledRules.join(',')}
+      : {}),
+    ...(request.motherTongue ? {motherTongue: request.motherTongue} : {}),
+  });
 }
 
 /** LanguageTool's category first (it is the more exact), then the type of the issue. */
