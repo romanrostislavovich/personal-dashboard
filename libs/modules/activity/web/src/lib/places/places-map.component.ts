@@ -59,10 +59,28 @@ const NAMED_COLOR = '#00838f';
 const HEAT_COLOR = '#d84315';
 /** Half a heat cell in degrees (the server's cells are 0.0015°). */
 const HEAT_HALF = 0.00075;
+/** A cell is never drawn smaller than this on the screen: zoomed out to a city, ~150 m is a dot. */
+const HEAT_MIN_PX = 14;
+/** The share is of this cell in the order (90th percentile), not of the busiest: home holds most
+ * hours, and next to it every other place was too pale to see. */
+const HEAT_REFERENCE = 0.9;
 
-/** A cell's opacity: a short visit shows, the place of most hours is the strongest. */
+/** A cell's opacity: a short visit shows, the places of most hours are the strongest. */
 function heatOpacity(share: number): number {
-  return 0.15 + 0.6 * Math.sqrt(share);
+  return 0.3 + 0.6 * Math.sqrt(share);
+}
+
+/** Each cell's share of the reference cell, at most 1. */
+export function heatShares(cells: HeatCell[]): (HeatCell & {share: number})[] {
+  const sorted = cells.map(cell => cell.minutes).sort((a, b) => a - b);
+  const reference = Math.max(
+    1,
+    sorted[Math.floor((sorted.length - 1) * HEAT_REFERENCE)] ?? 1,
+  );
+  return cells.map(cell => ({
+    ...cell,
+    share: Math.min(1, cell.minutes / reference),
+  }));
 }
 
 async function leaflet(
@@ -100,25 +118,44 @@ async function leaflet(
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
+  // The heat under the rest: the routes and the marks are drawn over it.
+  const heatLayer = L.layerGroup().addTo(map);
   const layer = L.layerGroup().addTo(map);
-  return {
-    draw({stays, trips, named, heat}) {
-      layer.clearLayers();
-      const bounds: [number, number][] = [];
-      // The heat first: the routes and the marks are drawn over it.
-      for (const cell of heat) {
+  let heatCells: MapLayers['heat'] = [];
+  // A cell is a square of its real size, or a dot of HEAT_MIN_PX when that is smaller.
+  const drawHeat = () => {
+    heatLayer.clearLayers();
+    const cellPx =
+      map.latLngToLayerPoint([0, HEAT_HALF]).x -
+      map.latLngToLayerPoint([0, -HEAT_HALF]).x;
+    for (const cell of heatCells) {
+      const style = {
+        stroke: false,
+        fillColor: HEAT_COLOR,
+        fillOpacity: heatOpacity(cell.share),
+      };
+      if (cellPx >= HEAT_MIN_PX) {
         L.rectangle(
           [
             [cell.latitude - HEAT_HALF, cell.longitude - HEAT_HALF],
             [cell.latitude + HEAT_HALF, cell.longitude + HEAT_HALF],
           ],
-          {
-            stroke: false,
-            fillColor: HEAT_COLOR,
-            fillOpacity: heatOpacity(cell.share),
-          },
-        ).addTo(layer);
+          style,
+        ).addTo(heatLayer);
+      } else {
+        L.circleMarker([cell.latitude, cell.longitude], {
+          ...style,
+          radius: HEAT_MIN_PX / 2,
+        }).addTo(heatLayer);
       }
+    }
+  };
+  map.on('zoomend', drawHeat);
+  return {
+    draw({stays, trips, named, heat}) {
+      layer.clearLayers();
+      const bounds: [number, number][] = [];
+      heatCells = heat;
       // The view follows the busiest cells, not a stray fix far away.
       bounds.push(
         ...heat
@@ -163,6 +200,8 @@ async function leaflet(
       } else {
         map.setView([52.23, 21.01], 11);
       }
+      // After the view is set: the size of a cell on the screen depends on it.
+      drawHeat();
     },
     destroy: () => map.remove(),
   };
@@ -370,15 +409,11 @@ export class PlacesMapComponent {
     const trips: MapTrip[] = this.entries().flatMap(entry =>
       entry.kind === 'trip' ? [{path: entry.path, mode: entry.mode}] : [],
     );
-    const busiest = Math.max(1, ...this.heat().map(cell => cell.minutes));
     this.renderer.draw({
       stays,
       trips,
       named: this.named(),
-      heat: this.heat().map(cell => ({
-        ...cell,
-        share: cell.minutes / busiest,
-      })),
+      heat: heatShares(this.heat()),
     });
   }
 }
