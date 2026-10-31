@@ -358,6 +358,28 @@ remote "docker image prune -f >/dev/null
   docker images personal-dashboard --format '{{.Repository}}:{{.Tag}}' |
     grep -v -x -F \"\$keep\" | xargs -r docker rmi >/dev/null 2>&1 || true"
 
+# This computer's instance is a sync client: until it runs the server's version, the server
+# answers its sync with 409 (and after 15 min it reports an error). It gets the very image the
+# server runs — before the slow installers, so the gap stays short.
+update_local_client() {
+  local container local_image
+  container=$(docker compose ps -q app 2>/dev/null)
+  [ -n "$container" ] || return 0
+  local_image=$(docker inspect -f '{{.Config.Image}}' "$container") || return 1
+  if [ "$WEB_IMAGE" != "$IMAGE" ]; then
+    docker pull -q "$WEB_IMAGE" >/dev/null || return 1
+  fi
+  # An image built for an arm64 server does not run here.
+  [ "$(docker image inspect -f '{{.Architecture}}' "$WEB_IMAGE")" = \
+    "$(docker version -f '{{.Server.Arch}}')" ] || return 1
+  docker tag "$WEB_IMAGE" "$local_image" || return 1
+  [ "$WEB_IMAGE" = "$IMAGE" ] || docker rmi "$WEB_IMAGE" >/dev/null 2>&1 || true
+  docker compose up -d --no-build --wait app >/dev/null 2>&1
+}
+step "Updating this computer's sync client"
+update_local_client ||
+  echo "This computer's instance was not updated: docker compose up -d --build app" >&2
+
 # After the app runs: the installers are a convenience, and a failed build of them must not keep
 # the update from the server.
 upload_desktop_installers ||

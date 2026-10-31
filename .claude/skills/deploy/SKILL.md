@@ -48,6 +48,7 @@ Nx may be blocked locally by Smart App Control: do not run `nx reset`; run the t
   `C:\Program Files\GitHub CLI\gh.exe`); a red run → `gh run view <id> --log-failed`, fix, push.
 - Native Android changed (`apps/mobile/android`, Capacitor plugins): the deploy builds an APK into
   `dist/server-apk/personal-dashboard.apk`; install it over the cable with the `phone` skill.
-- The owner's local instance is a sync client and must run the same migrations: tell the owner to run
-  `! docker compose up -d --build app`.
+- The owner's local instance is a sync client and must run the same migrations: deploy.sh updates
+  it itself ("Updating this computer's sync client"); if it printed that it did not, run
+  `docker compose up -d --build app`.
 - Report: the commit on the server, the rollback point the log printed, what was not verified live.
