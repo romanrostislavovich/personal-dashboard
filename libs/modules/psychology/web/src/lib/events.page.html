@@ -1,0 +1,229 @@
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-card-title>
+      {{
+        (editing() ? 'psychology.events.edit' : 'psychology.events.add')
+          | transloco
+      }}
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content class="form">
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-label>{{ 'psychology.events.title' | transloco }}</mat-label>
+      <input
+        matInput
+        maxlength="200"
+        [value]="draft().title"
+        (input)="set({title: $any($event.target).value})"
+      />
+    </mat-form-field>
+    <mat-button-toggle-group
+      hideSingleSelectionIndicator
+      [attr.aria-label]="'psychology.events.when' | transloco"
+      [value]="draft().by"
+      (change)="set({by: $event.value})"
+    >
+      <mat-button-toggle value="dates">
+        {{ 'psychology.events.byDates' | transloco }}
+      </mat-button-toggle>
+      <mat-button-toggle value="age">
+        {{ 'psychology.events.byAge' | transloco }}
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+    <div class="row">
+      @if (draft().by === 'dates') {
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-label>{{ 'psychology.events.from' | transloco }}</mat-label>
+          <input
+            matInput
+            type="date"
+            [value]="draft().startedOn"
+            (change)="set({startedOn: $any($event.target).value})"
+          />
+        </mat-form-field>
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-label>{{ 'psychology.events.to' | transloco }}</mat-label>
+          <input
+            matInput
+            type="date"
+            [value]="draft().endedOn"
+            [min]="draft().startedOn"
+            (change)="set({endedOn: $any($event.target).value})"
+          />
+          <mat-hint>{{ 'psychology.events.toHint' | transloco }}</mat-hint>
+        </mat-form-field>
+      } @else {
+        <mat-form-field subscriptSizing="dynamic" class="age">
+          <mat-label>{{ 'psychology.events.ageFrom' | transloco }}</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            max="120"
+            [value]="draft().ageFrom"
+            (input)="set({ageFrom: $any($event.target).value})"
+          />
+          <mat-hint>{{ 'psychology.events.ageHint' | transloco }}</mat-hint>
+        </mat-form-field>
+        <mat-form-field subscriptSizing="dynamic" class="age">
+          <mat-label>{{ 'psychology.events.ageTo' | transloco }}</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            max="120"
+            [value]="draft().ageTo"
+            (input)="set({ageTo: $any($event.target).value})"
+          />
+          <mat-hint>{{ 'psychology.events.ageToHint' | transloco }}</mat-hint>
+        </mat-form-field>
+      }
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>{{ 'psychology.events.feeling' | transloco }}</mat-label>
+        <mat-select
+          [value]="draft().feeling"
+          (selectionChange)="set({feeling: $event.value})"
+        >
+          @for (feeling of feelings; track feeling) {
+            <mat-option [value]="feeling">
+              {{ 'psychology.feelings.' + feeling | transloco }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-label>{{ 'psychology.events.description' | transloco }}</mat-label>
+      <textarea
+        matInput
+        rows="3"
+        maxlength="5000"
+        [value]="draft().description"
+        (input)="set({description: $any($event.target).value})"
+      ></textarea>
+    </mat-form-field>
+    @if (draft().by === 'age') {
+      <mat-form-field subscriptSizing="dynamic" class="birth">
+        <mat-label>{{ 'psychology.events.birthYear' | transloco }}</mat-label>
+        <input
+          matInput
+          type="number"
+          min="1900"
+          max="2100"
+          [value]="birthYear() ?? ''"
+          (change)="setBirthYear($any($event.target).value)"
+        />
+        <mat-hint>{{ 'psychology.events.birthYearHint' | transloco }}</mat-hint>
+      </mat-form-field>
+    }
+  </mat-card-content>
+  <mat-card-actions align="end">
+    @if (editing()) {
+      <pd-edited-at class="edited" [at]="editedAt()" />
+      <button matButton (click)="cancel()">
+        {{ 'core.actions.cancel' | transloco }}
+      </button>
+    }
+    <button matButton="filled" [disabled]="!valid()" (click)="save()">
+      {{ (editing() ? 'core.actions.save' : 'core.actions.add') | transloco }}
+    </button>
+  </mat-card-actions>
+</mat-card>
+
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-card-title>{{
+      'psychology.events.export' | transloco
+    }}</mat-card-title>
+    <mat-card-subtitle>{{
+      'psychology.events.exportHint' | transloco
+    }}</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content class="row padded">
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-label>{{ 'psychology.events.from' | transloco }}</mat-label>
+      <input
+        matInput
+        type="date"
+        [value]="exportFrom()"
+        (change)="exportFrom.set($any($event.target).value)"
+      />
+    </mat-form-field>
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-label>{{ 'psychology.events.to' | transloco }}</mat-label>
+      <input
+        matInput
+        type="date"
+        [value]="exportTo()"
+        [min]="exportFrom()"
+        (change)="exportTo.set($any($event.target).value)"
+      />
+    </mat-form-field>
+    <button matButton="tonal" [disabled]="exporting()" (click)="export('xlsx')">
+      <mat-icon>table_view</mat-icon> Excel
+    </button>
+    <button matButton="tonal" [disabled]="exporting()" (click)="export('docx')">
+      <mat-icon>description</mat-icon> Word
+    </button>
+    <span class="hint">
+      {{ 'psychology.events.inPeriod' | transloco: {count: inPeriod()} }}
+    </span>
+  </mat-card-content>
+</mat-card>
+
+<pd-resource-state [resource]="events">
+  <ng-template>
+    @for (event of events.value(); track event.id) {
+      <mat-card appearance="outlined">
+        <mat-card-content class="event">
+          <mat-icon
+            [class.hard]="event.feeling < 0"
+            [class.good]="event.feeling > 0"
+            [attr.aria-label]="
+              'psychology.feelings.' + event.feeling | transloco
+            "
+          >
+            {{ icons[event.feeling] }}
+          </mat-icon>
+          <span class="body">
+            <b>{{ event.title }}</b>
+            <span class="hint">
+              @if (event.startedOn) {
+                {{ event.startedOn | date: 'd MMM y' }}
+                @if (event.endedOn) {
+                  – {{ event.endedOn | date: 'd MMM y' }}
+                }
+              } @else {
+                {{ 'psychology.events.age' | transloco: {age: ages(event)} }}
+                @if (years(event); as years) {
+                  · ≈ {{ years }}
+                }
+              }
+            </span>
+            @if (event.description) {
+              <span class="words">{{ event.description }}</span>
+            }
+          </span>
+          <button
+            matIconButton
+            [attr.aria-label]="'core.actions.edit' | transloco"
+            (click)="edit(event)"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            matIconButton
+            [attr.aria-label]="'core.actions.delete' | transloco"
+            (click)="remove(event)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-card-content>
+      </mat-card>
+    } @empty {
+      @if (!events.isLoading()) {
+        <p class="hint">{{ 'psychology.events.empty' | transloco }}</p>
+      }
+    }
+  </ng-template>
+</pd-resource-state>

@@ -414,8 +414,9 @@ assistant as a tutor that knows the materials of the courses.
   own `pd/icon-button-label` (tools/eslint) in every web library; the 31 icon-only buttons
   without a label have one; the last hardcoded text (a default category) goes through Transloco.
   The colours left in code are data (map layers, brands, WoW classes, chart palettes)
-- **Smaller components** — the diary editor (845 lines), the WoW dashboard, the security page,
-  Psychology's events, the AI settings: templates and styles in their own files, parts split out
+- ✅ **Smaller components** (2026-10-31) — the diary editor, Health's history, the AI settings,
+  the security page, the WoW dashboard and Psychology's events have their templates and styles in
+  their own files; the editor's photo URLs are a class of their own (`editor/photo-urls.ts`)
 - **Tests where there are none** — the web libraries (pure helpers first: finance stats, the
   activity timeline, months, the repository filter) and the desktop app (the span builder, the
   private-window rules — the same as `isMeetingTitle` of contracts, the focus timer); lint for

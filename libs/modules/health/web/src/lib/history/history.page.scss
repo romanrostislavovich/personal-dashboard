@@ -1,0 +1,110 @@
+.upcoming {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--pd-radius);
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.filter {
+  width: 180px;
+}
+.spacer {
+  flex: 1;
+}
+.visit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+}
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.when {
+  font: var(--mat-sys-title-medium);
+}
+.where {
+  color: var(--mat-sys-on-surface-variant);
+  overflow-wrap: anywhere;
+}
+.text {
+  display: flex;
+  flex-direction: column;
+}
+.label {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+.words {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.recommendation {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.recommendation .words {
+  flex: 1;
+}
+.line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+.line > mat-icon {
+  flex-shrink: 0;
+  color: var(--mat-sys-primary);
+}
+.document {
+  align-self: flex-start;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-top: 1px solid var(--pd-border);
+  padding-top: 4px;
+}
+.drafts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--pd-radius-small);
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+.drafts span {
+  flex: 1;
+}
+.section {
+  margin: 8px 0 0;
+  font: var(--mat-sys-title-small);
+}
+.hint {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+.error {
+  color: var(--mat-sys-error);
+}

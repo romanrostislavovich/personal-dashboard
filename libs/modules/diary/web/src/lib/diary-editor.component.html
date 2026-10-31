@@ -1,0 +1,206 @@
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-card-title class="title">{{
+      day() | date: 'EEEE, d MMMM y'
+    }}</mat-card-title>
+    <mat-card-subtitle class="status" [class.error]="status() === 'error'">
+      @switch (status()) {
+        @case ('saving') {
+          {{ 'diary.editor.saving' | transloco }}
+        }
+        @case ('error') {
+          {{ 'diary.editor.saveFailed' | transloco }}
+        }
+        @default {
+          @if (savedAt(); as at) {
+            <mat-icon inline>cloud_done</mat-icon>
+            {{ 'diary.editor.savedAt' | transloco }}
+            {{ at | date: 'HH:mm' }}
+          } @else {
+            {{ 'diary.editor.empty' | transloco }}
+          }
+        }
+      }
+    </mat-card-subtitle>
+    @if (entry.value()) {
+      <button matButton type="button" class="delete-entry" (click)="remove()">
+        <mat-icon>delete</mat-icon> {{ 'diary.deleteEntry' | transloco }}
+      </button>
+    }
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="toolbar">
+      <div
+        class="moods"
+        role="radiogroup"
+        [attr.aria-label]="'diary.editor.mood' | transloco"
+      >
+        @for (value of moods; track value) {
+          <button
+            matIconButton
+            type="button"
+            role="radio"
+            class="mood"
+            [class.selected]="mood() === value"
+            [attr.aria-checked]="mood() === value"
+            [matTooltip]="'diary.moods.' + value | transloco"
+            [attr.aria-label]="'diary.moods.' + value | transloco"
+            (click)="setMood(value)"
+          >
+            {{ moodEmoji[value] }}
+          </button>
+        }
+      </div>
+      <mat-button-toggle-group
+        [value]="mode()"
+        (change)="switchMode($event.value)"
+        hideSingleSelectionIndicator
+      >
+        <mat-button-toggle value="visual">
+          <mat-icon>edit_note</mat-icon>
+          {{ 'diary.editor.visual' | transloco }}
+        </mat-button-toggle>
+        <mat-button-toggle value="markdown">
+          <mat-icon>code</mat-icon>
+          {{ 'diary.editor.markdown' | transloco }}
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <!-- mousedown is prevented so the text selection survives the click -->
+    <div
+      class="marks"
+      role="toolbar"
+      [attr.aria-label]="'diary.editor.toolbar' | transloco"
+    >
+      @if (mode() === 'visual') {
+        @for (action of formatActions; track action.id) {
+          <button
+            matIconButton
+            type="button"
+            class="format"
+            [class.active]="isActive(action)"
+            [attr.aria-pressed]="isActive(action)"
+            [matTooltip]="'diary.editor.format.' + action.id | transloco"
+            [attr.aria-label]="'diary.editor.format.' + action.id | transloco"
+            (mousedown)="$event.preventDefault()"
+            (click)="format(action)"
+          >
+            <mat-icon>{{ action.icon }}</mat-icon>
+          </button>
+        }
+        <label
+          class="format photo-button"
+          [class.busy]="uploading()"
+          [matTooltip]="'diary.editor.format.photo' | transloco"
+        >
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            [attr.aria-label]="'diary.editor.format.photo' | transloco"
+            (change)="pickPhotos($event)"
+          />
+          <mat-icon>add_photo_alternate</mat-icon>
+        </label>
+        <span class="divider"></span>
+      }
+      @for (emoji of markEmojis; track emoji) {
+        <button
+          type="button"
+          class="mark-button"
+          [matTooltip]="'diary.editor.markTitle' | transloco"
+          (mousedown)="$event.preventDefault()"
+          (click)="mark(emoji)"
+        >
+          {{ emoji }}
+        </button>
+      }
+      <button
+        matIconButton
+        type="button"
+        class="unmark"
+        [matTooltip]="'diary.editor.unmark' | transloco"
+        [attr.aria-label]="'diary.editor.unmark' | transloco"
+        (mousedown)="$event.preventDefault()"
+        (click)="unmark()"
+      >
+        <mat-icon>ink_eraser</mat-icon>
+      </button>
+    </div>
+
+    @if (mode() === 'visual' && inTable()) {
+      <div class="marks table-tools" role="toolbar">
+        <span class="table-label"
+          >{{ 'diary.editor.format.table' | transloco }}:</span
+        >
+        @for (action of tableActions; track action.id) {
+          <button
+            matIconButton
+            type="button"
+            class="format"
+            [matTooltip]="'diary.editor.format.' + action.id | transloco"
+            [attr.aria-label]="'diary.editor.format.' + action.id | transloco"
+            (mousedown)="$event.preventDefault()"
+            (click)="format(action)"
+          >
+            <mat-icon>{{ action.icon }}</mat-icon>
+          </button>
+        }
+      </div>
+    }
+    @if (photoError(); as message) {
+      <p class="photo-error">{{ message }}</p>
+    }
+
+    @if (!content().trim()) {
+      <div class="starter">
+        @if (template()) {
+          <button matButton="tonal" type="button" (click)="insertTemplate()">
+            <mat-icon>article</mat-icon>
+            {{ 'diary.editor.insertTemplate' | transloco }}
+          </button>
+        }
+        <div class="question">
+          <span class="question-label"
+            >💭 {{ 'diary.editor.question' | transloco }}</span
+          >
+          <span class="question-text">{{ question() }}</span>
+          <span class="question-actions">
+            <button matButton type="button" (click)="answer()">
+              {{ 'diary.editor.answer' | transloco }}
+            </button>
+            <button
+              matButton
+              type="button"
+              (click)="questionShift.set(questionShift() + 1)"
+            >
+              {{ 'diary.editor.anotherQuestion' | transloco }}
+            </button>
+          </span>
+        </div>
+      </div>
+    }
+
+    <!-- Kept in the DOM while the source is shown, so the visual editor keeps its undo history -->
+    <div #visual class="text visual" [hidden]="mode() !== 'visual'"></div>
+    @if (mode() === 'markdown') {
+      <textarea
+        #text
+        class="text"
+        [ngModel]="content()"
+        (ngModelChange)="content.set($event); scheduleSave()"
+        [placeholder]="'diary.editor.placeholder' | transloco"
+        (keydown.control.s)="$event.preventDefault(); flush()"
+        (keydown.meta.s)="$event.preventDefault(); flush()"
+      ></textarea>
+    }
+
+    <h4 class="section">{{ 'diary.photos.title' | transloco }}</h4>
+    <pd-diary-photos [day]="day()" [hiddenIds]="photosInText()" />
+
+    <p class="hint">{{ 'diary.editor.hint' | transloco }}</p>
+  </mat-card-content>
+</mat-card>
