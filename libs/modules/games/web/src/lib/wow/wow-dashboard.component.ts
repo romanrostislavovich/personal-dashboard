@@ -206,6 +206,7 @@ interface Character {
             <button
               matIconButton
               [matTooltip]="'games.syncNow' | transloco"
+              [attr.aria-label]="'games.syncNow' | transloco"
               [disabled]="busy()"
               (click)="sync.emit(c.account.id)"
             >
@@ -214,6 +215,7 @@ interface Character {
             <button
               matIconButton
               [matTooltip]="'core.actions.delete' | transloco"
+              [attr.aria-label]="'core.actions.delete' | transloco"
               [disabled]="busy()"
               (click)="remove.emit(c.account.id)"
             >

@@ -134,6 +134,7 @@ type EditorMode = 'visual' | 'markdown';
                 [class.selected]="mood() === value"
                 [attr.aria-checked]="mood() === value"
                 [matTooltip]="'diary.moods.' + value | transloco"
+                [attr.aria-label]="'diary.moods.' + value | transloco"
                 (click)="setMood(value)"
               >
                 {{ moodEmoji[value] }}

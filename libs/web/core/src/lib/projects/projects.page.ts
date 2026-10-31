@@ -97,10 +97,18 @@ type ProjectFilter = (typeof FILTERS)[number];
             <a matButton [routerLink]="['/projects', project.id]">
               {{ 'core.projects.open' | transloco }}
             </a>
-            <button matIconButton (click)="openForm(project)">
+            <button
+              matIconButton
+              [attr.aria-label]="'core.actions.edit' | transloco"
+              (click)="openForm(project)"
+            >
               <mat-icon>edit</mat-icon>
             </button>
-            <button matIconButton (click)="remove(project)">
+            <button
+              matIconButton
+              [attr.aria-label]="'core.actions.delete' | transloco"
+              (click)="remove(project)"
+            >
               <mat-icon>delete</mat-icon>
             </button>
           </mat-card-actions>

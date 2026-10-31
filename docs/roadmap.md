@@ -410,8 +410,10 @@ assistant as a tutor that knows the materials of the courses.
   while loading, "Could not load it" with "Try again" after a failed request, the list only once
   it is there) around the lists that said "No … yet" meanwhile; the actions of the AI page report
   errors
-- **Accessibility** — `aria-label` on the 28 icon-only buttons without one, the accessibility rules
-  of angular-eslint; the last hardcoded texts and status colours go to Transloco and theme tokens
+- ✅ **Accessibility** (2026-10-31) — the accessibility rules of angular-eslint and the project's
+  own `pd/icon-button-label` (tools/eslint) in every web library; the 31 icon-only buttons
+  without a label have one; the last hardcoded text (a default category) goes through Transloco.
+  The colours left in code are data (map layers, brands, WoW classes, chart palettes)
 - **Smaller components** — the diary editor (845 lines), the WoW dashboard, the security page,
   Psychology's events, the AI settings: templates and styles in their own files, parts split out
 - **Tests where there are none** — the web libraries (pure helpers first: finance stats, the

@@ -128,6 +128,7 @@ import {AiKnowledgeComponent} from './ai-knowledge.component';
               matIconButton
               (click)="edit(c)"
               [matTooltip]="'core.actions.edit' | transloco"
+              [attr.aria-label]="'core.actions.edit' | transloco"
             >
               <mat-icon>edit</mat-icon>
             </button>
@@ -135,6 +136,7 @@ import {AiKnowledgeComponent} from './ai-knowledge.component';
               matIconButton
               (click)="remove(c)"
               [matTooltip]="'core.actions.delete' | transloco"
+              [attr.aria-label]="'core.actions.delete' | transloco"
             >
               <mat-icon>delete</mat-icon>
             </button>

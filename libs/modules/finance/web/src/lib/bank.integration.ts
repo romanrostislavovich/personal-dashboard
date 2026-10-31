@@ -136,6 +136,7 @@ const SOON_DAYS = 7;
                   <button
                     matIconButton
                     [matTooltip]="'finance.bank.syncNow' | transloco"
+                    [attr.aria-label]="'finance.bank.syncNow' | transloco"
                     [disabled]="busy() || connection.expired"
                     (click)="sync(connection)"
                   >
@@ -144,6 +145,7 @@ const SOON_DAYS = 7;
                   <button
                     matIconButton
                     [matTooltip]="'core.actions.delete' | transloco"
+                    [attr.aria-label]="'core.actions.delete' | transloco"
                     [disabled]="busy()"
                     (click)="remove(connection)"
                   >

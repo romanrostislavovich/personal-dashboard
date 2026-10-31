@@ -106,6 +106,10 @@
         "2": "API keys → Create new API key; copy it — it is shown once.",
         "3": "Press “Connect a service” here, choose DeepSeek and paste the key: spending is counted from the changes of the balance."
       }
+    },
+    "categories": {
+      "hosting": "Hosting",
+      "aiApi": "AI API"
     }
   },
   "kpi": {

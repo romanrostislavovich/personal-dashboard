@@ -147,11 +147,19 @@
   <mat-card-header>
     <mat-card-title>{{ 'diary.calendar.title' | transloco }}</mat-card-title>
     <span class="year-nav">
-      <button matIconButton (click)="year.set(year() - 1)">
+      <button
+        matIconButton
+        [attr.aria-label]="'core.actions.previous' | transloco"
+        (click)="year.set(year() - 1)"
+      >
         <mat-icon>chevron_left</mat-icon>
       </button>
       <span class="year">{{ year() }}</span>
-      <button matIconButton (click)="year.set(year() + 1)">
+      <button
+        matIconButton
+        [attr.aria-label]="'core.actions.next' | transloco"
+        (click)="year.set(year() + 1)"
+      >
         <mat-icon>chevron_right</mat-icon>
       </button>
     </span>
@@ -277,11 +285,19 @@
       @default {
         <!-- Entries of the month -->
         <div class="month">
-          <button matIconButton (click)="shiftMonth(-1)">
+          <button
+            matIconButton
+            [attr.aria-label]="'core.actions.previous' | transloco"
+            (click)="shiftMonth(-1)"
+          >
             <mat-icon>chevron_left</mat-icon>
           </button>
           <span class="month-label">{{ monthDate() | date: 'LLLL yyyy' }}</span>
-          <button matIconButton (click)="shiftMonth(1)">
+          <button
+            matIconButton
+            [attr.aria-label]="'core.actions.next' | transloco"
+            (click)="shiftMonth(1)"
+          >
             <mat-icon>chevron_right</mat-icon>
           </button>
         </div>

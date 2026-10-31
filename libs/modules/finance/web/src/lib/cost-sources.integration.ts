@@ -103,6 +103,9 @@ import {FinanceApi} from './finance.api';
                   <button
                     matIconButton
                     [matTooltip]="'finance.costSources.syncNow' | transloco"
+                    [attr.aria-label]="
+                      'finance.costSources.syncNow' | transloco
+                    "
                     [disabled]="busy()"
                     (click)="sync(source)"
                   >
@@ -111,6 +114,7 @@ import {FinanceApi} from './finance.api';
                   <button
                     matIconButton
                     [matTooltip]="'core.actions.delete' | transloco"
+                    [attr.aria-label]="'core.actions.delete' | transloco"
                     (click)="remove(source)"
                   >
                     <mat-icon>link_off</mat-icon>
