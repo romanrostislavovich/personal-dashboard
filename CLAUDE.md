@@ -28,7 +28,10 @@ Architecture and rules: `docs/architecture.md`. Quick start: `README.md`. Contri
 - Skills: `/deploy`, `/new-module`, `/new-tab`, `/architecture-review`, `/migration`,
   `/verify-ui`, `/phone`, `/bug` — the project's checklists; use them instead of doing these from
   memory.
-- Hooks (`.claude/settings.json`): every edited file is formatted by prettier and fixed by eslint
+- Agent `architecture-reviewer` (`.claude/agents/`): the `/architecture-review` checklist in a
+  read-only subagent, for a feature branch before it is merged.
+- Hooks (`.claude/settings.json`): a new session starts with the branch, what is not committed,
+  main's commits made elsewhere, CI of main and the commit the server runs; every edited file is formatted by prettier and fixed by eslint
   (what eslint cannot fix comes back as an error); `git commit` is blocked while the staged files
   fail lint.
 - Style: Google's TypeScript style (gts) — its prettier settings (80 columns, no bracket spacing,
