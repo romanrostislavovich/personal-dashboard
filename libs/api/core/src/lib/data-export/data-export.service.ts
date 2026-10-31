@@ -68,8 +68,15 @@ export class DataExportService {
     return this.writeInto(userId, new ArchiveWriter(output));
   }
 
-  /** The same files into any sink: a ZIP, or a folder (OpenExportService). */
-  async writeInto(userId: string, archive: ArchiveSink): Promise<void> {
+  /**
+   * The same files into any sink: a ZIP, or a folder (OpenExportService). `omit` — columns left
+   * out of the rows (the open copy leaves out what is a credential, not the user's data).
+   */
+  async writeInto(
+    userId: string,
+    archive: ArchiveSink,
+    omit: Readonly<Record<string, readonly string[]>> = {},
+  ): Promise<void> {
     // One snapshot: rows that reference each other are exported as they were at one moment.
     await this.db.transaction(
       async tx => {
@@ -98,7 +105,13 @@ export class DataExportService {
         for (const {table, mine} of tables.filter(
           ({table: t}) => manifest.tables[t.name],
         )) {
-          await this.writeTable(tx, archive, table, mine);
+          await this.writeTable(
+            tx,
+            archive,
+            table,
+            mine,
+            omit[table.name] ?? [],
+          );
         }
       },
       {isolationLevel: 'repeatable read', accessMode: 'read only'},
@@ -119,10 +132,12 @@ export class DataExportService {
     archive: ArchiveSink,
     table: ExportTable,
     mine: SQL,
+    omitted: readonly string[] = [],
   ): Promise<void> {
     const name = sql.identifier(table.name);
     // Binary columns are left out of the row: a reference to a file takes their place.
-    const row = sql`(to_jsonb(t) - ${`{${table.binary.join(',')}}`}::text[])`;
+    const dropped = [...table.binary, ...omitted].join(',');
+    const row = sql`(to_jsonb(t) - ${`{${dropped}}`}::text[])`;
     // `true` where the column has content: only such a row gets the reference.
     const filled = table.binary.map(
       column =>

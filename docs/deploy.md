@@ -219,14 +219,16 @@ what changed after the dump.
 
 ## An open copy
 
-With `OPEN_EXPORT_DIR` set, every user's data is also written there once a day as plain files —
-read, searched and kept without the dashboard (and without PostgreSQL): `<user>/data/<table>.jsonl`
-(the rows, one JSON object a line), `<user>/diary/*.md` (the entries in Markdown),
-`<user>/finance/*.csv` (for a spreadsheet), `<user>/files/…` (photos). It is the layout of
-Settings → Data → Export: the contents of `<user>/` packed into a ZIP import back. A new copy takes the old
-one's place whole. The local instance writes it to `./exports` of the repository (a timer:
-2 minutes after the start, then every 24 hours); a server — at 04:30 as a job. Like the dumps,
-it holds your data unencrypted, the diary too: keep the folder private.
+With `OPEN_EXPORT_DIR` set, the owner's data is also written there once a day as plain files —
+read, searched and kept without the dashboard (and without PostgreSQL), in
+`OPEN_EXPORT_DIR/personal-dashboard/data/`: `data/<table>.jsonl` (the rows, one JSON object a
+line), `diary/*.md` (the entries in Markdown), `finance/*.csv` (for a spreadsheet), `files/…`
+(photos). It is the layout of Settings → Data → Export: the contents of `data/` packed into a ZIP
+import back. A new copy takes the old one's place whole; nothing else in the folder is touched.
+The local instance (`docker-compose.yml`) writes it to `./exports` of the repository — a timer: 2
+minutes after the start, then every 24 hours; the server's `deploy/compose.yml` does not set it.
+Other accounts are not copied, and a bank's access session is left out. Like the dumps, it holds
+your data unencrypted, the diary too: keep the folder private.
 
 ## The security agent on the server
 

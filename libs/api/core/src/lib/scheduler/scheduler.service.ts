@@ -9,6 +9,7 @@ import {ConfigService} from '@nestjs/config';
 import {PgBoss} from 'pg-boss';
 import {AppConfig} from '../config/env';
 import {JobRunsService} from '../system/job-runs.service';
+import {newTraceId, withTrace} from '../system/trace';
 
 export interface ScheduledJob {
   /** Unique name prefixed with the module id: `birthdays.daily-reminders`. */
@@ -109,19 +110,22 @@ export class SchedulerService
         missed: 'once',
         ...queueOptions(job),
       });
-      await this.boss.work(job.name, async () => {
-        if (!job.quiet) {
-          this.logger.log(`Running job ${job.name}`);
-        }
-        await this.runs.track(job, job.handler).catch(error => {
-          // An error-level entry: it lands in the system log and is told to the owner.
-          this.logger.error(
-            `Job ${job.name} failed: ${error}`,
-            error instanceof Error ? error.stack : '',
-          );
-          throw error;
-        });
-      });
+      // Every line of a run — its start and failure too — carries the run's id and the job.
+      await this.boss.work(job.name, () =>
+        withTrace({id: newTraceId(), job: job.name}, async () => {
+          if (!job.quiet) {
+            this.logger.log(`Running job ${job.name}`);
+          }
+          await this.runs.track(job, job.handler).catch(error => {
+            // An error-level entry: it lands in the system log and is told to the owner.
+            this.logger.error(
+              `Job ${job.name} failed: ${error}`,
+              error instanceof Error ? error.stack : '',
+            );
+            throw error;
+          });
+        }),
+      );
     }
     await this.runs.forget(this.jobs.map(job => job.name));
     this.logger.log(`Scheduled ${this.jobs.length} job(s) in ${tz}`);

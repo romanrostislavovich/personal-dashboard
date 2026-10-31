@@ -9,7 +9,7 @@ import {mkdir, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {ArchiveSink, FolderWriter} from './data-archive';
-import {folderName, OpenExportService} from './open-export.service';
+import {OpenExportService} from './open-export.service';
 
 describe('the open copy', () => {
   let folder: string;
@@ -19,12 +19,6 @@ describe('the open copy', () => {
   });
 
   afterEach(() => rmSync(folder, {recursive: true, force: true}));
-
-  it("names a user's folder by the address, or by the id", () => {
-    expect(folderName('Roman.R@example.com', 'id-1')).toBe('roman.r');
-    expect(folderName('..@example.com', 'id-1')).toBe('id-1');
-    expect(folderName('@example.com', 'id-1')).toBe('id-1');
-  });
 
   it('writes the files of an archive into folders', async () => {
     const writer = new FolderWriter(join(folder, 'me'));
@@ -42,21 +36,23 @@ describe('the open copy', () => {
     );
   });
 
-  it('puts the new copy in place of the old one, for every user', async () => {
-    await mkdir(join(folder, 'roman/stale'), {recursive: true});
-    await writeFile(join(folder, 'roman/stale/old.txt'), 'old');
-    const people = [
-      {id: 'u1', email: 'roman@example.com'},
-      {id: 'u2', email: 'roman@other.org'},
-    ];
+  it("puts the owner's new copy in place of the old one, without credentials", async () => {
+    const copy = join(folder, 'personal-dashboard/data');
+    await mkdir(join(copy, 'stale'), {recursive: true});
+    await writeFile(join(copy, 'stale/old.txt'), 'old');
+    await mkdir(join(folder, 'mine'));
+    const asked: unknown[] = [];
     const service = new OpenExportService(
       {get: () => folder} as never,
-      {select: () => ({from: async () => people})} as never,
+      {owner: async () => ({id: 'u1'})} as never,
       {
-        writeInto: async (userId: string, sink: ArchiveSink) => {
-          await sink.file('manifest.json', push =>
-            push(`{"user":"${userId}"}`),
-          );
+        writeInto: async (
+          userId: string,
+          sink: ArchiveSink,
+          omit: Record<string, string[]>,
+        ) => {
+          asked.push(userId, omit);
+          await sink.file('manifest.json', push => push('{}'));
           await sink.end();
         },
       } as never,
@@ -66,10 +62,11 @@ describe('the open copy', () => {
 
     await service.writeAll();
 
-    expect(readdirSync(folder).sort()).toEqual(['roman', 'u2']);
-    expect(existsSync(join(folder, 'roman/stale'))).toBe(false);
-    expect(readFileSync(join(folder, 'roman/manifest.json'), 'utf8')).toBe(
-      '{"user":"u1"}',
-    );
+    // Only its own folder: what else is in OPEN_EXPORT_DIR stays.
+    expect(readdirSync(folder).sort()).toEqual(['mine', 'personal-dashboard']);
+    expect(readdirSync(join(folder, 'personal-dashboard'))).toEqual(['data']);
+    expect(existsSync(join(copy, 'stale'))).toBe(false);
+    expect(readFileSync(join(copy, 'manifest.json'), 'utf8')).toBe('{}');
+    expect(asked).toEqual(['u1', {finance_bank_connections: ['session_id']}]);
   });
 });

@@ -572,6 +572,45 @@ describe.skipIf(!ADMIN_URL)(
         expect(parked.error).toContain('newer version');
       });
 
+      it('a parked row of an older sender is applied once its parent comes, not kept waiting', async () => {
+        const owner = randomUUID();
+        const id = randomUUID();
+        const change: SyncChange = {
+          table: 'birthdays',
+          pk: JSON.stringify({id}),
+          changedAt: new Date().toISOString(),
+          row: JSON.stringify({
+            id,
+            user_id: owner,
+            name: 'Waits for its user',
+            remind_days_before: [0],
+            memorial_remind_days_before: [0],
+            created_at: new Date().toISOString(),
+            dropped_since: 'x',
+          }),
+        };
+        expect(
+          await client.store.apply([change], {
+            origin: 'server',
+            senderAhead: -1,
+          }),
+        ).toMatchObject({parked: 1});
+
+        await addUser(client, owner);
+        // Any apply retries what is parked.
+        await client.store.apply([], {origin: 'server'});
+
+        expect(
+          await rows(client, sql`SELECT name FROM birthdays WHERE id = ${id}`),
+        ).toEqual([{name: 'Waits for its user'}]);
+        expect(
+          await rows(
+            client,
+            sql`SELECT 1 FROM sync.parked WHERE pk->>'id' = ${id}`,
+          ),
+        ).toEqual([]);
+      });
+
       it('an older sender has a column this side dropped: it is left out', async () => {
         const id = randomUUID();
         await addBirthday(client, id);

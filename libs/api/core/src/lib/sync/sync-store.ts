@@ -789,15 +789,13 @@ export class SyncStore {
             DELETE FROM sync.parked p USING jsonb_array_elements(${keys}::jsonb) AS e(value)
             WHERE p.table_name = e.value ->> 'table' AND p.pk = e.value -> 'pk'
           `);
-          for (const origin of new Set(chunk.map(item => item.origin))) {
-            const changes = chunk
-              .filter(item => item.origin === origin)
-              .map(item => item.change);
-            // A parked row may be of a newer version: it waits again if it still does not fit.
-            const {applied, skipped} = await this.applyRuns(tx, changes, {
+          for (const group of retryGroups(chunk)) {
+            // A row parked as of a newer version waits again while it still does not fit;
+            // any other is applied leniently: its columns unknown here (dropped) are left out.
+            const {applied, skipped} = await this.applyRuns(tx, group.changes, {
               ...context,
-              origin,
-              senderAhead: Math.max(context.senderAhead ?? 0, 1),
+              origin: group.origin,
+              senderAhead: group.newer ? 1 : -1,
             });
             progress = progress || applied + skipped > 0;
           }
@@ -813,11 +811,11 @@ export class SyncStore {
    * Parked changes worth another try: of tables known here, with every row they refer to present
    * (or the reference empty). Deletes always — what holds them back is a row referring to them.
    */
-  private async parkedReady(): Promise<{change: SyncChange; origin: string}[]> {
+  private async parkedReady(): Promise<ParkedItem[]> {
     const {rows: tables} = await this.db.execute<{table_name: string}>(
       sql`SELECT DISTINCT table_name FROM sync.parked`,
     );
-    const ready: {change: SyncChange; origin: string}[] = [];
+    const ready: ParkedItem[] = [];
     for (const {table_name} of tables) {
       const table = this.table(table_name);
       if (!table) {
@@ -830,8 +828,10 @@ export class SyncStore {
         changed_at: string;
         row: string | null;
         origin: string;
+        error: string | null;
       }>(sql`
-        SELECT p.pk::text AS pk, p.changed_at::text AS changed_at, p.row::text AS row, p.origin
+        SELECT p.pk::text AS pk, p.changed_at::text AS changed_at, p.row::text AS row, p.origin,
+          p.error
         FROM sync.parked p
         LEFT JOIN LATERAL jsonb_populate_record(NULL::${name}, p.row) k ON p.row IS NOT NULL
         WHERE p.table_name = ${table.name}
@@ -846,6 +846,7 @@ export class SyncStore {
             row: row.row,
           },
           origin: row.origin,
+          newer: isNewerSchemaError(row.error),
         })),
       );
     }
@@ -1051,4 +1052,37 @@ function fitOf(
   table: SyncTable,
 ): ReturnType<typeof rowFit> {
   return change.row === null ? 'whole' : rowFit(change.row, table.columns);
+}
+
+/** A parked change, who sent it, and whether it waits for this side's update. */
+interface ParkedItem {
+  change: SyncChange;
+  origin: string;
+  newer: boolean;
+}
+
+/** Parked changes to apply again, by who sent them and by whether they wait for an update. */
+function retryGroups(
+  items: ParkedItem[],
+): {origin: string; newer: boolean; changes: SyncChange[]}[] {
+  const groups = new Map<
+    string,
+    {origin: string; newer: boolean; changes: SyncChange[]}
+  >();
+  for (const item of items) {
+    const key = `${item.newer}:${item.origin}`;
+    const group = groups.get(key) ?? {
+      origin: item.origin,
+      newer: item.newer,
+      changes: [],
+    };
+    group.changes.push(item.change);
+    groups.set(key, group);
+  }
+  return [...groups.values()];
+}
+
+/** Parked because it came from a newer version (a column or a table not here yet). */
+function isNewerSchemaError(error: string | null): boolean {
+  return error === NEWER_SCHEMA || /of a newer version/.test(error ?? '');
 }

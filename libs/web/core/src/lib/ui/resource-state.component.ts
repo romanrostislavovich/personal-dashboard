@@ -23,7 +23,7 @@ export interface LoadedResource {
  * A list's three states that are not its contents: still loading (a bar, not "nothing yet"), a
  * failed request (what happened and "Try again"), and the loaded value — the template inside,
  * made only once the value is there, so its `@empty` means really empty. A reload keeps the
- * value shown with the bar above it.
+ * value shown as it is.
  *
  *   <pd-resource-state [resource]="birthdays">
  *     <ng-template>
@@ -43,7 +43,8 @@ export interface LoadedResource {
   ],
   template: `
     @let r = resource();
-    @if (r.isLoading()) {
+    <!-- Only the first load: a bar on a reload would push the list down and back. -->
+    @if (r.isLoading() && !r.hasValue()) {
       <mat-progress-bar
         mode="indeterminate"
         [attr.aria-label]="'core.resource.loading' | transloco"
