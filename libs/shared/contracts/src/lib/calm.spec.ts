@@ -1,4 +1,4 @@
-import {quietMinutesLeft} from './calm';
+import {heldTill, quietMinutesLeft} from './calm';
 
 describe('quiet hours', () => {
   const night = {from: '21:00', to: '09:00'};
@@ -24,5 +24,12 @@ describe('quiet hours', () => {
       45,
     );
     expect(quietMinutesLeft({from: '13:00', to: '14:00'}, at('14:00'))).toBe(0);
+  });
+
+  it('tells when a message made at a time comes', () => {
+    expect(heldTill(night, '21:00')).toBe('09:00');
+    expect(heldTill(night, '20:00')).toBeNull();
+    expect(heldTill({from: '22:00', to: '09:00'}, '21:00')).toBeNull();
+    expect(heldTill(null, '21:00')).toBeNull();
   });
 });

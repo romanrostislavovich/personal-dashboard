@@ -213,7 +213,8 @@
     "noLink": "No link",
     "noteHint": "Links in it can be clicked",
     "export": "To Excel",
-    "exportHint": "What is not bought yet — the name, the price, the link and the notes — to send to those who ask what to give"
+    "exportHint": "What is not bought yet — the name, the price, the link and the notes — to send to those who ask what to give",
+    "siteNotFound": "The link’s site is not found ({{error}}): check the link with “Edit”, or clear it — a wish does not need one."
   },
   "report": {
     "title": "The month by the AI",

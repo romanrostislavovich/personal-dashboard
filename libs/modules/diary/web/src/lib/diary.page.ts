@@ -16,18 +16,23 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
 import {MatMenuModule} from '@angular/material/menu';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {RouterLink} from '@angular/router';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {
   addDays,
+  DIARY_EVENING_AT,
   DIARY_MARK_EMOJIS,
+  DIARY_WEEKLY_AT,
   diaryPlainText,
   DiaryEntry,
   DiarySettings,
+  heldTill,
   LocalDate,
   parseLocalDate,
   toLocalDate,
 } from '@pd/contracts';
 import {
+  AuthService,
   currentMonth,
   monthAsDate,
   monthRange,
@@ -63,6 +68,7 @@ type Panel = 'month' | 'search' | 'marks';
     MatIconModule,
     MatMenuModule,
     MatTooltipModule,
+    RouterLink,
     TranslocoPipe,
     DiaryEditorComponent,
     DiaryHeatmapComponent,
@@ -77,6 +83,7 @@ export class DiaryPage {
   private readonly api = inject(DiaryApi);
   private readonly transloco = inject(TranslocoService);
   private readonly dialog = inject(MatDialog);
+  private readonly auth = inject(AuthService);
   private readonly editor = viewChild.required<DiaryEditorComponent>('editor');
 
   protected readonly moodEmoji = MOOD_EMOJI;
@@ -108,6 +115,20 @@ export class DiaryPage {
   protected readonly insights = this.api.insights();
   protected readonly stats = this.api.stats();
   protected readonly settings = this.api.settings();
+  /**
+   * Which of the diary's own messages the quiet hours (Settings → Notifications) hold, and till
+   * when: the owner set 21:00–09:00 once and the evening reminder came the next morning.
+   */
+  protected readonly held = computed(() => {
+    const hours = this.auth.user()?.calm?.quietHours ?? null;
+    const settings = this.settings.value();
+    return {
+      evening: settings?.eveningReminder
+        ? heldTill(hours, DIARY_EVENING_AT)
+        : null,
+      weekly: settings?.weeklySummary ? heldTill(hours, DIARY_WEEKLY_AT) : null,
+    };
+  });
   /** The editor's palette plus any other emoji used in marks, with how often each is used. */
   protected readonly markFilters = computed(() => {
     const counts = new Map(
