@@ -301,43 +301,47 @@
           <mat-icon>edit_note</mat-icon> {{ 'diary.today' | transloco }}
         </button>
 
-        @for (entry of entries.value(); track entry.day) {
-          <div class="entry-row">
-            <button
-              type="button"
-              class="entry"
-              [class.active]="entry.day === selectedDay()"
-              (click)="selectDay(entry.day)"
-            >
-              <span class="entry-head">
-                <span class="entry-date">{{
-                  entry.day | date: 'd MMMM, EEE'
-                }}</span>
-                <span class="entry-icons">
-                  @for (mark of entry.marks.slice(0, 3); track $index) {
-                    <span>{{ mark.emoji }}</span>
-                  }
-                  @if (entry.mood) {
-                    <span>{{ moodEmoji[entry.mood] }}</span>
-                  }
-                </span>
-              </span>
-              <span class="entry-preview">{{ preview(entry) }}</span>
-            </button>
-            <button
-              matIconButton
-              type="button"
-              class="entry-delete"
-              [matTooltip]="'diary.deleteEntry' | transloco"
-              [attr.aria-label]="'diary.deleteEntry' | transloco"
-              (click)="deleteEntry(entry.day)"
-            >
-              <mat-icon>delete</mat-icon>
-            </button>
-          </div>
-        } @empty {
-          <p class="empty">{{ 'diary.emptyMonth' | transloco }}</p>
-        }
+        <pd-resource-state [resource]="entries">
+          <ng-template>
+            @for (entry of entries.value(); track entry.day) {
+              <div class="entry-row">
+                <button
+                  type="button"
+                  class="entry"
+                  [class.active]="entry.day === selectedDay()"
+                  (click)="selectDay(entry.day)"
+                >
+                  <span class="entry-head">
+                    <span class="entry-date">{{
+                      entry.day | date: 'd MMMM, EEE'
+                    }}</span>
+                    <span class="entry-icons">
+                      @for (mark of entry.marks.slice(0, 3); track $index) {
+                        <span>{{ mark.emoji }}</span>
+                      }
+                      @if (entry.mood) {
+                        <span>{{ moodEmoji[entry.mood] }}</span>
+                      }
+                    </span>
+                  </span>
+                  <span class="entry-preview">{{ preview(entry) }}</span>
+                </button>
+                <button
+                  matIconButton
+                  type="button"
+                  class="entry-delete"
+                  [matTooltip]="'diary.deleteEntry' | transloco"
+                  [attr.aria-label]="'diary.deleteEntry' | transloco"
+                  (click)="deleteEntry(entry.day)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            } @empty {
+              <p class="empty">{{ 'diary.emptyMonth' | transloco }}</p>
+            }
+          </ng-template>
+        </pd-resource-state>
       }
     }
   </section>

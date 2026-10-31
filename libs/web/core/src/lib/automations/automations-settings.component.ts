@@ -29,6 +29,7 @@ import {
   AutomationRuleData,
   AutomationRuleDialog,
 } from './automation-rule.dialog';
+import {ResourceStateComponent} from '../ui/resource-state.component';
 
 /**
  * Settings → Automations: the rules "if X, then Y" of the user, made by hand or described in a
@@ -38,6 +39,7 @@ import {
   selector: 'pd-automations-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ResourceStateComponent,
     DatePipe,
     FormsModule,
     MatButtonModule,
@@ -97,62 +99,69 @@ import {
         }
 
         <ul class="rules">
-          @for (rule of rules.value(); track rule.id) {
-            <li [class.off]="!rule.isActive">
-              <mat-slide-toggle
-                [checked]="rule.isActive"
-                [attr.aria-label]="'core.automations.active' | transloco"
-                (change)="toggle(rule, $event.checked)"
-              />
-              <div class="body">
-                <b>{{ rule.name }}</b>
-                <span class="flow">
-                  {{ label(rule.trigger, 'trigger') }} →
-                  {{ label(rule.action, 'action') }}
-                </span>
-                <span class="meta">
-                  @if (rule.lastFiredAt) {
-                    {{
-                      'core.automations.fired'
-                        | transloco
-                          : {
-                              count: rule.fireCount,
-                              date: (rule.lastFiredAt | date: 'd MMM, HH:mm'),
-                            }
-                    }}
-                  } @else {
-                    {{ 'core.automations.never' | transloco }}
-                  }
-                </span>
-                @if (rule.lastError) {
-                  <span class="error">
-                    {{
-                      'core.automations.error'
-                        | transloco: {error: rule.lastError}
-                    }}
-                  </span>
+          <pd-resource-state [resource]="rules">
+            <ng-template>
+              @for (rule of rules.value(); track rule.id) {
+                <li [class.off]="!rule.isActive">
+                  <mat-slide-toggle
+                    [checked]="rule.isActive"
+                    [attr.aria-label]="'core.automations.active' | transloco"
+                    (change)="toggle(rule, $event.checked)"
+                  />
+                  <div class="body">
+                    <b>{{ rule.name }}</b>
+                    <span class="flow">
+                      {{ label(rule.trigger, 'trigger') }} →
+                      {{ label(rule.action, 'action') }}
+                    </span>
+                    <span class="meta">
+                      @if (rule.lastFiredAt) {
+                        {{
+                          'core.automations.fired'
+                            | transloco
+                              : {
+                                  count: rule.fireCount,
+                                  date:
+                                    (rule.lastFiredAt | date: 'd MMM, HH:mm'),
+                                }
+                        }}
+                      } @else {
+                        {{ 'core.automations.never' | transloco }}
+                      }
+                    </span>
+                    @if (rule.lastError) {
+                      <span class="error">
+                        {{
+                          'core.automations.error'
+                            | transloco: {error: rule.lastError}
+                        }}
+                      </span>
+                    }
+                  </div>
+                  <button
+                    matIconButton
+                    [attr.aria-label]="'core.actions.edit' | transloco"
+                    (click)="open(rule)"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    matIconButton
+                    [attr.aria-label]="'core.actions.delete' | transloco"
+                    (click)="remove(rule)"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </li>
+              } @empty {
+                @if (!rules.isLoading()) {
+                  <li class="meta">
+                    {{ 'core.automations.empty' | transloco }}
+                  </li>
                 }
-              </div>
-              <button
-                matIconButton
-                [attr.aria-label]="'core.actions.edit' | transloco"
-                (click)="open(rule)"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                matIconButton
-                [attr.aria-label]="'core.actions.delete' | transloco"
-                (click)="remove(rule)"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
-            </li>
-          } @empty {
-            @if (!rules.isLoading()) {
-              <li class="meta">{{ 'core.automations.empty' | transloco }}</li>
-            }
-          }
+              }
+            </ng-template>
+          </pd-resource-state>
         </ul>
       </mat-card-content>
     </mat-card>

@@ -785,5 +785,10 @@
     "gone": "This notification is gone: they are kept for 90 days.",
     "failed": "Did not work, try again."
   },
-  "editedAt": "Edited {{time}}"
+  "editedAt": "Edited {{time}}",
+  "resource": {
+    "loading": "Loading",
+    "failed": "Could not load it: no connection to the server, or it answered with an error.",
+    "retry": "Try again"
+  }
 }

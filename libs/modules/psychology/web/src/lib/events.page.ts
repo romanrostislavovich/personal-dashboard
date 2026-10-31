@@ -23,7 +23,7 @@ import {
 } from '@pd/contracts';
 import {firstValueFrom} from 'rxjs';
 import {PsychologyApi, today} from './psychology.api';
-import {EditedAtComponent} from '@pd/web-core';
+import {EditedAtComponent, ResourceStateComponent} from '@pd/web-core';
 
 const ICONS: Record<string, string> = {
   '-2': 'sentiment_very_dissatisfied',
@@ -73,6 +73,7 @@ function toAge(value: string): number | null {
   selector: 'pd-psychology-events-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ResourceStateComponent,
     EditedAtComponent,
     DatePipe,
     MatButtonModule,
@@ -278,58 +279,64 @@ function toAge(value: string): number | null {
       </mat-card-content>
     </mat-card>
 
-    @for (event of events.value(); track event.id) {
-      <mat-card appearance="outlined">
-        <mat-card-content class="event">
-          <mat-icon
-            [class.hard]="event.feeling < 0"
-            [class.good]="event.feeling > 0"
-            [attr.aria-label]="
-              'psychology.feelings.' + event.feeling | transloco
-            "
-          >
-            {{ icons[event.feeling] }}
-          </mat-icon>
-          <span class="body">
-            <b>{{ event.title }}</b>
-            <span class="hint">
-              @if (event.startedOn) {
-                {{ event.startedOn | date: 'd MMM y' }}
-                @if (event.endedOn) {
-                  – {{ event.endedOn | date: 'd MMM y' }}
+    <pd-resource-state [resource]="events">
+      <ng-template>
+        @for (event of events.value(); track event.id) {
+          <mat-card appearance="outlined">
+            <mat-card-content class="event">
+              <mat-icon
+                [class.hard]="event.feeling < 0"
+                [class.good]="event.feeling > 0"
+                [attr.aria-label]="
+                  'psychology.feelings.' + event.feeling | transloco
+                "
+              >
+                {{ icons[event.feeling] }}
+              </mat-icon>
+              <span class="body">
+                <b>{{ event.title }}</b>
+                <span class="hint">
+                  @if (event.startedOn) {
+                    {{ event.startedOn | date: 'd MMM y' }}
+                    @if (event.endedOn) {
+                      – {{ event.endedOn | date: 'd MMM y' }}
+                    }
+                  } @else {
+                    {{
+                      'psychology.events.age' | transloco: {age: ages(event)}
+                    }}
+                    @if (years(event); as years) {
+                      · ≈ {{ years }}
+                    }
+                  }
+                </span>
+                @if (event.description) {
+                  <span class="words">{{ event.description }}</span>
                 }
-              } @else {
-                {{ 'psychology.events.age' | transloco: {age: ages(event)} }}
-                @if (years(event); as years) {
-                  · ≈ {{ years }}
-                }
-              }
-            </span>
-            @if (event.description) {
-              <span class="words">{{ event.description }}</span>
-            }
-          </span>
-          <button
-            matIconButton
-            [attr.aria-label]="'core.actions.edit' | transloco"
-            (click)="edit(event)"
-          >
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button
-            matIconButton
-            [attr.aria-label]="'core.actions.delete' | transloco"
-            (click)="remove(event)"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-card-content>
-      </mat-card>
-    } @empty {
-      @if (!events.isLoading()) {
-        <p class="hint">{{ 'psychology.events.empty' | transloco }}</p>
-      }
-    }
+              </span>
+              <button
+                matIconButton
+                [attr.aria-label]="'core.actions.edit' | transloco"
+                (click)="edit(event)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                matIconButton
+                [attr.aria-label]="'core.actions.delete' | transloco"
+                (click)="remove(event)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-card-content>
+          </mat-card>
+        } @empty {
+          @if (!events.isLoading()) {
+            <p class="hint">{{ 'psychology.events.empty' | transloco }}</p>
+          }
+        }
+      </ng-template>
+    </pd-resource-state>
   `,
   styles: `
     :host {

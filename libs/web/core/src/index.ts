@@ -10,6 +10,7 @@ export * from './lib/ui/bar-chart.component';
 export * from './lib/ui/chart-scale';
 export * from './lib/ui/empty-state.component';
 export * from './lib/ui/edited-at.component';
+export * from './lib/ui/resource-state.component';
 export * from './lib/ui/share-list.component';
 export * from './lib/ui/duration.pipe';
 export * from './lib/ui/integration-guide.component';

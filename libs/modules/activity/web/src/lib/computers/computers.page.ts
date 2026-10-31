@@ -6,7 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import {TranslocoPipe} from '@jsverse/transloco';
-import {desktopBridge} from '@pd/web-core';
+import {desktopBridge, ResourceStateComponent} from '@pd/web-core';
 import {ActivityApi} from '../activity.api';
 import {ComputerCardComponent} from './computer-card.component';
 
@@ -16,18 +16,22 @@ const REFRESH_MS = 60_000;
 @Component({
   selector: 'pd-activity-computers-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, ComputerCardComponent],
+  imports: [ResourceStateComponent, TranslocoPipe, ComputerCardComponent],
   template: `
-    @for (computer of computers.value(); track computer.deviceId) {
-      <pd-activity-computer-card
-        [computer]="computer"
-        [isThis]="computer.deviceId === thisDevice()"
-      />
-    } @empty {
-      @if (!computers.isLoading()) {
-        <p class="hint">{{ 'activity.computers.empty' | transloco }}</p>
-      }
-    }
+    <pd-resource-state [resource]="computers">
+      <ng-template>
+        @for (computer of computers.value(); track computer.deviceId) {
+          <pd-activity-computer-card
+            [computer]="computer"
+            [isThis]="computer.deviceId === thisDevice()"
+          />
+        } @empty {
+          @if (!computers.isLoading()) {
+            <p class="hint">{{ 'activity.computers.empty' | transloco }}</p>
+          }
+        }
+      </ng-template>
+    </pd-resource-state>
     <p class="hint">{{ 'activity.computers.hint' | transloco }}</p>
   `,
   styles: `

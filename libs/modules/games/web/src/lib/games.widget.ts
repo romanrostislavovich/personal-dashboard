@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {RouterLink} from '@angular/router';
-import {needsSetup} from '@pd/web-core';
+import {needsSetup, ResourceStateComponent} from '@pd/web-core';
 import {TranslocoPipe} from '@jsverse/transloco';
 import {
   DotaSummary,
@@ -18,6 +18,7 @@ import {GamesApi} from './games.api';
   selector: 'pd-games-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ResourceStateComponent,
     RouterLink,
     MatCardModule,
     MatButtonModule,
@@ -30,58 +31,65 @@ import {GamesApi} from './games.api';
         <mat-card-title>🎮 {{ 'games.title' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        @for (account of accounts.value(); track account.id) {
-          <div class="row">
-            @if (dota(account); as d) {
-              <pd-dota-rank [rankTier]="d.rankTier" />
-              <div class="info">
-                <b>{{ d.personaName }}</b>
-                <span class="muted">
-                  {{
-                    'games.widget.dota30'
-                      | transloco
-                        : {wins: d.last30Days.wins, losses: d.last30Days.losses}
-                  }}
-                </span>
-              </div>
-            } @else if (steam(account); as s) {
-              @if (s.avatarUrl) {
-                <img class="avatar" [src]="s.avatarUrl" alt="" />
-              }
-              <div class="info">
-                <b>{{ s.personaName }}</b>
-                <span class="muted">
-                  {{
-                    'games.widget.steam'
-                      | transloco
-                        : {
-                            hours: hours(s.totals.minutes2Weeks),
-                            total: hours(s.totals.minutes),
-                          }
-                  }}
-                </span>
-                @if (s.games[0]; as top) {
-                  <span class="muted">🎮 {{ top.name }}</span>
+        <pd-resource-state [resource]="accounts">
+          <ng-template>
+            @for (account of accounts.value(); track account.id) {
+              <div class="row">
+                @if (dota(account); as d) {
+                  <pd-dota-rank [rankTier]="d.rankTier" />
+                  <div class="info">
+                    <b>{{ d.personaName }}</b>
+                    <span class="muted">
+                      {{
+                        'games.widget.dota30'
+                          | transloco
+                            : {
+                                wins: d.last30Days.wins,
+                                losses: d.last30Days.losses,
+                              }
+                      }}
+                    </span>
+                  </div>
+                } @else if (steam(account); as s) {
+                  @if (s.avatarUrl) {
+                    <img class="avatar" [src]="s.avatarUrl" alt="" />
+                  }
+                  <div class="info">
+                    <b>{{ s.personaName }}</b>
+                    <span class="muted">
+                      {{
+                        'games.widget.steam'
+                          | transloco
+                            : {
+                                hours: hours(s.totals.minutes2Weeks),
+                                total: hours(s.totals.minutes),
+                              }
+                      }}
+                    </span>
+                    @if (s.games[0]; as top) {
+                      <span class="muted">🎮 {{ top.name }}</span>
+                    }
+                  </div>
+                } @else if (wow(account); as w) {
+                  @if (w.avatarUrl) {
+                    <img class="avatar" [src]="w.avatarUrl" alt="" />
+                  }
+                  <div class="info">
+                    <b>{{ w.name }}</b>
+                    <span class="muted"
+                      >ilvl {{ w.itemLevel ?? '—' }} · {{ w.className }}</span
+                    >
+                    @if (w.recentAchievements[0]; as last) {
+                      <span class="muted">🏆 {{ last.name }}</span>
+                    }
+                  </div>
                 }
               </div>
-            } @else if (wow(account); as w) {
-              @if (w.avatarUrl) {
-                <img class="avatar" [src]="w.avatarUrl" alt="" />
-              }
-              <div class="info">
-                <b>{{ w.name }}</b>
-                <span class="muted"
-                  >ilvl {{ w.itemLevel ?? '—' }} · {{ w.className }}</span
-                >
-                @if (w.recentAchievements[0]; as last) {
-                  <span class="muted">🏆 {{ last.name }}</span>
-                }
-              </div>
+            } @empty {
+              <p class="muted">{{ 'games.widget.empty' | transloco }}</p>
             }
-          </div>
-        } @empty {
-          <p class="muted">{{ 'games.widget.empty' | transloco }}</p>
-        }
+          </ng-template>
+        </pd-resource-state>
       </mat-card-content>
       <mat-card-actions align="end">
         <a matButton routerLink="/games">{{

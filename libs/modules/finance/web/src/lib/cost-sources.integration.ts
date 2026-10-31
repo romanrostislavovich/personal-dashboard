@@ -17,9 +17,10 @@ import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {CostSource, CostSourceInput} from '@pd/contracts';
 import {firstValueFrom} from 'rxjs';
 import {
+  errorStatus,
   IntegrationGuideComponent,
   ProjectsApi,
-  errorStatus,
+  ResourceStateComponent,
 } from '@pd/web-core';
 import {
   CostSourceFormData,
@@ -35,6 +36,7 @@ import {FinanceApi} from './finance.api';
   selector: 'pd-cost-sources-integration',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ResourceStateComponent,
     CurrencyPipe,
     DatePipe,
     MatCardModule,
@@ -57,64 +59,71 @@ import {FinanceApi} from './finance.api';
         }}</mat-card-subtitle>
       </mat-card-header>
       <mat-list>
-        @for (source of sources.value(); track source.id) {
-          <mat-list-item>
-            <mat-icon matListItemIcon>{{
-              source.lastError ? 'sync_problem' : 'cloud_sync'
-            }}</mat-icon>
-            <span matListItemTitle>{{ source.name }}</span>
-            <span matListItemLine>
-              {{
-                'finance.costSources.providers.' + source.provider + '.title'
-                  | transloco
-              }}
-              ·
-              {{
-                source.projectId
-                  ? projectNames().get(source.projectId)
-                  : ('finance.scope.personal' | transloco)
-              }}
-              @if (source.lastSyncedAt) {
-                · {{ 'finance.costSources.synced' | transloco }}
-                {{ source.lastSyncedAt | date: 'd MMM, HH:mm' }}
-              }
-            </span>
-            @if (source.lastError) {
-              <span matListItemLine class="error">{{ source.lastError }}</span>
-            }
-            <div matListItemMeta class="meta">
-              <span class="amount">
-                @if (source.currentMonth) {
+        <pd-resource-state [resource]="sources">
+          <ng-template>
+            @for (source of sources.value(); track source.id) {
+              <mat-list-item>
+                <mat-icon matListItemIcon>{{
+                  source.lastError ? 'sync_problem' : 'cloud_sync'
+                }}</mat-icon>
+                <span matListItemTitle>{{ source.name }}</span>
+                <span matListItemLine>
                   {{
-                    source.currentMonth.amount
-                      | currency: source.currentMonth.currency
+                    'finance.costSources.providers.' +
+                      source.provider +
+                      '.title' | transloco
                   }}
-                } @else {
-                  —
+                  ·
+                  {{
+                    source.projectId
+                      ? projectNames().get(source.projectId)
+                      : ('finance.scope.personal' | transloco)
+                  }}
+                  @if (source.lastSyncedAt) {
+                    · {{ 'finance.costSources.synced' | transloco }}
+                    {{ source.lastSyncedAt | date: 'd MMM, HH:mm' }}
+                  }
+                </span>
+                @if (source.lastError) {
+                  <span matListItemLine class="error">{{
+                    source.lastError
+                  }}</span>
                 }
-              </span>
-              <button
-                matIconButton
-                [matTooltip]="'finance.costSources.syncNow' | transloco"
-                [disabled]="busy()"
-                (click)="sync(source)"
-              >
-                <mat-icon>sync</mat-icon>
-              </button>
-              <button
-                matIconButton
-                [matTooltip]="'core.actions.delete' | transloco"
-                (click)="remove(source)"
-              >
-                <mat-icon>link_off</mat-icon>
-              </button>
-            </div>
-          </mat-list-item>
-        } @empty {
-          <p class="empty padded">
-            {{ 'finance.costSources.empty' | transloco }}
-          </p>
-        }
+                <div matListItemMeta class="meta">
+                  <span class="amount">
+                    @if (source.currentMonth) {
+                      {{
+                        source.currentMonth.amount
+                          | currency: source.currentMonth.currency
+                      }}
+                    } @else {
+                      —
+                    }
+                  </span>
+                  <button
+                    matIconButton
+                    [matTooltip]="'finance.costSources.syncNow' | transloco"
+                    [disabled]="busy()"
+                    (click)="sync(source)"
+                  >
+                    <mat-icon>sync</mat-icon>
+                  </button>
+                  <button
+                    matIconButton
+                    [matTooltip]="'core.actions.delete' | transloco"
+                    (click)="remove(source)"
+                  >
+                    <mat-icon>link_off</mat-icon>
+                  </button>
+                </div>
+              </mat-list-item>
+            } @empty {
+              <p class="empty padded">
+                {{ 'finance.costSources.empty' | transloco }}
+              </p>
+            }
+          </ng-template>
+        </pd-resource-state>
       </mat-list>
       <div class="guides">
         <pd-integration-guide

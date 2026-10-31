@@ -406,8 +406,10 @@ assistant as a tutor that knows the materials of the courses.
 - ✅ **Observability** (2026-10-31) — JSON logs in production with a request or job id
   (`X-Request-Id`); the numbers — requests and their p95, job runs, memory, AI calls and tokens,
   sync, failed notifications — in Settings → System → Metrics (the owner's choice: no Prometheus)
-- **Loading and errors are not "empty"** — a shared `<pd-resource-state>`: a list shows "No …
-  yet" today while it loads or after a failed request; the actions of the AI page report errors
+- ✅ **Loading and errors are not "empty"** (2026-10-31) — a shared `<pd-resource-state>` (a bar
+  while loading, "Could not load it" with "Try again" after a failed request, the list only once
+  it is there) around the lists that said "No … yet" meanwhile; the actions of the AI page report
+  errors
 - **Accessibility** — `aria-label` on the 28 icon-only buttons without one, the accessibility rules
   of angular-eslint; the last hardcoded texts and status colours go to Transloco and theme tokens
 - **Smaller components** — the diary editor (845 lines), the WoW dashboard, the security page,

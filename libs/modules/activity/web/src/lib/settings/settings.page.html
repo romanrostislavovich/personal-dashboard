@@ -103,40 +103,44 @@
   <mat-card-content>
     <p class="hint">{{ 'activity.apps.hint' | transloco }}</p>
     <ul class="rows">
-      @for (app of apps.value(); track app.app) {
-        <li [class.excluded]="app.excluded">
-          <span class="name">
-            {{ app.name }}
-            @if (app.name.toLowerCase() !== app.app) {
-              <span class="hint">{{ app.app }}</span>
+      <pd-resource-state [resource]="apps">
+        <ng-template>
+          @for (app of apps.value(); track app.app) {
+            <li [class.excluded]="app.excluded">
+              <span class="name">
+                {{ app.name }}
+                @if (app.name.toLowerCase() !== app.app) {
+                  <span class="hint">{{ app.app }}</span>
+                }
+              </span>
+              <mat-form-field subscriptSizing="dynamic" class="category">
+                <mat-select
+                  [value]="app.category"
+                  [disabled]="app.excluded"
+                  [attr.aria-label]="'activity.apps.category' | transloco"
+                  (valueChange)="setCategory(app, $event)"
+                >
+                  @for (category of categories; track category) {
+                    <mat-option [value]="category">
+                      {{ 'activity.categories.' + category | transloco }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-slide-toggle
+                [checked]="!app.excluded"
+                [matTooltip]="'activity.apps.record' | transloco"
+                [attr.aria-label]="'activity.apps.record' | transloco"
+                (change)="setExcluded(app, !$event.checked)"
+              />
+            </li>
+          } @empty {
+            @if (!apps.isLoading()) {
+              <li class="hint">{{ 'activity.apps.empty' | transloco }}</li>
             }
-          </span>
-          <mat-form-field subscriptSizing="dynamic" class="category">
-            <mat-select
-              [value]="app.category"
-              [disabled]="app.excluded"
-              [attr.aria-label]="'activity.apps.category' | transloco"
-              (valueChange)="setCategory(app, $event)"
-            >
-              @for (category of categories; track category) {
-                <mat-option [value]="category">
-                  {{ 'activity.categories.' + category | transloco }}
-                </mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          <mat-slide-toggle
-            [checked]="!app.excluded"
-            [matTooltip]="'activity.apps.record' | transloco"
-            [attr.aria-label]="'activity.apps.record' | transloco"
-            (change)="setExcluded(app, !$event.checked)"
-          />
-        </li>
-      } @empty {
-        @if (!apps.isLoading()) {
-          <li class="hint">{{ 'activity.apps.empty' | transloco }}</li>
-        }
-      }
+          }
+        </ng-template>
+      </pd-resource-state>
     </ul>
   </mat-card-content>
 </mat-card>

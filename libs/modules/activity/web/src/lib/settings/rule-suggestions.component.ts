@@ -10,7 +10,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {TranslocoPipe} from '@jsverse/transloco';
 import {ActivityRuleSuggestion} from '@pd/contracts';
-import {DurationPipe} from '@pd/web-core';
+import {DurationPipe, ResourceStateComponent} from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
 import {ActivityApi} from '../activity.api';
 
@@ -23,6 +23,7 @@ import {ActivityApi} from '../activity.api';
   selector: 'pd-activity-rule-suggestions',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ResourceStateComponent,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
@@ -39,48 +40,58 @@ import {ActivityApi} from '../activity.api';
         {{ 'activity.rules.suggestions.refresh' | transloco }}
       </button>
     </div>
-    @for (item of suggestions.value(); track item.id) {
-      <div class="suggestion">
-        <mat-icon>{{ item.kind === 'site' ? 'public' : 'web_asset' }}</mat-icon>
-        <span class="body">
-          <span>«{{ item.pattern }}» → {{ item.projectName }}</span>
-          <span class="hint">
+    <pd-resource-state [resource]="suggestions">
+      <ng-template>
+        @for (item of suggestions.value(); track item.id) {
+          <div class="suggestion">
+            <mat-icon>{{
+              item.kind === 'site' ? 'public' : 'web_asset'
+            }}</mat-icon>
+            <span class="body">
+              <span>«{{ item.pattern }}» → {{ item.projectName }}</span>
+              <span class="hint">
+                {{
+                  'activity.rules.suggestions.near'
+                    | transloco: {time: item.seconds | pdDuration}
+                }}
+                @if (item.reason) {
+                  · {{ item.reason }}
+                }
+              </span>
+            </span>
+            <button
+              matIconButton
+              [matTooltip]="'activity.rules.suggestions.accept' | transloco"
+              [attr.aria-label]="
+                'activity.rules.suggestions.accept' | transloco
+              "
+              (click)="accept(item)"
+            >
+              <mat-icon>check</mat-icon>
+            </button>
+            <button
+              matIconButton
+              [matTooltip]="'activity.rules.suggestions.reject' | transloco"
+              [attr.aria-label]="
+                'activity.rules.suggestions.reject' | transloco
+              "
+              (click)="reject(item)"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        } @empty {
+          <p class="hint">
             {{
-              'activity.rules.suggestions.near'
-                | transloco: {time: item.seconds | pdDuration}
+              (refreshed()
+                ? 'activity.rules.suggestions.nothing'
+                : 'activity.rules.suggestions.hint'
+              ) | transloco
             }}
-            @if (item.reason) {
-              · {{ item.reason }}
-            }
-          </span>
-        </span>
-        <button
-          matIconButton
-          [matTooltip]="'activity.rules.suggestions.accept' | transloco"
-          [attr.aria-label]="'activity.rules.suggestions.accept' | transloco"
-          (click)="accept(item)"
-        >
-          <mat-icon>check</mat-icon>
-        </button>
-        <button
-          matIconButton
-          [matTooltip]="'activity.rules.suggestions.reject' | transloco"
-          [attr.aria-label]="'activity.rules.suggestions.reject' | transloco"
-          (click)="reject(item)"
-        >
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
-    } @empty {
-      <p class="hint">
-        {{
-          (refreshed()
-            ? 'activity.rules.suggestions.nothing'
-            : 'activity.rules.suggestions.hint'
-          ) | transloco
-        }}
-      </p>
-    }
+          </p>
+        }
+      </ng-template>
+    </pd-resource-state>
   `,
   styles: `
     .head {

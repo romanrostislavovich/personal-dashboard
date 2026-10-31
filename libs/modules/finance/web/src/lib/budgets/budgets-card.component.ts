@@ -17,6 +17,7 @@ import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {BUDGET_TOTAL, BudgetInput} from '@pd/contracts';
 import {firstValueFrom} from 'rxjs';
 import {FinanceApi} from '../finance.api';
+import {ResourceStateComponent} from '@pd/web-core';
 
 /** A limit is "almost spent" from this share (the same as the server's warning). */
 const WARN_SHARE = 0.8;
@@ -29,6 +30,7 @@ const WARN_SHARE = 0.8;
   selector: 'pd-budgets-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ResourceStateComponent,
     DecimalPipe,
     MatButtonModule,
     MatCardModule,
@@ -66,30 +68,36 @@ const WARN_SHARE = 0.8;
       <mat-card-content>
         @if (!editing()) {
           <ul class="budgets">
-            @for (budget of budgets.value(); track budget.id) {
-              @let share = budget.spent / budget.limit;
-              <li
-                [class.warn]="share >= warnShare && share < 1"
-                [class.over]="share >= 1"
-              >
-                <div class="head">
-                  <span class="name">{{ nameOf(budget.category) }}</span>
-                  <span class="numbers">
-                    {{ budget.spent | number: '1.0-0' }} /
-                    {{ budget.limit | number: '1.0-0' }}
-                    {{ budget.currency }}
-                  </span>
-                </div>
-                <span class="track">
-                  <span
-                    class="fill"
-                    [style.width.%]="share * 100 > 100 ? 100 : share * 100"
-                  ></span>
-                </span>
-              </li>
-            } @empty {
-              <li class="hint">{{ 'finance.budgets.empty' | transloco }}</li>
-            }
+            <pd-resource-state [resource]="budgets">
+              <ng-template>
+                @for (budget of budgets.value(); track budget.id) {
+                  @let share = budget.spent / budget.limit;
+                  <li
+                    [class.warn]="share >= warnShare && share < 1"
+                    [class.over]="share >= 1"
+                  >
+                    <div class="head">
+                      <span class="name">{{ nameOf(budget.category) }}</span>
+                      <span class="numbers">
+                        {{ budget.spent | number: '1.0-0' }} /
+                        {{ budget.limit | number: '1.0-0' }}
+                        {{ budget.currency }}
+                      </span>
+                    </div>
+                    <span class="track">
+                      <span
+                        class="fill"
+                        [style.width.%]="share * 100 > 100 ? 100 : share * 100"
+                      ></span>
+                    </span>
+                  </li>
+                } @empty {
+                  <li class="hint">
+                    {{ 'finance.budgets.empty' | transloco }}
+                  </li>
+                }
+              </ng-template>
+            </pd-resource-state>
           </ul>
         } @else {
           <ul class="edit">
