@@ -30,6 +30,7 @@ import {
   languageToolAnswers,
   LanguageToolRequest,
 } from './language-tool.client';
+import {LanguageToolGate} from './language-tool.gate';
 import {REWRITE_INSTRUCTIONS} from './rewrite-instructions';
 import {writingSettings} from './writing.schema';
 
@@ -48,6 +49,7 @@ export class WritingService {
   private readonly logger = new Logger(WritingService.name);
   /** Results by the text and the settings it was checked with; the oldest go first. */
   private readonly cache = new Map<string, WritingCheckResult>();
+  private readonly gate = new LanguageToolGate<WritingCheckResult>();
 
   constructor(
     @Inject(DB) private readonly db: Database,
@@ -226,10 +228,18 @@ export class WritingService {
     if (known) {
       return known;
     }
-    const result = await checkWithLanguageTool(url, request).catch(error => {
-      this.logger.warn(`LanguageTool failed: ${error}`);
-      throw new ServiceUnavailableException('LanguageTool did not answer');
-    });
+    if (this.gate.resting()) {
+      throw new ServiceUnavailableException('LanguageTool is overloaded');
+    }
+    const result = await this.gate
+      .run(key, () => checkWithLanguageTool(url, request))
+      .catch(error => {
+        if (overloaded(error)) {
+          this.gate.rest();
+        }
+        this.logger.warn(`LanguageTool failed: ${error}`);
+        throw new ServiceUnavailableException('LanguageTool did not answer');
+      });
     this.remember(key, result);
     return result;
   }
@@ -302,6 +312,14 @@ export function withoutKnownWords(
           .slice(issue.offset, issue.offset + issue.length)
           .toLocaleLowerCase(),
       ),
+  );
+}
+
+/** A timeout or a 5xx: LanguageTool is behind, not the request wrong. */
+export function overloaded(error: unknown): boolean {
+  return (
+    (error instanceof Error && error.name === 'TimeoutError') ||
+    /LanguageTool 5\d\d/.test(String(error))
   );
 }
 
