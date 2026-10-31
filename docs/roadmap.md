@@ -285,15 +285,15 @@ None written down now (the voice assistant's two went to [On hold](#on-hold)).
   opens it, then the next question waiting), Telegram, or right in the phone's shade (up to three
   buttons, without opening the app) — and closed in the other channels. Still to come: the AI
   assistant reading and answering the inbox ("what did I miss?")
-- **Quiet hours** — nothing at night, one summary in the morning (a question with buttons — the
+- ✅ **Quiet hours** — nothing at night, one summary in the morning (a question with buttons — the
   habit's, the film's — never in it: it follows on its own, with its day: «Вчера, 26.10 — …»;
   built 2026-10-27; one answered in the bell at night, or closed meanwhile — the day written in the
   diary, the habit marked — is not sent, 2026-10-30); minor ones gathered into one message an hour
 - **A calendar feed (ICS)** — a private link with the birthdays, days of memory, reminders, due
   dates of tasks, subscription charges and the end of free trials, subscribed to in the calendar
   of a phone
-- **Push notifications** — in the browser, the desktop app and on phones (the PWA, without
-  Telegram), next to Telegram; switched off per kind of notification or all at once
+- ✅ **Push notifications** — in the browser, the desktop app and on phones (the Android app,
+  FCM), next to Telegram; switched off per kind of notification, per section or all at once
 - **Challenges of the week** — every Monday three personal challenges from the user's own data
   ("2 focus sessions a day", "at most 10 h of games", "5 diary entries"), a result and XP at the end
 - **Psychology: a gentle warning** — when the results of a questionnaire stay worse for several
@@ -332,8 +332,9 @@ None written down now (the voice assistant's two went to [On hold](#on-hold)).
 - **Sleep from the computer** — the first and the last activity of a day are known already (and
   compared with the mood); next: an estimate out of them ("slept ~6 h, went to bed at 2:40"), a
   weekly trend, in Life; the phone refines it later
-- **Sleep, steps, weight** — the first part of Fitness: from Google Fit / Health Connect or typed
-  in by hand, shown in Life and in the morning digest
+- **Sleep, steps, weight** — the first part of Fitness: ✅ sleep and steps come from the band
+  through Health Connect (Health → Band, 2026-10-29); still to come: weight, and the steps and the
+  sleep in Life and in the morning digest
 - **Weather: more** — air quality and pollen; days off and public holidays in the digest
 - **Shopping list** — items added from Telegram ("milk, bread") or the page, grouped by shop or
   category, ticked off in the shop; ingredients of a recipe added in one click; can be shared
@@ -748,7 +749,7 @@ assistant as a tutor that knows the materials of the courses.
 
 - **Mobile app & Smart Band Wearables Integration** — mobile application collecting data from
   the smartphone and wearable devices (smart watch / smart band via BLE, Google Health Connect, Apple Health).
-  The plan in stages: [proposals/mobile-app.md](proposals/mobile-app.md):
+  The app and its decisions: [apps/mobile/README.md](../apps/mobile/README.md):
   - **the base:** Capacitor around the same Angular app, offline reading and writing, push
     through Google, a gentle-day widget, quiet hours, a help button (crisis lines by country and
     a close person's contact)
@@ -782,7 +783,7 @@ Set aside until there is time for them (the owner's decision, 2026-10-30); nothi
 on now.
 
 - **The phone's voice assistant «Люцифер»** — built and deployed 2026-10-26
-  (docs/proposals/mobile-app.md, stage 4) and switched off. Before it comes back:
+  (the Android app) and switched off. Before it comes back:
   - **Voice assistant: too many false alarms** — in a real room «Люцифер» woke up on ordinary
     speech (2026-10-26, 20:07: a bit of a conversation was sent as a question); the owner switched
     it off. The test of the wake word used synthesized phrases, which a room does not sound like:

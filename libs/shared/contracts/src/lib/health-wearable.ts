@@ -1,7 +1,7 @@
 import {z} from 'zod';
 
 /**
- * The band's data through the Google Health API (docs/proposals/mobile-app.md, stage 3): the
+ * The band's data through the Google Health API (apps/mobile/README.md): the
  * Fitbit Air and every Fitbit write there, and the dashboard reads it from the server — no
  * phone of ours in between.
  */

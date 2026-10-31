@@ -46,7 +46,7 @@ const NOTIFY_EVERY_MINUTES = 180;
 type SessionRow = typeof healthBandSessions.$inferSelect;
 
 /**
- * The band through the phone (docs/proposals/mobile-app.md, stage 3): the phone sends what
+ * The band through the phone (apps/mobile/README.md): the phone sends what
  * Health Connect has for a time window, the server replaces that window and counts the days it
  * touched again (BandDaysService); a fresh reaction of the body is told at once.
  */

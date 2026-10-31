@@ -58,7 +58,7 @@ const COUNTED = [
 ] as const satisfies readonly (keyof WearableDay)[];
 
 /**
- * The band through the Google Health API (docs/proposals/mobile-app.md, stage 3):
+ * The band through the Google Health API (apps/mobile/README.md):
  * 1. the owner sets the keys of a Google Cloud app once (Settings → Integrations);
  * 2. a user signs in with Google (`connectUrl` → `/api/medical/wearable/callback`), the refresh
  *    token is kept encrypted;
