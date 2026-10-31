@@ -19,6 +19,7 @@ import {eq, sql} from 'drizzle-orm';
 import {randomUUID} from 'node:crypto';
 import {AppConfig} from '../config/env';
 import {DB, Database} from '../database/database.module';
+import {schemaGap} from './schema-gap';
 import {encryptionKeyCheck} from './sync-protocol';
 import {syncState} from './sync.schema';
 import {SyncStore} from './sync-store';
@@ -37,6 +38,8 @@ export const SYNC_STATE = {
   pullCursor: 'pull-cursor',
   /** Client: progress of the one-time recheck of the whole change log (see SyncClient). */
   recheck: 'recheck',
+  /** Client: how many migrations the server is ahead (negative: behind), when they differ. */
+  schemaAhead: 'schema-ahead',
   lastSyncedAt: 'last-synced-at',
   lastError: 'last-error',
   /** Client: when to compare the data with the server's next (see SyncClient.reconcile). */
@@ -76,9 +79,11 @@ export class SyncService implements OnApplicationBootstrap {
   }
 
   /** What both sides must agree on; sent with every request. */
-  async handshake(): Promise<{schema: string; keyCheck: string}> {
+  async handshake(): Promise<Handshake> {
+    const migrations = await this.migrations();
     return {
-      schema: await this.schemaVersion(),
+      schema: migrations.at(-1) ?? 'none',
+      migrations,
       keyCheck: encryptionKeyCheck(
         this.config.get('ENCRYPTION_KEY', {infer: true}),
       ),
@@ -88,16 +93,17 @@ export class SyncService implements OnApplicationBootstrap {
   // --- Server side ---
 
   async receive(request: SyncPushRequest): Promise<SyncPushResponse> {
-    await this.verify(request);
+    const ahead = await this.verify(request);
     const result = await this.store.apply(request.changes, {
       origin: clientOrigin(request.peer),
+      senderAhead: -ahead,
     });
     await this.touchContact();
     return result;
   }
 
   async send(request: SyncPullRequest): Promise<SyncPullResponse> {
-    await this.verify(request);
+    const ahead = await this.verify(request);
     const origin = clientOrigin(request.peer);
     // The client's own changes are not sent back to it.
     const batch = await this.store.changesSince(
@@ -105,14 +111,11 @@ export class SyncService implements OnApplicationBootstrap {
       from => from !== origin,
     );
     await this.touchContact();
-    return {serverId: await this.serverId(), ...batch};
+    return {serverId: await this.serverId(), ...batch, schemaAhead: ahead};
   }
 
   /** An action request is checked like push and pull (see ServerActions). */
-  async acceptAction(request: {
-    schema: string;
-    keyCheck: string;
-  }): Promise<void> {
+  async acceptAction(request: PeerHandshake): Promise<void> {
     await this.verify(request);
     await this.touchContact();
   }
@@ -159,6 +162,9 @@ export class SyncService implements OnApplicationBootstrap {
           )
         : 0,
       ...(off ? {parked: 0, conflicts: 0} : await this.store.problemCounts()),
+      schemaAhead: client
+        ? Number(await this.getState(SYNC_STATE.schemaAhead)) || null
+        : null,
       reconcile: client
         ? parseJson<ReconcileResult>(
             await this.getState(SYNC_STATE.reconcileResult),
@@ -167,12 +173,20 @@ export class SyncService implements OnApplicationBootstrap {
     };
   }
 
-  private async verify(request: {
-    schema: string;
-    keyCheck: string;
-  }): Promise<void> {
+  /**
+   * Checks the other side's handshake; returns how many migrations this side is ahead of it
+   * (negative: behind). One side's migrations being the start of the other's is fine: they sync
+   * across the versions (docs/sync.md); histories that went apart are not.
+   */
+  private async verify(request: PeerHandshake): Promise<number> {
     const own = await this.handshake();
-    if (request.schema !== own.schema) {
+    const ahead =
+      request.schema === own.schema
+        ? 0
+        : request.migrations
+          ? schemaGap(own.migrations, request.migrations)
+          : null;
+    if (ahead === null) {
       // The usual reason is a deploy of one side only, so the message says how to finish it.
       throw new ConflictException(
         'The server and this computer run different versions of the dashboard. Update the one ' +
@@ -185,6 +199,7 @@ export class SyncService implements OnApplicationBootstrap {
         'ENCRYPTION_KEY differs between the instances',
       );
     }
+    return ahead;
   }
 
   private async serverId(): Promise<string> {
@@ -201,14 +216,23 @@ export class SyncService implements OnApplicationBootstrap {
     await this.setState(SYNC_STATE.lastContact, new Date().toISOString());
   }
 
-  /** The latest applied migration: both instances must be on the same one. */
-  private async schemaVersion(): Promise<string> {
+  /** The applied migrations, oldest first. */
+  private async migrations(): Promise<string[]> {
     const {rows} = await this.db.execute<{hash: string}>(
-      sql`SELECT hash FROM drizzle.__drizzle_migrations ORDER BY created_at DESC LIMIT 1`,
+      sql`SELECT hash FROM drizzle.__drizzle_migrations ORDER BY created_at, id`,
     );
-    return rows[0]?.hash ?? 'none';
+    return rows.map(row => row.hash);
   }
 }
+
+interface Handshake {
+  schema: string;
+  migrations: string[];
+  keyCheck: string;
+}
+
+/** What the other side sends; an older instance sends no `migrations`. */
+type PeerHandshake = Omit<Handshake, 'migrations'> & {migrations?: string[]};
 
 function parseJson<T>(text: string | null): T | null {
   return text === null ? null : (JSON.parse(text) as T);

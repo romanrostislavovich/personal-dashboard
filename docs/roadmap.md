@@ -394,9 +394,9 @@ assistant as a tutor that knows the materials of the courses.
 
 #### Engineering
 
-- **Sync across versions** — today any difference of the migrations stops sync; a peer whose
-  migrations are the start of yours is accepted, the status says "the server is N migrations
-  ahead", and a notification tells when the two drift apart
+- ✅ **Sync across versions** (2026-10-31) — a peer whose migrations are the start of yours is
+  accepted, the status says "the server is N migrations ahead", rows of the newer schema wait in
+  `sync.parked`; migrations that went apart stop it and are reported after 15 minutes (docs/sync.md)
 - **Data portability and open formats** — continuous standardized export (Markdown, JSON-LD,
   CSV/Parquet) for vendor independence and offline accessibility without running the backend
 - **`updatedAt` on every table a user edits** — "edited at" in the UI and a check that the AI and

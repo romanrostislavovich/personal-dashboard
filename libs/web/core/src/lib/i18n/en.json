@@ -230,7 +230,9 @@
             "restore-failed": "The server's latest test restore did not go well."
           }
         }
-      }
+      },
+      "serverAhead": "The server is {{count}} migration(s) ahead of this copy: sync goes on, but the server's new data waits here until this copy is updated — docker compose up -d --build app.",
+      "clientAhead": "This copy is {{count}} migration(s) ahead of the server: sync goes on, the new data waits on the server until it is updated (deploy/deploy.sh)."
     },
     "security": {
       "title": "Security",

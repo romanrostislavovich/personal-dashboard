@@ -311,6 +311,10 @@ export class SyncClient
     if (due && Date.parse(due) > Date.now()) {
       return;
     }
+    // Across versions the tables differ by their new columns: nothing to compare until then.
+    if (await this.sync.getState(SYNC_STATE.schemaAhead)) {
+      return;
+    }
     const server = await this.request<
       SyncFingerprintsRequest,
       SyncFingerprintsResponse
@@ -405,9 +409,15 @@ export class SyncClient
           continue;
         }
       }
+      const ahead = response.schemaAhead ?? 0;
+      await this.sync.setState(
+        SYNC_STATE.schemaAhead,
+        ahead ? String(ahead) : null,
+      );
       await this.store.apply(response.changes, {
         origin: SERVER_ORIGIN,
         unsentAfter: await this.sync.getState(SYNC_STATE.pushCursor),
+        senderAhead: ahead,
       });
       count += response.changes.length;
       await this.sync.setState(SYNC_STATE.pullCursor, response.cursor);

@@ -2,6 +2,7 @@ import {Inject, Injectable, Logger} from '@nestjs/common';
 import {SyncChange, SyncPushResponse, TableFingerprint} from '@pd/contracts';
 import {sql, SQL} from 'drizzle-orm';
 import {DB, Database} from '../database/database.module';
+import {rowFit} from './schema-gap';
 import {readSyncTables, SyncTable} from './sync-catalog';
 import {APPLYING_SETTING, installSyncTriggers, pkObject} from './sync-triggers';
 
@@ -33,6 +34,13 @@ interface ApplyContext {
    * pulls before it pushes, so the other direction is covered by the "skipped" case.)
    */
   unsentAfter?: string | null;
+  /**
+   * How many migrations the sender is ahead of this side (negative: behind); missing or 0 — the
+   * same schema. A newer sender's row with columns unknown here waits in `sync.parked` until this
+   * side is updated; an older sender's row lacks columns, and those keep their values here (its
+   * columns this side dropped are left out).
+   */
+  senderAhead?: number;
 }
 
 /** A version of a row that lost a conflict; kept in `sync.conflicts`. */
@@ -47,6 +55,9 @@ interface Loser {
 }
 
 const LOST_TO_NEWER = 'lost to a newer row';
+/** Why a row of a newer schema waits in `sync.parked`. */
+const NEWER_SCHEMA =
+  'has columns of a newer version: waits until this instance is updated';
 /** Why a row waits in `sync.parked` when it was parked before even trying. */
 const MISSING_PARENT =
   'waits for a row it refers to (violates foreign key constraint)';
@@ -175,12 +186,21 @@ export class SyncStore {
     context: ApplyContext,
   ): Promise<SyncPushResponse> {
     const result: SyncPushResponse = {applied: 0, skipped: 0, parked: 0};
-    for (const run of writeRuns(this.dependencyOrder(changes))) {
-      const table = this.table(run[0].table);
+    for (const all of writeRuns(this.dependencyOrder(changes))) {
+      const table = this.table(all[0].table);
+      // Across versions a row may not fit the table here: those go one at a time.
+      const misfits =
+        table && context.senderAhead
+          ? all.filter(change => fitOf(change, table) !== 'whole')
+          : [];
+      const run = misfits.length
+        ? all.filter(change => !misfits.includes(change))
+        : all;
       const {applied, parked, rest} =
         table && run.length >= BULK_MIN
           ? await this.applyInBulk(tx, table, run, context)
           : {applied: 0, parked: 0, rest: run};
+      rest.push(...misfits);
       result.applied += applied;
       result.parked += parked;
       for (const change of rest) {
@@ -486,29 +506,46 @@ export class SyncStore {
     } catch (error) {
       const message = errorMessage(error);
       this.logger.warn(`Parked ${change.table} ${change.pk}: ${message}`);
-      await tx.execute(sql`
-        INSERT INTO sync.parked (table_name, pk, changed_at, row, origin, error)
-        VALUES (${change.table}, ${change.pk}::jsonb, ${change.changedAt}::timestamptz,
-          ${change.row}::jsonb, ${context.origin}, ${message})
-        ON CONFLICT (table_name, pk) DO UPDATE
-          SET changed_at = EXCLUDED.changed_at, row = EXCLUDED.row, origin = EXCLUDED.origin,
-            error = EXCLUDED.error, parked_at = now()
-          WHERE sync.parked.changed_at <= EXCLUDED.changed_at
-      `);
+      await this.park(tx, change, context, message);
       return 'parked';
     }
+  }
+
+  private async park(
+    tx: Transaction,
+    change: SyncChange,
+    context: ApplyContext,
+    message: string,
+  ): Promise<void> {
+    await tx.execute(sql`
+      INSERT INTO sync.parked (table_name, pk, changed_at, row, origin, error)
+      VALUES (${change.table}, ${change.pk}::jsonb, ${change.changedAt}::timestamptz,
+        ${change.row}::jsonb, ${context.origin}, ${message})
+      ON CONFLICT (table_name, pk) DO UPDATE
+        SET changed_at = EXCLUDED.changed_at, row = EXCLUDED.row, origin = EXCLUDED.origin,
+          error = EXCLUDED.error, parked_at = now()
+        WHERE sync.parked.changed_at <= EXCLUDED.changed_at
+    `);
   }
 
   private async applyChange(
     tx: Transaction,
     change: SyncChange,
-    {origin, unsentAfter}: ApplyContext,
+    context: ApplyContext,
   ): Promise<Outcome> {
+    const {origin, unsentAfter, senderAhead = 0} = context;
     const table = this.table(change.table);
     if (!table) {
       throw new Error(
-        `Unknown table ${change.table} — are both instances on the same version?`,
+        senderAhead > 0
+          ? `A table of a newer version (${change.table}): waits until this instance is updated`
+          : `Unknown table ${change.table} — are both instances on the same version?`,
       );
+    }
+    const fit = senderAhead ? fitOf(change, table) : 'whole';
+    if (fit === 'newer' && senderAhead > 0) {
+      await this.park(tx, change, context, NEWER_SCHEMA);
+      return 'parked';
     }
     const local = await this.localVersion(tx, table, change, unsentAfter);
     if (local?.localWins) {
@@ -532,7 +569,7 @@ export class SyncStore {
         : 'differed from the other side';
       await this.keepOverwrittenLocal(tx, table, change, reason);
     }
-    if (!(await this.writeRow(tx, table, change))) {
+    if (!(await this.writeRow(tx, table, change, fit !== 'whole'))) {
       return 'skipped';
     }
     await this.recordVersion(tx, table, change, origin);
@@ -595,9 +632,10 @@ export class SyncStore {
     tx: Transaction,
     table: SyncTable,
     change: SyncChange,
+    onlyItsColumns: boolean,
   ): Promise<boolean> {
     if (change.row !== null) {
-      return this.upsert(tx, table, change);
+      return this.upsert(tx, table, change, onlyItsColumns);
     }
     await tx.execute(
       sql`DELETE FROM ${sql.identifier(table.name)} t WHERE ${pkMatch(table, change.pk)}`,
@@ -631,11 +669,14 @@ export class SyncStore {
    * Inserts or updates the row. Another row may hold the same unique values under a different
    * id (a diary entry for the same day written on both sides): the newer one stays.
    * Returns false if the local row is newer and the incoming one was not applied.
+   * `onlyItsColumns` (a row of another version): the columns the row lacks keep their values (or
+   * get their defaults), the ones unknown here are left out.
    */
   private async upsert(
     tx: Transaction,
     table: SyncTable,
     change: SyncChange,
+    onlyItsColumns = false,
   ): Promise<boolean> {
     const name = sql.identifier(table.name);
     for (const unique of table.uniques) {
@@ -684,14 +725,21 @@ export class SyncStore {
         );
       }
     }
-    const updates = table.columns
+    const sent = onlyItsColumns
+      ? table.columns.filter(column =>
+          Object.hasOwn(JSON.parse(change.row ?? '{}') as object, column),
+        )
+      : table.columns;
+    const updates = sent
       .filter(column => !table.primaryKey.includes(column))
       .map(
         column =>
           sql`${sql.identifier(column)} = EXCLUDED.${sql.identifier(column)}`,
       );
+    const list = columns(null, sent);
     await tx.execute(sql`
-      INSERT INTO ${name} SELECT * FROM jsonb_populate_record(NULL::${name}, ${change.row}::jsonb)
+      INSERT INTO ${name} (${list})
+      SELECT ${columns('k', sent)} FROM jsonb_populate_record(NULL::${name}, ${change.row}::jsonb) k
       ON CONFLICT (${columns(null, table.primaryKey)})
       ${updates.length ? sql`DO UPDATE SET ${sql.join(updates, sql`, `)}` : sql`DO NOTHING`}
     `);
@@ -745,9 +793,11 @@ export class SyncStore {
             const changes = chunk
               .filter(item => item.origin === origin)
               .map(item => item.change);
+            // A parked row may be of a newer version: it waits again if it still does not fit.
             const {applied, skipped} = await this.applyRuns(tx, changes, {
               ...context,
               origin,
+              senderAhead: Math.max(context.senderAhead ?? 0, 1),
             });
             progress = progress || applied + skipped > 0;
           }
@@ -993,4 +1043,12 @@ function errorMessage(error: unknown): string {
     return error.cause.message;
   }
   return error instanceof Error ? error.message : String(error);
+}
+
+/** How a change's row fits the table here; a delete always does. */
+function fitOf(
+  change: SyncChange,
+  table: SyncTable,
+): ReturnType<typeof rowFit> {
+  return change.row === null ? 'whole' : rowFit(change.row, table.columns);
 }
