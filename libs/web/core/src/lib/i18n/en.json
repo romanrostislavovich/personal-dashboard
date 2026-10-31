@@ -769,5 +769,6 @@
     "allAnswered": "All questions answered",
     "gone": "This notification is gone: they are kept for 90 days.",
     "failed": "Did not work, try again."
-  }
+  },
+  "editedAt": "Edited {{time}}"
 }

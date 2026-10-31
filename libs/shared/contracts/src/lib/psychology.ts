@@ -76,6 +76,8 @@ export interface PsychologyEvent {
   ageTo: number | null;
   feeling: EventFeeling;
   createdAt: string;
+  /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+  updatedAt: string | null;
 }
 
 type EventTime = Pick<

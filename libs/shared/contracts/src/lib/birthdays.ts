@@ -67,6 +67,8 @@ export interface Birthday {
   deathDay: number | null;
   deathYear: number | null;
   memorialRemindDaysBefore: number[];
+  /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+  updatedAt: string | null;
 }
 
 export interface UpcomingBirthday extends Birthday {

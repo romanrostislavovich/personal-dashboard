@@ -17,6 +17,7 @@ import {MatInputModule} from '@angular/material/input';
 import {TranslocoPipe} from '@jsverse/transloco';
 import {MatSelectModule} from '@angular/material/select';
 import {Wish, WishInput} from '@pd/contracts';
+import {EditedAtComponent} from '@pd/web-core';
 
 export interface WishFormData {
   wish: Wish | null;
@@ -32,6 +33,7 @@ export interface WishFormData {
   selector: 'pd-wish-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    EditedAtComponent,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -110,6 +112,7 @@ export interface WishFormData {
         </mat-form-field>
       </mat-dialog-content>
 
+      <pd-edited-at class="edited" [at]="data.wish?.updatedAt" />
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>
           {{ 'core.actions.cancel' | transloco }}

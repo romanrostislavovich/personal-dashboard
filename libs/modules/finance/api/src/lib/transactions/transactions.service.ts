@@ -280,7 +280,7 @@ export class TransactionsService {
     }
     const [row] = await this.db
       .update(transactions)
-      .set(input)
+      .set({...input, updatedAt: new Date()})
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
     if (!row) {
@@ -572,5 +572,6 @@ function toTransaction(
     costSourceId: row.costSourceId,
     mainAmount,
     hasReceipt,
+    updatedAt: row.updatedAt?.toISOString() ?? null,
   };
 }

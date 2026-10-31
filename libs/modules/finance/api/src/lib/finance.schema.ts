@@ -68,6 +68,8 @@ export const recurringPayments = pgTable(
     /** The key dates already reminded of ("cancel-by:2026-11-01"): each once. */
     datesNotified: jsonb().$type<string[]>().notNull().default([]),
     createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+    updatedAt: timestamp({withTimezone: true}),
   },
   table => [index().on(table.userId), index().on(table.projectId)],
 );
@@ -160,6 +162,8 @@ export const transactions = pgTable(
     /** Who was paid or who paid, as the bank wrote it: the category follows it next time. */
     counterparty: text(),
     createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+    updatedAt: timestamp({withTimezone: true}),
   },
   // One transaction per source and month — the sync updates it instead of creating new ones.
   table => [
@@ -259,6 +263,8 @@ export const wishes = pgTable(
     /** Whom it is a gift for: a name, as the person is called in Birthdays. */
     recipient: text(),
     createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+    updatedAt: timestamp({withTimezone: true}),
   },
   table => [index().on(table.userId)],
 );

@@ -22,6 +22,7 @@ import {
   MEMORIAL_REMINDER_DEFAULT,
   REMINDER_DAY_OPTIONS,
 } from '@pd/contracts';
+import {EditedAtComponent} from '@pd/web-core';
 
 const MONTHS = Array.from({length: 12}, (_, i) => i + 1);
 
@@ -47,6 +48,7 @@ function wholeDates(form: AbstractControl): ValidationErrors | null {
   selector: 'pd-birthday-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    EditedAtComponent,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -165,6 +167,7 @@ function wholeDates(form: AbstractControl): ValidationErrors | null {
         }
       </mat-dialog-content>
 
+      <pd-edited-at class="edited" [at]="birthday?.updatedAt" />
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>
           {{ 'core.actions.cancel' | transloco }}

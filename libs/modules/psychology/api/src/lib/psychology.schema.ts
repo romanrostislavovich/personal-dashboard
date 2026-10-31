@@ -36,6 +36,8 @@ export const psychologyEvents = pgTable(
     /** How it felt: -2 (hard) … 2 (good). */
     feeling: smallint().$type<EventFeeling>().notNull().default(0),
     createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+    updatedAt: timestamp({withTimezone: true}),
   },
   table => [index().on(table.userId, table.startedOn)],
 );

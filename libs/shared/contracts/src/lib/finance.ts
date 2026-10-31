@@ -66,6 +66,8 @@ export interface Transaction {
    * rate for this currency.
    */
   mainAmount: number | null;
+  /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+  updatedAt: string | null;
 }
 
 export const transactionQuerySchema = z.object({
@@ -148,6 +150,8 @@ export interface RecurringPayment {
   priceLockedUntil: LocalDate | null;
   /** The dates counted from the terms; `null` — no term given. */
   contract: ContractDates | null;
+  /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+  updatedAt: string | null;
 }
 
 /** What the terms of a contract come to today. */
@@ -510,6 +514,8 @@ export interface Wish {
    * (negative — over the budget), in the main currency; `null` — no such budget or no price.
    */
   budget: {left: number; afterBuying: number; currency: string} | null;
+  /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+  updatedAt: string | null;
 }
 
 /** The price of a wish on a day. */

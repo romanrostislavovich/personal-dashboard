@@ -399,8 +399,10 @@ assistant as a tutor that knows the materials of the courses.
   `sync.parked`; migrations that went apart stop it and are reported after 15 minutes (docs/sync.md)
 - **Data portability and open formats** — continuous standardized export (Markdown, JSON-LD,
   CSV/Parquet) for vendor independence and offline accessibility without running the backend
-- **`updatedAt` on every table a user edits** — "edited at" in the UI and a check that the AI and
-  a second tab do not overwrite each other's change (If-Match)
+- ✅ **`updatedAt` on what a user edits** (2026-10-31) — tasks, transactions, recurring payments,
+  wishes, birthdays, projects and life events keep when the user (or the assistant) last changed
+  them, shown as "Edited 31 Oct, 14:32" in their forms; the last save wins (the owner's choice: no
+  If-Match)
 - **Observability** — JSON logs in production with a request or job id; `/metrics` (job runs,
   AI calls and tokens, sync lag, failed notifications)
 - **Loading and errors are not "empty"** — a shared `<pd-resource-state>`: a list shows "No …

@@ -287,3 +287,13 @@ h3 {
     color: var(--mat-sys-on-surface);
   }
 }
+
+// "Edited …" (pd-edited-at) between a dialog's fields and its buttons, or first in a card's
+// actions, pushing the buttons to the end.
+.mat-mdc-dialog-container pd-edited-at.edited {
+  padding: 0 24px;
+}
+.mat-mdc-card-actions pd-edited-at.edited {
+  margin-right: auto;
+  padding-left: 8px;
+}

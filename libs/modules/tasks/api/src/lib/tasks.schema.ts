@@ -56,6 +56,8 @@ export const tasks = pgTable(
     repeat: jsonb().$type<Repeat>(),
     completedAt: timestamp({withTimezone: true}),
     createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+    updatedAt: timestamp({withTimezone: true}),
   },
   table => [
     index().on(table.userId, table.completedAt),

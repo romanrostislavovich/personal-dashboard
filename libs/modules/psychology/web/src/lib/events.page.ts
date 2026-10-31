@@ -23,6 +23,7 @@ import {
 } from '@pd/contracts';
 import {firstValueFrom} from 'rxjs';
 import {PsychologyApi, today} from './psychology.api';
+import {EditedAtComponent} from '@pd/web-core';
 
 const ICONS: Record<string, string> = {
   '-2': 'sentiment_very_dissatisfied',
@@ -72,6 +73,7 @@ function toAge(value: string): number | null {
   selector: 'pd-psychology-events-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    EditedAtComponent,
     DatePipe,
     MatButtonModule,
     MatButtonToggleModule,
@@ -214,6 +216,7 @@ function toAge(value: string): number | null {
       </mat-card-content>
       <mat-card-actions align="end">
         @if (editing()) {
+          <pd-edited-at class="edited" [at]="editedAt()" />
           <button matButton (click)="cancel()">
             {{ 'core.actions.cancel' | transloco }}
           </button>
@@ -409,6 +412,12 @@ export class EventsPage {
   );
   protected readonly draft = signal<Draft>({...EMPTY, startedOn: today()});
   protected readonly editing = signal<string | null>(null);
+  /** When the event being edited was last changed. */
+  protected readonly editedAt = computed(
+    () =>
+      (this.events.value() ?? []).find(event => event.id === this.editing())
+        ?.updatedAt ?? null,
+  );
   protected readonly valid = computed(() => {
     const {title, by, startedOn, endedOn, ageFrom, ageTo} = this.draft();
     if (!title.trim()) {

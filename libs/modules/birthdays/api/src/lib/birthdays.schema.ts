@@ -38,6 +38,8 @@ export const birthdays = pgTable(
     deathYear: smallint(),
     memorialRemindDaysBefore: integer().array().notNull().default([0, 1]),
     createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+    updatedAt: timestamp({withTimezone: true}),
   },
   table => [index().on(table.userId)],
 );
