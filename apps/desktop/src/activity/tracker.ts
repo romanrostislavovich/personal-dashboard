@@ -592,8 +592,7 @@ export class ActivityTracker {
     }
   }
 
-  private onSample(observed: WindowSample | null): void {
-    let sample = observed;
+  private onSample(sample: WindowSample | null): void {
     const now = Date.now();
     const config = this.store.config;
     const idleMs = powerMonitor.getSystemIdleTime() * 1000;
@@ -602,15 +601,7 @@ export class ActivityTracker {
       this.sourceIdentity = this.telemetryIdentity();
     }
     this.sourceSampleAt = now;
-    this.windowCollection = !sample
-      ? 'waiting-window'
-      : isExcluded(sample, config)
-        ? 'excluded-app'
-        : isPrivateWindow(sample.title, config.privateWords)
-          ? 'private-window'
-          : sanitizeTelemetryText(sample.app)
-            ? 'collecting'
-            : 'waiting-window';
+    this.windowCollection = windowCollectionOf(sample, config);
     // Unlike legacy spans, telemetry entirely excludes private windows and idle video players.
     // Apply these checks to the original title, before legacy span title redaction below.
     this.smartWindowAllowed =
@@ -638,10 +629,20 @@ export class ActivityTracker {
       this.keep(this.spans.feed(null, now));
       return;
     }
+    this.recordWindow(sample, now, idleMs);
+  }
+
+  /** The window in front goes into the spans (and the focus timer's distractions). */
+  private recordWindow(
+    observed: WindowSample,
+    now: number,
+    idleMs: number,
+  ): void {
+    const config = this.store.config;
     // A private window: the program is recorded, its title never leaves the computer.
-    if (isPrivateWindow(sample.title, config.privateWords)) {
-      sample = {...sample, title: ''};
-    }
+    const sample = isPrivateWindow(observed.title, config.privateWords)
+      ? {...observed, title: ''}
+      : observed;
     this.front = {...sample, at: now};
     if (
       idleMs < config.idleMinutes * 60_000 &&
@@ -894,4 +895,21 @@ function mergedConfig(
     privateWords: list(sent.privateWords, known.privateWords),
     meetingApps: list(sent.meetingApps, known.meetingApps),
   };
+}
+
+/** What the tracker does with the window in front, for its status in the settings. */
+function windowCollectionOf(
+  sample: WindowSample | null,
+  config: TrackerConfig,
+): DesktopTelemetryDiagnostics['collection'] {
+  if (!sample) {
+    return 'waiting-window';
+  }
+  if (isExcluded(sample, config)) {
+    return 'excluded-app';
+  }
+  if (isPrivateWindow(sample.title, config.privateWords)) {
+    return 'private-window';
+  }
+  return sanitizeTelemetryText(sample.app) ? 'collecting' : 'waiting-window';
 }

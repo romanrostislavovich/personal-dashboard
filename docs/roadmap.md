@@ -417,10 +417,11 @@ assistant as a tutor that knows the materials of the courses.
 - ✅ **Smaller components** (2026-10-31) — the diary editor, Health's history, the AI settings,
   the security page, the WoW dashboard and Psychology's events have their templates and styles in
   their own files; the editor's photo URLs are a class of their own (`editor/photo-urls.ts`)
-- **Tests where there are none** — the web libraries (pure helpers first: finance stats, the
-  activity timeline, months, the repository filter) and the desktop app (the span builder, the
-  private-window rules — the same as `isMeetingTitle` of contracts, the focus timer); lint for
-  the desktop app
+- ✅ **Tests where there are none** (2026-10-31) — the web libraries' pure helpers (finance stats
+  and category icons, the activity timeline and periods, the repository filter, the task filter)
+  and the desktop app (the span builder, the window rules — checked against `isMeetingTitle` of
+  contracts — the focus timer); the desktop app is linted too, its three most tangled functions
+  split
 - **CI and tooling** — the Nx cache kept between runs, `format:check`, `.nvmrc` / `engines`,
   `affected` and `typecheck` scripts
 - **A module generator** — `nx g @pd/tools:module`: the api and web libraries, contracts, the

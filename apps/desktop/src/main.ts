@@ -663,19 +663,13 @@ function trustedSetup(event: Electron.IpcMainInvokeEvent): boolean {
 let consentBusy = false;
 let contextRevision = 0;
 async function setContextConsent(
-  kind: 'telemetry' | 'smartBreak',
+  kind: ContextKind,
   enabled: unknown,
   trusted: () => boolean = () => true,
 ): Promise<boolean> {
   if (typeof enabled !== 'boolean' || !trusted()) return false;
   if (!enabled) {
-    contextRevision++;
-    if (kind === 'telemetry') tracker.resetTelemetry();
-    else tracker.resetSmartBreak();
-    saveSettings({
-      ...loadSettings(),
-      [kind === 'telemetry' ? 'telemetryConsent' : 'smartBreakConsent']: null,
-    });
+    saveConsent(kind, null);
     refreshTray();
     return true;
   }
@@ -687,34 +681,11 @@ async function setContextConsent(
     kind === 'telemetry'
       ? tracker.telemetryStatus()
       : tracker.smartBreakStatus();
-  if (enabled && (!server || !deviceId || !status.available)) return false;
+  if (!server || !deviceId || !status.available) return false;
   consentBusy = true;
   try {
-    if (enabled && !status.enabled) {
-      const messages = workstateMessages(app.getLocale());
-      const question: Electron.MessageBoxOptions = {
-        type: 'question',
-        message:
-          kind === 'telemetry'
-            ? messages.telemetryConsent
-            : messages.smartBreakConsent,
-        detail: `${messages.server}: ${server}`,
-        buttons: [messages.cancel, messages.allow],
-        defaultId: 0,
-        cancelId: 0,
-        noLink: true,
-      };
-      // Without a parent the question can open behind the dashboard's window: the switch then
-      // seems to do nothing while it waits for an answer nobody sees.
-      const parent =
-        mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()
-          ? mainWindow
-          : null;
-      const result = await (parent
-        ? dialog.showMessageBox(parent, question)
-        : dialog.showMessageBox(question));
-      if (result.response !== 1) return false;
-    }
+    if (!status.enabled && !(await askConsent(kind, server))) return false;
+    // While the question waited, the server, the device or the consent may have changed.
     if (
       !trusted() ||
       revision !== contextRevision ||
@@ -722,14 +693,7 @@ async function setContextConsent(
       deviceId !== tracker.status().deviceId
     )
       return false;
-    contextRevision++;
-    if (kind === 'telemetry') tracker.resetTelemetry();
-    else tracker.resetSmartBreak();
-    saveSettings({
-      ...loadSettings(),
-      [kind === 'telemetry' ? 'telemetryConsent' : 'smartBreakConsent']:
-        enabled && server && deviceId ? {serverUrl: server, deviceId} : null,
-    });
+    saveConsent(kind, {serverUrl: server, deviceId});
     return true;
   } catch {
     return false;
@@ -737,6 +701,49 @@ async function setContextConsent(
     consentBusy = false;
     refreshTray();
   }
+}
+
+type ContextKind = 'telemetry' | 'smartBreak';
+
+/** Starts the context over and keeps the consent (`null` — withdrawn). */
+function saveConsent(
+  kind: ContextKind,
+  consent: {serverUrl: string; deviceId: string} | null,
+): void {
+  contextRevision++;
+  if (kind === 'telemetry') tracker.resetTelemetry();
+  else tracker.resetSmartBreak();
+  saveSettings({
+    ...loadSettings(),
+    [kind === 'telemetry' ? 'telemetryConsent' : 'smartBreakConsent']: consent,
+  });
+}
+
+/** Asks the user before the context is collected for this server; `true` — allowed. */
+async function askConsent(kind: ContextKind, server: string): Promise<boolean> {
+  const messages = workstateMessages(app.getLocale());
+  const question: Electron.MessageBoxOptions = {
+    type: 'question',
+    message:
+      kind === 'telemetry'
+        ? messages.telemetryConsent
+        : messages.smartBreakConsent,
+    detail: `${messages.server}: ${server}`,
+    buttons: [messages.cancel, messages.allow],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true,
+  };
+  // Without a parent the question can open behind the dashboard's window: the switch then
+  // seems to do nothing while it waits for an answer nobody sees.
+  const parent =
+    mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()
+      ? mainWindow
+      : null;
+  const result = await (parent
+    ? dialog.showMessageBox(parent, question)
+    : dialog.showMessageBox(question));
+  return result.response === 1;
 }
 
 function notify(title: string, body: string, onClick: () => void): void {

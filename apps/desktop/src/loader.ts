@@ -24,5 +24,4 @@ function bundleFolder(): string {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- the path is known only now
 require(join(bundleFolder(), 'app.js'));
