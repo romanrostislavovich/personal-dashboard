@@ -154,7 +154,10 @@ memory (`OLLAMA_MEMORY=6g`), so a server with 8 GB.
 ## Updating
 
 Both instances must run the same version (the same migrations); until they do, sync pauses with a
-clear message and nothing is lost.
+clear message and nothing is lost. `deploy/deploy.sh` updates both: right after the server it
+runs this computer's instance on the very same image (when one runs here).
+
+By hand:
 
 1. Push to `main` and wait for the **Image** workflow.
 2. Server: `cd /opt/dashboard && docker compose pull && docker compose up -d`
