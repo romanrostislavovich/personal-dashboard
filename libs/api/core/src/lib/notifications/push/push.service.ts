@@ -246,6 +246,30 @@ export class PushService implements OnApplicationBootstrap {
   }
 
   /**
+   * A silent message that wakes the app on the user's phones, shown to nobody: `kind` tells
+   * what it does there (`revive` — the collection is started again, see SensorsWorker). The
+   * number of phones it went to; 0 — none takes it (no key, no phone that draws its own).
+   */
+  async wake(userId: string, kind: string): Promise<number> {
+    const fcm = this.canSendTo(userId)
+      ? await this.fcm().catch(() => null)
+      : null;
+    if (!fcm) {
+      return 0;
+    }
+    let sent = 0;
+    for (const device of await this.devices(userId)) {
+      if (device.rich) {
+        await fcm.fcm
+          .sendData(device.token, {pd: '1', kind})
+          .then(() => sent++)
+          .catch(() => undefined);
+      }
+    }
+    return sent;
+  }
+
+  /**
    * What a rich phone draws: the text, the card a tap opens, and up to three buttons that answer
    * from the shade (a question with more — ratings 1–10 — is answered on its card).
    */

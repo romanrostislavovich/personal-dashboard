@@ -397,3 +397,12 @@ export function syncApi(api: ApiClient) {
 }
 
 export type AuthClient = ReturnType<typeof authApi>;
+
+/** The map's tiles, through the dashboard (`MapTilesService`): OpenStreetMap sees the server. */
+export function mapApi(api: ApiClient) {
+  return {
+    /** A tile of OpenStreetMap; kept for offline like a photo — a tile hardly changes. */
+    tile: (z: number, x: number, y: number) =>
+      api.blob(`/api/map/tiles/${z}/${x}/${y}`, undefined, {immutable: true}),
+  };
+}

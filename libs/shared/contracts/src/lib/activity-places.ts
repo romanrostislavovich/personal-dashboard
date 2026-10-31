@@ -27,6 +27,22 @@ export type PhoneLocationIngest = z.infer<typeof phoneLocationIngestSchema>;
 export const placesQuerySchema = z.object({day: LOCAL_DATE});
 export type PlacesQuery = z.infer<typeof placesQuerySchema>;
 
+/** The heat map of a period (Activity → Places): at most a year. */
+export const placesHeatQuerySchema = z
+  .object({from: LOCAL_DATE, to: LOCAL_DATE})
+  .refine(q => q.from <= q.to, {message: 'from after to'})
+  .refine(q => Date.parse(q.to) - Date.parse(q.from) <= 366 * 86_400_000, {
+    message: 'a year at most',
+  });
+export type PlacesHeatQuery = z.infer<typeof placesHeatQuerySchema>;
+
+/** A cell of ~150 m and the minutes spent in it over the period. */
+export interface HeatCell {
+  latitude: number;
+  longitude: number;
+  minutes: number;
+}
+
 /** A place the user named ("Home", "Work"): the stays within its radius take its name. */
 export interface NamedPlace {
   id: string;

@@ -3,6 +3,7 @@ package com.personalworld.dashboard.inbox;
 import androidx.annotation.NonNull;
 import com.capacitorjs.plugins.pushnotifications.MessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import com.personalworld.dashboard.sensors.SensorsWorker;
 import java.util.Map;
 
 /**
@@ -21,6 +22,9 @@ public class PushMessagingService extends MessagingService {
         }
         if ("close".equals(data.get("kind"))) {
             InboxNotifications.close(this, data.get("id"));
+        } else if ("revive".equals(data.get("kind"))) {
+            // Silent: the server's watchdog heard nothing for long (PhoneWatchdogService).
+            SensorsWorker.revive(this);
         } else {
             InboxNotifications.show(this, data);
         }

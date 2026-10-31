@@ -20,6 +20,7 @@ export * from './lib/secrets/secrets.service';
 export * from './lib/server-keys/server-keys.service';
 export * from './lib/notifications/notification-channel';
 export * from './lib/notifications/notifications.service';
+export {PushService} from './lib/notifications/push/push.service';
 export * from './lib/notifications/telegram/bot-command';
 export {TelegramBotService} from './lib/notifications/telegram/telegram-bot.service';
 export * from './lib/achievements/achievement-metric';

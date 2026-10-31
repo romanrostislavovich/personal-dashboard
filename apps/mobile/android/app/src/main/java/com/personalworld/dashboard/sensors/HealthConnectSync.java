@@ -99,6 +99,16 @@ public final class HealthConnectSync {
         return list.toArray(new String[0]);
     }
 
+    /** The end of the newest record Health Connect gave (the band's freshest data); 0 — none yet. */
+    static long newest(SensorsStore store) {
+        return store.number("healthNewest");
+    }
+
+    /** The next run sends the last days again, whatever the change log says (a revive). */
+    static void resendRecentDays(SensorsStore store) {
+        store.setNumber("healthResendFrom", System.currentTimeMillis() - AFTER_DELETION_MS);
+    }
+
     public static boolean supported() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
     }
@@ -195,6 +205,7 @@ public final class HealthConnectSync {
             }
             long from = Long.MAX_VALUE;
             long to = Long.MIN_VALUE;
+            long newest = 0;
             String next = token;
             try {
                 ChangeLogsResponse changes;
@@ -206,6 +217,7 @@ public final class HealthConnectSync {
                         long[] span = span(record);
                         from = Math.min(from, span[0]);
                         to = Math.max(to, span[1]);
+                        newest = Math.max(newest, Math.min(span[1], now));
                     }
                     if (!changes.getDeletedLogs().isEmpty()) {
                         from = Math.min(from, now - AFTER_DELETION_MS);
@@ -220,10 +232,19 @@ public final class HealthConnectSync {
                 from = now - AFTER_DELETION_MS;
                 to = now;
             }
+            long resend = store.number("healthResendFrom");
+            if (resend > 0) {
+                from = Math.min(from, resend);
+                to = now;
+            }
             if (from <= to) {
                 send(store, from, Math.min(to + 1, now));
             }
             store.setText("healthToken", next);
+            store.setNumber("healthResendFrom", 0);
+            if (newest > store.number("healthNewest")) {
+                store.setNumber("healthNewest", newest);
+            }
         }
 
         private String changesToken(List<Class<? extends Record>> types) throws Exception {

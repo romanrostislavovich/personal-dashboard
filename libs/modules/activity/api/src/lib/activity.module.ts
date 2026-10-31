@@ -19,6 +19,7 @@ import {PhoneSecurityController} from './phone/phone-security.controller';
 import {PhoneVoiceController} from './phone/phone-voice.controller';
 import {PhoneUsageLinks} from './phone/phone-usage.links';
 import {PhoneSignalsService} from './phone/phone-signals.service';
+import {PhoneWatchdogService} from './phone/phone-watchdog.service';
 import {PhoneUsageService} from './phone/phone-usage.service';
 import {PlacesController} from './places/places.controller';
 import {PlaceNamesService} from './places/place-names.service';
@@ -79,6 +80,7 @@ import {TelemetrySummaryService} from './telemetry-summary.service';
     PhoneUsageLinks,
     PhoneUsageService,
     PhoneSignalsService,
+    PhoneWatchdogService,
     PlacesService,
     SitesService,
     ProjectTimeService,

@@ -32,6 +32,7 @@ import {
   PlaceInput,
   PlaceLookup,
   PlacesImport,
+  HeatCell,
   PlacesOverview,
   PlacesSettings,
   WorkstateInput,
@@ -107,6 +108,14 @@ export class ActivityApi {
 
   mergeDevice(id: string, into: string) {
     return fromCore(() => this.activity.mergeDevice(id, into));
+  }
+
+  /** The heat map of a period; nothing is asked while `period` gives `null`. */
+  placesHeat(period: () => {from: string; to: string} | null) {
+    return httpResource<HeatCell[]>(() => {
+      const range = period();
+      return range ? ACTIVITY_READS.placesHeat(range) : undefined;
+    });
   }
 
   /** A day in places and trips; reloads when the day changes. */

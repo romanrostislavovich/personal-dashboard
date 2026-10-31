@@ -30,6 +30,9 @@ import {
   PlacesOverview,
   PlacesQuery,
   placesQuerySchema,
+  HeatCell,
+  PlacesHeatQuery,
+  placesHeatQuerySchema,
   PlaceUpdate,
   placeUpdateSchema,
 } from '@pd/contracts';
@@ -75,6 +78,16 @@ export class PlacesController {
     @Query(new ZodValidationPipe(placesQuerySchema)) query: PlacesQuery,
   ): Promise<PlacesOverview> {
     return this.places.overview(user.id, query.day);
+  }
+
+  /** Where a period was spent, for the map's heat layer. */
+  @Get('places/heat')
+  heat(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(placesHeatQuerySchema))
+    query: PlacesHeatQuery,
+  ): Promise<HeatCell[]> {
+    return this.places.heat(user.id, query);
   }
 
   @Get('places/settings')
