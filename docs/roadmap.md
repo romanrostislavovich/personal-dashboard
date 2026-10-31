@@ -254,7 +254,8 @@ None written down now (the voice assistant's two went to [On hold](#on-hold)).
   answer is the film's rating, then an optional few words (text or a voice message) become its
   note. Films only, not shows. Quiet hours hold it till the morning. (The owner's choices,
   2026-10-26.)
-- **Life: steps** — in the day feed, once the steps come from somewhere (a phone, a band)
+- ✅ **Life: steps** (2026-10-31) — the band's steps and the night's sleep (with its score) in the
+  day feed, from Health → Band
 
 ### Next
 
@@ -333,8 +334,8 @@ None written down now (the voice assistant's two went to [On hold](#on-hold)).
   compared with the mood); next: an estimate out of them ("slept ~6 h, went to bed at 2:40"), a
   weekly trend, in Life; the phone refines it later
 - **Sleep, steps, weight** — the first part of Fitness: ✅ sleep and steps come from the band
-  through Health Connect (Health → Band, 2026-10-29); still to come: weight, and the steps and the
-  sleep in Life and in the morning digest
+  through Health Connect (Health → Band, 2026-10-29); ✅ in the Life feed (2026-10-31); still to
+  come: weight, and the steps and the sleep in the morning digest
 - **Weather: more** — air quality and pollen; days off and public holidays in the digest
 - **Shopping list** — items added from Telegram ("milk, bread") or the page, grouped by shop or
   category, ticked off in the shop; ingredients of a recipe added in one click; can be shared

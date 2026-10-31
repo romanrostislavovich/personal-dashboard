@@ -613,5 +613,12 @@
       "empty": "Данных от браслета пока нет.",
       "open": "Открыть"
     }
+  },
+  "life": {
+    "steps": "Шаги: {{steps}}",
+    "sleep": "Сон {{hours}} ч {{minutes}} мин · {{from}}–{{to}}",
+    "sleepNoTimes": "Сон {{hours}} ч {{minutes}} мин",
+    "sleepScored": "Сон {{hours}} ч {{minutes}} мин · {{from}}–{{to}} · оценка {{score}}",
+    "sleepScoredNoTimes": "Сон {{hours}} ч {{minutes}} мин · оценка {{score}}"
   }
 }

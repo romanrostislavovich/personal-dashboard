@@ -235,9 +235,12 @@ export class SectionsAchievements implements OnModuleInit {
       todayIn(this.users.timeZoneOf(await this.users.findById(userId))),
     );
     const yesterday = toLocalDate(addDays(parseLocalDate(today), -1));
-    // The weather is in every day's feed: it tells nothing about how full the day was.
+    // The weather and the band (steps, sleep) are in every day's feed on their own: they tell
+    // nothing about how full the day was.
     const days = await Promise.all(
-      [today, yesterday].map(day => this.life.day(userId, day, ['weather'])),
+      [today, yesterday].map(day =>
+        this.life.day(userId, day, ['weather', 'health']),
+      ),
     );
     return Math.max(
       ...days.map(day => new Set(day.events.map(event => event.module)).size),
