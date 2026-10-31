@@ -436,6 +436,20 @@ export type FinanceReportQuery = z.infer<typeof financeReportQuerySchema>;
 
 // --- Wishlist ---
 
+/** Whether a link names a host with a domain (`shop.pl`), not a single word (`https://go`). */
+export function siteOnTheInternet(url: string): boolean {
+  const host = new URL(url).hostname;
+  return host.includes('.') && !host.endsWith('.');
+}
+
+/**
+ * Whether a check failed because the link's site is not found at all (DNS): the link is wrong,
+ * not the shop's page.
+ */
+export function wishSiteNotFound(checkError: string | null): boolean {
+  return checkError === 'ENOTFOUND' || checkError === 'EAI_AGAIN';
+}
+
 export const wishInputSchema = z
   .object({
     /**
@@ -445,6 +459,9 @@ export const wishInputSchema = z
     url: z
       .url({protocol: /^https?$/})
       .max(2000)
+      // A shop is on the internet: `https://go` (a link cut short) passed and then failed
+      // every daily check with EAI_AGAIN.
+      .refine(siteOnTheInternet, {message: 'Not a site on the internet'})
       .nullish(),
     /** Empty — the name the page gives (a wish without a page needs one). */
     name: z.string().trim().max(200).nullish(),

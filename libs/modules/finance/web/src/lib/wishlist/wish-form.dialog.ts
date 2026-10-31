@@ -146,7 +146,11 @@ export class WishFormDialog {
   private readonly wish = this.data.wish;
   protected readonly form = inject(NonNullableFormBuilder).group(
     {
-      url: [this.wish?.url ?? '', Validators.pattern(/^https?:\/\/\S+$/i)],
+      // A host with a domain, as the server checks: not `https://go`.
+      url: [
+        this.wish?.url ?? '',
+        Validators.pattern(/^https?:\/\/[^\s/?#]+\.[^\s/?#.]+([/?#]\S*)?$/i),
+      ],
       name: [this.wish?.name ?? ''],
       price: [
         this.wish?.price ?? (null as number | null),

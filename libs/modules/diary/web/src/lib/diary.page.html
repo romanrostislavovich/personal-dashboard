@@ -16,6 +16,9 @@
       [attr.aria-label]="'diary.settingsMenu' | transloco"
     >
       <mat-icon>tune</mat-icon>
+      @if (held().evening || held().weekly) {
+        <span class="held-dot"></span>
+      }
     </button>
     <mat-menu #diaryMenu="matMenu" xPosition="before">
       <button
@@ -33,6 +36,17 @@
         }}</mat-icon>
         {{ 'diary.eveningReminder' | transloco }}
       </button>
+      @if (held().evening; as till) {
+        <a
+          mat-menu-item
+          class="wrap held"
+          routerLink="/settings"
+          [queryParams]="{tab: 'notifications'}"
+        >
+          <mat-icon>bedtime</mat-icon>
+          {{ 'diary.held.evening' | transloco: {till} }}
+        </a>
+      }
       <button
         mat-menu-item
         class="wrap"
@@ -49,6 +63,17 @@
         }}</mat-icon>
         {{ 'diary.weeklySummary' | transloco }}
       </button>
+      @if (held().weekly; as till) {
+        <a
+          mat-menu-item
+          class="wrap held"
+          routerLink="/settings"
+          [queryParams]="{tab: 'notifications'}"
+        >
+          <mat-icon>bedtime</mat-icon>
+          {{ 'diary.held.weekly' | transloco: {till} }}
+        </a>
+      }
       <button mat-menu-item (click)="editTemplate()">
         <mat-icon>article</mat-icon> {{ 'diary.template.button' | transloco }}
       </button>

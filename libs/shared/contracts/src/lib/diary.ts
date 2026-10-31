@@ -49,6 +49,11 @@ export interface DiaryStats {
   topMarks: {emoji: string; count: number}[];
 }
 
+/** When the evening reminder is sent (the cron of DiaryJobs). */
+export const DIARY_EVENING_AT = '21:00';
+/** When the review of the week is sent on Sundays (the cron of DiaryJobs). */
+export const DIARY_WEEKLY_AT = '20:00';
+
 export const diarySettingsSchema = z.object({
   /** Reminder at 21:00 if there is no entry for the day. */
   eveningReminder: z.boolean(),

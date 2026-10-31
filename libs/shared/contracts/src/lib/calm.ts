@@ -82,3 +82,14 @@ export function quietMinutesLeft(
   }
   return (to - minuteOfDay + 24 * 60) % (24 * 60);
 }
+
+/**
+ * When a message made at `clock` (`HH:MM`) comes, if the quiet hours hold it; `null` — it comes
+ * on time.
+ */
+export function heldTill(
+  hours: CalmSettings['quietHours'],
+  clock: string,
+): string | null {
+  return hours && quietMinutesLeft(hours, minutesOf(clock)) ? hours.to : null;
+}

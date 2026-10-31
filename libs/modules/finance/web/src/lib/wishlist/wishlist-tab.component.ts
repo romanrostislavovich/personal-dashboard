@@ -14,7 +14,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
-import {Wish, WishInput} from '@pd/contracts';
+import {Wish, WishInput, wishSiteNotFound} from '@pd/contracts';
 import {
   LinkedTextComponent,
   SparklineComponent,
@@ -195,8 +195,10 @@ import {priceTrend, shopName} from './wish-view';
               <p class="warning">
                 <mat-icon inline>warning</mat-icon>
                 {{
-                  'finance.wishlist.unreadable'
-                    | transloco: {error: wish.checkError}
+                  (siteNotFound(wish.checkError)
+                    ? 'finance.wishlist.siteNotFound'
+                    : 'finance.wishlist.unreadable'
+                  ) | transloco: {error: wish.checkError}
                 }}
               </p>
             }
@@ -376,6 +378,7 @@ export class WishlistTabComponent {
   protected readonly wishes = this.api.wishlist();
   /** For the form: a wish can be saved for one of them. */
   protected readonly abs = Math.abs;
+  protected readonly siteNotFound = wishSiteNotFound;
   /** The wish whose price history is shown. */
   protected readonly open = signal<string | null>(null);
   protected readonly history = this.api.wishPrices(this.open);

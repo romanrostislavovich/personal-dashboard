@@ -171,5 +171,9 @@
   },
   "dayContext": {
     "title": "What the day was like"
+  },
+  "held": {
+    "evening": "The quiet hours hold it: it comes at {{till}}. Change the quiet hours →",
+    "weekly": "The quiet hours hold the review: it comes at {{till}}. Change the quiet hours →"
   }
 }
