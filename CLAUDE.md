@@ -26,10 +26,12 @@ Architecture and rules: `docs/architecture.md`. Quick start: `README.md`. Contri
 ## Skills and hooks (`.claude/`)
 
 - Skills: `/deploy`, `/new-module`, `/new-tab`, `/architecture-review`, `/migration`,
-  `/verify-ui`, `/phone`, `/bug` — the project's checklists; use them instead of doing these from
-  memory.
-- Agent `architecture-reviewer` (`.claude/agents/`): the `/architecture-review` checklist in a
-  read-only subagent, for a feature branch before it is merged.
+  `/verify-ui`, `/phone`, `/bug`, `/team-review` — the project's checklists; use them instead of
+  doing these from memory.
+- Agents — the development team (`.claude/agents/`): `analyst` before the code of a feature (the
+  questions to the owner and a proposal); `frontend-reviewer`, `backend-reviewer`,
+  `architecture-reviewer` and `qa` before a merge, together through `/team-review`; `web-designer`
+  for how pages look and work (mockups under `docs/design/`, a redesign in steps).
 - Hooks (`.claude/settings.json`): a new session starts with the branch, what is not committed,
   main's commits made elsewhere, CI of main and the commit the server runs; every edited file is formatted by prettier and fixed by eslint
   (what eslint cannot fix comes back as an error); `git commit` is blocked while the staged files
