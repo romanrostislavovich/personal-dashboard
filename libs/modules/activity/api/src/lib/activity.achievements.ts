@@ -193,7 +193,7 @@ export class ActivityAchievements implements OnModuleInit {
         [
           6,
           '☕',
-          {en: 'A full day', ru: 'Полный день'},
+          {en: 'A whole day', ru: 'Полный день'},
           {
             en: '6 hours at the computer in one day',
             ru: '6 часов за компьютером за один день',
@@ -266,7 +266,7 @@ export class ActivityAchievements implements OnModuleInit {
         [
           4,
           '🎯',
-          {en: 'In the flow', ru: 'В потоке'},
+          {en: 'A day in the tools', ru: 'День в инструментах'},
           {
             en: '4 hours in development tools in one day',
             ru: '4 часа в инструментах разработки за один день',
@@ -391,7 +391,7 @@ export class ActivityAchievements implements OnModuleInit {
       [
         100,
         '🎬',
-        {en: 'Film buff', ru: 'Киноман'},
+        {en: 'Movie lover', ru: 'Киноман'},
         {en: '100 hours in players', ru: '100 часов в плеерах'},
       ],
     ]);
@@ -602,7 +602,7 @@ export class ActivityAchievements implements OnModuleInit {
         [
           30,
           '🏔️',
-          {en: 'Unbreakable', ru: 'Несгибаемый'},
+          {en: 'Unwavering focus', ru: 'Непоколебимый фокус'},
           {
             en: 'A focus session 30 days in a row',
             ru: 'Фокус-сессия 30 дней подряд',

@@ -56,7 +56,7 @@ export class MusicAchievements implements OnModuleInit {
       [
         50_000,
         '💿',
-        {en: 'Collector', ru: 'Коллекционер'},
+        {en: 'Crate digger', ru: 'Копатель пластинок'},
         plays('50,000', '50 000'),
         'epic',
       ],
@@ -93,7 +93,7 @@ export class MusicAchievements implements OnModuleInit {
       [
         100,
         '🔊',
-        {en: 'Marathon', ru: 'Марафон'},
+        {en: 'Nonstop', ru: 'Нон-стоп'},
         {en: '100 tracks in a single day', ru: '100 треков за один день'},
         'epic',
       ],
@@ -116,7 +116,7 @@ export class MusicAchievements implements OnModuleInit {
       [
         100,
         '🦉',
-        {en: 'Night owl', ru: 'Сова'},
+        {en: 'Night listener', ru: 'Ночной слушатель'},
         {
           en: '100 tracks between midnight and 5 am',
           ru: '100 треков с полуночи до 5 утра',
@@ -153,7 +153,7 @@ export class MusicAchievements implements OnModuleInit {
         [
           5,
           '🎼',
-          {en: 'Many-sided', ru: 'Разносторонний'},
+          {en: 'Eclectic', ru: 'Эклектик'},
           {
             en: `5 genres, ${GENRE_PLAYS}+ plays each`,
             ru: `5 жанров, в каждом ${GENRE_PLAYS}+ прослушиваний`,
@@ -314,7 +314,7 @@ export class MusicAchievements implements OnModuleInit {
       [
         1,
         '🎂',
-        {en: 'Anniversary', ru: 'Годовщина'},
+        {en: 'Music birthday', ru: 'Музыкальный день рождения'},
         {en: 'A year since the first play', ru: 'Год с первого прослушивания'},
       ],
       [

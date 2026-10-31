@@ -235,7 +235,7 @@ export class GamesAchievements implements OnModuleInit {
         achievementTier(
           50,
           '🎩',
-          {en: 'Many names', ru: 'Многоликий'},
+          {en: 'A wall of titles', ru: 'Стена званий'},
           {en: '50 titles', ru: '50 званий'},
         ),
         achievementTier(

@@ -53,7 +53,7 @@ export class BandAchievements implements OnModuleInit {
         [
           100,
           '🛰️',
-          {en: 'Always in touch', ru: 'Всегда на связи'},
+          {en: 'Never takes it off', ru: 'Всегда на руке'},
           {en: '100 days with the band', ru: '100 дней с браслетом'},
         ],
         [

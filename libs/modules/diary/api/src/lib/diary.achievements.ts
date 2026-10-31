@@ -73,7 +73,7 @@ export class DiaryAchievements implements OnModuleInit {
         achievementTier(
           365,
           '🏛️',
-          {en: 'A year without gaps', ru: 'Год без пропусков'},
+          {en: 'A year of pages', ru: 'Год страниц'},
           {
             en: '365 days in a row with a diary entry',
             ru: '365 дней подряд с записью в дневнике',

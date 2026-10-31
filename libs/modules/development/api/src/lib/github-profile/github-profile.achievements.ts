@@ -84,7 +84,7 @@ export class GithubProfileAchievements implements OnModuleInit {
         [
           10,
           '⚡',
-          {en: 'Productive day', ru: 'Продуктивный день'},
+          {en: 'Busy day', ru: 'Продуктивный день'},
           {
             en: '10 contributions in one day',
             ru: '10 контрибуций за один день',
@@ -93,7 +93,7 @@ export class GithubProfileAchievements implements OnModuleInit {
         [
           25,
           '🚀',
-          {en: 'In the flow', ru: 'В потоке'},
+          {en: 'Contribution spree', ru: 'Россыпь контрибуций'},
           {
             en: '25 contributions in one day',
             ru: '25 контрибуций за один день',
@@ -136,7 +136,7 @@ export class GithubProfileAchievements implements OnModuleInit {
         [
           100,
           '💯',
-          {en: 'Hundred days of code', ru: 'Сто дней кода'},
+          {en: 'Green streak', ru: 'Зелёная полоса'},
           {en: '100 days in a row', ru: '100 дней подряд'},
         ],
         [
@@ -167,7 +167,7 @@ export class GithubProfileAchievements implements OnModuleInit {
       [
         200,
         '🏗️',
-        {en: 'Builder', ru: 'Строитель'},
+        {en: 'Pull request machine', ru: 'Машина пулл-реквестов'},
         {en: '200 pull requests', ru: '200 пулл-реквестов'},
       ],
       [

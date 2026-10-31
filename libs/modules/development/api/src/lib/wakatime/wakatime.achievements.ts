@@ -41,7 +41,7 @@ export class WakatimeAchievements implements OnModuleInit {
         [
           100,
           '💻',
-          {en: 'A hundred hours', ru: 'Сотня часов'},
+          {en: 'A hundred hours of code', ru: 'Сотня часов кода'},
           {en: '100 hours of coding', ru: '100 часов кодинга'},
         ],
         [
@@ -53,7 +53,7 @@ export class WakatimeAchievements implements OnModuleInit {
         [
           1000,
           '🏅',
-          {en: 'A thousand hours', ru: 'Тысяча часов'},
+          {en: 'A thousand hours of code', ru: 'Тысяча часов кода'},
           {en: '1,000 hours of coding', ru: '1 000 часов кодинга'},
         ],
         [
@@ -71,7 +71,7 @@ export class WakatimeAchievements implements OnModuleInit {
         [
           4,
           '☕',
-          {en: 'Deep work', ru: 'Глубокая работа'},
+          {en: 'Heads down', ru: 'С головой в коде'},
           {
             en: '4 hours of coding in one day',
             ru: '4 часа кодинга за один день',
@@ -89,7 +89,7 @@ export class WakatimeAchievements implements OnModuleInit {
         [
           12,
           '🦉',
-          {en: 'Marathon', ru: 'Марафон'},
+          {en: 'Code marathon', ru: 'Кодинг-марафон'},
           {
             en: '12 hours of coding in one day',
             ru: '12 часов кодинга за один день',
@@ -120,7 +120,7 @@ export class WakatimeAchievements implements OnModuleInit {
         [
           100,
           '💯',
-          {en: 'A hundred days', ru: 'Сто дней'},
+          {en: 'A hundred coding days', ru: 'Сто дней за кодом'},
           {en: '100 days with coding', ru: '100 дней с кодингом'},
         ],
         [
@@ -138,7 +138,7 @@ export class WakatimeAchievements implements OnModuleInit {
         [
           7,
           '🔥',
-          {en: 'No days off', ru: 'Без выходных'},
+          {en: 'Code without days off', ru: 'Код без выходных'},
           {en: 'Coding 7 days in a row', ru: 'Кодинг 7 дней подряд'},
         ],
         [

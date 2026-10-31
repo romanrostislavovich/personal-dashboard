@@ -27,13 +27,13 @@ export class SteamAchievements implements OnModuleInit {
         [
           100,
           '🎮',
-          {en: 'Warmed up', ru: 'Разогрев'},
+          {en: 'Warm-up', ru: 'Разогрев'},
           {en: '100 hours in Steam games', ru: '100 часов в играх Steam'},
         ],
         [
           1000,
           '🕹️',
-          {en: 'A thousand hours', ru: 'Тысяча часов'},
+          {en: 'A thousand hours in game', ru: 'Тысяча часов в игре'},
           {en: '1,000 hours in Steam games', ru: '1 000 часов в играх Steam'},
         ],
         [
@@ -109,7 +109,7 @@ export class SteamAchievements implements OnModuleInit {
         [
           2000,
           '👑',
-          {en: 'Completionist', ru: 'Перфекционист'},
+          {en: 'Trophy cabinet', ru: 'Полка трофеев'},
           {
             en: '2,000 achievements in Steam games',
             ru: '2 000 достижений в играх Steam',
