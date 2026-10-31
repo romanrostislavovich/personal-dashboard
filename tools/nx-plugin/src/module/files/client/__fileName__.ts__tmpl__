@@ -1,0 +1,18 @@
+import {<%= className %>Item, <%= className %>ItemInput} from '@pd/contracts';
+import {ApiClient, apiRequest} from '../api-client';
+
+// The requests of the <%= titleEn %> module: every client (web, phone, desktop) goes through these.
+
+export const <%= constantName %>_READS = {
+  /** Newest first. */
+  list: () => apiRequest('/api/<%= fileName %>'),
+};
+
+export function <%= propertyName %>Api(api: ApiClient) {
+  return {
+    list: () => api.read<<%= className %>Item[]>(<%= constantName %>_READS.list()),
+    create: (input: <%= className %>ItemInput) =>
+      api.post<<%= className %>Item>('/api/<%= fileName %>', input),
+    remove: (id: string) => api.delete(`/api/<%= fileName %>/${id}`),
+  };
+}

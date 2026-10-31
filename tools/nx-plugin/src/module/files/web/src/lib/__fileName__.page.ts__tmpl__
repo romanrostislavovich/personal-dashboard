@@ -1,0 +1,98 @@
+import {ChangeDetectionStrategy, Component, inject, signal} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatListModule} from '@angular/material/list';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {EmptyStateComponent, ResourceStateComponent} from '@pd/web-core';
+import {firstValueFrom} from 'rxjs';
+import {<%= className %>Api} from './<%= fileName %>.api';
+
+/** The <%= titleEn %> page: the list and a field to add to it. */
+@Component({
+  selector: 'pd-<%= fileName %>-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    FormsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatListModule,
+    TranslocoPipe,
+    EmptyStateComponent,
+    ResourceStateComponent,
+  ],
+  template: `
+    <header class="page-header">
+      <h1 class="page-title">{{ '<%= fileName %>.title' | transloco }}</h1>
+    </header>
+
+    <form class="add" (ngSubmit)="add()">
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>{{ '<%= fileName %>.name' | transloco }}</mat-label>
+        <input matInput name="name" [(ngModel)]="name" maxlength="200" />
+      </mat-form-field>
+      <button matButton="filled" type="submit" [disabled]="!name().trim()">
+        <mat-icon>add</mat-icon> {{ 'core.actions.add' | transloco }}
+      </button>
+    </form>
+
+    <pd-resource-state [resource]="items">
+      <ng-template>
+        @for (item of items.value(); track item.id) {
+          <mat-list-item>
+            <span matListItemTitle>{{ item.name }}</span>
+            <button
+              matIconButton
+              matListItemMeta
+              [attr.aria-label]="'core.actions.delete' | transloco"
+              (click)="remove(item.id)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-list-item>
+        } @empty {
+          <pd-empty-state
+            icon="<%= icon %>"
+            [title]="'<%= fileName %>.emptyTitle' | transloco"
+            [text]="'<%= fileName %>.empty' | transloco"
+          />
+        }
+      </ng-template>
+    </pd-resource-state>
+  `,
+  styles: `
+    .add {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+  `,
+})
+export class <%= className %>Page {
+  private readonly api = inject(<%= className %>Api);
+  protected readonly items = this.api.list();
+  protected readonly name = signal('');
+
+  protected async add(): Promise<void> {
+    const name = this.name().trim();
+    if (!name) {
+      return;
+    }
+    await firstValueFrom(this.api.create({name}));
+    this.name.set('');
+    this.items.reload();
+  }
+
+  protected async remove(id: string): Promise<void> {
+    await firstValueFrom(this.api.remove(id));
+    this.items.reload();
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "tools",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools/nx-plugin/src",
+  "projectType": "library",
+  "tags": ["scope:tools"],
+  "targets": {}
+}

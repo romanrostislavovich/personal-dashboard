@@ -98,6 +98,12 @@ repositories of Open Source, `AccountSource` for an account and its activity.
 
 ## Writing a new module
 
+**The short way:** `npx nx g @pd/tools:module strava --titleRu="Страва" --icon=directions_run`
+(`tools/nx-plugin`) does steps 1–6 below for a list of items — the contracts, the client core's
+requests, the api library (a table, a service, a controller), the web library (a page, i18n) and
+their registration; then `npm run db:generate` and the rest of `.claude/skills/new-module/SKILL.md`.
+The steps by hand, for what the generator does not cover:
+
 Say it is `strava`.
 
 1. **Generate the libraries:**

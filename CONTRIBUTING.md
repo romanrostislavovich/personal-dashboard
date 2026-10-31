@@ -21,6 +21,7 @@ npm run dev              # API on :3300, web on http://localhost:4200
 | `npm run affected`          | Lint, tests and build of what changed since `main`   |
 | `npm run typecheck`         | Types of every library (`-- libs/x/y` for some)      |
 | `npm run format:check`      | Formatting of the whole repository, as CI checks it  |
+| `npx nx g @pd/tools:module` | A new module: libraries, contracts, requests, i18n   |
 | `npm run build`             | Production build of API and web                      |
 | `npm run desktop:package`   | Build a desktop installer                            |
 

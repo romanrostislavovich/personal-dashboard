@@ -1,0 +1,38 @@
+import nx from '@nx/eslint-plugin';
+import baseConfig from '../../../../eslint.config.mjs';
+import {
+  pdTemplatePlugin,
+  templateAccessibilityRules,
+} from '../../../../tools/eslint/template-accessibility.mjs';
+
+export default [
+  ...nx.configs['flat/angular'],
+  ...nx.configs['flat/angular-template'],
+  ...baseConfig,
+  {
+    files: ['**/*.ts'],
+    rules: {
+      '@angular-eslint/directive-selector': [
+        'error',
+        {
+          type: 'attribute',
+          prefix: 'pd',
+          style: 'camelCase',
+        },
+      ],
+      '@angular-eslint/component-selector': [
+        'error',
+        {
+          type: 'element',
+          prefix: 'pd',
+          style: 'kebab-case',
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.html'],
+    plugins: {pd: pdTemplatePlugin},
+    rules: templateAccessibilityRules,
+  },
+];

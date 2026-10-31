@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "PdModule",
+  "title": "A dashboard module",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The module's id, kebab-case: reading-list",
+      "$default": {"$source": "argv", "index": 0},
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "x-prompt": "The module's id (kebab-case, e.g. reading-list)?"
+    },
+    "titleEn": {
+      "type": "string",
+      "description": "Its name in the menu, in English (default: from the id)"
+    },
+    "titleRu": {
+      "type": "string",
+      "description": "Its name in the menu, in Russian (default: the English one)"
+    },
+    "icon": {
+      "type": "string",
+      "description": "A Material icon for the menu",
+      "default": "widgets"
+    },
+    "group": {
+      "type": "string",
+      "description": "The group of the side menu",
+      "enum": ["things", "me", "work", "leisure", "safety", "bottom"],
+      "default": "things"
+    }
+  },
+  "required": ["name"]
+}

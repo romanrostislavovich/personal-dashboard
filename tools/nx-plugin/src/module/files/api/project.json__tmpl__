@@ -1,0 +1,9 @@
+{
+  "name": "<%= fileName %>-api",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/modules/<%= fileName %>/api/src",
+  "projectType": "library",
+  "tags": ["scope:api", "type:module"],
+  "// targets": "to see all targets run: nx show project <%= fileName %>-api --web",
+  "targets": {}
+}
