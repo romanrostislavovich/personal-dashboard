@@ -14,6 +14,11 @@ Changing the phone's settings or permissions is the owner's call — open the sc
   `MSYS_NO_PATHCONV=1 adb exec-out screencap -p > <scratchpad>/x.png`, then Read it.
 - Install the APK the deploy built, keeping data:
   `adb install -r dist/server-apk/personal-dashboard.apk` (Play Protect does not object over adb).
+  HyperOS then shows its own question (Security → `AdbInstallActivity`, "Install via USB") about
+  3 s after the copy: the owner must have the phone unlocked, wait for it and tap "Install".
+  Pressing Home, switching apps or a locked screen cancels it — adb reports
+  `INSTALL_FAILED_USER_RESTRICTED: Install canceled by user`. Tell the owner before running the
+  command; `adb logcat -d | grep AdbInstallActivity` shows whether the question was shown.
   Version: `adb shell dumpsys package com.personalworld.dashboard | grep versionName`.
 - Open a page of the app: `adb shell am start -a android.intent.action.VIEW -d "personaldashboard://<route>" com.personalworld.dashboard`
   (e.g. `health/band`, `settings?tab=devices` — the phone card there starts a collection run).
