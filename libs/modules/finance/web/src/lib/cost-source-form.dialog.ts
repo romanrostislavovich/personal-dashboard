@@ -15,7 +15,7 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {pickableProjects} from '@pd/web-core';
-import {TranslocoPipe} from '@jsverse/transloco';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {
   COST_PROVIDERS,
   CostProvider,
@@ -28,13 +28,19 @@ export interface CostSourceFormData {
   defaultProjectId: string | null;
 }
 
-/** Defaults for each service — the user can change them. */
+/** Defaults for each service — the user can change them; the category in the user's language. */
 const PROVIDER_DEFAULTS: Record<
   CostProvider,
   {name: string; category: string}
 > = {
-  hetzner: {name: 'Hetzner Cloud', category: 'Хостинг'},
-  deepseek: {name: 'DeepSeek API', category: 'AI API'},
+  hetzner: {
+    name: 'Hetzner Cloud',
+    category: 'finance.costSources.categories.hosting',
+  },
+  deepseek: {
+    name: 'DeepSeek API',
+    category: 'finance.costSources.categories.aiApi',
+  },
 };
 
 @Component({
@@ -150,13 +156,17 @@ export class CostSourceFormDialog {
   private readonly dialogRef = inject(
     MatDialogRef<CostSourceFormDialog, CostSourceInput>,
   );
+  private readonly transloco = inject(TranslocoService);
 
   protected readonly providers = COST_PROVIDERS;
   protected readonly form = inject(NonNullableFormBuilder).group({
     provider: ['hetzner' as CostProvider],
     apiToken: ['', [Validators.required, Validators.minLength(10)]],
     name: [PROVIDER_DEFAULTS.hetzner.name, Validators.required],
-    category: [PROVIDER_DEFAULTS.hetzner.category, Validators.required],
+    category: [
+      this.transloco.translate(PROVIDER_DEFAULTS.hetzner.category),
+      Validators.required,
+    ],
     projectId: [this.data.defaultProjectId ?? ''],
   });
 
@@ -170,7 +180,12 @@ export class CostSourceFormDialog {
   constructor() {
     // When the service changes, fill in its name and category.
     this.form.controls.provider.valueChanges.subscribe(provider =>
-      this.form.patchValue(PROVIDER_DEFAULTS[provider]),
+      this.form.patchValue({
+        name: PROVIDER_DEFAULTS[provider].name,
+        category: this.transloco.translate(
+          PROVIDER_DEFAULTS[provider].category,
+        ),
+      }),
     );
   }
 

@@ -113,6 +113,12 @@ docker compose logs -f app
 Open `https://<DOMAIN>/api/health` — it answers `{"status":"ok"}`. The database is empty for now:
 your user and data arrive with the first sync.
 
+The log is one JSON object a line (`LOG_FORMAT=text` in `.env` for the coloured lines). Every
+line of one request or one run of a background job carries the same `traceId` — the request's is
+also in its `X-Request-Id` response header — so `docker compose logs app | grep <id>` shows all of
+it. The numbers (requests, job runs, memory, the AI's tokens, notifications, sync) are in
+**Settings → System → Metrics**.
+
 ## 6. Connect your computer
 
 In the computer's `.env` (see [sync.md](sync.md)):
@@ -210,6 +216,19 @@ docker compose start app
 
 Without the last `psql` line the computer would not notice the restore and would not send back
 what changed after the dump.
+
+## An open copy
+
+With `OPEN_EXPORT_DIR` set, the owner's data is also written there once a day as plain files —
+read, searched and kept without the dashboard (and without PostgreSQL), in
+`OPEN_EXPORT_DIR/personal-dashboard/data/`: `data/<table>.jsonl` (the rows, one JSON object a
+line), `diary/*.md` (the entries in Markdown), `finance/*.csv` (for a spreadsheet), `files/…`
+(photos). It is the layout of Settings → Data → Export: the contents of `data/` packed into a ZIP
+import back. A new copy takes the old one's place whole; nothing else in the folder is touched.
+The local instance (`docker-compose.yml`) writes it to `./exports` of the repository — a timer: 2
+minutes after the start, then every 24 hours; the server's `deploy/compose.yml` does not set it.
+Other accounts are not copied, and a bank's access session is left out. Like the dumps, it holds
+your data unencrypted, the diary too: keep the folder private.
 
 ## The security agent on the server
 

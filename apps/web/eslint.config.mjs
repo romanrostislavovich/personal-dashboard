@@ -1,5 +1,9 @@
 import nx from '@nx/eslint-plugin';
 import baseConfig from '../../eslint.config.mjs';
+import {
+  pdTemplatePlugin,
+  templateAccessibilityRules,
+} from '../../tools/eslint/template-accessibility.mjs';
 
 export default [
   ...nx.configs['flat/angular'],
@@ -28,7 +32,7 @@ export default [
   },
   {
     files: ['**/*.html'],
-    // Override or add rules here
-    rules: {},
+    plugins: {pd: pdTemplatePlugin},
+    rules: templateAccessibilityRules,
   },
 ];

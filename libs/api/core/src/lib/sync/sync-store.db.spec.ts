@@ -504,6 +504,133 @@ describe.skipIf(!ADMIN_URL)(
       expect(parked.error).toContain('Unknown table');
     });
 
+    describe('across versions', () => {
+      /** The client's birthday as a server of another version would send it. */
+      const changeOf = async (
+        id: string,
+        edit: (row: Record<string, unknown>) => void,
+      ): Promise<SyncChange> => {
+        const [{row}] = await rows<{row: Record<string, unknown>}>(
+          client,
+          sql`SELECT to_jsonb(t) AS row FROM birthdays t WHERE id = ${id}`,
+        );
+        edit(row);
+        return {
+          table: 'birthdays',
+          pk: JSON.stringify({id}),
+          changedAt: new Date(Date.now() + 60_000).toISOString(),
+          row: JSON.stringify(row),
+        };
+      };
+
+      it('an older sender leaves out a column: it keeps its value here', async () => {
+        const id = randomUUID();
+        await addBirthday(client, id);
+        await client.db.execute(
+          sql`UPDATE birthdays SET note = 'kept' WHERE id = ${id}`,
+        );
+        const change = await changeOf(id, row => {
+          row['name'] = 'Renamed';
+          delete row['note'];
+        });
+
+        expect(
+          await client.store.apply([change], {
+            origin: 'server',
+            senderAhead: -1,
+          }),
+        ).toMatchObject({applied: 1});
+        expect(
+          await rows(
+            client,
+            sql`SELECT name, note FROM birthdays WHERE id = ${id}`,
+          ),
+        ).toEqual([{name: 'Renamed', note: 'kept'}]);
+      });
+
+      it('a newer sender has a column unknown here: the row waits for the update', async () => {
+        const id = randomUUID();
+        await addBirthday(client, id);
+        const change = await changeOf(id, row => {
+          row['name'] = 'From the future';
+          row['added_later'] = 1;
+        });
+
+        expect(
+          await client.store.apply([change], {
+            origin: 'server',
+            senderAhead: 2,
+          }),
+        ).toMatchObject({parked: 1});
+        expect(
+          await rows(client, sql`SELECT name FROM birthdays WHERE id = ${id}`),
+        ).toEqual([{name: 'Bob'}]);
+        const [parked] = await rows<{error: string}>(
+          client,
+          sql`SELECT error FROM sync.parked WHERE table_name = 'birthdays' AND pk->>'id' = ${id}`,
+        );
+        expect(parked.error).toContain('newer version');
+      });
+
+      it('a parked row of an older sender is applied once its parent comes, not kept waiting', async () => {
+        const owner = randomUUID();
+        const id = randomUUID();
+        const change: SyncChange = {
+          table: 'birthdays',
+          pk: JSON.stringify({id}),
+          changedAt: new Date().toISOString(),
+          row: JSON.stringify({
+            id,
+            user_id: owner,
+            name: 'Waits for its user',
+            remind_days_before: [0],
+            memorial_remind_days_before: [0],
+            created_at: new Date().toISOString(),
+            dropped_since: 'x',
+          }),
+        };
+        expect(
+          await client.store.apply([change], {
+            origin: 'server',
+            senderAhead: -1,
+          }),
+        ).toMatchObject({parked: 1});
+
+        await addUser(client, owner);
+        // Any apply retries what is parked.
+        await client.store.apply([], {origin: 'server'});
+
+        expect(
+          await rows(client, sql`SELECT name FROM birthdays WHERE id = ${id}`),
+        ).toEqual([{name: 'Waits for its user'}]);
+        expect(
+          await rows(
+            client,
+            sql`SELECT 1 FROM sync.parked WHERE pk->>'id' = ${id}`,
+          ),
+        ).toEqual([]);
+      });
+
+      it('an older sender has a column this side dropped: it is left out', async () => {
+        const id = randomUUID();
+        await addBirthday(client, id);
+        const change = await changeOf(id, row => {
+          row['name'] = 'Old schema';
+          row['dropped_since'] = 'x';
+        });
+
+        expect(
+          await client.store.apply([change], {
+            origin: 'server',
+            senderAhead: -1,
+          }),
+        ).toMatchObject({applied: 1});
+        expect(
+          await rows(client, sql`SELECT name FROM birthdays WHERE id = ${id}`),
+        ).toEqual([{name: 'Old schema'}]);
+      });
+    });
+
     it('fingerprints match after a sync and tell a differing row', async () => {
       const id = randomUUID();
       await server.db.execute(sql`INSERT INTO projects (id, user_id, name)

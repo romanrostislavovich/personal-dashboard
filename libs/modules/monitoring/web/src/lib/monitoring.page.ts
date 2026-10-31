@@ -21,7 +21,12 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {RouterLink} from '@angular/router';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {Monitor} from '@pd/contracts';
-import {pickableProjects, ProjectsApi, errorStatus} from '@pd/web-core';
+import {
+  errorStatus,
+  pickableProjects,
+  ProjectsApi,
+  ResourceStateComponent,
+} from '@pd/web-core';
 import {firstValueFrom, interval} from 'rxjs';
 import {MonitorCardComponent} from './monitor-card.component';
 import {MonitoringApi} from './monitoring.api';
@@ -33,6 +38,7 @@ const REFRESH_MS = 60_000;
   selector: 'pd-monitoring-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ResourceStateComponent,
     ReactiveFormsModule,
     RouterLink,
     MatCardModule,
@@ -93,15 +99,19 @@ const REFRESH_MS = 60_000;
     </mat-card>
 
     <div class="cards">
-      @for (monitor of monitors.value(); track monitor.id) {
-        <pd-monitor-card
-          [monitor]="monitor"
-          [projectName]="projectNames().get(monitor.projectId) ?? ''"
-          (remove)="remove($event)"
-        />
-      } @empty {
-        <p class="empty">{{ 'monitoring.empty' | transloco }}</p>
-      }
+      <pd-resource-state [resource]="monitors">
+        <ng-template>
+          @for (monitor of monitors.value(); track monitor.id) {
+            <pd-monitor-card
+              [monitor]="monitor"
+              [projectName]="projectNames().get(monitor.projectId) ?? ''"
+              (remove)="remove($event)"
+            />
+          } @empty {
+            <p class="empty">{{ 'monitoring.empty' | transloco }}</p>
+          }
+        </ng-template>
+      </pd-resource-state>
     </div>
   `,
   styles: `

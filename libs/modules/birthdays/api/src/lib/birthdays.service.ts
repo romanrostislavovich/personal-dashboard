@@ -64,7 +64,7 @@ export class BirthdaysService {
   ): Promise<UpcomingBirthday> {
     const [row] = await this.db
       .update(birthdays)
-      .set(stored(input))
+      .set({...stored(input), updatedAt: new Date()})
       .where(and(eq(birthdays.id, id), eq(birthdays.userId, userId)))
       .returning();
     if (!row) {
@@ -117,6 +117,7 @@ export function toUpcoming(
   return {
     id: row.id,
     name: row.name,
+    updatedAt: row.updatedAt?.toISOString() ?? null,
     month: row.month,
     day: row.day,
     year: row.year,

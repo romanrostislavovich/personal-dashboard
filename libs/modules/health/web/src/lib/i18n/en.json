@@ -613,5 +613,12 @@
       "empty": "No data from the band yet.",
       "open": "Open"
     }
+  },
+  "life": {
+    "steps": "{{steps}} steps",
+    "sleep": "Sleep {{hours}} h {{minutes}} min · {{from}}–{{to}}",
+    "sleepNoTimes": "Sleep {{hours}} h {{minutes}} min",
+    "sleepScored": "Sleep {{hours}} h {{minutes}} min · {{from}}–{{to}} · score {{score}}",
+    "sleepScoredNoTimes": "Sleep {{hours}} h {{minutes}} min · score {{score}}"
   }
 }

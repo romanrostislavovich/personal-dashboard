@@ -129,7 +129,7 @@ export class PsychologyService {
   ): Promise<PsychologyEvent> {
     const [row] = await this.db
       .update(psychologyEvents)
-      .set(stored(input))
+      .set({...stored(input), updatedAt: new Date()})
       .where(
         and(eq(psychologyEvents.id, id), eq(psychologyEvents.userId, userId)),
       )
@@ -270,6 +270,7 @@ function toEvent(row: PsychologyEventRow): PsychologyEvent {
     ageTo: row.ageTo,
     feeling: row.feeling,
     createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt?.toISOString() ?? null,
   };
 }
 

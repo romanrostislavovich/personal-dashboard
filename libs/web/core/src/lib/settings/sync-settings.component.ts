@@ -75,6 +75,18 @@ import {SyncConflictsComponent} from './sync-conflicts.component';
                   }}
                 </p>
               }
+              @if (s.schemaAhead; as ahead) {
+                <!-- Different versions still sync; rows of the newer one wait on the older side. -->
+                <p class="notice">
+                  <mat-icon>update</mat-icon>
+                  {{
+                    (ahead > 0
+                      ? 'core.settings.sync.serverAhead'
+                      : 'core.settings.sync.clientAhead'
+                    ) | transloco: {count: ahead > 0 ? ahead : -ahead}
+                  }}
+                </p>
+              }
               @if (s.reconcile; as r) {
                 @if (r.mismatches.length) {
                   <div class="warning">
@@ -230,6 +242,7 @@ import {SyncConflictsComponent} from './sync-conflicts.component';
     }
     .error,
     .ok,
+    .notice,
     .warning {
       display: flex;
       align-items: center;
@@ -237,6 +250,10 @@ import {SyncConflictsComponent} from './sync-conflicts.component';
     }
     .error {
       color: var(--mat-sys-error);
+    }
+    .notice {
+      align-items: flex-start;
+      color: var(--mat-sys-tertiary);
     }
     .warning {
       align-items: flex-start;

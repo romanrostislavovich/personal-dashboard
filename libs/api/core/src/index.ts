@@ -16,6 +16,8 @@ export * from './lib/search/search.service';
 export * from './lib/life/life.service';
 export * from './lib/automations/automations.service';
 export {SystemLogger} from './lib/system/system-logger';
+export {traceRequests} from './lib/system/trace.middleware';
+export {currentTrace, withTrace} from './lib/system/trace';
 export * from './lib/secrets/secrets.service';
 export * from './lib/server-keys/server-keys.service';
 export * from './lib/notifications/notification-channel';

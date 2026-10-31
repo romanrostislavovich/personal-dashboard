@@ -22,7 +22,7 @@ import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import {DatePipe} from '@angular/common';
-import {pickableProjects, withDefaults} from '@pd/web-core';
+import {EditedAtComponent, pickableProjects, withDefaults} from '@pd/web-core';
 import {TranslocoPipe} from '@jsverse/transloco';
 import {Project, RecurringPayment, RecurringPaymentInput} from '@pd/contracts';
 
@@ -48,6 +48,7 @@ export interface RecurringPaymentFormData {
   selector: 'pd-recurring-payment-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    EditedAtComponent,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -248,6 +249,7 @@ export interface RecurringPaymentFormData {
         }
       </mat-dialog-content>
 
+      <pd-edited-at class="edited" [at]="data.payment?.updatedAt" />
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>
           {{ 'core.actions.cancel' | transloco }}

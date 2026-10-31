@@ -216,6 +216,7 @@ export class WishlistService {
     await this.db
       .update(wishes)
       .set({
+        updatedAt: new Date(),
         // Left out — as it was (the extension sends only a price seen); empty — no page.
         url: input.url === undefined ? row.url : input.url || null,
         name: input.name || row.name,
@@ -529,6 +530,7 @@ function toWish(row: WishRow, range?: {lowest: number; highest: number}): Wish {
     checkError: row.checkError,
     boughtAt: row.boughtAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt?.toISOString() ?? null,
     recipient: row.recipient,
     budget: null,
   };

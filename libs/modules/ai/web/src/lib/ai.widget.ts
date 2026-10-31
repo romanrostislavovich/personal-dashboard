@@ -38,7 +38,12 @@ import {TranslocoPipe} from '@jsverse/transloco';
             (ngModelChange)="question.set($event)"
             [placeholder]="'ai.suggestions.spending' | transloco"
           />
-          <button matIconButton type="submit" [disabled]="!question().trim()">
+          <button
+            matIconButton
+            type="submit"
+            [disabled]="!question().trim()"
+            [attr.aria-label]="'ai.send' | transloco"
+          >
             <mat-icon>send</mat-icon>
           </button>
         </form>

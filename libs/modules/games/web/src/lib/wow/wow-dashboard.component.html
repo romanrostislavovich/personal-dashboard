@@ -1,0 +1,227 @@
+@if (characters().length) {
+  <div class="tiles">
+    <div class="tile">
+      <span class="label">{{ 'games.wow.characters' | transloco }}</span>
+      <span class="value">{{ characters().length }}</span>
+    </div>
+    <div class="tile">
+      <span class="label">{{ 'games.wow.bestItemLevel' | transloco }}</span>
+      <span class="value">{{ totals().itemLevel ?? '—' }}</span>
+    </div>
+    <div class="tile">
+      <span class="label">{{ 'games.wow.achievementPoints' | transloco }}</span>
+      <span class="value">{{ totals().points | number }}</span>
+    </div>
+    <div class="tile">
+      <span class="label">{{ 'games.wow.achievements' | transloco }}</span>
+      <span class="value">{{ totals().achievements | number }}</span>
+    </div>
+    @if (totals().mythic) {
+      <div class="tile">
+        <span class="label">{{ 'games.wow.bestMythic' | transloco }}</span>
+        <span class="value">{{ totals().mythic | number }}</span>
+      </div>
+    }
+    @if (totals().mounts) {
+      <div class="tile">
+        <span class="label">{{
+          'games.wow.collections.mounts' | transloco
+        }}</span>
+        <span class="value">{{ totals().mounts | number }}</span>
+      </div>
+    }
+    @for (token of tokens.value(); track token.region) {
+      <div class="tile token">
+        <span class="label">
+          {{ 'games.wow.token' | transloco }} ·
+          {{ token.region.toUpperCase() }}
+        </span>
+        <span class="value">{{ token.price | number }} <small>g</small></span>
+        @if (token.history.length > 1) {
+          <pd-sparkline
+            [points]="tokenPoints(token.history)"
+            [label]="'games.wow.token' | transloco"
+          />
+        }
+      </div>
+    }
+  </div>
+}
+
+<div class="characters">
+  @for (c of characters(); track c.account.id) {
+    <article
+      class="character"
+      [class.selected]="selected()?.account?.id === c.account.id"
+      [style.--class]="classColor(c.summary)"
+    >
+      @if (c.summary; as s) {
+        <div class="head">
+          @if (s.avatarUrl) {
+            <img class="avatar" [src]="s.avatarUrl" alt="" />
+          }
+          <div class="who">
+            @if (s.profileUrl; as url) {
+              <a class="name" [href]="url" target="_blank" rel="noopener">{{
+                s.name
+              }}</a>
+            } @else {
+              <!-- Classic: Blizzard's site has no page for the character. -->
+              <span class="name">{{ s.name }}</span>
+            }
+            <span class="muted"
+              >{{ s.level }} {{ s.raceName }} {{ s.specName ?? '' }}
+              {{ s.className }}</span
+            >
+            <span class="muted">
+              {{ s.realm }}
+              @if (s.version !== 'retail') {
+                · {{ 'games.wow.versions.' + s.version | transloco }}
+              }
+              @if (s.guild) {
+                · &lt;{{ s.guild }}&gt;
+              }
+            </span>
+          </div>
+          <div class="ilvl">
+            <span class="value">{{ s.itemLevel ?? '—' }}</span>
+            <span class="label">ilvl</span>
+          </div>
+        </div>
+        <div class="facts">
+          <span
+            ><mat-icon inline>emoji_events</mat-icon>
+            {{ s.achievementPoints | number }}</span
+          >
+          @if (s.lastLoginAt) {
+            <span class="muted"
+              >{{ 'games.wow.lastLogin' | transloco }}
+              {{ s.lastLoginAt | timeAgo: lang() }}</span
+            >
+          }
+        </div>
+      } @else {
+        <p class="who">{{ c.account.displayName }}</p>
+      }
+      @if (c.account.lastError) {
+        <p class="error">{{ c.account.lastError }}</p>
+      }
+      <div class="actions">
+        @if (c.summary; as s) {
+          <button matButton (click)="select(c.account.id)">
+            <mat-icon>{{
+              selected()?.account?.id === c.account.id
+                ? 'expand_less'
+                : 'expand_more'
+            }}</mat-icon>
+            {{ 'games.wow.details.open' | transloco }}
+          </button>
+          <button
+            matIconButton
+            [matTooltip]="
+              (s.notify ? 'games.wow.notifyOn' : 'games.wow.notifyOff')
+                | transloco
+            "
+            [attr.aria-label]="'games.wow.notifyOn' | transloco"
+            [attr.aria-pressed]="s.notify"
+            [disabled]="busy()"
+            (click)="toggleNotify(c.account.id, s)"
+          >
+            <mat-icon>{{
+              s.notify ? 'notifications_active' : 'notifications_off'
+            }}</mat-icon>
+          </button>
+        }
+        <button
+          matIconButton
+          [matTooltip]="'games.syncNow' | transloco"
+          [attr.aria-label]="'games.syncNow' | transloco"
+          [disabled]="busy()"
+          (click)="sync.emit(c.account.id)"
+        >
+          <mat-icon>sync</mat-icon>
+        </button>
+        <button
+          matIconButton
+          [matTooltip]="'core.actions.delete' | transloco"
+          [attr.aria-label]="'core.actions.delete' | transloco"
+          [disabled]="busy()"
+          (click)="remove.emit(c.account.id)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </article>
+  } @empty {
+    <p class="muted">{{ 'games.wow.empty' | transloco }}</p>
+  }
+</div>
+
+@if (selected()?.summary; as chosen) {
+  <pd-wow-character-details [character]="chosen" />
+}
+
+<!-- Several characters side by side. -->
+@if (compared().length > 1) {
+  <section class="panel">
+    <h3>{{ 'games.wow.compare' | transloco }}</h3>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'games.wow.character' | transloco }}</th>
+            <th class="numeric">{{ 'games.wow.level' | transloco }}</th>
+            <th class="numeric">ilvl</th>
+            <th class="numeric">Mythic+</th>
+            <th class="numeric">
+              {{ 'games.wow.details.raids' | transloco }}
+            </th>
+            <th class="numeric">PvP</th>
+            <th class="numeric">
+              {{ 'games.wow.collections.quests' | transloco }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of compared(); track row.id) {
+            <tr>
+              <td>
+                <b [style.color]="row.color">{{ row.name }}</b>
+                <span class="muted">{{ row.spec }}</span>
+              </td>
+              <td class="numeric">{{ row.level }}</td>
+              <td class="numeric">{{ row.itemLevel ?? '—' }}</td>
+              <td class="numeric">{{ row.mythic ?? '—' }}</td>
+              <td class="numeric">{{ row.raid ?? '—' }}</td>
+              <td class="numeric">{{ row.pvp ?? '—' }}</td>
+              <td class="numeric">{{ row.quests ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+@if (feed().length) {
+  <section class="panel">
+    <h3>{{ 'games.wow.recentAchievements' | transloco }}</h3>
+    <ul class="feed">
+      @for (a of feed(); track a.character + a.id) {
+        <li>
+          <mat-icon inline>emoji_events</mat-icon>
+          <a
+            [href]="'https://www.wowhead.com/achievement=' + a.id"
+            target="_blank"
+            rel="noopener"
+            >{{ a.name }}</a
+          >
+          @if (characters().length > 1) {
+            <span class="muted">{{ a.character }}</span>
+          }
+          <span class="muted date">{{ a.completedAt | date: 'd MMM y' }}</span>
+        </li>
+      }
+    </ul>
+  </section>
+}

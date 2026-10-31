@@ -1,0 +1,64 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.padded {
+  padding-top: 12px;
+}
+mat-button-toggle-group {
+  align-self: flex-start;
+}
+.form .row {
+  align-items: flex-start;
+}
+.age {
+  width: 220px;
+}
+.birth {
+  align-self: flex-start;
+  width: min(100%, 372px);
+}
+.event {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-top: 16px;
+}
+.event > mat-icon {
+  color: var(--mat-sys-on-surface-variant);
+}
+.event > mat-icon.hard {
+  color: var(--mat-sys-error);
+}
+.event > mat-icon.good {
+  color: var(--pd-success);
+}
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.words {
+  white-space: pre-wrap;
+}
+.hint {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}

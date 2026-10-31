@@ -1,0 +1,16 @@
+import {users} from '@pd/api-core/schema';
+import {index, pgTable, text, timestamp, uuid} from 'drizzle-orm/pg-core';
+
+/** The items of the <%= titleEn %> module, each the user's own. */
+export const <%= propertyName %>Items = pgTable(
+  '<%= tableName %>',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, {onDelete: 'cascade'}),
+    name: text().notNull(),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+  },
+  table => [index().on(table.userId)],
+);

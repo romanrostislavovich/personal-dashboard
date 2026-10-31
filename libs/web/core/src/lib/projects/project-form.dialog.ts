@@ -14,12 +14,14 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {TranslocoPipe} from '@jsverse/transloco';
 import {Project, ProjectInput} from '@pd/contracts';
+import {EditedAtComponent} from '../ui/edited-at.component';
 
 /** Create/edit dialog. Returns a `ProjectInput`, or `undefined` if cancelled. */
 @Component({
   selector: 'pd-project-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    EditedAtComponent,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -65,6 +67,7 @@ import {Project, ProjectInput} from '@pd/contracts';
           <mat-hint>{{ 'core.projects.closedOnHint' | transloco }}</mat-hint>
         </mat-form-field>
       </mat-dialog-content>
+      <pd-edited-at class="edited" [at]="project?.updatedAt" />
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>
           {{ 'core.actions.cancel' | transloco }}

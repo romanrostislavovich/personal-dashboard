@@ -3,11 +3,19 @@
 
   <div class="filters">
     <div class="month">
-      <button matIconButton (click)="shiftMonth(-1)">
+      <button
+        matIconButton
+        [attr.aria-label]="'core.actions.previous' | transloco"
+        (click)="shiftMonth(-1)"
+      >
         <mat-icon>chevron_left</mat-icon>
       </button>
       <span class="month-label">{{ monthDate() | date: 'LLLL yyyy' }}</span>
-      <button matIconButton (click)="shiftMonth(1)">
+      <button
+        matIconButton
+        [attr.aria-label]="'core.actions.next' | transloco"
+        (click)="shiftMonth(1)"
+      >
         <mat-icon>chevron_right</mat-icon>
       </button>
     </div>
@@ -394,10 +402,18 @@
               >
                 <mat-icon>edit_note</mat-icon>
               </button>
-              <button matIconButton (click)="openRecurringForm(p)">
+              <button
+                matIconButton
+                [attr.aria-label]="'core.actions.edit' | transloco"
+                (click)="openRecurringForm(p)"
+              >
                 <mat-icon>edit</mat-icon>
               </button>
-              <button matIconButton (click)="removeRecurring(p)">
+              <button
+                matIconButton
+                [attr.aria-label]="'core.actions.delete' | transloco"
+                (click)="removeRecurring(p)"
+              >
                 <mat-icon>delete</mat-icon>
               </button>
             </div>

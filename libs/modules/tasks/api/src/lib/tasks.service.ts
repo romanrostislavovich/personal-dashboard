@@ -182,7 +182,7 @@ export class TasksService {
     }
     await this.db
       .update(tasks)
-      .set(changes)
+      .set({...changes, updatedAt: new Date()})
       .where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
   }
 
@@ -218,6 +218,7 @@ export class TasksService {
           id: _id,
           completedAt: _completedAt,
           createdAt: _createdAt,
+          updatedAt: _updatedAt,
           ...copy
         } = task;
         await tx.insert(tasks).values({
@@ -372,6 +373,7 @@ function toTask(row: TaskRow, reminderAt: string | null): Task {
     repeat: row.repeat,
     completedAt: row.completedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt?.toISOString() ?? null,
     reminderAt,
     focusSeconds: 0,
     windowSeconds: 0,

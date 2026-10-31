@@ -95,6 +95,21 @@ the version set aside next to the row as it is now: "Bring this one back" makes 
 trash), "Keep the current" forgets the other version. Changes waiting for related data are listed
 there too, with the database's error; "Discard" gives one up.
 
+### Across versions
+
+One side may be updated before the other (`deploy/deploy.sh` updates the server first, then the
+computer). Each request carries every applied migration; when one side's are the start of the
+other's, the two keep syncing and **Settings → Sync** says "the server is N migrations ahead":
+
+- a row from the **newer** side with columns this side does not have yet waits in `sync.parked`
+  ("has columns of a newer version") and is applied after this side is updated — a table this
+  side does not have yet waits the same way;
+- a row from the **older** side lacks the new columns: they keep their values here (a new row gets
+  their defaults); a column the newer side dropped is left out;
+- the comparison of the data (below) waits until both run the same version.
+
+Migrations that went apart (different ones at the same place) stop the sync as before.
+
 ### Reconciliation
 
 A sync bug once lost rows without a word, so the client checks: every 6 hours, after a sync that
@@ -114,9 +129,10 @@ rule and the other is kept in the conflicts ("differs from the other side") — 
 
 ### When something goes wrong
 
-- **"The server and this computer run different versions"** — one side was updated without the
-  other (migrations must match; `deploy/deploy.sh` updates both itself): run `docker compose up -d --build app` on the computer, or
-  `deploy/deploy.sh` for the server. Until then the sync waits; after 15 minutes it is reported.
+- **"The server and this computer run different versions"** — their migrations went apart (not
+  one ahead of the other, see "Across versions"): run `docker compose up -d --build app` on the
+  computer, or `deploy/deploy.sh` for the server. Until then the sync waits; after 15 minutes it
+  is reported.
 - **"ENCRYPTION_KEY differs"** — set the same key on both.
 - **"The server rejected SYNC_TOKEN"** — the token must be the same on both.
 - **The server database was replaced** — the client notices, downloads everything and sends all of

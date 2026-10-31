@@ -27,7 +27,11 @@ import {
   TransactionInput,
   TransactionKind,
 } from '@pd/contracts';
-import {pickableProjects, todayLocalDate} from '@pd/web-core';
+import {
+  EditedAtComponent,
+  pickableProjects,
+  todayLocalDate,
+} from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
 import {FinanceApi} from './finance.api';
 
@@ -43,6 +47,7 @@ export interface TransactionFormData {
   selector: 'pd-transaction-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    EditedAtComponent,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -136,6 +141,7 @@ export interface TransactionFormData {
         </mat-form-field>
       </mat-dialog-content>
 
+      <pd-edited-at class="edited" [at]="data.transaction?.updatedAt" />
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>
           {{ 'core.actions.cancel' | transloco }}

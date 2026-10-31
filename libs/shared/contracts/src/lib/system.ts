@@ -37,4 +37,25 @@ export interface SystemStatus {
   jobs: SystemJob[];
   /** Newest first. */
   log: SystemLogEntry[];
+  metrics: SystemMetrics;
+}
+
+/** Numbers of the instance (Settings → System → Metrics). */
+export interface SystemMetrics {
+  /** When this process started: the counters of requests and job runs count from then. */
+  since: string;
+  memoryMb: number;
+  requests: {total: number; serverErrors: number; p95Ms: number | null};
+  jobs: {runs: number; failures: number};
+  /** The AI of every user today (the server's day), from the usage log. */
+  ai: {requests: number; promptTokens: number; completionTokens: number};
+  /** Notifications of the last 24 hours, by how their delivery went. */
+  notifications: {sent: number; failed: number; waiting: number};
+  /** `null` — sync is off. */
+  sync: {
+    /** Client: the last sync; server: the last contact from a client. */
+    lastAt: string | null;
+    pending: number;
+    parked: number;
+  } | null;
 }

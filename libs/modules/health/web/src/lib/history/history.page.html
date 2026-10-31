@@ -1,0 +1,328 @@
+<div class="toolbar">
+  <button matButton="filled" (click)="addVisit()">
+    <mat-icon>add</mat-icon> {{ 'health.visit.add' | transloco }}
+  </button>
+  <button matButton="tonal" (click)="addDocument()">
+    <mat-icon>upload_file</mat-icon> {{ 'health.document.add' | transloco }}
+  </button>
+  @if (
+    countries().length > 1 || specialities().length > 1 || doctors().length > 1
+  ) {
+    <span class="spacer"></span>
+    <mat-form-field subscriptSizing="dynamic" class="filter">
+      <mat-label>{{ 'health.country' | transloco }}</mat-label>
+      <mat-select
+        [value]="filters().country"
+        (selectionChange)="filter({country: $event.value})"
+      >
+        <mat-option [value]="''">{{ 'health.all' | transloco }}</mat-option>
+        @for (code of countries(); track code) {
+          <mat-option [value]="code">{{ code | pdCountry }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field subscriptSizing="dynamic" class="filter">
+      <mat-label>{{ 'health.doctor.speciality' | transloco }}</mat-label>
+      <mat-select
+        [value]="filters().speciality"
+        (selectionChange)="filter({speciality: $event.value})"
+      >
+        <mat-option [value]="''">{{ 'health.all' | transloco }}</mat-option>
+        @for (speciality of specialities(); track speciality) {
+          <mat-option [value]="speciality">{{
+            speciality | pdSpeciality
+          }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field subscriptSizing="dynamic" class="filter">
+      <mat-label>{{ 'health.visit.doctor' | transloco }}</mat-label>
+      <mat-select
+        [value]="filters().doctorId"
+        (selectionChange)="filter({doctorId: $event.value})"
+      >
+        <mat-option [value]="''">{{ 'health.all' | transloco }}</mat-option>
+        @for (doctor of doctors(); track doctor.id) {
+          <mat-option [value]="doctor.id">{{ doctor.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+</div>
+
+@if (record.isLoading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+@if (record.error()) {
+  <p class="error" role="alert">{{ 'health.errors.load' | transloco }}</p>
+} @else if (data(); as data) {
+  @if (drafts().length) {
+    <div class="drafts" role="status">
+      <mat-icon>auto_awesome</mat-icon>
+      <span>{{
+        'health.drafts.waiting' | transloco: {count: drafts().length}
+      }}</span>
+      <button matButton="filled" (click)="review(data, drafts()[0])">
+        {{ 'health.drafts.checkOne' | transloco }}
+      </button>
+    </div>
+  }
+  @if (upcoming(); as next) {
+    <!-- The next visit a doctor asked for: on top, not inside the card of the last one. -->
+    <div class="upcoming" role="status">
+      <mat-icon>event_upcoming</mat-icon>
+      <span>
+        <b>{{
+          next.days === 0
+            ? ('health.upcoming.today' | transloco)
+            : ('health.upcoming.title' | transloco: {days: next.days})
+        }}</b>
+        {{ next.visit.nextVisitOn | date: 'd MMMM y' }}
+        @if (next.visit.speciality) {
+          · {{ next.visit.speciality | pdSpeciality }}
+        }
+        @if (doctorName(data, next.visit); as name) {
+          · {{ name }}
+        }
+      </span>
+    </div>
+  }
+  @for (visit of visits(); track visit.id) {
+    <mat-card appearance="outlined">
+      <mat-card-content class="visit">
+        <div class="head">
+          <span class="when">{{ visit.visitedOn | date: 'd MMMM y' }}</span>
+          <span class="where">
+            @if (visit.speciality) {
+              <b>{{ visit.speciality | pdSpeciality }}</b>
+            }
+            @if (doctorName(data, visit); as name) {
+              · {{ name }}
+            }
+            @if (clinicName(data, visit); as name) {
+              · {{ name }}
+            }
+            @if (visit.country) {
+              · {{ visit.country | pdCountry }}
+            }
+          </span>
+          <span class="spacer"></span>
+          <button
+            matIconButton
+            [attr.aria-label]="'core.actions.edit' | transloco"
+            [matTooltip]="'core.actions.edit' | transloco"
+            (click)="editVisit(data, visit)"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            matIconButton
+            [attr.aria-label]="'core.actions.delete' | transloco"
+            [matTooltip]="'core.actions.delete' | transloco"
+            (click)="removeVisit(visit)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+        @for (field of texts; track field) {
+          @if (visit[field]; as text) {
+            <div class="text">
+              <span class="label">{{
+                'health.visit.' + field | transloco
+              }}</span>
+              @if (field === 'recommendations') {
+                <!-- Every line of the recommendations can become a task. -->
+                @for (line of lines(text); track $index) {
+                  <span class="recommendation">
+                    <span class="words">{{ line }}</span>
+                    <button
+                      matIconButton
+                      [attr.aria-label]="'health.visit.toTask' | transloco"
+                      [matTooltip]="'health.visit.toTask' | transloco"
+                      (click)="toTask(line)"
+                    >
+                      <mat-icon>add_task</mat-icon>
+                    </button>
+                  </span>
+                }
+              } @else {
+                <span class="words">{{ text }}</span>
+              }
+            </div>
+          }
+        }
+
+        @for (diagnosis of diagnosesOf(data, visit); track diagnosis.id) {
+          <div class="line">
+            <mat-icon>diagnosis</mat-icon>
+            <span>
+              @if (diagnosis.code) {
+                <b>{{ diagnosis.code }}</b>
+              }
+              {{ diagnosis.title }}
+              <span class="hint"
+                >· {{ 'health.statuses.' + diagnosis.status | transloco }}</span
+              >
+            </span>
+          </div>
+        }
+        @for (medication of medicationsOf(data, visit); track medication.id) {
+          <div class="line">
+            <mat-icon>medication</mat-icon>
+            <span>
+              <b>{{ medication.name }}</b>
+              @if (medication.dose) {
+                {{ medication.dose }}
+              }
+              @if (medication.schedule) {
+                · {{ medication.schedule }}
+              }
+            </span>
+          </div>
+        }
+        @for (panel of panelsOf(data, visit); track panel.id) {
+          <div class="line">
+            <mat-icon>labs</mat-icon>
+            <span>
+              {{ 'health.labs.one' | transloco }}
+              @if (panel.laboratory) {
+                · {{ panel.laboratory }}
+              }
+              <span class="hint">
+                ·
+                {{
+                  'health.labs.lines' | transloco: {count: panel.values.length}
+                }}
+                @if (outOfRange(panel); as out) {
+                  · {{ 'health.labs.outOfRange' | transloco: {count: out} }}
+                }
+              </span>
+            </span>
+          </div>
+        }
+        @for (study of studiesOf(data, visit); track study.id) {
+          <div class="line">
+            <mat-icon>radiology</mat-icon>
+            <span>
+              <b>{{ 'health.studyKinds.' + study.kind | transloco }}</b>
+              @if (study.area) {
+                {{ study.area }}
+              }
+              @if (study.conclusion) {
+                <span class="hint">· {{ study.conclusion }}</span>
+              }
+            </span>
+          </div>
+        }
+        @for (document of documentsOf(data, visit); track document.id) {
+          <button matButton class="document" (click)="open(document)">
+            <mat-icon>{{
+              document.mimeType === 'application/pdf'
+                ? 'picture_as_pdf'
+                : 'image'
+            }}</mat-icon>
+            {{ document.name }}
+            @if (document.pages > 1) {
+              ·
+              {{ 'health.document.pages' | transloco: {count: document.pages} }}
+            }
+          </button>
+        }
+        @if (visit.nextVisitOn) {
+          <p class="hint">
+            {{
+              'health.visit.next'
+                | transloco: {day: (visit.nextVisitOn | date: 'd MMMM y')}
+            }}
+          </p>
+        }
+
+        <div class="actions">
+          <button matButton (click)="addDiagnosis(data, visit)">
+            <mat-icon>add</mat-icon>
+            {{ 'health.diagnosis.one' | transloco }}
+          </button>
+          <button matButton (click)="addMedication(data, visit)">
+            <mat-icon>add</mat-icon>
+            {{ 'health.medication.one' | transloco }}
+          </button>
+          <button matButton (click)="addPanel(data, visit)">
+            <mat-icon>add</mat-icon> {{ 'health.labs.one' | transloco }}
+          </button>
+          <button matButton (click)="addStudy(data, visit)">
+            <mat-icon>add</mat-icon> {{ 'health.study.one' | transloco }}
+          </button>
+          <button matButton (click)="addDocument(visit)">
+            <mat-icon>add</mat-icon> {{ 'health.document.one' | transloco }}
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  } @empty {
+    <p class="hint">
+      {{
+        (data.visits.length
+          ? 'health.history.nothingFound'
+          : 'health.history.empty'
+        ) | transloco
+      }}
+    </p>
+  }
+
+  @if (looseDocuments().length) {
+    <h2 class="section">
+      {{ 'health.history.otherDocuments' | transloco }}
+    </h2>
+    @for (document of looseDocuments(); track document.id) {
+      <div class="line">
+        <button matButton class="document" (click)="open(document)">
+          <mat-icon>{{
+            document.mimeType === 'application/pdf' ? 'picture_as_pdf' : 'image'
+          }}</mat-icon>
+          {{ document.name }}
+          @if (document.pages > 1) {
+            ·
+            {{ 'health.document.pages' | transloco: {count: document.pages} }}
+          }
+        </button>
+        <span class="hint">
+          {{ 'health.documentKinds.' + document.kind | transloco }}
+          @if (document.documentedOn) {
+            · {{ document.documentedOn | date: 'd MMM y' }}
+          }
+        </span>
+        <span class="spacer"></span>
+        @if (document.hasDraft) {
+          <button matButton="tonal" (click)="review(data, document)">
+            <mat-icon>fact_check</mat-icon>
+            {{ 'health.drafts.checkOne' | transloco }}
+          </button>
+        } @else {
+          <button
+            matIconButton
+            [attr.aria-label]="'health.drafts.readWithAi' | transloco"
+            [matTooltip]="'health.drafts.readWithAi' | transloco"
+            (click)="review(data, document)"
+          >
+            <mat-icon>auto_awesome</mat-icon>
+          </button>
+        }
+        <button
+          matIconButton
+          [attr.aria-label]="'core.actions.edit' | transloco"
+          (click)="editDocument(data, document)"
+        >
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          matIconButton
+          [attr.aria-label]="'core.actions.delete' | transloco"
+          (click)="removeDocument(document)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    }
+  }
+}

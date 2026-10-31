@@ -3,6 +3,7 @@ import {DocumentReaderService} from './documents/document-reader.service';
 import {HealthTelegram} from './documents/health-telegram';
 import {HealthAchievements} from './health.achievements';
 import {BandAchievements} from './wearable/band.achievements';
+import {BandLife} from './wearable/band.life';
 import {HealthAiTools} from './health.ai-tools';
 import {HealthController} from './health.controller';
 import {HealthDemo} from './health.demo';
@@ -71,6 +72,7 @@ import {WearableService} from './wearable/wearable.service';
     BandDaysService,
     BandService,
     BandAiTools,
+    BandLife,
   ],
 })
 export class HealthModule {}

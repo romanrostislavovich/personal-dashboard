@@ -108,6 +108,8 @@ export interface Task {
    * three months — also from the Activity section. It overlaps the focus time: never add them.
    */
   windowSeconds: number;
+  /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+  updatedAt: string | null;
 }
 
 // --- Reminders ---

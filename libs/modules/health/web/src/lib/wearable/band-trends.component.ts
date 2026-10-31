@@ -14,6 +14,7 @@ import {WearableDay} from '@pd/contracts';
 import {Bar, BarChartComponent, SparklineComponent} from '@pd/web-core';
 import {HealthApi} from '../health.api';
 import {addDays, today} from './band-format';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
 
 type Field = Exclude<keyof WearableDay, 'day' | 'sleepStart' | 'sleepEnd'>;
 
@@ -60,6 +61,7 @@ const PERIODS = [7, 30, 90] as const;
   selector: 'pd-band-trends',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    MatProgressBarModule,
     DecimalPipe,
     MatButtonToggleModule,
     MatCardModule,
@@ -83,7 +85,11 @@ const PERIODS = [7, 30, 90] as const;
       </mat-button-toggle-group>
     </div>
 
-    @if (!data.value().length) {
+    @if (data.isLoading() && !data.value().length) {
+      <mat-progress-bar mode="indeterminate" />
+    } @else if (data.error() && !data.value().length) {
+      <p class="hint" role="alert">{{ 'core.resource.failed' | transloco }}</p>
+    } @else if (!data.value().length) {
       <p class="hint">{{ 'health.band.noDays' | transloco }}</p>
     } @else {
       <div class="tiles">

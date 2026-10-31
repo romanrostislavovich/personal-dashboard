@@ -18,7 +18,9 @@
     "save": "Save",
     "cancel": "Cancel",
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "previous": "Previous",
+    "next": "Next"
   },
   "login": {
     "title": "Sign in",
@@ -230,7 +232,9 @@
             "restore-failed": "The server's latest test restore did not go well."
           }
         }
-      }
+      },
+      "serverAhead": "The server is {{count}} migration(s) ahead of this copy: sync goes on, but the server's new data waits here until this copy is updated — docker compose up -d --build app.",
+      "clientAhead": "This copy is {{count}} migration(s) ahead of the server: sync goes on, the new data waits on the server until it is updated (deploy/deploy.sh)."
     },
     "security": {
       "title": "Security",
@@ -364,7 +368,22 @@
       "refresh": "Refresh",
       "clear": "Clear",
       "since": "Repeats since",
-      "logEmpty": "Nothing here — the server has no complaints."
+      "logEmpty": "Nothing here — the server has no complaints.",
+      "metrics": {
+        "title": "Metrics",
+        "since": "Requests and job runs are counted since the server started: {{time}}",
+        "requests": "Requests",
+        "serverErrors": "server errors: {{count}}",
+        "jobs": "Background job runs",
+        "failures": "failed: {{count}}",
+        "memory": "Memory",
+        "ai": "AI today",
+        "aiValue": "{{requests}} requests · {{tokens}} tokens",
+        "notifications": "Notifications in 24 h",
+        "notificationsValue": "delivered {{sent}} · failed {{failed}} · waiting {{waiting}}",
+        "sync": "Sync",
+        "syncValue": "last {{time}} · to send {{pending}} · waiting for related {{parked}}"
+      }
     },
     "guide": {
       "title": "How to connect",
@@ -767,5 +786,11 @@
     "allAnswered": "All questions answered",
     "gone": "This notification is gone: they are kept for 90 days.",
     "failed": "Did not work, try again."
+  },
+  "editedAt": "Edited {{time}}",
+  "resource": {
+    "loading": "Loading",
+    "failed": "Could not load it: no connection to the server, or it answered with an error.",
+    "retry": "Try again"
   }
 }

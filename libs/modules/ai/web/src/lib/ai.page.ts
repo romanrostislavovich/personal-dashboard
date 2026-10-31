@@ -36,6 +36,7 @@ import {
   EmptyStateComponent,
 } from '@pd/web-core';
 import {pastedFiles} from '@pd/client-core';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {firstValueFrom} from 'rxjs';
 import {AiApi} from './ai.api';
 
@@ -77,6 +78,7 @@ export class AiPage {
   /** Questions shown before the AI is connected (keys of `ai.examples`). */
   protected readonly examples = ['spent', 'mood', 'coding', 'health'];
   private readonly transloco = inject(TranslocoService);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly messagesEnd =
     viewChild<ElementRef<HTMLElement>>('messagesEnd');
 
@@ -200,8 +202,10 @@ export class AiPage {
 
   /** The one-click switch from the chat header: the next answer comes from this connection. */
   async useConnection(connection: AiConnection): Promise<void> {
-    this.settings.set(
-      await firstValueFrom(this.api.activateConnection(connection.id)),
+    await this.reporting(async () =>
+      this.settings.set(
+        await firstValueFrom(this.api.activateConnection(connection.id)),
+      ),
     );
   }
 
@@ -256,16 +260,22 @@ export class AiPage {
 
   /** A new conversation, here and in Telegram; the old one stays in the history menu. */
   async startNew(): Promise<void> {
-    this.show(await firstValueFrom(this.api.startConversation()));
+    await this.reporting(async () =>
+      this.show(await firstValueFrom(this.api.startConversation())),
+    );
   }
 
   async loadArchive(): Promise<void> {
-    this.archive.set(await firstValueFrom(this.api.conversations()));
+    await this.reporting(async () =>
+      this.archive.set(await firstValueFrom(this.api.conversations())),
+    );
   }
 
   /** Opens an earlier conversation; a new message continues it (and makes it current). */
   async open(conversation: AiConversation): Promise<void> {
-    this.show(await firstValueFrom(this.api.conversation(conversation.id)));
+    await this.reporting(async () =>
+      this.show(await firstValueFrom(this.api.conversation(conversation.id))),
+    );
   }
 
   async removeConversation(
@@ -273,10 +283,23 @@ export class AiPage {
     event: Event,
   ): Promise<void> {
     event.stopPropagation();
-    await firstValueFrom(this.api.removeConversation(conversation.id));
-    this.archive.update(list => list.filter(c => c.id !== conversation.id));
-    if (conversation.id === this.conversationId()) {
-      await this.loadCurrent();
+    await this.reporting(async () => {
+      await firstValueFrom(this.api.removeConversation(conversation.id));
+      this.archive.update(list => list.filter(c => c.id !== conversation.id));
+      if (conversation.id === this.conversationId()) {
+        await this.loadCurrent();
+      }
+    });
+  }
+
+  /** An action of the page that failed says so instead of doing nothing. */
+  private async reporting(action: () => Promise<unknown>): Promise<void> {
+    try {
+      await action();
+    } catch {
+      this.snackBar.open(this.transloco.translate('ai.errors.action'), 'OK', {
+        duration: 5000,
+      });
     }
   }
 

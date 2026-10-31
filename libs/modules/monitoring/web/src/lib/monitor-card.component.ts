@@ -134,6 +134,7 @@ const SSL_WARNING_DAYS = 14;
         <button
           matIconButton
           [matTooltip]="'core.actions.delete' | transloco"
+          [attr.aria-label]="'core.actions.delete' | transloco"
           (click)="remove.emit(m)"
         >
           <mat-icon>delete</mat-icon>

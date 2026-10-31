@@ -69,7 +69,8 @@ Russian.
 - 🎨 **Comfortable** — Ctrl+K opens any page and searches all your data, themes and accents, a
   home page you arrange yourself, an installable app that opens offline
 - 🔒 **Yours** — your server, tokens encrypted, two-factor sign-in, a 30-day trash, an offline
-  local copy that syncs both ways with the server
+  local copy that syncs both ways with the server, and a daily open copy of everything as plain
+  files (JSON lines, the diary in Markdown, finance in CSV) that reads without the dashboard
 
 ## Sections
 

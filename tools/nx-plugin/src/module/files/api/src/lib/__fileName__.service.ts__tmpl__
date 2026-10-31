@@ -1,0 +1,49 @@
+import {Inject, Injectable, NotFoundException} from '@nestjs/common';
+import {Database, DB} from '@pd/api-core';
+import {<%= className %>Item, <%= className %>ItemInput} from '@pd/contracts';
+import {and, desc, eq} from 'drizzle-orm';
+import {<%= propertyName %>Items} from './<%= fileName %>.schema';
+
+type Row = typeof <%= propertyName %>Items.$inferSelect;
+
+/** The <%= titleEn %> items of one user: every query filters by `userId`. */
+@Injectable()
+export class <%= className %>Service {
+  constructor(@Inject(DB) private readonly db: Database) {}
+
+  async list(userId: string): Promise<<%= className %>Item[]> {
+    const rows = await this.db
+      .select()
+      .from(<%= propertyName %>Items)
+      .where(eq(<%= propertyName %>Items.userId, userId))
+      .orderBy(desc(<%= propertyName %>Items.createdAt));
+    return rows.map(toItem);
+  }
+
+  async create(
+    userId: string,
+    input: <%= className %>ItemInput,
+  ): Promise<<%= className %>Item> {
+    const [row] = await this.db
+      .insert(<%= propertyName %>Items)
+      .values({userId, name: input.name})
+      .returning();
+    return toItem(row);
+  }
+
+  async remove(userId: string, id: string): Promise<void> {
+    const deleted = await this.db
+      .delete(<%= propertyName %>Items)
+      .where(
+        and(eq(<%= propertyName %>Items.id, id), eq(<%= propertyName %>Items.userId, userId)),
+      )
+      .returning({id: <%= propertyName %>Items.id});
+    if (!deleted.length) {
+      throw new NotFoundException();
+    }
+  }
+}
+
+function toItem(row: Row): <%= className %>Item {
+  return {id: row.id, name: row.name, createdAt: row.createdAt.toISOString()};
+}

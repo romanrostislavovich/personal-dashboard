@@ -142,7 +142,7 @@ export class RecurringPaymentsService {
       }
       await tx
         .update(recurringPayments)
-        .set({...normalized(input), noticedAmount: null})
+        .set({...normalized(input), noticedAmount: null, updatedAt: new Date()})
         .where(
           and(
             eq(recurringPayments.id, id),
@@ -260,5 +260,6 @@ function toRecurringPayment(
     autoRenews: row.autoRenews,
     priceLockedUntil: row.priceLockedUntil,
     contract: contractDates(row, firstCharge, today),
+    updatedAt: row.updatedAt?.toISOString() ?? null,
   };
 }

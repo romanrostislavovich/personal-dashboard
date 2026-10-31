@@ -1,0 +1,9 @@
+{
+  "generators": {
+    "module": {
+      "factory": "./src/module/generator.js",
+      "schema": "./src/module/schema.json",
+      "description": "A new dashboard module: contracts, client-core requests, the api and web libraries, i18n and the registrations"
+    }
+  }
+}

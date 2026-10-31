@@ -36,6 +36,7 @@ import {
   currentMonth,
   monthAsDate,
   monthRange,
+  ResourceStateComponent,
   shiftMonth,
   todayLocalDate,
 } from '@pd/web-core';
@@ -59,6 +60,7 @@ type Panel = 'month' | 'search' | 'marks';
   selector: 'pd-diary-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ResourceStateComponent,
     DatePipe,
     FormsModule,
     MatCardModule,

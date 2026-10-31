@@ -147,11 +147,19 @@
   <mat-card-header>
     <mat-card-title>{{ 'diary.calendar.title' | transloco }}</mat-card-title>
     <span class="year-nav">
-      <button matIconButton (click)="year.set(year() - 1)">
+      <button
+        matIconButton
+        [attr.aria-label]="'core.actions.previous' | transloco"
+        (click)="year.set(year() - 1)"
+      >
         <mat-icon>chevron_left</mat-icon>
       </button>
       <span class="year">{{ year() }}</span>
-      <button matIconButton (click)="year.set(year() + 1)">
+      <button
+        matIconButton
+        [attr.aria-label]="'core.actions.next' | transloco"
+        (click)="year.set(year() + 1)"
+      >
         <mat-icon>chevron_right</mat-icon>
       </button>
     </span>
@@ -277,11 +285,19 @@
       @default {
         <!-- Entries of the month -->
         <div class="month">
-          <button matIconButton (click)="shiftMonth(-1)">
+          <button
+            matIconButton
+            [attr.aria-label]="'core.actions.previous' | transloco"
+            (click)="shiftMonth(-1)"
+          >
             <mat-icon>chevron_left</mat-icon>
           </button>
           <span class="month-label">{{ monthDate() | date: 'LLLL yyyy' }}</span>
-          <button matIconButton (click)="shiftMonth(1)">
+          <button
+            matIconButton
+            [attr.aria-label]="'core.actions.next' | transloco"
+            (click)="shiftMonth(1)"
+          >
             <mat-icon>chevron_right</mat-icon>
           </button>
         </div>
@@ -301,43 +317,47 @@
           <mat-icon>edit_note</mat-icon> {{ 'diary.today' | transloco }}
         </button>
 
-        @for (entry of entries.value(); track entry.day) {
-          <div class="entry-row">
-            <button
-              type="button"
-              class="entry"
-              [class.active]="entry.day === selectedDay()"
-              (click)="selectDay(entry.day)"
-            >
-              <span class="entry-head">
-                <span class="entry-date">{{
-                  entry.day | date: 'd MMMM, EEE'
-                }}</span>
-                <span class="entry-icons">
-                  @for (mark of entry.marks.slice(0, 3); track $index) {
-                    <span>{{ mark.emoji }}</span>
-                  }
-                  @if (entry.mood) {
-                    <span>{{ moodEmoji[entry.mood] }}</span>
-                  }
-                </span>
-              </span>
-              <span class="entry-preview">{{ preview(entry) }}</span>
-            </button>
-            <button
-              matIconButton
-              type="button"
-              class="entry-delete"
-              [matTooltip]="'diary.deleteEntry' | transloco"
-              [attr.aria-label]="'diary.deleteEntry' | transloco"
-              (click)="deleteEntry(entry.day)"
-            >
-              <mat-icon>delete</mat-icon>
-            </button>
-          </div>
-        } @empty {
-          <p class="empty">{{ 'diary.emptyMonth' | transloco }}</p>
-        }
+        <pd-resource-state [resource]="entries">
+          <ng-template>
+            @for (entry of entries.value(); track entry.day) {
+              <div class="entry-row">
+                <button
+                  type="button"
+                  class="entry"
+                  [class.active]="entry.day === selectedDay()"
+                  (click)="selectDay(entry.day)"
+                >
+                  <span class="entry-head">
+                    <span class="entry-date">{{
+                      entry.day | date: 'd MMMM, EEE'
+                    }}</span>
+                    <span class="entry-icons">
+                      @for (mark of entry.marks.slice(0, 3); track $index) {
+                        <span>{{ mark.emoji }}</span>
+                      }
+                      @if (entry.mood) {
+                        <span>{{ moodEmoji[entry.mood] }}</span>
+                      }
+                    </span>
+                  </span>
+                  <span class="entry-preview">{{ preview(entry) }}</span>
+                </button>
+                <button
+                  matIconButton
+                  type="button"
+                  class="entry-delete"
+                  [matTooltip]="'diary.deleteEntry' | transloco"
+                  [attr.aria-label]="'diary.deleteEntry' | transloco"
+                  (click)="deleteEntry(entry.day)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            } @empty {
+              <p class="empty">{{ 'diary.emptyMonth' | transloco }}</p>
+            }
+          </ng-template>
+        </pd-resource-state>
       }
     }
   </section>

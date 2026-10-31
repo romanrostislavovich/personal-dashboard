@@ -1,0 +1,5 @@
+# <%= fileName %>-api
+
+The backend of the <%= titleEn %> module: `/api/<%= fileName %>`. Made by `nx g @pd/tools:module`.
+
+Run `nx test <%= fileName %>-api` for its tests.

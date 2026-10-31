@@ -29,7 +29,7 @@ import {
   TaskPriority,
   TaskUpdate,
 } from '@pd/contracts';
-import {pickableProjects, ProjectsApi} from '@pd/web-core';
+import {EditedAtComponent, pickableProjects, ProjectsApi} from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
 import {RepeatFieldComponent} from '../repeat-field.component';
 import {TasksApi} from '../tasks.api';
@@ -50,6 +50,7 @@ export interface TaskDialogData {
   selector: 'pd-task-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    EditedAtComponent,
     FormsModule,
     MatButtonModule,
     MatCheckboxModule,
@@ -176,6 +177,7 @@ export interface TaskDialogData {
         </mat-form-field>
       </section>
     </mat-dialog-content>
+    <pd-edited-at class="edited" [at]="data.task?.updatedAt" />
     <mat-dialog-actions align="end">
       <button matButton mat-dialog-close>
         {{ 'core.actions.cancel' | transloco }}

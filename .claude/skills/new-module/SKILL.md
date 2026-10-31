@@ -24,6 +24,8 @@ notified, what goes to Links, mobile layout. Write the decisions into the matchi
   (pattern: `DeviceAuthService`, `LinksService.register*`).
 - `libs/modules/<name>/web` — standalone components, `OnPush`, signals, Material 3 `matButton`.
 - Register the module in `apps/api` and `apps/web/src/app/modules.ts`; restart `npm run dev`.
+- Start from `npx nx g @pd/tools:module <name> --titleRu=… --icon=…`: it makes all of the above for
+  a list of items (`--dry-run` shows the files); grow it from there.
 
 ## 2. Data
 

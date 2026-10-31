@@ -1,0 +1,10 @@
+import {Module} from '@nestjs/common';
+import {<%= className %>Controller} from './<%= fileName %>.controller';
+import {<%= className %>Service} from './<%= fileName %>.service';
+
+/** <%= titleEn %>: a list of the user's items. API: `/api/<%= fileName %>`. */
+@Module({
+  controllers: [<%= className %>Controller],
+  providers: [<%= className %>Service],
+})
+export class <%= className %>Module {}

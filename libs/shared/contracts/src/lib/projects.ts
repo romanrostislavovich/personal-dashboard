@@ -26,6 +26,8 @@ export interface Project {
   aliases: string[];
   closedOn: string | null;
   createdAt: string;
+  /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+  updatedAt: string | null;
 }
 
 /** Closed — its closing day has come; a day still ahead is only the plan. */

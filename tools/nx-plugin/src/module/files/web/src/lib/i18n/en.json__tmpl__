@@ -1,0 +1,6 @@
+{
+  "title": "<%= titleEn %>",
+  "name": "Name",
+  "emptyTitle": "Nothing here yet",
+  "empty": "Add the first one with the field above."
+}

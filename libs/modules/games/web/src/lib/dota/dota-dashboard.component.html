@@ -72,6 +72,7 @@
           <button
             matIconButton
             [matTooltip]="'games.syncNow' | transloco"
+            [attr.aria-label]="'games.syncNow' | transloco"
             [disabled]="busy()"
             (click)="sync.emit(a.id)"
           >
@@ -80,6 +81,7 @@
           <button
             matIconButton
             [matTooltip]="'core.actions.delete' | transloco"
+            [attr.aria-label]="'core.actions.delete' | transloco"
             [disabled]="busy()"
             (click)="remove.emit(a.id)"
           >
@@ -258,6 +260,7 @@
                   <button
                     matIconButton
                     [matTooltip]="'games.syncNow' | transloco"
+                    [attr.aria-label]="'games.syncNow' | transloco"
                     [disabled]="busy()"
                     (click)="sync.emit(a.id)"
                   >
@@ -266,6 +269,7 @@
                   <button
                     matIconButton
                     [matTooltip]="'core.actions.delete' | transloco"
+                    [attr.aria-label]="'core.actions.delete' | transloco"
                     [disabled]="busy()"
                     (click)="remove.emit(a.id)"
                   >

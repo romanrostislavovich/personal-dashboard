@@ -3,6 +3,7 @@ import {randomUUID} from 'node:crypto';
 import {
   sanitizeTelemetryUrl,
   WorkstateCapture,
+  WorkstateRestorePlan,
   workstateRestorePlanSchema,
 } from '@pd/contracts';
 import {ActivityTracker} from '../activity/tracker';
@@ -180,35 +181,12 @@ export class DesktopWorkstates {
     this.busy = true;
     const result = {opened: 0, failed: 0, canceled: false};
     try {
-      const messages = workstateMessages(app.getLocale());
       const plan = parsed.data;
       const ide = this.context()?.idePath;
       const executable = ide ? await localPath(ide, 'exe') : null;
-      const lines = [
-        `${messages.server}: ${this.serverUrl()}`,
-        executable ? `${messages.ide}: ${executable}` : messages.folder,
-      ];
-      for (const action of plan.actions) {
-        if (action.kind === 'openProject') {
-          action.path = await localPath(action.path, 'directory');
-          lines.push(`${messages.project}: ${action.path}`);
-        } else if (action.kind === 'openUrl') {
-          if (sanitizeTelemetryUrl(action.url) !== action.url)
-            throw new Error('Unsafe URL');
-          lines.push(action.url);
-        } else lines.push(`${action.field}: ${action.text}`);
-      }
+      const lines = await this.describe(plan, executable);
       if (!lease.valid()) return canceledResult();
-      const confirmation = await dialog.showMessageBox({
-        type: 'question',
-        message: messages.resumePrompt,
-        detail: lines.join('\n\n'),
-        buttons: [messages.cancel, messages.resume],
-        defaultId: 0,
-        cancelId: 0,
-        noLink: true,
-      });
-      if (confirmation.response !== 1) return canceledResult();
+      if (!(await confirmResume(lines))) return canceledResult();
       for (const action of plan.actions) {
         if (!lease.valid()) {
           result.canceled = true;
@@ -216,20 +194,9 @@ export class DesktopWorkstates {
         }
         if (action.kind === 'reference') continue;
         try {
-          if (action.kind === 'openUrl') {
-            if (sanitizeTelemetryUrl(action.url) !== action.url)
-              throw new Error('Unsafe URL');
-            await shell.openExternal(action.url);
-          } else {
-            const path = await localPath(action.path, 'directory');
-            const exe = executable ? await localPath(executable, 'exe') : null;
-            if (!lease.valid()) {
-              result.canceled = true;
-              break;
-            }
-            if (exe) await launchProject(exe, path);
-            else if (await shell.openPath(path))
-              throw new Error('Folder could not be opened');
+          if ((await openAction(action, executable, lease)) === 'canceled') {
+            result.canceled = true;
+            break;
           }
           result.opened++;
         } catch {
@@ -244,4 +211,72 @@ export class DesktopWorkstates {
       this.busy = false;
     }
   }
+
+  /** What the plan will open, for the question; local paths are checked (and set) here. */
+  private async describe(
+    plan: WorkstateRestorePlan,
+    executable: string | null,
+  ): Promise<string[]> {
+    const messages = workstateMessages(app.getLocale());
+    const lines = [
+      `${messages.server}: ${this.serverUrl()}`,
+      executable ? `${messages.ide}: ${executable}` : messages.folder,
+    ];
+    for (const action of plan.actions) {
+      if (action.kind === 'openProject') {
+        action.path = await localPath(action.path, 'directory');
+        lines.push(`${messages.project}: ${action.path}`);
+      } else if (action.kind === 'openUrl') {
+        safeUrl(action.url);
+        lines.push(action.url);
+      } else lines.push(`${action.field}: ${action.text}`);
+    }
+    return lines;
+  }
+}
+
+type RestoreAction = WorkstateRestorePlan['actions'][number];
+
+/** The user agrees to open what the plan lists; `true` — they did. */
+async function confirmResume(lines: string[]): Promise<boolean> {
+  const messages = workstateMessages(app.getLocale());
+  const confirmation = await dialog.showMessageBox({
+    type: 'question',
+    message: messages.resumePrompt,
+    detail: lines.join('\n\n'),
+    buttons: [messages.cancel, messages.resume],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true,
+  });
+  return confirmation.response === 1;
+}
+
+/**
+ * Opens one link or project; `canceled` — the gate closed meanwhile (the screen locked).
+ * Throws when it could not.
+ */
+async function openAction(
+  action: Exclude<RestoreAction, {kind: 'reference'}>,
+  executable: string | null,
+  lease: {valid: () => boolean},
+): Promise<'opened' | 'canceled'> {
+  if (!lease.valid()) return 'canceled';
+  if (action.kind === 'openUrl') {
+    await shell.openExternal(safeUrl(action.url));
+    return 'opened';
+  }
+  const path = await localPath(action.path, 'directory');
+  const exe = executable ? await localPath(executable, 'exe') : null;
+  if (!lease.valid()) return 'canceled';
+  if (exe) await launchProject(exe, path);
+  else if (await shell.openPath(path))
+    throw new Error('Folder could not be opened');
+  return 'opened';
+}
+
+/** Only an address the telemetry would keep as it is is opened. */
+function safeUrl(url: string): string {
+  if (sanitizeTelemetryUrl(url) !== url) throw new Error('Unsafe URL');
+  return url;
 }

@@ -64,7 +64,7 @@ export class ProjectsService {
   ): Promise<Project> {
     const [row] = await this.db
       .update(projects)
-      .set(input)
+      .set({...input, updatedAt: new Date()})
       .where(and(eq(projects.id, id), eq(projects.userId, userId)))
       .returning();
     if (!row) {
@@ -97,5 +97,6 @@ function toProject(row: typeof projects.$inferSelect): Project {
     aliases: row.aliases,
     closedOn: row.closedOn,
     createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt?.toISOString() ?? null,
   };
 }

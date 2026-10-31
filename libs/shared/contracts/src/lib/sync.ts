@@ -30,6 +30,11 @@ const handshake = {
   peer: z.string().min(1).max(100),
   /** The latest applied migration. */
   schema: z.string(),
+  /**
+   * Every applied migration, oldest first. When one side's are the start of the other's, the two
+   * sync across versions (docs/sync.md); left out by an older instance — then `schema` must match.
+   */
+  migrations: z.array(z.string().max(128)).max(5_000).optional(),
   /** A hash of ENCRYPTION_KEY: synced secrets can only be read with the same key. */
   keyCheck: z.string(),
 };
@@ -97,6 +102,8 @@ export interface SyncPullResponse {
   changes: SyncChange[];
   cursor: string | null;
   hasMore: boolean;
+  /** How many migrations the server is ahead of the client; negative — behind. */
+  schemaAhead?: number;
 }
 
 export interface SyncStatus {
@@ -113,6 +120,11 @@ export interface SyncStatus {
   parked: number;
   /** Versions that lost a conflict (kept in `sync.conflicts`). */
   conflicts: number;
+  /**
+   * Client: how many migrations the server is ahead (negative — this instance is ahead); the two
+   * still sync, rows of the newer schema wait here until this one is updated. `null` — the same.
+   */
+  schemaAhead: number | null;
   /** Client: the latest comparison of the data with the server's; `null` — not yet. */
   reconcile: ReconcileResult | null;
   /** Backups on this instance (server: the dumps, client: their copies); `null` — none. */

@@ -19,7 +19,11 @@ import {
   ActivityApp,
   ActivityCategory,
 } from '@pd/contracts';
-import {pickableProjects, ProjectsApi} from '@pd/web-core';
+import {
+  pickableProjects,
+  ProjectsApi,
+  ResourceStateComponent,
+} from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
 import {ActivityApi} from '../activity.api';
 import {RuleSuggestionsComponent} from './rule-suggestions.component';
@@ -38,6 +42,7 @@ const IDLE_MINUTES = [1, 2, 3, 5, 10, 15, 30, 60];
   selector: 'pd-activity-settings-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ResourceStateComponent,
     RuleSuggestionsComponent,
     MatButtonModule,
     MatCardModule,

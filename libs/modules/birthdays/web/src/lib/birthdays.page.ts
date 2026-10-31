@@ -136,10 +136,18 @@ const GIFT_TRIGGER = 'birthdays.upcoming';
                 [daysUntil]="nearest(birthday)"
                 [quiet]="!!birthday.memorial"
               />
-              <button matIconButton (click)="openForm(birthday)">
+              <button
+                matIconButton
+                [attr.aria-label]="'core.actions.edit' | transloco"
+                (click)="openForm(birthday)"
+              >
                 <mat-icon>edit</mat-icon>
               </button>
-              <button matIconButton (click)="remove(birthday)">
+              <button
+                matIconButton
+                [attr.aria-label]="'core.actions.delete' | transloco"
+                (click)="remove(birthday)"
+              >
                 <mat-icon>delete</mat-icon>
               </button>
             </div>

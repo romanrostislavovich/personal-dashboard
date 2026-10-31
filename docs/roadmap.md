@@ -254,7 +254,8 @@ None written down now (the voice assistant's two went to [On hold](#on-hold)).
   answer is the film's rating, then an optional few words (text or a voice message) become its
   note. Films only, not shows. Quiet hours hold it till the morning. (The owner's choices,
   2026-10-26.)
-- **Life: steps** — in the day feed, once the steps come from somewhere (a phone, a band)
+- ✅ **Life: steps** (2026-10-31) — the band's steps and the night's sleep (with its score) in the
+  day feed, from Health → Band
 
 ### Next
 
@@ -333,8 +334,8 @@ None written down now (the voice assistant's two went to [On hold](#on-hold)).
   compared with the mood); next: an estimate out of them ("slept ~6 h, went to bed at 2:40"), a
   weekly trend, in Life; the phone refines it later
 - **Sleep, steps, weight** — the first part of Fitness: ✅ sleep and steps come from the band
-  through Health Connect (Health → Band, 2026-10-29); still to come: weight, and the steps and the
-  sleep in Life and in the morning digest
+  through Health Connect (Health → Band, 2026-10-29); ✅ in the Life feed (2026-10-31); still to
+  come: weight, and the steps and the sleep in the morning digest
 - **Weather: more** — air quality and pollen; days off and public holidays in the digest
 - **Shopping list** — items added from Telegram ("milk, bread") or the page, grouped by shop or
   category, ticked off in the shop; ingredients of a recipe added in one click; can be shared
@@ -393,29 +394,40 @@ assistant as a tutor that knows the materials of the courses.
 
 #### Engineering
 
-- **Sync across versions** — today any difference of the migrations stops sync; a peer whose
-  migrations are the start of yours is accepted, the status says "the server is N migrations
-  ahead", and a notification tells when the two drift apart
-- **Data portability and open formats** — continuous standardized export (Markdown, JSON-LD,
-  CSV/Parquet) for vendor independence and offline accessibility without running the backend
-- **`updatedAt` on every table a user edits** — "edited at" in the UI and a check that the AI and
-  a second tab do not overwrite each other's change (If-Match)
-- **Observability** — JSON logs in production with a request or job id; `/metrics` (job runs,
-  AI calls and tokens, sync lag, failed notifications)
-- **Loading and errors are not "empty"** — a shared `<pd-resource-state>`: a list shows "No …
-  yet" today while it loads or after a failed request; the actions of the AI page report errors
-- **Accessibility** — `aria-label` on the 28 icon-only buttons without one, the accessibility rules
-  of angular-eslint; the last hardcoded texts and status colours go to Transloco and theme tokens
-- **Smaller components** — the diary editor (845 lines), the WoW dashboard, the security page,
-  Psychology's events, the AI settings: templates and styles in their own files, parts split out
-- **Tests where there are none** — the web libraries (pure helpers first: finance stats, the
-  activity timeline, months, the repository filter) and the desktop app (the span builder, the
-  private-window rules — the same as `isMeetingTitle` of contracts, the focus timer); lint for
-  the desktop app
-- **CI and tooling** — the Nx cache kept between runs, `format:check`, `.nvmrc` / `engines`,
-  `affected` and `typecheck` scripts
-- **A module generator** — `nx g @pd/tools:module`: the api and web libraries, contracts, the
-  requests of the client core, i18n and the registration in one command instead of ten steps
+- ✅ **Sync across versions** (2026-10-31) — a peer whose migrations are the start of yours is
+  accepted, the status says "the server is N migrations ahead", rows of the newer schema wait in
+  `sync.parked`; migrations that went apart stop it and are reported after 15 minutes (docs/sync.md)
+- ✅ **Data portability and open formats** (2026-10-31) — a daily open copy in `OPEN_EXPORT_DIR`
+  (`./exports` of the local instance): the rows as JSON lines, the diary in Markdown, finance in
+  CSV, the photos — read without the dashboard, importable back as a ZIP (docs/deploy.md, "An open copy")
+- ✅ **`updatedAt` on what a user edits** (2026-10-31) — tasks, transactions, recurring payments,
+  wishes, birthdays, projects and life events keep when the user (or the assistant) last changed
+  them, shown as "Edited 31 Oct, 14:32" in their forms; the last save wins (the owner's choice: no
+  If-Match)
+- ✅ **Observability** (2026-10-31) — JSON logs in production with a request or job id
+  (`X-Request-Id`); the numbers — requests and their p95, job runs, memory, AI calls and tokens,
+  sync, failed notifications — in Settings → System → Metrics (the owner's choice: no Prometheus)
+- ✅ **Loading and errors are not "empty"** (2026-10-31) — a shared `<pd-resource-state>` (a bar
+  while loading, "Could not load it" with "Try again" after a failed request, the list only once
+  it is there) around the lists that said "No … yet" meanwhile; the actions of the AI page report
+  errors
+- ✅ **Accessibility** (2026-10-31) — the accessibility rules of angular-eslint and the project's
+  own `pd/icon-button-label` (tools/eslint) in every web library; the 31 icon-only buttons
+  without a label have one; the last hardcoded text (a default category) goes through Transloco.
+  The colours left in code are data (map layers, brands, WoW classes, chart palettes)
+- ✅ **Smaller components** (2026-10-31) — the diary editor, Health's history, the AI settings,
+  the security page, the WoW dashboard and Psychology's events have their templates and styles in
+  their own files; the editor's photo URLs are a class of their own (`editor/photo-urls.ts`)
+- ✅ **Tests where there are none** (2026-10-31) — the web libraries' pure helpers (finance stats
+  and category icons, the activity timeline and periods, the repository filter, the task filter)
+  and the desktop app (the span builder, the window rules — checked against `isMeetingTitle` of
+  contracts — the focus timer); the desktop app is linted too, its three most tangled functions
+  split
+- ✅ **CI and tooling** (2026-10-31) — the Nx cache kept between CI runs, `format:check` in CI,
+  `.nvmrc` / `engines`, `npm run affected` and `npm run typecheck` (tools/typecheck.mjs)
+- ✅ **A module generator** (2026-10-31) — `nx g @pd/tools:module` (tools/nx-plugin): the api and
+  web libraries, contracts, the requests of the client core, i18n and the registration in one
+  command; a working list of items to grow from
 
 #### Browser extension
 

@@ -17,6 +17,8 @@ export const projects = pgTable(
     /** The day it was finished; null — it is still going. */
     closedOn: date({mode: 'string'}),
     createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    /** When the user (or the assistant for them) last changed it; `null` — not since it was made. */
+    updatedAt: timestamp({withTimezone: true}),
   },
   table => [index().on(table.userId)],
 );

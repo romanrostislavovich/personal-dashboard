@@ -1,0 +1,24 @@
+import {httpResource} from '@angular/common/http';
+import {inject, Injectable} from '@angular/core';
+import {<%= constantName %>_READS, <%= propertyName %>Api} from '@pd/client-core';
+import {<%= className %>Item, <%= className %>ItemInput} from '@pd/contracts';
+import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
+
+/** The <%= titleEn %> requests of the client core (`@pd/client-core`) for Angular. */
+@Injectable({providedIn: 'root'})
+export class <%= className %>Api {
+  private readonly items = <%= propertyName %>Api(inject(DASHBOARD_CLIENT).api);
+
+  /** Reactive list (newest first); call it in a component field. */
+  list() {
+    return httpResource<<%= className %>Item[]>(() => <%= constantName %>_READS.list());
+  }
+
+  create(input: <%= className %>ItemInput) {
+    return fromCore(() => this.items.create(input));
+  }
+
+  remove(id: string) {
+    return fromCore(() => this.items.remove(id));
+  }
+}

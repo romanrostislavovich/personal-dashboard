@@ -1,0 +1,18 @@
+import {WebDashboardModule} from '@pd/web-core';
+
+/** Web part of the <%= titleEn %> module. Plugged in at apps/web/src/app/modules.ts. */
+export const <%= propertyName %>Module: WebDashboardModule = {
+  id: '<%= fileName %>',
+  nav: {labelKey: '<%= fileName %>.title', icon: '<%= icon %>', group: '<%= group %>'},
+  loadRoutes: async () => [
+    {
+      path: '',
+      loadComponent: () =>
+        import('./<%= fileName %>.page').then(m => m.<%= className %>Page),
+    },
+  ],
+  translations: {
+    en: () => import('./i18n/en.json'),
+    ru: () => import('./i18n/ru.json'),
+  },
+};

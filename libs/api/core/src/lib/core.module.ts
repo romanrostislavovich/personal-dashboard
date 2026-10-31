@@ -42,6 +42,7 @@ import {SecurityLinks} from './security/security.links';
 import {SecurityService} from './security/security.service';
 import {SignInLog} from './security/sign-in-log.service';
 import {DataExportService} from './data-export/data-export.service';
+import {OpenExportService} from './data-export/open-export.service';
 import {DataImportService} from './data-export/data-import.service';
 import {TrashService} from './trash/trash.service';
 import {AiUndoService} from './ai/ai-undo.service';
@@ -97,6 +98,7 @@ import {SecretsService} from './secrets/secrets.service';
 import {ServerKeysService} from './server-keys/server-keys.service';
 import {JobRunsService} from './system/job-runs.service';
 import {SystemController} from './system/system.controller';
+import {SystemMetricsService} from './system/system-metrics.service';
 import {SystemLogService} from './system/system-log.service';
 import {UnhandledErrorsFilter} from './system/unhandled-errors.filter';
 import {ServerActions} from './sync/server-actions';
@@ -183,6 +185,7 @@ import {UserActivityService} from './realtime/user-activity.service';
     SessionsService,
     TrashService,
     DataExportService,
+    OpenExportService,
     DataImportService,
     OtherComputersService,
     OutboundPolicy,
@@ -242,6 +245,7 @@ import {UserActivityService} from './realtime/user-activity.service';
     SyncConflictsService,
     BackupService,
     JobRunsService,
+    SystemMetricsService,
     SystemLogService,
     // Errors nobody caught are logged with their request (see the filter).
     {provide: APP_FILTER, useClass: UnhandledErrorsFilter},

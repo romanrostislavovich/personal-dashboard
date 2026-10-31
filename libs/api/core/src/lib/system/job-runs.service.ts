@@ -2,6 +2,7 @@ import {Inject, Injectable} from '@nestjs/common';
 import {SystemJob} from '@pd/contracts';
 import {asc, eq, sql} from 'drizzle-orm';
 import {DB, Database} from '../database/database.module';
+import {processCounters} from './process-counters';
 import {systemJobRuns} from './system.schema';
 
 const MAX_ERROR = 1000;
@@ -23,7 +24,9 @@ export class JobRunsService {
     await this.save(job, {lastStartedAt: startedAt});
     try {
       await run();
+      processCounters.job(false);
     } catch (error) {
+      processCounters.job(true);
       await this.save(job, {
         lastError: (error instanceof Error
           ? error.message

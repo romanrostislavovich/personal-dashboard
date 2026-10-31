@@ -1,0 +1,40 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
+import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
+import {<%= className %>ItemInput, <%= propertyName %>ItemInputSchema} from '@pd/contracts';
+import {<%= className %>Service} from './<%= fileName %>.service';
+
+@Controller('<%= fileName %>')
+export class <%= className %>Controller {
+  constructor(private readonly items: <%= className %>Service) {}
+
+  @Get()
+  list(@CurrentUser() user: AuthUser) {
+    return this.items.list(user.id);
+  }
+
+  @Post()
+  create(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(<%= propertyName %>ItemInputSchema)) input: <%= className %>ItemInput,
+  ) {
+    return this.items.create(user.id, input);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.items.remove(user.id, id);
+  }
+}

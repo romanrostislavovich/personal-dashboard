@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {RouterLink} from '@angular/router';
-import {needsSetup} from '@pd/web-core';
+import {needsSetup, ResourceStateComponent} from '@pd/web-core';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {Habit, isBuilding} from '@pd/contracts';
 import {habitIcon, HabitsApi} from './habits.api';
@@ -11,27 +11,37 @@ import {habitIcon, HabitsApi} from './habits.api';
 @Component({
   selector: 'pd-habits-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatCardModule, RouterLink, TranslocoPipe],
+  imports: [
+    ResourceStateComponent,
+    MatButtonModule,
+    MatCardModule,
+    RouterLink,
+    TranslocoPipe,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-card-title>🌱 {{ 'habits.title' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content class="list">
-        @for (habit of habits.value(); track habit.id) {
-          <div class="row">
-            <span class="icon">{{ icon(habit) }}</span>
-            <span class="name">{{ name(habit) }}</span>
-            <span class="days">
-              {{
-                'habits.widget.days'
-                  | transloco: {days: habit.stats.currentStreak}
-              }}
-            </span>
-          </div>
-        } @empty {
-          <p class="empty">{{ 'habits.widget.empty' | transloco }}</p>
-        }
+        <pd-resource-state [resource]="habits">
+          <ng-template>
+            @for (habit of habits.value(); track habit.id) {
+              <div class="row">
+                <span class="icon">{{ icon(habit) }}</span>
+                <span class="name">{{ name(habit) }}</span>
+                <span class="days">
+                  {{
+                    'habits.widget.days'
+                      | transloco: {days: habit.stats.currentStreak}
+                  }}
+                </span>
+              </div>
+            } @empty {
+              <p class="empty">{{ 'habits.widget.empty' | transloco }}</p>
+            }
+          </ng-template>
+        </pd-resource-state>
       </mat-card-content>
       <mat-card-actions align="end">
         <a matButton routerLink="/habits">{{
