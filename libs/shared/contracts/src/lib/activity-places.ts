@@ -1,7 +1,7 @@
 import {z} from 'zod';
 import {LocalDate} from './local-date';
 
-// The phone's location (the Android app, stage 2c of docs/proposals/mobile-app.md): where the
+// The phone's location (the Android app, apps/mobile/README.md): where the
 // day went — the places it was spent at and the trips between them.
 
 const moment = z.iso.datetime({offset: true});

@@ -1,8 +1,8 @@
 import {z} from 'zod';
 
 /**
- * The band in detail, read by the phone from Health Connect (docs/proposals/mobile-app.md,
- * stage 3): the pulse per minute, HRV readings, sleep with its stages, exercises — and what the
+ * The band in detail, read by the phone from Health Connect (apps/mobile/README.md): the
+ * pulse per minute, HRV readings, sleep with its stages, exercises — and what the
  * server counts from them: the stress index, the body's reactions, the sleep score, resilience.
  * The day totals stay in `WearableDay` (health-wearable.ts), the Google Health API's first.
  */

@@ -748,7 +748,7 @@ assistant as a tutor that knows the materials of the courses.
 
 - **Mobile app & Smart Band Wearables Integration** — mobile application collecting data from
   the smartphone and wearable devices (smart watch / smart band via BLE, Google Health Connect, Apple Health).
-  The plan in stages: [proposals/mobile-app.md](proposals/mobile-app.md):
+  The app and its decisions: [apps/mobile/README.md](../apps/mobile/README.md):
   - **the base:** Capacitor around the same Angular app, offline reading and writing, push
     through Google, a gentle-day widget, quiet hours, a help button (crisis lines by country and
     a close person's contact)
@@ -782,7 +782,7 @@ Set aside until there is time for them (the owner's decision, 2026-10-30); nothi
 on now.
 
 - **The phone's voice assistant «Люцифер»** — built and deployed 2026-10-26
-  (docs/proposals/mobile-app.md, stage 4) and switched off. Before it comes back:
+  (the Android app) and switched off. Before it comes back:
   - **Voice assistant: too many false alarms** — in a real room «Люцифер» woke up on ordinary
     speech (2026-10-26, 20:07: a bit of a conversation was sent as a question); the owner switched
     it off. The test of the wake word used synthesized phrases, which a room does not sound like:
