@@ -127,7 +127,7 @@ export class ProfileSettingsComponent {
       await this.auth.updateProfile(this.form.getRawValue());
       this.snackBar.open(
         this.transloco.translate('core.settings.profile.saved'),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 3000,
         },

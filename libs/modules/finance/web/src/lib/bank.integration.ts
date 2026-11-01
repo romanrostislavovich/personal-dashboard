@@ -423,7 +423,11 @@ export class BankIntegration {
           : result === 'renewed'
             ? 'finance.bank.renewed'
             : 'finance.bank.connected';
-      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 8000});
+      this.snackBar.open(
+        this.transloco.translate(key),
+        this.transloco.translate('core.actions.ok'),
+        {duration: 8000},
+      );
       setTimeout(
         () =>
           document.getElementById('pd-bank')?.scrollIntoView({block: 'start'}),
@@ -483,7 +487,7 @@ export class BankIntegration {
       const result = await firstValueFrom(this.api.syncBank(connection.id));
       this.snackBar.open(
         this.transloco.translate('finance.bank.syncResult', result),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 6000,
         },
@@ -497,7 +501,7 @@ export class BankIntegration {
       const result = await firstValueFrom(this.api.resortBank());
       this.snackBar.open(
         this.transloco.translate('finance.bank.resortResult', result),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 8000,
         },
@@ -535,7 +539,11 @@ export class BankIntegration {
       await action();
       this.state.reload();
     } catch (error) {
-      this.snackBar.open(this.failure(error), 'OK', {duration: 10000});
+      this.snackBar.open(
+        this.failure(error),
+        this.transloco.translate('core.actions.ok'),
+        {duration: 10000},
+      );
     } finally {
       this.busy.set(false);
     }

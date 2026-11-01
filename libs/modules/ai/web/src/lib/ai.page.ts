@@ -297,9 +297,13 @@ export class AiPage {
     try {
       await action();
     } catch {
-      this.snackBar.open(this.transloco.translate('ai.errors.action'), 'OK', {
-        duration: 5000,
-      });
+      this.snackBar.open(
+        this.transloco.translate('ai.errors.action'),
+        this.transloco.translate('core.actions.ok'),
+        {
+          duration: 5000,
+        },
+      );
     }
   }
 

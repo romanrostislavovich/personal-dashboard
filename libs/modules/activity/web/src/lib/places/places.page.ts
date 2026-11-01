@@ -445,7 +445,7 @@ export class PlacesPage {
       if (!found) {
         this.snackBar.open(
           this.transloco.translate('activity.places.googleNone'),
-          'OK',
+          this.transloco.translate('core.actions.ok'),
           {
             duration: 5000,
           },
@@ -455,7 +455,7 @@ export class PlacesPage {
     } catch {
       this.snackBar.open(
         this.transloco.translate('activity.places.googleFailed'),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 6000,
         },

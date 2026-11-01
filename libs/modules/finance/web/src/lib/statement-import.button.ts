@@ -81,7 +81,7 @@ export class StatementImportButton {
       const result = await firstValueFrom(this.api.importStatement(file));
       this.snackBar.open(
         this.transloco.translate('finance.bank.syncResult', result),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 6000,
         },
@@ -92,7 +92,11 @@ export class StatementImportButton {
         errorStatus(error) === 400
           ? 'finance.statement.notPko'
           : 'finance.bank.failed';
-      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 8000});
+      this.snackBar.open(
+        this.transloco.translate(key),
+        this.transloco.translate('core.actions.ok'),
+        {duration: 8000},
+      );
     } finally {
       this.busy.set(false);
     }

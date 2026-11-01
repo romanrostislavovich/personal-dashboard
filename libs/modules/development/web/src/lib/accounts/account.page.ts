@@ -156,7 +156,7 @@ export class AccountPage {
       const message = (errorBody(error) as {message?: string} | null)?.message;
       this.snackBar.open(
         message ?? this.transloco.translate('development.errors.generic'),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 8000,
         },

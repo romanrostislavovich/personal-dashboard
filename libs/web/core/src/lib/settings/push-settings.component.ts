@@ -172,7 +172,7 @@ export class PushSettingsComponent {
       this.transloco.translate(
         ok ? 'core.settings.push.testSent' : 'core.settings.push.testFailed',
       ),
-      'OK',
+      this.transloco.translate('core.actions.ok'),
       {duration: 4000},
     );
     this.status.reload();

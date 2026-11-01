@@ -42,7 +42,11 @@ import {SystemMetrics} from '@pd/contracts';
                 }}
               }
               @if (m.requests.p95Ms !== null) {
-                · p95 {{ m.requests.p95Ms | number }} ms
+                ·
+                {{
+                  'core.settings.system.metrics.p95'
+                    | transloco: {value: m.requests.p95Ms | number}
+                }}
               }
             </dd>
           </div>
@@ -61,7 +65,12 @@ import {SystemMetrics} from '@pd/contracts';
           </div>
           <div>
             <dt>{{ 'core.settings.system.metrics.memory' | transloco }}</dt>
-            <dd>{{ m.memoryMb | number }} MB</dd>
+            <dd>
+              {{
+                'core.settings.system.metrics.memoryValue'
+                  | transloco: {value: m.memoryMb | number}
+              }}
+            </dd>
           </div>
           <div>
             <dt>{{ 'core.settings.system.metrics.ai' | transloco }}</dt>

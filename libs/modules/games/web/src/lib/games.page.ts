@@ -124,7 +124,9 @@ export class GamesPage {
       const text = realms
         ? this.transloco.translate('games.errors.realmNotFound', {realms})
         : this.transloco.translate(key ?? 'games.errors.generic');
-      this.snackBar.open(text, 'OK', {duration: realms ? 30000 : 6000});
+      this.snackBar.open(text, this.transloco.translate('core.actions.ok'), {
+        duration: realms ? 30000 : 6000,
+      });
     } finally {
       this.busy.set(false);
     }

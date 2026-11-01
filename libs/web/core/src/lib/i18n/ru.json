@@ -20,7 +20,8 @@
     "edit": "Изменить",
     "delete": "Удалить",
     "previous": "Назад",
-    "next": "Вперёд"
+    "next": "Вперёд",
+    "ok": "ОК"
   },
   "login": {
     "title": "Вход",
@@ -367,6 +368,8 @@
         "jobs": "Запуски фоновых задач",
         "failures": "неудачных: {{count}}",
         "memory": "Память",
+        "memoryValue": "{{value}} МБ",
+        "p95": "p95 {{value}} мс",
         "ai": "ИИ сегодня",
         "aiValue": "{{requests}} запр. · {{tokens}} токенов",
         "notifications": "Уведомления за сутки",

@@ -259,7 +259,11 @@ export class DataSettingsComponent {
             : status === 404
               ? 'core.settings.data.gone'
               : 'core.settings.data.failed';
-      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 8000});
+      this.snackBar.open(
+        this.transloco.translate(key),
+        this.transloco.translate('core.actions.ok'),
+        {duration: 8000},
+      );
     } finally {
       this.busy.set(null);
     }

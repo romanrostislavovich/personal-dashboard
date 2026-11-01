@@ -218,7 +218,7 @@ export class ProjectsPage {
       if (errorStatus(error) === 409) {
         this.snackBar.open(
           this.transloco.translate('core.projects.inUse'),
-          'OK',
+          this.transloco.translate('core.actions.ok'),
           {
             duration: 5000,
           },

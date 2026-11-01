@@ -184,7 +184,7 @@ export class GoogleHealthIntegration {
     } catch {
       this.snackBar.open(
         this.transloco.translate('health.band.integration.actionFailed'),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 8000,
         },
@@ -201,7 +201,7 @@ export class GoogleHealthIntegration {
     if (result) {
       this.snackBar.open(
         this.transloco.translate(`health.band.integration.${result}`),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 5000,
         },

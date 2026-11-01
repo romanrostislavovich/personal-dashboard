@@ -172,7 +172,9 @@ export class SoundcloudIntegration {
         errorStatus(error) === 400 && said
           ? said
           : this.transloco.translate('music.connect.error');
-      this.snackBar.open(message, 'OK', {duration: 8000});
+      this.snackBar.open(message, this.transloco.translate('core.actions.ok'), {
+        duration: 8000,
+      });
     } finally {
       this.settings.reload();
       this.busy.set(false);

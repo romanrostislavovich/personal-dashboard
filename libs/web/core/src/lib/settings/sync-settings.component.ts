@@ -316,9 +316,13 @@ export class SyncSettingsComponent {
       const status = await action();
       this.status.set(status);
       if (!status.lastError && !status.backup?.lastError) {
-        this.snackBar.open(this.transloco.translate(done), 'OK', {
-          duration: 3000,
-        });
+        this.snackBar.open(
+          this.transloco.translate(done),
+          this.transloco.translate('core.actions.ok'),
+          {
+            duration: 3000,
+          },
+        );
       }
     } finally {
       this.busy.set(false);

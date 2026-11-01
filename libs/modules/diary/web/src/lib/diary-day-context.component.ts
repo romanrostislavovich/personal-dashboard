@@ -11,6 +11,7 @@ import {RouterLink} from '@angular/router';
 import {TranslocoPipe} from '@jsverse/transloco';
 import {CORE_READS} from '@pd/client-core';
 import {LifeDay} from '@pd/contracts';
+import {NumberParamsPipe} from '@pd/web-core';
 
 /**
  * What the other sections know about the day being written about: the hours at the computer,
@@ -20,7 +21,13 @@ import {LifeDay} from '@pd/contracts';
 @Component({
   selector: 'pd-diary-day-context',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatCardModule, MatIconModule, RouterLink, TranslocoPipe],
+  imports: [
+    MatCardModule,
+    MatIconModule,
+    RouterLink,
+    TranslocoPipe,
+    NumberParamsPipe,
+  ],
   template: `
     @if (events().length) {
       <mat-card appearance="outlined">
@@ -36,10 +43,12 @@ import {LifeDay} from '@pd/contracts';
                 <mat-icon inline>{{ event.icon }}</mat-icon>
                 @if (event.link) {
                   <a [routerLink]="event.link">{{
-                    event.key | transloco: event.params ?? {}
+                    event.key | transloco: (event.params | pdNumberParams)
                   }}</a>
                 } @else {
-                  <span>{{ event.key | transloco: event.params ?? {} }}</span>
+                  <span>{{
+                    event.key | transloco: (event.params | pdNumberParams)
+                  }}</span>
                 }
               </li>
             }
