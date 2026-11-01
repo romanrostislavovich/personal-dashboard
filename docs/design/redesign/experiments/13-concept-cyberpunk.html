@@ -1154,10 +1154,16 @@
     <script>
       // Switching screens: jacks on desktop, tab bar on phone, number keys 1–2 in this mockup.
       const go = id => {
-        document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
-        document.querySelectorAll(".jack, .tabbar button").forEach(b => b.classList.remove("on"));
-        document.querySelector(`.jack[data-go="${id}"]`)?.classList.add("on");
-        document.querySelector(`.tabbar [data-go="${id}"]`)?.classList.add("on");
+        document
+          .querySelectorAll('.screen')
+          .forEach(s => s.classList.toggle('on', s.id === id));
+        document
+          .querySelectorAll('.jack, .tabbar button')
+          .forEach(b => b.classList.remove('on'));
+        document.querySelector(`.jack[data-go="${id}"]`)?.classList.add('on');
+        document
+          .querySelector(`.tabbar [data-go="${id}"]`)
+          ?.classList.add('on');
         window.scrollTo({top: 0});
       };
       document.querySelectorAll('[data-go]').forEach(b => {

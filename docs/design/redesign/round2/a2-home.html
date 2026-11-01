@@ -1,1657 +1,3152 @@
 <!doctype html>
 <html lang="ru">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>A2 Кокпит · Главная — Personal Dashboard, раунд 2</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<style>
-/* ===== Tokens: the 00–06 "Oracle" graphite set, names as in apps/web/src/styles.scss ===== */
-:root {
-  color-scheme: dark;
-  --mat-sys-primary: #e6e9ee;
-  --mat-sys-on-primary: #111418;
-  --mat-sys-secondary-container: #262c34;
-  --mat-sys-on-secondary-container: #eef1f5;
-  --mat-sys-surface: #0b0d10;
-  --mat-sys-surface-container-lowest: #07080a;
-  --mat-sys-surface-container-low: #111418;
-  --mat-sys-surface-container: #161a1f;
-  --mat-sys-surface-container-high: #1d2228;
-  --mat-sys-surface-container-highest: #252b32;
-  --mat-sys-on-surface: #e8eaed;
-  --mat-sys-on-surface-variant: #a3abb6;
-  --mat-sys-outline: #6b7480;
-  --mat-sys-outline-variant: #262c33;
-  --mat-sys-inverse-surface: #e8eaed;
-  --mat-sys-inverse-on-surface: #111418;
-  --pd-oracle: #5eead4;
-  --pd-oracle-text: #5eead4;
-  --pd-oracle-container: color-mix(in srgb, #5eead4 9%, transparent);
-  --pd-oracle-border: color-mix(in srgb, #5eead4 32%, transparent);
-  --pd-oracle-glow:
-    0 0 0 1px color-mix(in srgb, #5eead4 22%, transparent),
-    0 0 48px -12px color-mix(in srgb, #5eead4 30%, transparent);
-  --pd-forecast-line: var(--pd-oracle);
-  --pd-forecast-band: color-mix(in srgb, #5eead4 14%, transparent);
-  --pd-ok-fill: #10b981;
-  --pd-ok-text: #34d399;
-  --pd-warn-fill: #f59e0b;
-  --pd-warn-text: #fbbf24;
-  --pd-crit-fill: #f43f5e;
-  --pd-crit-text: #fb7185;
-  --pd-ok-container: color-mix(in srgb, #10b981 14%, transparent);
-  --pd-warn-container: color-mix(in srgb, #f59e0b 14%, transparent);
-  --pd-crit-container: color-mix(in srgb, #f43f5e 14%, transparent);
-  --pd-chart-primary: #c9cfd8;
-  --pd-chart-empty: color-mix(in srgb, #e8eaed 9%, transparent);
-  --pd-grid-line: color-mix(in srgb, #e8eaed 6%, transparent);
-  --pd-heat-0: color-mix(in srgb, #e8eaed 7%, transparent);
-  --pd-heat-1: color-mix(in srgb, #c9cfd8 28%, transparent);
-  --pd-heat-2: color-mix(in srgb, #c9cfd8 52%, transparent);
-  --pd-heat-3: color-mix(in srgb, #c9cfd8 80%, transparent);
-  --pd-radius: 16px;
-  --pd-radius-l: 20px;
-  --pd-radius-small: 12px;
-  --pd-radius-xs: 8px;
-  --pd-border: var(--mat-sys-outline-variant);
-  --pd-card: var(--mat-sys-surface-container-low);
-  --pd-shadow-overlay: 0 24px 64px -16px rgb(0 0 0 / 80%);
-  --pd-space-1: 4px;
-  --pd-space-2: 8px;
-  --pd-space-3: 12px;
-  --pd-space-4: 16px;
-  --pd-space-6: 24px;
-  --pd-space-8: 32px;
-  --pd-space-12: 48px;
-  --pd-font: Inter, Roboto, "Segoe UI", system-ui, sans-serif;
-  --pd-font-heading: Inter, "Segoe UI", system-ui, sans-serif;
-  --pd-font-mono:
-    "JetBrains Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
-  /* designer annotations, not part of the app */
-  --anno: #c4b5fd;
-  --anno-bg: color-mix(in srgb, #c4b5fd 14%, #0b0d10);
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    color-scheme: light;
-    --mat-sys-primary: #15181c;
-    --mat-sys-on-primary: #ffffff;
-    --mat-sys-secondary-container: #e3e6ea;
-    --mat-sys-on-secondary-container: #15181c;
-    --mat-sys-surface: #f4f5f7;
-    --mat-sys-surface-container-lowest: #ffffff;
-    --mat-sys-surface-container-low: #ffffff;
-    --mat-sys-surface-container: #eef0f3;
-    --mat-sys-surface-container-high: #e7eaee;
-    --mat-sys-surface-container-highest: #dfe3e8;
-    --mat-sys-on-surface: #15181c;
-    --mat-sys-on-surface-variant: #4b5563;
-    --mat-sys-outline: #6b7280;
-    --mat-sys-outline-variant: #d9dde3;
-    --mat-sys-inverse-surface: #15181c;
-    --mat-sys-inverse-on-surface: #f4f5f7;
-    --pd-oracle: #14b8a6;
-    --pd-oracle-text: #0f766e;
-    --pd-oracle-container: color-mix(in srgb, #14b8a6 8%, transparent);
-    --pd-oracle-border: color-mix(in srgb, #0f766e 30%, transparent);
-    --pd-oracle-glow: 0 0 0 1px color-mix(in srgb, #0f766e 18%, transparent);
-    --pd-forecast-line: #0f766e;
-    --pd-forecast-band: color-mix(in srgb, #14b8a6 14%, transparent);
-    --pd-ok-text: #047857;
-    --pd-warn-text: #b45309;
-    --pd-crit-text: #be123c;
-    --pd-chart-primary: #374151;
-    --pd-chart-empty: color-mix(in srgb, #15181c 8%, transparent);
-    --pd-grid-line: color-mix(in srgb, #15181c 7%, transparent);
-    --pd-heat-0: color-mix(in srgb, #15181c 7%, transparent);
-    --pd-heat-1: color-mix(in srgb, #374151 25%, transparent);
-    --pd-heat-2: color-mix(in srgb, #374151 50%, transparent);
-    --pd-heat-3: color-mix(in srgb, #374151 82%, transparent);
-    --pd-shadow-overlay: 0 24px 48px -16px rgb(0 0 0 / 22%);
-    --anno: #6d28d9;
-    --anno-bg: #f3efff;
-  }
-}
-:root[data-theme="light"] {
-  color-scheme: light;
-  --mat-sys-primary: #15181c;
-  --mat-sys-on-primary: #ffffff;
-  --mat-sys-secondary-container: #e3e6ea;
-  --mat-sys-on-secondary-container: #15181c;
-  --mat-sys-surface: #f4f5f7;
-  --mat-sys-surface-container-lowest: #ffffff;
-  --mat-sys-surface-container-low: #ffffff;
-  --mat-sys-surface-container: #eef0f3;
-  --mat-sys-surface-container-high: #e7eaee;
-  --mat-sys-surface-container-highest: #dfe3e8;
-  --mat-sys-on-surface: #15181c;
-  --mat-sys-on-surface-variant: #4b5563;
-  --mat-sys-outline: #6b7280;
-  --mat-sys-outline-variant: #d9dde3;
-  --mat-sys-inverse-surface: #15181c;
-  --mat-sys-inverse-on-surface: #f4f5f7;
-  --pd-oracle: #14b8a6;
-  --pd-oracle-text: #0f766e;
-  --pd-oracle-container: color-mix(in srgb, #14b8a6 8%, transparent);
-  --pd-oracle-border: color-mix(in srgb, #0f766e 30%, transparent);
-  --pd-oracle-glow: 0 0 0 1px color-mix(in srgb, #0f766e 18%, transparent);
-  --pd-forecast-line: #0f766e;
-  --pd-forecast-band: color-mix(in srgb, #14b8a6 14%, transparent);
-  --pd-ok-text: #047857;
-  --pd-warn-text: #b45309;
-  --pd-crit-text: #be123c;
-  --pd-chart-primary: #374151;
-  --pd-chart-empty: color-mix(in srgb, #15181c 8%, transparent);
-  --pd-grid-line: color-mix(in srgb, #15181c 7%, transparent);
-  --pd-heat-0: color-mix(in srgb, #15181c 7%, transparent);
-  --pd-heat-1: color-mix(in srgb, #374151 25%, transparent);
-  --pd-heat-2: color-mix(in srgb, #374151 50%, transparent);
-  --pd-heat-3: color-mix(in srgb, #374151 82%, transparent);
-  --pd-shadow-overlay: 0 24px 48px -16px rgb(0 0 0 / 22%);
-  --anno: #6d28d9;
-  --anno-bg: #f3efff;
-}
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>A2 Кокпит · Главная — Personal Dashboard, раунд 2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ===== Tokens: the 00–06 "Oracle" graphite set, names as in apps/web/src/styles.scss ===== */
+      :root {
+        color-scheme: dark;
+        --mat-sys-primary: #e6e9ee;
+        --mat-sys-on-primary: #111418;
+        --mat-sys-secondary-container: #262c34;
+        --mat-sys-on-secondary-container: #eef1f5;
+        --mat-sys-surface: #0b0d10;
+        --mat-sys-surface-container-lowest: #07080a;
+        --mat-sys-surface-container-low: #111418;
+        --mat-sys-surface-container: #161a1f;
+        --mat-sys-surface-container-high: #1d2228;
+        --mat-sys-surface-container-highest: #252b32;
+        --mat-sys-on-surface: #e8eaed;
+        --mat-sys-on-surface-variant: #a3abb6;
+        --mat-sys-outline: #6b7480;
+        --mat-sys-outline-variant: #262c33;
+        --mat-sys-inverse-surface: #e8eaed;
+        --mat-sys-inverse-on-surface: #111418;
+        --pd-oracle: #5eead4;
+        --pd-oracle-text: #5eead4;
+        --pd-oracle-container: color-mix(in srgb, #5eead4 9%, transparent);
+        --pd-oracle-border: color-mix(in srgb, #5eead4 32%, transparent);
+        --pd-oracle-glow:
+          0 0 0 1px color-mix(in srgb, #5eead4 22%, transparent),
+          0 0 48px -12px color-mix(in srgb, #5eead4 30%, transparent);
+        --pd-forecast-line: var(--pd-oracle);
+        --pd-forecast-band: color-mix(in srgb, #5eead4 14%, transparent);
+        --pd-ok-fill: #10b981;
+        --pd-ok-text: #34d399;
+        --pd-warn-fill: #f59e0b;
+        --pd-warn-text: #fbbf24;
+        --pd-crit-fill: #f43f5e;
+        --pd-crit-text: #fb7185;
+        --pd-ok-container: color-mix(in srgb, #10b981 14%, transparent);
+        --pd-warn-container: color-mix(in srgb, #f59e0b 14%, transparent);
+        --pd-crit-container: color-mix(in srgb, #f43f5e 14%, transparent);
+        --pd-chart-primary: #c9cfd8;
+        --pd-chart-empty: color-mix(in srgb, #e8eaed 9%, transparent);
+        --pd-grid-line: color-mix(in srgb, #e8eaed 6%, transparent);
+        --pd-heat-0: color-mix(in srgb, #e8eaed 7%, transparent);
+        --pd-heat-1: color-mix(in srgb, #c9cfd8 28%, transparent);
+        --pd-heat-2: color-mix(in srgb, #c9cfd8 52%, transparent);
+        --pd-heat-3: color-mix(in srgb, #c9cfd8 80%, transparent);
+        --pd-radius: 16px;
+        --pd-radius-l: 20px;
+        --pd-radius-small: 12px;
+        --pd-radius-xs: 8px;
+        --pd-border: var(--mat-sys-outline-variant);
+        --pd-card: var(--mat-sys-surface-container-low);
+        --pd-shadow-overlay: 0 24px 64px -16px rgb(0 0 0 / 80%);
+        --pd-space-1: 4px;
+        --pd-space-2: 8px;
+        --pd-space-3: 12px;
+        --pd-space-4: 16px;
+        --pd-space-6: 24px;
+        --pd-space-8: 32px;
+        --pd-space-12: 48px;
+        --pd-font: Inter, Roboto, 'Segoe UI', system-ui, sans-serif;
+        --pd-font-heading: Inter, 'Segoe UI', system-ui, sans-serif;
+        --pd-font-mono:
+          'JetBrains Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
+        /* designer annotations, not part of the app */
+        --anno: #c4b5fd;
+        --anno-bg: color-mix(in srgb, #c4b5fd 14%, #0b0d10);
+      }
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme='dark']) {
+          color-scheme: light;
+          --mat-sys-primary: #15181c;
+          --mat-sys-on-primary: #ffffff;
+          --mat-sys-secondary-container: #e3e6ea;
+          --mat-sys-on-secondary-container: #15181c;
+          --mat-sys-surface: #f4f5f7;
+          --mat-sys-surface-container-lowest: #ffffff;
+          --mat-sys-surface-container-low: #ffffff;
+          --mat-sys-surface-container: #eef0f3;
+          --mat-sys-surface-container-high: #e7eaee;
+          --mat-sys-surface-container-highest: #dfe3e8;
+          --mat-sys-on-surface: #15181c;
+          --mat-sys-on-surface-variant: #4b5563;
+          --mat-sys-outline: #6b7280;
+          --mat-sys-outline-variant: #d9dde3;
+          --mat-sys-inverse-surface: #15181c;
+          --mat-sys-inverse-on-surface: #f4f5f7;
+          --pd-oracle: #14b8a6;
+          --pd-oracle-text: #0f766e;
+          --pd-oracle-container: color-mix(in srgb, #14b8a6 8%, transparent);
+          --pd-oracle-border: color-mix(in srgb, #0f766e 30%, transparent);
+          --pd-oracle-glow: 0 0 0 1px
+            color-mix(in srgb, #0f766e 18%, transparent);
+          --pd-forecast-line: #0f766e;
+          --pd-forecast-band: color-mix(in srgb, #14b8a6 14%, transparent);
+          --pd-ok-text: #047857;
+          --pd-warn-text: #b45309;
+          --pd-crit-text: #be123c;
+          --pd-chart-primary: #374151;
+          --pd-chart-empty: color-mix(in srgb, #15181c 8%, transparent);
+          --pd-grid-line: color-mix(in srgb, #15181c 7%, transparent);
+          --pd-heat-0: color-mix(in srgb, #15181c 7%, transparent);
+          --pd-heat-1: color-mix(in srgb, #374151 25%, transparent);
+          --pd-heat-2: color-mix(in srgb, #374151 50%, transparent);
+          --pd-heat-3: color-mix(in srgb, #374151 82%, transparent);
+          --pd-shadow-overlay: 0 24px 48px -16px rgb(0 0 0 / 22%);
+          --anno: #6d28d9;
+          --anno-bg: #f3efff;
+        }
+      }
+      :root[data-theme='light'] {
+        color-scheme: light;
+        --mat-sys-primary: #15181c;
+        --mat-sys-on-primary: #ffffff;
+        --mat-sys-secondary-container: #e3e6ea;
+        --mat-sys-on-secondary-container: #15181c;
+        --mat-sys-surface: #f4f5f7;
+        --mat-sys-surface-container-lowest: #ffffff;
+        --mat-sys-surface-container-low: #ffffff;
+        --mat-sys-surface-container: #eef0f3;
+        --mat-sys-surface-container-high: #e7eaee;
+        --mat-sys-surface-container-highest: #dfe3e8;
+        --mat-sys-on-surface: #15181c;
+        --mat-sys-on-surface-variant: #4b5563;
+        --mat-sys-outline: #6b7280;
+        --mat-sys-outline-variant: #d9dde3;
+        --mat-sys-inverse-surface: #15181c;
+        --mat-sys-inverse-on-surface: #f4f5f7;
+        --pd-oracle: #14b8a6;
+        --pd-oracle-text: #0f766e;
+        --pd-oracle-container: color-mix(in srgb, #14b8a6 8%, transparent);
+        --pd-oracle-border: color-mix(in srgb, #0f766e 30%, transparent);
+        --pd-oracle-glow: 0 0 0 1px color-mix(in srgb, #0f766e 18%, transparent);
+        --pd-forecast-line: #0f766e;
+        --pd-forecast-band: color-mix(in srgb, #14b8a6 14%, transparent);
+        --pd-ok-text: #047857;
+        --pd-warn-text: #b45309;
+        --pd-crit-text: #be123c;
+        --pd-chart-primary: #374151;
+        --pd-chart-empty: color-mix(in srgb, #15181c 8%, transparent);
+        --pd-grid-line: color-mix(in srgb, #15181c 7%, transparent);
+        --pd-heat-0: color-mix(in srgb, #15181c 7%, transparent);
+        --pd-heat-1: color-mix(in srgb, #374151 25%, transparent);
+        --pd-heat-2: color-mix(in srgb, #374151 50%, transparent);
+        --pd-heat-3: color-mix(in srgb, #374151 82%, transparent);
+        --pd-shadow-overlay: 0 24px 48px -16px rgb(0 0 0 / 22%);
+        --anno: #6d28d9;
+        --anno-bg: #f3efff;
+      }
 
-/* ===== Base ===== */
-* {
-  box-sizing: border-box;
-}
-html {
-  -webkit-text-size-adjust: 100%;
-}
-body {
-  margin: 0;
-  font: 400 14px/20px var(--pd-font);
-  color: var(--mat-sys-on-surface);
-  background: var(--mat-sys-surface);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-h1,
-h2,
-h3,
-p {
-  margin: 0;
-}
-a {
-  color: inherit;
-  text-decoration: none;
-}
-button,
-input,
-textarea,
-select {
-  font: inherit;
-  color: inherit;
-}
-button {
-  cursor: pointer;
-}
-:focus-visible {
-  outline: 2px solid var(--mat-sys-primary);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
+      /* ===== Base ===== */
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        margin: 0;
+        font: 400 14px/20px var(--pd-font);
+        color: var(--mat-sys-on-surface);
+        background: var(--mat-sys-surface);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+        color: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      :focus-visible {
+        outline: 2px solid var(--mat-sys-primary);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
 
-/* ===== Type scale ===== */
-.t-display {
-  font: 700 28px/36px var(--pd-font-heading);
-  letter-spacing: -0.02em;
-}
-.t-headline {
-  font: 700 22px/28px var(--pd-font-heading);
-  letter-spacing: -0.01em;
-}
-.t-title {
-  font: 600 16px/24px var(--pd-font);
-}
-.t-title-s {
-  font: 600 14px/20px var(--pd-font);
-}
-.t-body {
-  font: 400 14px/20px var(--pd-font);
-}
-.t-answer {
-  font: 500 18px/26px var(--pd-font);
-}
-.t-label {
-  font: 500 12px/16px var(--pd-font);
-  color: var(--mat-sys-on-surface-variant);
-}
-.eyebrow {
-  font: 500 11px/16px var(--pd-font-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--mat-sys-on-surface-variant);
-}
-.mono,
-.num {
-  font-family: var(--pd-font-mono);
-  font-variant-numeric: tabular-nums;
-}
-.num-xl {
-  font: 600 32px/40px var(--pd-font-mono);
-  letter-spacing: -0.02em;
-}
-.num-l {
-  font: 600 24px/32px var(--pd-font-mono);
-  letter-spacing: -0.01em;
-}
-.num-m {
-  font: 600 16px/24px var(--pd-font-mono);
-}
-.muted {
-  color: var(--mat-sys-on-surface-variant);
-}
-.ok {
-  color: var(--pd-ok-text);
-}
-.warn {
-  color: var(--pd-warn-text);
-}
-.crit {
-  color: var(--pd-crit-text);
-}
-.answer {
-  color: var(--pd-oracle-text);
-}
-.sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-}
+      /* ===== Type scale ===== */
+      .t-display {
+        font: 700 28px/36px var(--pd-font-heading);
+        letter-spacing: -0.02em;
+      }
+      .t-headline {
+        font: 700 22px/28px var(--pd-font-heading);
+        letter-spacing: -0.01em;
+      }
+      .t-title {
+        font: 600 16px/24px var(--pd-font);
+      }
+      .t-title-s {
+        font: 600 14px/20px var(--pd-font);
+      }
+      .t-body {
+        font: 400 14px/20px var(--pd-font);
+      }
+      .t-answer {
+        font: 500 18px/26px var(--pd-font);
+      }
+      .t-label {
+        font: 500 12px/16px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .eyebrow {
+        font: 500 11px/16px var(--pd-font-mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .mono,
+      .num {
+        font-family: var(--pd-font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+      .num-xl {
+        font: 600 32px/40px var(--pd-font-mono);
+        letter-spacing: -0.02em;
+      }
+      .num-l {
+        font: 600 24px/32px var(--pd-font-mono);
+        letter-spacing: -0.01em;
+      }
+      .num-m {
+        font: 600 16px/24px var(--pd-font-mono);
+      }
+      .muted {
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .ok {
+        color: var(--pd-ok-text);
+      }
+      .warn {
+        color: var(--pd-warn-text);
+      }
+      .crit {
+        color: var(--pd-crit-text);
+      }
+      .answer {
+        color: var(--pd-oracle-text);
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
 
-/* ===== Icons ===== */
-svg.ic {
-  width: 20px;
-  height: 20px;
-  flex: none;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  vertical-align: middle;
-}
-svg.ic.s {
-  width: 16px;
-  height: 16px;
-}
+      /* ===== Icons ===== */
+      svg.ic {
+        width: 20px;
+        height: 20px;
+        flex: none;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vertical-align: middle;
+      }
+      svg.ic.s {
+        width: 16px;
+        height: 16px;
+      }
 
-/* ===== Status ===== */
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex: none;
-  display: inline-block;
-  background: var(--pd-ok-fill);
-}
-.dot.warn {
-  background: var(--pd-warn-fill);
-}
-.dot.crit {
-  background: var(--pd-crit-fill);
-}
-.dot.off {
-  background: var(--mat-sys-outline);
-}
-.dot.oracle {
-  background: var(--pd-oracle);
-}
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 24px;
-  padding: 0 8px;
-  border-radius: 999px;
-  font: 600 12px/16px var(--pd-font);
-  background: var(--mat-sys-surface-container-high);
-  color: var(--mat-sys-on-surface-variant);
-  white-space: nowrap;
-}
-.badge.ok {
-  background: var(--pd-ok-container);
-  color: var(--pd-ok-text);
-}
-.badge.warn {
-  background: var(--pd-warn-container);
-  color: var(--pd-warn-text);
-}
-.badge.crit {
-  background: var(--pd-crit-container);
-  color: var(--pd-crit-text);
-}
-.badge.oracle {
-  background: var(--pd-oracle-container);
-  color: var(--pd-oracle-text);
-}
-.delta {
-  font: 600 12px/16px var(--pd-font-mono);
-  white-space: nowrap;
-}
-.new {
-  display: inline-block;
-  font: 600 10px/14px var(--pd-font-mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0 5px;
-  border: 1px dashed var(--anno);
-  color: var(--anno);
-  border-radius: 4px;
-  vertical-align: middle;
-  white-space: nowrap;
-}
-.illus {
-  font: 500 10px/14px var(--pd-font-mono);
-  color: var(--mat-sys-on-surface-variant);
-  border: 1px solid var(--pd-border);
-  border-radius: 4px;
-  padding: 0 4px;
-  white-space: nowrap;
-}
-.pulse {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--pd-oracle);
-  flex: none;
-  animation: pulse 2.4s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--pd-oracle) 50%, transparent);
-  }
-  50% {
-    box-shadow: 0 0 0 6px transparent;
-  }
-}
+      /* ===== Status ===== */
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: none;
+        display: inline-block;
+        background: var(--pd-ok-fill);
+      }
+      .dot.warn {
+        background: var(--pd-warn-fill);
+      }
+      .dot.crit {
+        background: var(--pd-crit-fill);
+      }
+      .dot.off {
+        background: var(--mat-sys-outline);
+      }
+      .dot.oracle {
+        background: var(--pd-oracle);
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 24px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font: 600 12px/16px var(--pd-font);
+        background: var(--mat-sys-surface-container-high);
+        color: var(--mat-sys-on-surface-variant);
+        white-space: nowrap;
+      }
+      .badge.ok {
+        background: var(--pd-ok-container);
+        color: var(--pd-ok-text);
+      }
+      .badge.warn {
+        background: var(--pd-warn-container);
+        color: var(--pd-warn-text);
+      }
+      .badge.crit {
+        background: var(--pd-crit-container);
+        color: var(--pd-crit-text);
+      }
+      .badge.oracle {
+        background: var(--pd-oracle-container);
+        color: var(--pd-oracle-text);
+      }
+      .delta {
+        font: 600 12px/16px var(--pd-font-mono);
+        white-space: nowrap;
+      }
+      .new {
+        display: inline-block;
+        font: 600 10px/14px var(--pd-font-mono);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 0 5px;
+        border: 1px dashed var(--anno);
+        color: var(--anno);
+        border-radius: 4px;
+        vertical-align: middle;
+        white-space: nowrap;
+      }
+      .illus {
+        font: 500 10px/14px var(--pd-font-mono);
+        color: var(--mat-sys-on-surface-variant);
+        border: 1px solid var(--pd-border);
+        border-radius: 4px;
+        padding: 0 4px;
+        white-space: nowrap;
+      }
+      .pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--pd-oracle);
+        flex: none;
+        animation: pulse 2.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0
+            color-mix(in srgb, var(--pd-oracle) 50%, transparent);
+        }
+        50% {
+          box-shadow: 0 0 0 6px transparent;
+        }
+      }
 
-/* ===== Score ring (conic) ===== */
-.ring {
-  --v: 80;
-  --c: var(--pd-ok-fill);
-  --size: 40px;
-  width: var(--size);
-  height: var(--size);
-  border-radius: 50%;
-  flex: none;
-  display: grid;
-  place-items: center;
-  background: conic-gradient(
-    var(--c) calc(var(--v) * 1%),
-    var(--pd-chart-empty) 0
-  );
-  position: relative;
-  font: 600 13px/1 var(--pd-font-mono);
-}
-.ring::before {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border-radius: 50%;
-  background: var(--pd-card);
-}
-.ring > span {
-  position: relative;
-}
-.ring.warn {
-  --c: var(--pd-warn-fill);
-}
-.ring.crit {
-  --c: var(--pd-crit-fill);
-}
-.ring.oracle {
-  --c: var(--pd-oracle);
-}
+      /* ===== Score ring (conic) ===== */
+      .ring {
+        --v: 80;
+        --c: var(--pd-ok-fill);
+        --size: 40px;
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        flex: none;
+        display: grid;
+        place-items: center;
+        background: conic-gradient(
+          var(--c) calc(var(--v) * 1%),
+          var(--pd-chart-empty) 0
+        );
+        position: relative;
+        font: 600 13px/1 var(--pd-font-mono);
+      }
+      .ring::before {
+        content: '';
+        position: absolute;
+        inset: 4px;
+        border-radius: 50%;
+        background: var(--pd-card);
+      }
+      .ring > span {
+        position: relative;
+      }
+      .ring.warn {
+        --c: var(--pd-warn-fill);
+      }
+      .ring.crit {
+        --c: var(--pd-crit-fill);
+      }
+      .ring.oracle {
+        --c: var(--pd-oracle);
+      }
 
-/* ===== Meters, sparklines, heat strips ===== */
-.meter {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--pd-chart-empty);
-  overflow: hidden;
-}
-.meter > i {
-  display: block;
-  height: 100%;
-  border-radius: 3px;
-  background: var(--pd-chart-primary);
-}
-.meter.ok > i {
-  background: var(--pd-ok-fill);
-}
-.meter.warn > i {
-  background: var(--pd-warn-fill);
-}
-.meter.crit > i {
-  background: var(--pd-crit-fill);
-}
-.meter.oracle > i {
-  background: var(--pd-oracle);
-}
-svg.spark {
-  display: block;
-  width: 100%;
-  height: 28px;
-  overflow: visible;
-}
-svg.spark .p {
-  fill: none;
-  stroke: var(--pd-chart-primary);
-  stroke-width: 1.6;
-  vector-effect: non-scaling-stroke;
-}
-svg.spark .f {
-  fill: none;
-  stroke: var(--pd-forecast-line);
-  stroke-width: 1.6;
-  stroke-dasharray: 3 3;
-  vector-effect: non-scaling-stroke;
-}
-svg.spark .band {
-  fill: var(--pd-forecast-band);
-}
-svg.spark .w {
-  stroke: var(--pd-warn-fill);
-}
-svg.spark .c {
-  stroke: var(--pd-crit-fill);
-}
-.hs {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  gap: 2px;
-  height: 12px;
-}
-.hs i {
-  border-radius: 2px;
-  background: var(--pd-heat-0);
-}
-.hs i.l1 {
-  background: var(--pd-heat-1);
-}
-.hs i.l2 {
-  background: var(--pd-heat-2);
-}
-.hs i.l3 {
-  background: var(--pd-heat-3);
-}
-.hs i.w {
-  background: var(--pd-warn-fill);
-}
-.hs i.c {
-  background: var(--pd-crit-fill);
-}
-.hs i.na {
-  background: repeating-linear-gradient(
-    135deg,
-    var(--pd-heat-0) 0 2px,
-    transparent 2px 4px
-  );
-}
-.hs i.t {
-  outline: 1px solid var(--mat-sys-on-surface-variant);
-  outline-offset: 0;
-}
+      /* ===== Meters, sparklines, heat strips ===== */
+      .meter {
+        height: 6px;
+        border-radius: 3px;
+        background: var(--pd-chart-empty);
+        overflow: hidden;
+      }
+      .meter > i {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+        background: var(--pd-chart-primary);
+      }
+      .meter.ok > i {
+        background: var(--pd-ok-fill);
+      }
+      .meter.warn > i {
+        background: var(--pd-warn-fill);
+      }
+      .meter.crit > i {
+        background: var(--pd-crit-fill);
+      }
+      .meter.oracle > i {
+        background: var(--pd-oracle);
+      }
+      svg.spark {
+        display: block;
+        width: 100%;
+        height: 28px;
+        overflow: visible;
+      }
+      svg.spark .p {
+        fill: none;
+        stroke: var(--pd-chart-primary);
+        stroke-width: 1.6;
+        vector-effect: non-scaling-stroke;
+      }
+      svg.spark .f {
+        fill: none;
+        stroke: var(--pd-forecast-line);
+        stroke-width: 1.6;
+        stroke-dasharray: 3 3;
+        vector-effect: non-scaling-stroke;
+      }
+      svg.spark .band {
+        fill: var(--pd-forecast-band);
+      }
+      svg.spark .w {
+        stroke: var(--pd-warn-fill);
+      }
+      svg.spark .c {
+        stroke: var(--pd-crit-fill);
+      }
+      .hs {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        gap: 2px;
+        height: 12px;
+      }
+      .hs i {
+        border-radius: 2px;
+        background: var(--pd-heat-0);
+      }
+      .hs i.l1 {
+        background: var(--pd-heat-1);
+      }
+      .hs i.l2 {
+        background: var(--pd-heat-2);
+      }
+      .hs i.l3 {
+        background: var(--pd-heat-3);
+      }
+      .hs i.w {
+        background: var(--pd-warn-fill);
+      }
+      .hs i.c {
+        background: var(--pd-crit-fill);
+      }
+      .hs i.na {
+        background: repeating-linear-gradient(
+          135deg,
+          var(--pd-heat-0) 0 2px,
+          transparent 2px 4px
+        );
+      }
+      .hs i.t {
+        outline: 1px solid var(--mat-sys-on-surface-variant);
+        outline-offset: 0;
+      }
 
-/* ===== Buttons and chips (matButton: filled / tonal / text) ===== */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 999px;
-  border: 0;
-  font: 600 14px/20px var(--pd-font);
-  background: transparent;
-  color: var(--mat-sys-on-surface);
-  white-space: nowrap;
-}
-.btn.filled {
-  background: var(--mat-sys-primary);
-  color: var(--mat-sys-on-primary);
-}
-.btn.tonal {
-  background: var(--mat-sys-secondary-container);
-  color: var(--mat-sys-on-secondary-container);
-}
-.btn.outlined {
-  border: 1px solid var(--mat-sys-outline-variant);
-}
-.btn.s {
-  height: 32px;
-  padding: 0 12px;
-  font-size: 13px;
-}
-.btn.danger {
-  background: var(--pd-crit-container);
-  color: var(--pd-crit-text);
-}
-.btn:hover {
-  filter: brightness(1.08);
-}
-.icon-btn {
-  width: 40px;
-  height: 40px;
-  display: inline-grid;
-  place-items: center;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--mat-sys-on-surface-variant);
-  flex: none;
-  position: relative;
-}
-.icon-btn:hover {
-  background: var(--mat-sys-surface-container-high);
-  color: var(--mat-sys-on-surface);
-}
-.icon-btn .dot {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-}
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: var(--pd-radius-xs);
-  border: 1px solid var(--pd-border);
-  background: transparent;
-  font: 500 13px/16px var(--pd-font);
-  color: var(--mat-sys-on-surface);
-  white-space: nowrap;
-}
-.chip[aria-pressed="true"],
-.chip.on {
-  background: var(--mat-sys-secondary-container);
-  border-color: transparent;
-}
-kbd {
-  font: 500 11px/16px var(--pd-font-mono);
-  padding: 0 6px;
-  border-radius: 6px;
-  border: 1px solid var(--pd-border);
-  color: var(--mat-sys-on-surface-variant);
-  background: var(--mat-sys-surface-container);
-}
+      /* ===== Buttons and chips (matButton: filled / tonal / text) ===== */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 0;
+        font: 600 14px/20px var(--pd-font);
+        background: transparent;
+        color: var(--mat-sys-on-surface);
+        white-space: nowrap;
+      }
+      .btn.filled {
+        background: var(--mat-sys-primary);
+        color: var(--mat-sys-on-primary);
+      }
+      .btn.tonal {
+        background: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-secondary-container);
+      }
+      .btn.outlined {
+        border: 1px solid var(--mat-sys-outline-variant);
+      }
+      .btn.s {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 13px;
+      }
+      .btn.danger {
+        background: var(--pd-crit-container);
+        color: var(--pd-crit-text);
+      }
+      .btn:hover {
+        filter: brightness(1.08);
+      }
+      .icon-btn {
+        width: 40px;
+        height: 40px;
+        display: inline-grid;
+        place-items: center;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--mat-sys-on-surface-variant);
+        flex: none;
+        position: relative;
+      }
+      .icon-btn:hover {
+        background: var(--mat-sys-surface-container-high);
+        color: var(--mat-sys-on-surface);
+      }
+      .icon-btn .dot {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: var(--pd-radius-xs);
+        border: 1px solid var(--pd-border);
+        background: transparent;
+        font: 500 13px/16px var(--pd-font);
+        color: var(--mat-sys-on-surface);
+        white-space: nowrap;
+      }
+      .chip[aria-pressed='true'],
+      .chip.on {
+        background: var(--mat-sys-secondary-container);
+        border-color: transparent;
+      }
+      kbd {
+        font: 500 11px/16px var(--pd-font-mono);
+        padding: 0 6px;
+        border-radius: 6px;
+        border: 1px solid var(--pd-border);
+        color: var(--mat-sys-on-surface-variant);
+        background: var(--mat-sys-surface-container);
+      }
 
-/* ===== Card, list, section header ===== */
-.card {
-  background: var(--pd-card);
-  border: 1px solid var(--pd-border);
-  border-radius: var(--pd-radius);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 0;
-  position: relative;
-}
-a.card:hover,
-button.card:hover {
-  border-color: var(--mat-sys-outline);
-}
-.card-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 24px;
-  color: var(--mat-sys-on-surface-variant);
-}
-.card-head .t-title-s {
-  color: var(--mat-sys-on-surface);
-}
-.card-head .end {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.oracle-card {
-  border-color: var(--pd-oracle-border);
-  box-shadow: var(--pd-oracle-glow);
-  border-radius: var(--pd-radius-l);
-  background:
-    linear-gradient(var(--pd-oracle-container), var(--pd-oracle-container)),
-    var(--pd-card);
-}
-.sec-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 8px 0 0;
-  min-height: 32px;
-}
-.sec-head .end {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.list {
-  display: flex;
-  flex-direction: column;
-}
-.row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 48px;
-  padding: 6px 0;
-  border-top: 1px solid var(--pd-border);
-  min-width: 0;
-}
-.list > .row:first-child {
-  border-top: 0;
-}
-.row .grow {
-  flex: 1;
-  min-width: 0;
-}
-.row .grow > * {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.row .val {
-  font-family: var(--pd-font-mono);
-  white-space: nowrap;
-}
-.lead {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--pd-radius-small);
-  display: grid;
-  place-items: center;
-  background: var(--mat-sys-surface-container-high);
-  color: var(--mat-sys-on-surface-variant);
-  flex: none;
-}
-.kv {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.check {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 32px;
-}
-.check i {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  border: 1.8px solid var(--mat-sys-outline);
-  flex: none;
-}
+      /* ===== Card, list, section header ===== */
+      .card {
+        background: var(--pd-card);
+        border: 1px solid var(--pd-border);
+        border-radius: var(--pd-radius);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
+        position: relative;
+      }
+      a.card:hover,
+      button.card:hover {
+        border-color: var(--mat-sys-outline);
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 24px;
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .card-head .t-title-s {
+        color: var(--mat-sys-on-surface);
+      }
+      .card-head .end {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .oracle-card {
+        border-color: var(--pd-oracle-border);
+        box-shadow: var(--pd-oracle-glow);
+        border-radius: var(--pd-radius-l);
+        background:
+          linear-gradient(
+            var(--pd-oracle-container),
+            var(--pd-oracle-container)
+          ),
+          var(--pd-card);
+      }
+      .sec-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 8px 0 0;
+        min-height: 32px;
+      }
+      .sec-head .end {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .list {
+        display: flex;
+        flex-direction: column;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 48px;
+        padding: 6px 0;
+        border-top: 1px solid var(--pd-border);
+        min-width: 0;
+      }
+      .list > .row:first-child {
+        border-top: 0;
+      }
+      .row .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .row .grow > * {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .row .val {
+        font-family: var(--pd-font-mono);
+        white-space: nowrap;
+      }
+      .lead {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--pd-radius-small);
+        display: grid;
+        place-items: center;
+        background: var(--mat-sys-surface-container-high);
+        color: var(--mat-sys-on-surface-variant);
+        flex: none;
+      }
+      .kv {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 32px;
+      }
+      .check i {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        border: 1.8px solid var(--mat-sys-outline);
+        flex: none;
+      }
 
-/* ===== Shell: sidebar (groups folded, as in 02-shell), phone top bar and bottom bar ===== */
-.app {
-  display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
-  min-height: 100vh;
-}
-.side {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 12px;
-  border-right: 1px solid var(--pd-border);
-  background: var(--mat-sys-surface);
-}
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 48px;
-  padding: 0 8px;
-  font-weight: 700;
-}
-.logo {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  background: var(--mat-sys-primary);
-  color: var(--mat-sys-on-primary);
-}
-.logo svg.ic {
-  width: 16px;
-  height: 16px;
-}
-.search-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  margin: 4px 0 8px;
-  padding: 0 8px 0 12px;
-  border-radius: var(--pd-radius-small);
-  border: 1px solid var(--pd-border);
-  background: var(--mat-sys-surface-container-low);
-  color: var(--mat-sys-on-surface-variant);
-  text-align: left;
-  width: 100%;
-}
-.search-btn span {
-  flex: 1;
-}
-.nav-item,
-.nav-group > summary {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 40px;
-  padding: 0 12px;
-  border-radius: var(--pd-radius-small);
-  color: var(--mat-sys-on-surface-variant);
-  font-weight: 500;
-  cursor: pointer;
-  list-style: none;
-}
-.nav-group > summary::-webkit-details-marker {
-  display: none;
-}
-.nav-item:hover,
-.nav-group > summary:hover {
-  background: var(--mat-sys-surface-container);
-  color: var(--mat-sys-on-surface);
-}
-.nav-item[aria-current="page"] {
-  background: var(--mat-sys-secondary-container);
-  color: var(--mat-sys-on-surface);
-  box-shadow: inset 3px 0 0 var(--pd-oracle);
-}
-.nav-item.sub {
-  padding-left: 44px;
-  min-height: 36px;
-  font-weight: 400;
-}
-.nav-item .count,
-.nav-group .count {
-  margin-left: auto;
-  font: 500 12px/16px var(--pd-font-mono);
-  color: var(--mat-sys-on-surface-variant);
-}
-.nav-group > summary .dot {
-  margin-left: auto;
-}
-.nav-group > summary .dot + .count {
-  margin-left: 0;
-}
-.side .spacer {
-  flex: 1;
-  min-height: 16px;
-}
-.lvl {
-  --v: 1;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font: 600 10px/1 var(--pd-font-mono);
-  background: conic-gradient(
-    var(--pd-oracle) calc(var(--v) * 1%),
-    var(--pd-chart-empty) 0
-  );
-  position: relative;
-  color: var(--mat-sys-on-surface);
-}
-.lvl::before {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  border-radius: 50%;
-  background: var(--mat-sys-surface);
-}
-.lvl b {
-  position: relative;
-  font-weight: 600;
-}
-.content {
-  min-width: 0;
-  padding: 24px 32px 48px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.ptop {
-  display: none;
-}
-.bottombar {
-  display: none;
-}
+      /* ===== Shell: sidebar (groups folded, as in 02-shell), phone top bar and bottom bar ===== */
+      .app {
+        display: grid;
+        grid-template-columns: 248px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+      .side {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 12px;
+        border-right: 1px solid var(--pd-border);
+        background: var(--mat-sys-surface);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 48px;
+        padding: 0 8px;
+        font-weight: 700;
+      }
+      .logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        background: var(--mat-sys-primary);
+        color: var(--mat-sys-on-primary);
+      }
+      .logo svg.ic {
+        width: 16px;
+        height: 16px;
+      }
+      .search-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 40px;
+        margin: 4px 0 8px;
+        padding: 0 8px 0 12px;
+        border-radius: var(--pd-radius-small);
+        border: 1px solid var(--pd-border);
+        background: var(--mat-sys-surface-container-low);
+        color: var(--mat-sys-on-surface-variant);
+        text-align: left;
+        width: 100%;
+      }
+      .search-btn span {
+        flex: 1;
+      }
+      .nav-item,
+      .nav-group > summary {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 40px;
+        padding: 0 12px;
+        border-radius: var(--pd-radius-small);
+        color: var(--mat-sys-on-surface-variant);
+        font-weight: 500;
+        cursor: pointer;
+        list-style: none;
+      }
+      .nav-group > summary::-webkit-details-marker {
+        display: none;
+      }
+      .nav-item:hover,
+      .nav-group > summary:hover {
+        background: var(--mat-sys-surface-container);
+        color: var(--mat-sys-on-surface);
+      }
+      .nav-item[aria-current='page'] {
+        background: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-surface);
+        box-shadow: inset 3px 0 0 var(--pd-oracle);
+      }
+      .nav-item.sub {
+        padding-left: 44px;
+        min-height: 36px;
+        font-weight: 400;
+      }
+      .nav-item .count,
+      .nav-group .count {
+        margin-left: auto;
+        font: 500 12px/16px var(--pd-font-mono);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .nav-group > summary .dot {
+        margin-left: auto;
+      }
+      .nav-group > summary .dot + .count {
+        margin-left: 0;
+      }
+      .side .spacer {
+        flex: 1;
+        min-height: 16px;
+      }
+      .lvl {
+        --v: 1;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font: 600 10px/1 var(--pd-font-mono);
+        background: conic-gradient(
+          var(--pd-oracle) calc(var(--v) * 1%),
+          var(--pd-chart-empty) 0
+        );
+        position: relative;
+        color: var(--mat-sys-on-surface);
+      }
+      .lvl::before {
+        content: '';
+        position: absolute;
+        inset: 2px;
+        border-radius: 50%;
+        background: var(--mat-sys-surface);
+      }
+      .lvl b {
+        position: relative;
+        font-weight: 600;
+      }
+      .content {
+        min-width: 0;
+        padding: 24px 32px 48px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .ptop {
+        display: none;
+      }
+      .bottombar {
+        display: none;
+      }
 
-@media (max-width: 1023px) {
-  .app {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .side {
-    display: none;
-  }
-  .content {
-    padding: 12px 16px 96px;
-    gap: 12px;
-  }
-  .ptop {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    height: 56px;
-    padding: 0 4px 0 16px;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: var(--mat-sys-surface);
-    border-bottom: 1px solid var(--pd-border);
-  }
-  .ptop .t-title {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .ptop .icon-btn {
-    width: 48px;
-    height: 48px;
-  }
-  .bottombar {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 6;
-    height: 72px;
-    padding-bottom: env(safe-area-inset-bottom);
-    background: var(--mat-sys-surface-container);
-    border-top: 1px solid var(--pd-border);
-  }
-  .bottombar a {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    font: 500 12px/16px var(--pd-font);
-    color: var(--mat-sys-on-surface-variant);
-    min-height: 48px;
-  }
-  .bottombar a span.pill {
-    width: 56px;
-    height: 32px;
-    border-radius: 16px;
-    display: grid;
-    place-items: center;
-    position: relative;
-  }
-  .bottombar a[aria-current="page"] {
-    color: var(--mat-sys-on-surface);
-  }
-  .bottombar a[aria-current="page"] span.pill {
-    background: var(--mat-sys-secondary-container);
-  }
-  .bottombar .pill .dot {
-    position: absolute;
-    top: 4px;
-    right: 12px;
-  }
-  .btn {
-    height: 48px;
-  }
-  .btn.s {
-    height: 40px;
-  }
-  .chip {
-    height: 40px;
-  }
-}
+      @media (max-width: 1023px) {
+        .app {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .side {
+          display: none;
+        }
+        .content {
+          padding: 12px 16px 96px;
+          gap: 12px;
+        }
+        .ptop {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          height: 56px;
+          padding: 0 4px 0 16px;
+          position: sticky;
+          top: 0;
+          z-index: 5;
+          background: var(--mat-sys-surface);
+          border-bottom: 1px solid var(--pd-border);
+        }
+        .ptop .t-title {
+          flex: 1;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .ptop .icon-btn {
+          width: 48px;
+          height: 48px;
+        }
+        .bottombar {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 6;
+          height: 72px;
+          padding-bottom: env(safe-area-inset-bottom);
+          background: var(--mat-sys-surface-container);
+          border-top: 1px solid var(--pd-border);
+        }
+        .bottombar a {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          font: 500 12px/16px var(--pd-font);
+          color: var(--mat-sys-on-surface-variant);
+          min-height: 48px;
+        }
+        .bottombar a span.pill {
+          width: 56px;
+          height: 32px;
+          border-radius: 16px;
+          display: grid;
+          place-items: center;
+          position: relative;
+        }
+        .bottombar a[aria-current='page'] {
+          color: var(--mat-sys-on-surface);
+        }
+        .bottombar a[aria-current='page'] span.pill {
+          background: var(--mat-sys-secondary-container);
+        }
+        .bottombar .pill .dot {
+          position: absolute;
+          top: 4px;
+          right: 12px;
+        }
+        .btn {
+          height: 48px;
+        }
+        .btn.s {
+          height: 40px;
+        }
+        .chip {
+          height: 40px;
+        }
+      }
 
-/* ===== Overlays: palette, quick actions, blocks, drawer ===== */
-dialog {
-  border: 1px solid var(--pd-border);
-  border-radius: var(--pd-radius-l);
-  padding: 0;
-  background: var(--mat-sys-surface-container);
-  color: var(--mat-sys-on-surface);
-  box-shadow: var(--pd-shadow-overlay);
-  max-width: calc(100vw - 24px);
-}
-dialog::backdrop {
-  background: rgb(0 0 0 / 55%);
-}
-.dlg-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 12px 12px 20px;
-  border-bottom: 1px solid var(--pd-border);
-}
-.dlg-head .t-title {
-  flex: 1;
-}
-.dlg-body {
-  padding: 16px 20px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.dlg-foot {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  padding: 12px 20px 16px;
-  border-top: 1px solid var(--pd-border);
-}
-#palette {
-  width: 640px;
-  margin-top: 12vh;
-}
-.pal-input {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 16px;
-  height: 56px;
-  border-bottom: 1px solid var(--pd-border);
-}
-.pal-input input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  background: transparent;
-  font-size: 16px;
-  outline: none;
-}
-.pal-list {
-  padding: 8px;
-  max-height: 56vh;
-  overflow-y: auto;
-}
-.pal-list .eyebrow {
-  padding: 8px 12px 4px;
-}
-.pal-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 44px;
-  padding: 0 12px;
-  border-radius: var(--pd-radius-small);
-  width: 100%;
-  border: 0;
-  background: transparent;
-  text-align: left;
-}
-.pal-item:hover,
-.pal-item.sel {
-  background: var(--mat-sys-secondary-container);
-}
-.pal-item .grow {
-  flex: 1;
-  min-width: 0;
-}
-.pal-hint {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 10px 16px;
-  border-top: 1px solid var(--pd-border);
-}
-#quick {
-  width: 520px;
-}
-.seg {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  border: 1px solid var(--pd-border);
-  border-radius: 999px;
-  padding: 3px;
-  gap: 3px;
-}
-.seg button {
-  border: 0;
-  background: transparent;
-  height: 36px;
-  border-radius: 999px;
-  font-weight: 600;
-  color: var(--mat-sys-on-surface-variant);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-.seg button[aria-selected="true"] {
-  background: var(--mat-sys-secondary-container);
-  color: var(--mat-sys-on-surface);
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.field input,
-.field textarea {
-  border: 1px solid var(--pd-border);
-  background: var(--mat-sys-surface-container-high);
-  border-radius: var(--pd-radius-small);
-  padding: 10px 12px;
-  min-height: 48px;
-  outline: none;
-  width: 100%;
-}
-.field input:focus,
-.field textarea:focus {
-  border-color: var(--mat-sys-outline);
-}
-.amount {
-  font: 600 32px/40px var(--pd-font-mono) !important;
-  text-align: right;
-}
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-[role="tabpanel"][hidden] {
-  display: none !important;
-}
-#blocks {
-  width: 480px;
-}
-.sw-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 48px;
-  border-top: 1px solid var(--pd-border);
-}
-.sw-row:first-child {
-  border-top: 0;
-}
-.sw-row .grip {
-  color: var(--mat-sys-outline);
-  cursor: grab;
-  font: 600 14px/1 var(--pd-font-mono);
-  letter-spacing: -2px;
-  width: 16px;
-}
-.sw-row .grow {
-  flex: 1;
-  min-width: 0;
-}
-.switch {
-  appearance: none;
-  width: 44px;
-  height: 24px;
-  border-radius: 12px;
-  background: var(--mat-sys-surface-container-highest);
-  border: 1px solid var(--mat-sys-outline);
-  position: relative;
-  flex: none;
-  cursor: pointer;
-  margin: 0;
-}
-.switch::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--mat-sys-outline);
-  transition: transform 150ms ease;
-}
-.switch:checked {
-  background: var(--mat-sys-primary);
-  border-color: var(--mat-sys-primary);
-}
-.switch:checked::after {
-  transform: translateX(20px);
-  background: var(--mat-sys-on-primary);
-}
-.switch:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-#drawer {
-  margin: 0 0 0 auto;
-  height: 100vh;
-  max-height: 100vh;
-  width: 440px;
-  border-radius: var(--pd-radius-l) 0 0 var(--pd-radius-l);
-}
-#drawer .dlg-body {
-  overflow-y: auto;
-  max-height: calc(100vh - 66px);
-}
-@media (max-width: 1023px) {
-  #palette {
-    margin-top: 8px;
-    width: calc(100vw - 16px);
-  }
-  #quick,
-  #blocks {
-    width: calc(100vw - 16px);
-    margin-bottom: 8px;
-  }
-  #drawer {
-    margin: auto 0 0;
-    width: 100vw;
-    max-width: 100vw;
-    height: auto;
-    max-height: 85vh;
-    border-radius: var(--pd-radius-l) var(--pd-radius-l) 0 0;
-  }
-  #drawer .dlg-body {
-    max-height: calc(85vh - 66px);
-  }
-}
-[data-block][hidden] {
-  display: none !important;
-}
+      /* ===== Overlays: palette, quick actions, blocks, drawer ===== */
+      dialog {
+        border: 1px solid var(--pd-border);
+        border-radius: var(--pd-radius-l);
+        padding: 0;
+        background: var(--mat-sys-surface-container);
+        color: var(--mat-sys-on-surface);
+        box-shadow: var(--pd-shadow-overlay);
+        max-width: calc(100vw - 24px);
+      }
+      dialog::backdrop {
+        background: rgb(0 0 0 / 55%);
+      }
+      .dlg-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 12px 12px 20px;
+        border-bottom: 1px solid var(--pd-border);
+      }
+      .dlg-head .t-title {
+        flex: 1;
+      }
+      .dlg-body {
+        padding: 16px 20px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .dlg-foot {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        padding: 12px 20px 16px;
+        border-top: 1px solid var(--pd-border);
+      }
+      #palette {
+        width: 640px;
+        margin-top: 12vh;
+      }
+      .pal-input {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 16px;
+        height: 56px;
+        border-bottom: 1px solid var(--pd-border);
+      }
+      .pal-input input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        background: transparent;
+        font-size: 16px;
+        outline: none;
+      }
+      .pal-list {
+        padding: 8px;
+        max-height: 56vh;
+        overflow-y: auto;
+      }
+      .pal-list .eyebrow {
+        padding: 8px 12px 4px;
+      }
+      .pal-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 44px;
+        padding: 0 12px;
+        border-radius: var(--pd-radius-small);
+        width: 100%;
+        border: 0;
+        background: transparent;
+        text-align: left;
+      }
+      .pal-item:hover,
+      .pal-item.sel {
+        background: var(--mat-sys-secondary-container);
+      }
+      .pal-item .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .pal-hint {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding: 10px 16px;
+        border-top: 1px solid var(--pd-border);
+      }
+      #quick {
+        width: 520px;
+      }
+      .seg {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        border: 1px solid var(--pd-border);
+        border-radius: 999px;
+        padding: 3px;
+        gap: 3px;
+      }
+      .seg button {
+        border: 0;
+        background: transparent;
+        height: 36px;
+        border-radius: 999px;
+        font-weight: 600;
+        color: var(--mat-sys-on-surface-variant);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .seg button[aria-selected='true'] {
+        background: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-surface);
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field input,
+      .field textarea {
+        border: 1px solid var(--pd-border);
+        background: var(--mat-sys-surface-container-high);
+        border-radius: var(--pd-radius-small);
+        padding: 10px 12px;
+        min-height: 48px;
+        outline: none;
+        width: 100%;
+      }
+      .field input:focus,
+      .field textarea:focus {
+        border-color: var(--mat-sys-outline);
+      }
+      .amount {
+        font: 600 32px/40px var(--pd-font-mono) !important;
+        text-align: right;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      [role='tabpanel'][hidden] {
+        display: none !important;
+      }
+      #blocks {
+        width: 480px;
+      }
+      .sw-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 48px;
+        border-top: 1px solid var(--pd-border);
+      }
+      .sw-row:first-child {
+        border-top: 0;
+      }
+      .sw-row .grip {
+        color: var(--mat-sys-outline);
+        cursor: grab;
+        font: 600 14px/1 var(--pd-font-mono);
+        letter-spacing: -2px;
+        width: 16px;
+      }
+      .sw-row .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .switch {
+        appearance: none;
+        width: 44px;
+        height: 24px;
+        border-radius: 12px;
+        background: var(--mat-sys-surface-container-highest);
+        border: 1px solid var(--mat-sys-outline);
+        position: relative;
+        flex: none;
+        cursor: pointer;
+        margin: 0;
+      }
+      .switch::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--mat-sys-outline);
+        transition: transform 150ms ease;
+      }
+      .switch:checked {
+        background: var(--mat-sys-primary);
+        border-color: var(--mat-sys-primary);
+      }
+      .switch:checked::after {
+        transform: translateX(20px);
+        background: var(--mat-sys-on-primary);
+      }
+      .switch:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      #drawer {
+        margin: 0 0 0 auto;
+        height: 100vh;
+        max-height: 100vh;
+        width: 440px;
+        border-radius: var(--pd-radius-l) 0 0 var(--pd-radius-l);
+      }
+      #drawer .dlg-body {
+        overflow-y: auto;
+        max-height: calc(100vh - 66px);
+      }
+      @media (max-width: 1023px) {
+        #palette {
+          margin-top: 8px;
+          width: calc(100vw - 16px);
+        }
+        #quick,
+        #blocks {
+          width: calc(100vw - 16px);
+          margin-bottom: 8px;
+        }
+        #drawer {
+          margin: auto 0 0;
+          width: 100vw;
+          max-width: 100vw;
+          height: auto;
+          max-height: 85vh;
+          border-radius: var(--pd-radius-l) var(--pd-radius-l) 0 0;
+        }
+        #drawer .dlg-body {
+          max-height: calc(85vh - 66px);
+        }
+      }
+      [data-block][hidden] {
+        display: none !important;
+      }
 
-/* ===== Mock bar and designer annotations (not part of the app) ===== */
-.mock-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 12px;
-  padding: 6px 16px;
-  font: 500 12px/20px var(--pd-font);
-  background: var(--anno-bg);
-  color: var(--mat-sys-on-surface);
-  border-bottom: 1px dashed var(--anno);
-}
-.mock-bar b {
-  color: var(--anno);
-}
-.mock-bar a {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  color: var(--mat-sys-on-surface-variant);
-}
-.mock-bar a[aria-current="page"] {
-  color: var(--mat-sys-on-surface);
-  font-weight: 700;
-  text-decoration: none;
-}
-.mock-bar .sp {
-  flex: 1;
-}
-.mock-bar button {
-  border: 1px solid var(--anno);
-  background: transparent;
-  border-radius: 999px;
-  padding: 2px 10px;
-  font-size: 12px;
-  min-height: 28px;
-}
-[data-tier] {
-  position: relative;
-}
-.anno-on [data-tier] {
-  outline: 1px dashed var(--anno);
-  outline-offset: 3px;
-}
-.anno-on [data-tier]::after {
-  content: attr(data-tier);
-  position: absolute;
-  top: -10px;
-  right: 12px;
-  z-index: 2;
-  font: 600 10px/16px var(--pd-font-mono);
-  letter-spacing: 0.04em;
-  padding: 0 6px;
-  border-radius: 4px;
-  background: var(--anno-bg);
-  color: var(--anno);
-  border: 1px solid var(--anno);
-  pointer-events: none;
-  white-space: nowrap;
-}
-.dnote {
-  display: none;
-  font: 400 13px/20px var(--pd-font);
-  padding: 12px 16px;
-  border: 1px dashed var(--anno);
-  border-radius: var(--pd-radius-small);
-  background: var(--anno-bg);
-}
-.dnote b {
-  color: var(--anno);
-}
-.anno-on .dnote {
-  display: block;
-}
+      /* ===== Mock bar and designer annotations (not part of the app) ===== */
+      .mock-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 12px;
+        padding: 6px 16px;
+        font: 500 12px/20px var(--pd-font);
+        background: var(--anno-bg);
+        color: var(--mat-sys-on-surface);
+        border-bottom: 1px dashed var(--anno);
+      }
+      .mock-bar b {
+        color: var(--anno);
+      }
+      .mock-bar a {
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .mock-bar a[aria-current='page'] {
+        color: var(--mat-sys-on-surface);
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .mock-bar .sp {
+        flex: 1;
+      }
+      .mock-bar button {
+        border: 1px solid var(--anno);
+        background: transparent;
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 12px;
+        min-height: 28px;
+      }
+      [data-tier] {
+        position: relative;
+      }
+      .anno-on [data-tier] {
+        outline: 1px dashed var(--anno);
+        outline-offset: 3px;
+      }
+      .anno-on [data-tier]::after {
+        content: attr(data-tier);
+        position: absolute;
+        top: -10px;
+        right: 12px;
+        z-index: 2;
+        font: 600 10px/16px var(--pd-font-mono);
+        letter-spacing: 0.04em;
+        padding: 0 6px;
+        border-radius: 4px;
+        background: var(--anno-bg);
+        color: var(--anno);
+        border: 1px solid var(--anno);
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      .dnote {
+        display: none;
+        font: 400 13px/20px var(--pd-font);
+        padding: 12px 16px;
+        border: 1px dashed var(--anno);
+        border-radius: var(--pd-radius-small);
+        background: var(--anno-bg);
+      }
+      .dnote b {
+        color: var(--anno);
+      }
+      .anno-on .dnote {
+        display: block;
+      }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
-    scroll-behavior: auto !important;
-  }
-}
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+          scroll-behavior: auto !important;
+        }
+      }
 
-/* level strip (shared): ring + XP + the closest achievement */
-.level { display: flex; align-items: center; gap: 12px; padding: 12px 16px; flex-direction: row; }
-.level .lv-txt { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
-.level .lv-txt > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@media (max-width: 1023px) {
-  .mock-bar a:not([aria-current="page"]):not([href="index.html"]) { display: none; }
-}
+      /* level strip (shared): ring + XP + the closest achievement */
+      .level {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        flex-direction: row;
+      }
+      .level .lv-txt {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-width: 0;
+      }
+      .level .lv-txt > span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      @media (max-width: 1023px) {
+        .mock-bar a:not([aria-current='page']):not([href='index.html']) {
+          display: none;
+        }
+      }
 
-/* ===== This page ===== */
+      /* ===== This page ===== */
 
-.cbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 6px; border: 1px solid var(--pd-border); border-radius: var(--pd-radius); background: var(--pd-card); position: sticky; top: 8px; z-index: 4; }
-.pill { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: var(--pd-radius-small); border: 1px solid transparent; background: var(--mat-sys-surface-container); font: 500 13px/16px var(--pd-font); white-space: nowrap; }
-.pill:hover { border-color: var(--mat-sys-outline); }
-.pill.crit-p { background: var(--pd-crit-container); color: var(--pd-crit-text); }
-.pill.search { min-width: 260px; color: var(--mat-sys-on-surface-variant); }
-.pill.search span { flex: 1; text-align: left; }
-.cbar .sp { flex: 1; }
-.brief1 { display: flex; align-items: center; gap: 12px; padding: 10px 16px; flex-direction: row; flex-wrap: wrap; }
-.brief1 .a { display: inline-flex; gap: 6px; align-items: center; }
-.brief1 .sep { width: 1px; height: 20px; background: var(--pd-oracle-border); }
-.cock { display: grid; grid-template-columns: minmax(0, 8fr) minmax(300px, 4fr); gap: 16px; align-items: start; }
-.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.tile { padding: 12px; gap: 8px; }
-.tile.w2 { grid-column: span 2; }
-.rail { display: flex; flex-direction: column; gap: 12px; }
-.rail .card { padding: 12px; gap: 8px; }
-.vrow { display: grid; grid-template-columns: 64px 1fr 64px; gap: 8px; align-items: center; min-height: 28px; }
-.vrow .val { text-align: right; }
-.ctr-row { display: grid; grid-template-columns: 10px 1fr auto 32px; gap: 8px; align-items: center; min-height: 36px; border-top: 1px solid var(--pd-border); }
-.ctr-row:first-of-type { border-top: 0; }
-.ctr-row .icon-btn { width: 32px; height: 32px; }
-.lg { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; min-height: 32px; }
-.edit-on .tile { outline: 1px dashed var(--mat-sys-outline); cursor: grab; }
-@media (max-width: 1279px) { .tiles { grid-template-columns: repeat(2, 1fr); } .tile.w2 { grid-column: span 2; } .pill.search { display: none; } }
-@media (max-width: 1023px) {
-  .cbar { position: static; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .cbar .sp, .cbar .btn { display: none; }
-  .pill { justify-content: center; padding: 0 6px; min-width: 0; height: 44px; }
-  .pill > span:not(.dot):not(.ring) { overflow: hidden; text-overflow: ellipsis; }
-  .pill .new { display: none; }
-  .pill { font-size: 12px; gap: 6px; }
-  .pill .mono.muted { display: none; }
-  .cock { grid-template-columns: 1fr; }
-  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .brief1 .sep { display: none; }
-  .brief1 .a { width: 100%; }
-  .level { width: 100% !important; }
-}
+      .cbar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        padding: 6px;
+        border: 1px solid var(--pd-border);
+        border-radius: var(--pd-radius);
+        background: var(--pd-card);
+        position: sticky;
+        top: 8px;
+        z-index: 4;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 40px;
+        padding: 0 12px;
+        border-radius: var(--pd-radius-small);
+        border: 1px solid transparent;
+        background: var(--mat-sys-surface-container);
+        font: 500 13px/16px var(--pd-font);
+        white-space: nowrap;
+      }
+      .pill:hover {
+        border-color: var(--mat-sys-outline);
+      }
+      .pill.crit-p {
+        background: var(--pd-crit-container);
+        color: var(--pd-crit-text);
+      }
+      .pill.search {
+        min-width: 260px;
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .pill.search span {
+        flex: 1;
+        text-align: left;
+      }
+      .cbar .sp {
+        flex: 1;
+      }
+      .brief1 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      .brief1 .a {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .brief1 .sep {
+        width: 1px;
+        height: 20px;
+        background: var(--pd-oracle-border);
+      }
+      .cock {
+        display: grid;
+        grid-template-columns: minmax(0, 8fr) minmax(300px, 4fr);
+        gap: 16px;
+        align-items: start;
+      }
+      .tiles {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      .tile {
+        padding: 12px;
+        gap: 8px;
+      }
+      .tile.w2 {
+        grid-column: span 2;
+      }
+      .rail {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .rail .card {
+        padding: 12px;
+        gap: 8px;
+      }
+      .vrow {
+        display: grid;
+        grid-template-columns: 64px 1fr 64px;
+        gap: 8px;
+        align-items: center;
+        min-height: 28px;
+      }
+      .vrow .val {
+        text-align: right;
+      }
+      .ctr-row {
+        display: grid;
+        grid-template-columns: 10px 1fr auto 32px;
+        gap: 8px;
+        align-items: center;
+        min-height: 36px;
+        border-top: 1px solid var(--pd-border);
+      }
+      .ctr-row:first-of-type {
+        border-top: 0;
+      }
+      .ctr-row .icon-btn {
+        width: 32px;
+        height: 32px;
+      }
+      .lg {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 8px;
+        align-items: center;
+        min-height: 32px;
+      }
+      .edit-on .tile {
+        outline: 1px dashed var(--mat-sys-outline);
+        cursor: grab;
+      }
+      @media (max-width: 1279px) {
+        .tiles {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .tile.w2 {
+          grid-column: span 2;
+        }
+        .pill.search {
+          display: none;
+        }
+      }
+      @media (max-width: 1023px) {
+        .cbar {
+          position: static;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .cbar .sp,
+        .cbar .btn {
+          display: none;
+        }
+        .pill {
+          justify-content: center;
+          padding: 0 6px;
+          min-width: 0;
+          height: 44px;
+        }
+        .pill > span:not(.dot):not(.ring) {
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .pill .new {
+          display: none;
+        }
+        .pill {
+          font-size: 12px;
+          gap: 6px;
+        }
+        .pill .mono.muted {
+          display: none;
+        }
+        .cock {
+          grid-template-columns: 1fr;
+        }
+        .tiles {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+        }
+        .brief1 .sep {
+          display: none;
+        }
+        .brief1 .a {
+          width: 100%;
+        }
+        .level {
+          width: 100% !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-4-4" />
+      </symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24">
+        <path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z" />
+        <path d="M10 20a2 2 0 0 0 4 0" />
+      </symbol>
+      <symbol id="i-home" viewBox="0 0 24 24">
+        <path d="M4 11l8-7 8 7v9h-6v-6h-4v6H4z" />
+      </symbol>
+      <symbol id="i-ai" viewBox="0 0 24 24">
+        <path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" />
+        <path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" />
+      </symbol>
+      <symbol id="i-wallet" viewBox="0 0 24 24">
+        <rect x="3" y="6" width="18" height="13" rx="2" />
+        <path d="M3 10h18" />
+        <circle cx="16.5" cy="14.5" r="1" />
+      </symbol>
+      <symbol id="i-life" viewBox="0 0 24 24">
+        <path d="M3 12h4l2-5 4 10 2-5h6" />
+      </symbol>
+      <symbol id="i-task" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="16" height="16" rx="3" />
+        <path d="M8 12l3 3 5-6" />
+      </symbol>
+      <symbol id="i-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" />
+      </symbol>
+      <symbol id="i-code" viewBox="0 0 24 24">
+        <path d="M9 8l-4 4 4 4M15 8l4 4-4 4" />
+      </symbol>
+      <symbol id="i-game" viewBox="0 0 24 24">
+        <rect x="2" y="7" width="20" height="11" rx="5" />
+        <path d="M7 11v3M5.5 12.5h3M16 11.5h.01M18 13.5h.01" />
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24">
+        <path d="M12 3l8 3v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6z" />
+      </symbol>
+      <symbol id="i-server" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="7" rx="2" />
+        <rect x="3" y="13" width="18" height="7" rx="2" />
+        <path d="M7 7.5h.01M7 16.5h.01" />
+      </symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"
+        />
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14" />
+      </symbol>
+      <symbol id="i-note" viewBox="0 0 24 24">
+        <path d="M5 4h10l4 4v12H5z" />
+        <path d="M15 4v4h4M8 12h8M8 16h5" />
+      </symbol>
+      <symbol id="i-restart" viewBox="0 0 24 24">
+        <path d="M20 12a8 8 0 1 1-2.3-5.6" />
+        <path d="M20 4v5h-5" />
+      </symbol>
+      <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </symbol>
+      <symbol id="i-heart" viewBox="0 0 24 24">
+        <path
+          d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"
+        />
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8v4l3 2" />
+      </symbol>
+      <symbol id="i-book" viewBox="0 0 24 24">
+        <path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z" />
+        <path d="M5 17a3 3 0 0 1 3-3h11" />
+      </symbol>
+      <symbol id="i-music" viewBox="0 0 24 24">
+        <path d="M9 18V6l10-2v12" />
+        <circle cx="6.5" cy="18" r="2.5" />
+        <circle cx="16.5" cy="16" r="2.5" />
+      </symbol>
+      <symbol id="i-gift" viewBox="0 0 24 24">
+        <rect x="4" y="9" width="16" height="11" rx="1" />
+        <path
+          d="M3 9h18M12 9v11M12 9c-2-4-6-4-6-1.5S10 9 12 9s6 0 6-1.5S14 5 12 9"
+        />
+      </symbol>
+      <symbol id="i-backup" viewBox="0 0 24 24">
+        <path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z" />
+        <path d="M9.5 13.5l2 2 3.5-4" />
+      </symbol>
+      <symbol id="i-sync" viewBox="0 0 24 24">
+        <path
+          d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"
+        />
+      </symbol>
+      <symbol id="i-plug" viewBox="0 0 24 24">
+        <path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4" />
+      </symbol>
+      <symbol id="i-send" viewBox="0 0 24 24">
+        <path d="M21 4L3 11l6 2 2 6 3-4 5 4z" />
+        <path d="M9 13l12-9" />
+      </symbol>
+      <symbol id="i-cpu" viewBox="0 0 24 24">
+        <rect x="6" y="6" width="12" height="12" rx="2" />
+        <rect x="9.5" y="9.5" width="5" height="5" />
+        <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" />
+      </symbol>
+      <symbol id="i-disk" viewBox="0 0 24 24">
+        <ellipse cx="12" cy="6" rx="8" ry="3" />
+        <path
+          d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"
+        />
+      </symbol>
+      <symbol id="i-box" viewBox="0 0 24 24">
+        <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" />
+        <path d="M4 7.5l8 4.5 8-4.5M12 12v9" />
+      </symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24">
+        <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+        <path d="M11 18.5h2" />
+      </symbol>
+      <symbol id="i-laptop" viewBox="0 0 24 24">
+        <rect x="4" y="5" width="16" height="11" rx="1.5" />
+        <path d="M2 19h20" />
+      </symbol>
+      <symbol id="i-globe" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18" />
+      </symbol>
+      <symbol id="i-watch" viewBox="0 0 24 24">
+        <rect x="7" y="6" width="10" height="12" rx="3" />
+        <path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3M12 10v2.5l1.5 1" />
+      </symbol>
+      <symbol id="i-tune" viewBox="0 0 24 24">
+        <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+        <circle cx="16" cy="7" r="2" />
+        <circle cx="10" cy="17" r="2" />
+      </symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24">
+        <path d="M13 3L5 13h6l-1 8 8-10h-6z" />
+      </symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <path d="M12 4l9 16H3z" />
+        <path d="M12 10v4M12 17h.01" />
+      </symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24">
+        <path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z" />
+        <circle cx="12" cy="10" r="2" />
+      </symbol>
+      <symbol id="i-film" viewBox="0 0 24 24">
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M7 5v14M17 5v14M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4" />
+      </symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path
+          d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"
+        />
+      </symbol>
+      <symbol id="i-target" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8" />
+        <circle cx="12" cy="12" r="3" />
+      </symbol>
+      <symbol id="i-log" viewBox="0 0 24 24">
+        <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />
+      </symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="7" height="7" rx="1.5" />
+        <rect x="13" y="4" width="7" height="7" rx="1.5" />
+        <rect x="4" y="13" width="7" height="7" rx="1.5" />
+        <rect x="13" y="13" width="7" height="7" rx="1.5" />
+      </symbol>
+      <symbol id="i-more" viewBox="0 0 24 24">
+        <circle cx="5" cy="12" r="1.2" />
+        <circle cx="12" cy="12" r="1.2" />
+        <circle cx="19" cy="12" r="1.2" />
+      </symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24">
+        <rect x="5" y="11" width="14" height="9" rx="2" />
+        <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+      </symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24">
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </symbol>
+      <symbol id="i-up" viewBox="0 0 24 24">
+        <path d="M12 19V5M6 11l6-6 6 6" />
+      </symbol>
+      <symbol id="i-down" viewBox="0 0 24 24">
+        <path d="M12 5v14M6 13l6 6 6-6" />
+      </symbol>
+    </svg>
+    <nav class="mock-bar" aria-label="Макеты раунда 2">
+      <b>Раунд 2</b><a href="index.html">Обзор</a
+      ><a href="a1-home.html">A1 Три этажа</a
+      ><a href="a1-finance.html">A1 · Финансы</a
+      ><a href="a2-home.html" aria-current="page">A2 Кокпит</a
+      ><a href="a2-system.html">A2 · Система</a
+      ><a href="a3-home.html">A3 Одна лента</a
+      ><a href="a3-tasks.html">A3 · Дела</a
+      ><a href="b1-now-soon.html">B1 Сейчас/Скоро</a
+      ><a href="b2-statusbar.html">B2 Строка состояния</a
+      ><a href="c1-telemetry.html">C1 Телеметрия</a
+      ><a href="c2-signals.html">C2 Все сигналы</a><span class="sp"></span
+      ><button type="button" id="mock-anno" aria-pressed="true">
+        Пояснения: вкл</button
+      ><button type="button" id="mock-theme">Тема: как в системе</button>
+    </nav>
 
-</style>
-</head>
-<body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol><symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-6v-6h-4v6H4z"/></symbol><symbol id="i-ai" viewBox="0 0 24 24"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></symbol><symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1"/></symbol><symbol id="i-life" viewBox="0 0 24 24"><path d="M3 12h4l2-5 4 10 2-5h6"/></symbol><symbol id="i-task" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></symbol><symbol id="i-code" viewBox="0 0 24 24"><path d="M9 8l-4 4 4 4M15 8l4 4-4 4"/></symbol><symbol id="i-game" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 11v3M5.5 12.5h3M16 11.5h.01M18 13.5h.01"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6z"/></symbol><symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8 12h8M8 16h5"/></symbol><symbol id="i-restart" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></symbol><symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol><symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></symbol><symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></symbol><symbol id="i-gift" viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="1"/><path d="M3 9h18M12 9v11M12 9c-2-4-6-4-6-1.5S10 9 12 9s6 0 6-1.5S14 5 12 9"/></symbol><symbol id="i-backup" viewBox="0 0 24 24"><path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z"/><path d="M9.5 13.5l2 2 3.5-4"/></symbol><symbol id="i-sync" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></symbol><symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/></symbol><symbol id="i-send" viewBox="0 0 24 24"><path d="M21 4L3 11l6 2 2 6 3-4 5 4z"/><path d="M9 13l12-9"/></symbol><symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></symbol><symbol id="i-disk" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol><symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></symbol><symbol id="i-laptop" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></symbol><symbol id="i-watch" viewBox="0 0 24 24"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3M12 10v2.5l1.5 1"/></symbol><symbol id="i-tune" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></symbol><symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/></symbol><symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-log" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol><symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol><symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol><symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol></svg>
-<nav class="mock-bar" aria-label="Макеты раунда 2"><b>Раунд 2</b><a href="index.html">Обзор</a><a href="a1-home.html">A1 Три этажа</a><a href="a1-finance.html">A1 · Финансы</a><a href="a2-home.html" aria-current="page">A2 Кокпит</a><a href="a2-system.html">A2 · Система</a><a href="a3-home.html">A3 Одна лента</a><a href="a3-tasks.html">A3 · Дела</a><a href="b1-now-soon.html">B1 Сейчас/Скоро</a><a href="b2-statusbar.html">B2 Строка состояния</a><a href="c1-telemetry.html">C1 Телеметрия</a><a href="c2-signals.html">C2 Все сигналы</a><span class="sp"></span><button type="button" id="mock-anno" aria-pressed="true">Пояснения: вкл</button><button type="button" id="mock-theme">Тема: как в системе</button></nav>
+    <header class="ptop">
+      <span class="t-title">Главная</span>
+      <button
+        class="icon-btn"
+        type="button"
+        aria-label="Поиск и команды"
+        data-open="palette"
+      >
+        <svg class="ic" aria-hidden="true"><use href="#i-search" /></svg>
+      </button>
+      <button
+        class="icon-btn"
+        type="button"
+        aria-label="Быстро записать"
+        data-open="quick"
+      >
+        <svg class="ic" aria-hidden="true"><use href="#i-plus" /></svg>
+      </button>
+    </header>
+    <div class="app">
+      <aside class="side" aria-label="Меню">
+        <div class="brand">
+          <span class="logo"
+            ><svg class="ic" aria-hidden="true">
+              <use href="#i-bolt" /></svg></span
+          >Personal Dashboard
+        </div>
+        <button class="search-btn" type="button" data-open="palette">
+          <svg class="ic" aria-hidden="true"><use href="#i-search" /></svg
+          ><span>Поиск</span><kbd>Ctrl K</kbd>
+        </button>
+        <a class="nav-item" href="a2-home.html" aria-current="page"
+          ><svg class="ic" aria-hidden="true"><use href="#i-home" /></svg
+          >Главная</a
+        >
+        <a class="nav-item" href="#"
+          ><svg class="ic" aria-hidden="true"><use href="#i-ai" /></svg>AI</a
+        >
+        <a class="nav-item" href="a1-finance.html"
+          ><svg class="ic" aria-hidden="true"><use href="#i-wallet" /></svg
+          >Финансы</a
+        >
+        <a class="nav-item" href="#"
+          ><svg class="ic" aria-hidden="true"><use href="#i-life" /></svg
+          >Жизнь</a
+        >
+        <details class="nav-group">
+          <summary>
+            <svg class="ic" aria-hidden="true"><use href="#i-task" /></svg
+            >Дела<span class="count">3</span>
+          </summary>
+          <a class="nav-item sub" href="#">Задачи<span class="count">3</span></a
+          ><a class="nav-item sub" href="#">Скриншоты</a
+          ><a class="nav-item sub" href="#">Дни рождения</a>
+        </details>
+        <details class="nav-group">
+          <summary>
+            <svg class="ic" aria-hidden="true"><use href="#i-user" /></svg
+            >Я<span
+              class="dot warn"
+              title="Дневник: сегодня ещё нет записи"
+            ></span
+            ><span class="count">4</span>
+          </summary>
+          <a class="nav-item sub" href="#">Дневник</a
+          ><a class="nav-item sub" href="#">Психология</a
+          ><a class="nav-item sub" href="#">Здоровье</a
+          ><a class="nav-item sub" href="#">Привычки</a>
+        </details>
+        <details class="nav-group">
+          <summary>
+            <svg class="ic" aria-hidden="true"><use href="#i-code" /></svg
+            >Работа<span class="count">5</span>
+          </summary>
+          <a class="nav-item sub" href="#">Проекты</a
+          ><a class="nav-item sub" href="#">Текст</a
+          ><a class="nav-item sub" href="#">Разработка</a
+          ><a class="nav-item sub" href="#">Мониторинг</a
+          ><a class="nav-item sub" href="#">Активность</a>
+        </details>
+        <details class="nav-group">
+          <summary>
+            <svg class="ic" aria-hidden="true"><use href="#i-game" /></svg
+            >Досуг<span class="count">3</span>
+          </summary>
+          <a class="nav-item sub" href="#">Музыка</a
+          ><a class="nav-item sub" href="#">Кино</a
+          ><a class="nav-item sub" href="#">Игры</a>
+        </details>
+        <details class="nav-group">
+          <summary>
+            <svg class="ic" aria-hidden="true"><use href="#i-shield" /></svg
+            >Безопасность<span class="count">2</span>
+          </summary>
+          <a class="nav-item sub" href="#">Пароли</a
+          ><a class="nav-item sub" href="#">Безопасность</a>
+        </details>
+        <div class="spacer"></div>
+        <a class="nav-item" href="#"
+          ><span class="lvl" style="--v: 1"><b>10</b></span
+          >Ачивки<span class="count">175/504</span></a
+        >
+        <a class="nav-item" href="a2-system.html"
+          ><svg class="ic" aria-hidden="true"><use href="#i-server" /></svg
+          >Система<span
+            class="dot crit"
+            style="margin-left: auto"
+            title="2 сервиса не отвечают"
+          ></span
+        ></a>
+        <a class="nav-item" href="#"
+          ><svg class="ic" aria-hidden="true"><use href="#i-settings" /></svg
+          >Настройки</a
+        >
+      </aside>
+      <main class="content">
+        <div class="dnote">
+          <b>A2 «Кокпит».</b> Для тех дней, когда хочется видеть всё сразу. Все
+          три уровня на одном экране, но в разных местах: уровень 1 — липкая
+          строка-панель сверху (не уезжает при прокрутке), уровень 2 — плотная
+          сетка плиток слева, уровень 3 — узкая колонка справа «под капотом».
+          Брифинг сжат до одной строки из трёх ответов. Каждая плитка — число,
+          изменение и линия за 14 дней; лишних слов нет. «Изменить» включает
+          перетаскивание и выключатели плиток.
+        </div>
 
-<header class="ptop"><span class="t-title">Главная</span>
-<button class="icon-btn" type="button" aria-label="Поиск и команды" data-open="palette"><svg class="ic " aria-hidden="true"><use href="#i-search"/></svg></button>
-<button class="icon-btn" type="button" aria-label="Быстро записать" data-open="quick"><svg class="ic " aria-hidden="true"><use href="#i-plus"/></svg></button></header>
-<div class="app">
-<aside class="side" aria-label="Меню">
-<div class="brand"><span class="logo"><svg class="ic " aria-hidden="true"><use href="#i-bolt"/></svg></span>Personal Dashboard</div>
-<button class="search-btn" type="button" data-open="palette"><svg class="ic " aria-hidden="true"><use href="#i-search"/></svg><span>Поиск</span><kbd>Ctrl K</kbd></button>
-<a class="nav-item" href="a2-home.html" aria-current="page"><svg class="ic " aria-hidden="true"><use href="#i-home"/></svg>Главная</a>
-<a class="nav-item" href="#"><svg class="ic " aria-hidden="true"><use href="#i-ai"/></svg>AI</a>
-<a class="nav-item" href="a1-finance.html"><svg class="ic " aria-hidden="true"><use href="#i-wallet"/></svg>Финансы</a>
-<a class="nav-item" href="#"><svg class="ic " aria-hidden="true"><use href="#i-life"/></svg>Жизнь</a>
-<details class="nav-group"><summary><svg class="ic " aria-hidden="true"><use href="#i-task"/></svg>Дела<span class="count">3</span></summary>
-<a class="nav-item sub" href="#">Задачи<span class="count">3</span></a><a class="nav-item sub" href="#">Скриншоты</a><a class="nav-item sub" href="#">Дни рождения</a></details>
-<details class="nav-group"><summary><svg class="ic " aria-hidden="true"><use href="#i-user"/></svg>Я<span class="dot warn" title="Дневник: сегодня ещё нет записи"></span><span class="count">4</span></summary>
-<a class="nav-item sub" href="#">Дневник</a><a class="nav-item sub" href="#">Психология</a><a class="nav-item sub" href="#">Здоровье</a><a class="nav-item sub" href="#">Привычки</a></details>
-<details class="nav-group"><summary><svg class="ic " aria-hidden="true"><use href="#i-code"/></svg>Работа<span class="count">5</span></summary>
-<a class="nav-item sub" href="#">Проекты</a><a class="nav-item sub" href="#">Текст</a><a class="nav-item sub" href="#">Разработка</a><a class="nav-item sub" href="#">Мониторинг</a><a class="nav-item sub" href="#">Активность</a></details>
-<details class="nav-group"><summary><svg class="ic " aria-hidden="true"><use href="#i-game"/></svg>Досуг<span class="count">3</span></summary>
-<a class="nav-item sub" href="#">Музыка</a><a class="nav-item sub" href="#">Кино</a><a class="nav-item sub" href="#">Игры</a></details>
-<details class="nav-group"><summary><svg class="ic " aria-hidden="true"><use href="#i-shield"/></svg>Безопасность<span class="count">2</span></summary>
-<a class="nav-item sub" href="#">Пароли</a><a class="nav-item sub" href="#">Безопасность</a></details>
-<div class="spacer"></div>
-<a class="nav-item" href="#"><span class="lvl" style="--v:1"><b>10</b></span>Ачивки<span class="count">175/504</span></a>
-<a class="nav-item" href="a2-system.html"><svg class="ic " aria-hidden="true"><use href="#i-server"/></svg>Система<span class="dot crit" style="margin-left:auto" title="2 сервиса не отвечают"></span></a>
-<a class="nav-item" href="#"><svg class="ic " aria-hidden="true"><use href="#i-settings"/></svg>Настройки</a>
-</aside>
-<main class="content">
-<div class="dnote"><b>A2 «Кокпит».</b> Для тех дней, когда хочется видеть всё сразу. Все три уровня на одном экране, но в разных местах: уровень 1 — липкая строка-панель сверху (не уезжает при прокрутке), уровень 2 — плотная сетка плиток слева, уровень 3 — узкая колонка справа «под капотом». Брифинг сжат до одной строки из трёх ответов. Каждая плитка — число, изменение и линия за 14 дней; лишних слов нет. «Изменить» включает перетаскивание и выключатели плиток.</div>
+        <div
+          class="cbar"
+          data-tier="Уровень 1 · строка состояния"
+          role="toolbar"
+          aria-label="Состояние системы"
+        >
+          <button
+            class="pill"
+            type="button"
+            data-open="drawer"
+            data-tpl="t-health"
+            data-title="Здоровье системы"
+          >
+            <span class="ring warn" style="--v: 86; --size: 28px"
+              ><span style="font-size: 11px">86</span></span
+            ><span>Здоровье <span class="new">новое</span></span>
+          </button>
+          <button
+            class="pill crit-p"
+            type="button"
+            data-open="drawer"
+            data-tpl="t-alerts"
+            data-title="Тревоги"
+          >
+            <span class="dot crit"></span><b class="mono">2</b
+            ><span>тревоги</span>
+          </button>
+          <button
+            class="pill"
+            type="button"
+            data-open="drawer"
+            data-tpl="t-mcp"
+            data-title="AI-клиенты (MCP)"
+          >
+            <span class="dot"></span>MCP<span class="mono muted">11:52</span>
+          </button>
+          <button
+            class="pill"
+            type="button"
+            data-open="drawer"
+            data-tpl="t-bot"
+            data-title="Telegram-бот"
+          >
+            <span class="dot"></span>Бот<span class="mono muted">140 мс</span>
+          </button>
+          <button
+            class="pill"
+            type="button"
+            data-open="drawer"
+            data-tpl="t-backup"
+            data-title="Копии и где живут данные"
+          >
+            <span class="dot"></span>Копия<span class="mono muted">03:00</span>
+          </button>
+          <button
+            class="pill"
+            type="button"
+            data-open="drawer"
+            data-tpl="t-sync"
+            data-title="Устройства и синхронизация"
+          >
+            <span class="dot"></span>Синхр.<span class="mono muted">12:22</span>
+          </button>
+          <span class="sp"></span>
+          <button class="pill search" type="button" data-open="palette">
+            <svg class="ic s" aria-hidden="true"><use href="#i-search" /></svg
+            ><span>Найти или сделать</span><kbd>Ctrl K</kbd>
+          </button>
+          <button
+            class="btn filled s"
+            type="button"
+            data-open="quick"
+            data-tab="tx"
+          >
+            <svg class="ic s" aria-hidden="true"><use href="#i-plus" /></svg
+            >Быстро
+          </button>
+        </div>
+        <section
+          class="card oracle-card brief1"
+          data-block="brief"
+          data-name="Ответы на сегодня (брифинг)"
+          data-locked
+          data-tier="Брифинг · одна строка, всегда сверху"
+          aria-label="Ответы на сегодня"
+        >
+          <span class="pulse" aria-hidden="true"></span
+          ><span class="eyebrow">Ответы · 08:30</span>
+          <span class="a"><span class="dot crit"></span>2 сервиса молчат</span
+          ><span class="sep"></span>
+          <span class="a"
+            ><span class="dot warn"></span>до 10.11 хватит еле-еле:
+            <b class="mono answer">≈ 150 PLN</b></span
+          ><span class="sep"></span>
+          <span class="a"
+            ><span class="dot oracle"></span>лечь до 23:30 → завтра
+            <b class="answer">≈ 7/10</b></span
+          >
+          <a
+            class="t-label"
+            style="margin-left: auto; text-decoration: underline"
+            href="#"
+            >Все ответы и «почему»</a
+          >
+        </section>
 
-<div class="cbar" data-tier="Уровень 1 · строка состояния" role="toolbar" aria-label="Состояние системы">
-<button class="pill" type="button" data-open="drawer" data-tpl="t-health" data-title="Здоровье системы"><span class="ring warn" style="--v:86;--size:28px"><span style="font-size:11px">86</span></span><span>Здоровье <span class="new">новое</span></span></button>
-<button class="pill crit-p" type="button" data-open="drawer" data-tpl="t-alerts" data-title="Тревоги"><span class="dot crit"></span><b class="mono">2</b><span>тревоги</span></button>
-<button class="pill" type="button" data-open="drawer" data-tpl="t-mcp" data-title="AI-клиенты (MCP)"><span class="dot"></span>MCP<span class="mono muted">11:52</span></button>
-<button class="pill" type="button" data-open="drawer" data-tpl="t-bot" data-title="Telegram-бот"><span class="dot"></span>Бот<span class="mono muted">140 мс</span></button>
-<button class="pill" type="button" data-open="drawer" data-tpl="t-backup" data-title="Копии и где живут данные"><span class="dot"></span>Копия<span class="mono muted">03:00</span></button>
-<button class="pill" type="button" data-open="drawer" data-tpl="t-sync" data-title="Устройства и синхронизация"><span class="dot"></span>Синхр.<span class="mono muted">12:22</span></button>
-<span class="sp"></span>
-<button class="pill search" type="button" data-open="palette"><svg class="ic s" aria-hidden="true"><use href="#i-search"/></svg><span>Найти или сделать</span><kbd>Ctrl K</kbd></button>
-<button class="btn filled s" type="button" data-open="quick" data-tab="tx"><svg class="ic s" aria-hidden="true"><use href="#i-plus"/></svg>Быстро</button>
-</div>
-<section class="card oracle-card brief1" data-block="brief" data-name="Ответы на сегодня (брифинг)" data-locked data-tier="Брифинг · одна строка, всегда сверху" aria-label="Ответы на сегодня">
-<span class="pulse" aria-hidden="true"></span><span class="eyebrow">Ответы · 08:30</span>
-<span class="a"><span class="dot crit"></span>2 сервиса молчат</span><span class="sep"></span>
-<span class="a"><span class="dot warn"></span>до 10.11 хватит еле-еле: <b class="mono answer">≈ 150 PLN</b></span><span class="sep"></span>
-<span class="a"><span class="dot oracle"></span>лечь до 23:30 → завтра <b class="answer">≈ 7/10</b></span>
-<a class="t-label" style="margin-left:auto;text-decoration:underline" href="#">Все ответы и «почему»</a>
-</section>
+        <div class="cock">
+          <div class="tiles" data-tier="Уровень 2 · главное, плотно" id="tiles">
+            <div
+              style="
+                grid-column: 1/-1;
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                flex-wrap: wrap;
+              "
+            >
+              <a
+                class="card level"
+                href="#"
+                data-block="level"
+                data-name="Уровень и ачивки"
+                aria-label="Уровень 10, 10 из 1000 опыта, 175 из 504 ачивок"
+                style="width: min(100%, 420px)"
+                ><span class="ring oracle" style="--v: 1; --size: 44px"
+                  ><span>10</span></span
+                ><span class="lv-txt"
+                  ><span
+                    ><span class="t-title-s">Уровень 10</span>
+                    <span class="t-label mono"
+                      >10 / 1000 XP · 175 / 504</span
+                    ></span
+                  ><span class="meter oracle"><i style="width: 1%"></i></span
+                  ><span class="t-label"
+                    >Ближе всего: «Десятилетие с музыкой»
+                    <span class="mono answer">3 533 / 3 650</span></span
+                  ></span
+                ></a
+              ><span class="sp" style="flex: 1"></span
+              ><button class="btn outlined s" type="button" id="edit">
+                <svg class="ic s" aria-hidden="true"><use href="#i-tune" /></svg
+                >Изменить
+              </button>
+            </div>
 
-<div class="cock">
-<div class="tiles" data-tier="Уровень 2 · главное, плотно" id="tiles">
-<div style="grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><a class="card level" href="#" data-block="level" data-name="Уровень и ачивки" aria-label="Уровень 10, 10 из 1000 опыта, 175 из 504 ачивок" style="width:min(100%, 420px)"><span class="ring oracle" style="--v:1;--size:44px"><span>10</span></span><span class="lv-txt"><span><span class="t-title-s">Уровень 10</span> <span class="t-label mono">10 / 1000 XP · 175 / 504</span></span><span class="meter oracle"><i style="width:1%"></i></span><span class="t-label">Ближе всего: «Десятилетие с музыкой» <span class="mono answer">3 533 / 3 650</span></span></span></a><span class="sp" style="flex:1"></span><button class="btn outlined s" type="button" id="edit"><svg class="ic s" aria-hidden="true"><use href="#i-tune"/></svg>Изменить</button></div>
+            <a
+              class="card tile"
+              href="a1-finance.html"
+              data-block="money"
+              data-name="Деньги"
+              ><div class="card-head">
+                <svg class="ic s" aria-hidden="true">
+                  <use href="#i-wallet" /></svg
+                ><span class="t-title-s">Деньги</span
+                ><span class="end"><span class="t-label mono">PLN</span></span>
+              </div>
+              <div class="kv">
+                <span class="num-l">3 644,66</span
+                ><span class="delta answer">≈ 150 к 10.11</span>
+              </div>
+              <svg
+                class="spark"
+                data-v="3100,3050,2980,2940,2890,2850,2800,6900,6700,6450,6100,5800,5200,3644"
+                data-f="3100,2400,1700,980,150"
+              ></svg>
+              <span class="t-label">сегодня −179,88 · темп 180/день</span></a
+            >
 
-<a class="card tile" href="a1-finance.html" data-block="money" data-name="Деньги"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-wallet"/></svg><span class="t-title-s">Деньги</span><span class="end"><span class="t-label mono">PLN</span></span></div>
-<div class="kv"><span class="num-l">3 644,66</span><span class="delta answer">≈ 150 к 10.11</span></div>
-<svg class="spark" data-v="3100,3050,2980,2940,2890,2850,2800,6900,6700,6450,6100,5800,5200,3644" data-f="3100,2400,1700,980,150"></svg>
-<span class="t-label">сегодня −179,88 · темп 180/день</span></a>
+            <a
+              class="card tile"
+              href="#"
+              data-block="screen"
+              data-name="Экранное время"
+              ><div class="card-head">
+                <svg class="ic s" aria-hidden="true">
+                  <use href="#i-clock" /></svg
+                ><span class="t-title-s">Экран</span><span class="end"></span>
+              </div>
+              <div class="kv">
+                <span class="num-l">4:25</span
+                ><span class="delta warn">+38 мин</span>
+              </div>
+              <svg
+                class="spark"
+                data-v="5.1,4.2,3.9,4.8,4.1,3.6,4.4,4.0,3.8,4.6,5.2,4.1,3.9,4.4"
+              ></svg>
+              <span class="t-label">Instagram 2:53 · разблок. 61</span></a
+            >
 
-<a class="card tile" href="#" data-block="screen" data-name="Экранное время"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-clock"/></svg><span class="t-title-s">Экран</span><span class="end"></span></div>
-<div class="kv"><span class="num-l">4:25</span><span class="delta warn">+38 мин</span></div>
-<svg class="spark" data-v="5.1,4.2,3.9,4.8,4.1,3.6,4.4,4.0,3.8,4.6,5.2,4.1,3.9,4.4"></svg>
-<span class="t-label">Instagram 2:53 · разблок. 61</span></a>
+            <a
+              class="card tile"
+              href="#"
+              data-block="focus"
+              data-name="Фокус и кодинг"
+              ><div class="card-head">
+                <svg class="ic s" aria-hidden="true"><use href="#i-code" /></svg
+                ><span class="t-title-s">Кодинг</span><span class="end"></span>
+              </div>
+              <div class="kv">
+                <span class="num-l">0:31</span
+                ><span class="delta ok">+12 % за 7 дн.</span>
+              </div>
+              <svg
+                class="spark"
+                data-v="2.1,3.4,2.8,4.2,3.1,0,0.4,3.8,3.2,4.1,2.9,3.5,0.3,0.5"
+              ></svg>
+              <span class="t-label"
+                >неделя 21:38 · фокус 0:50 · 4 коммита</span
+              ></a
+            >
+            <div
+              class="card tile w2"
+              data-block="tasks"
+              data-name="Дела и заметки"
+            >
+              <div class="card-head">
+                <svg class="ic s" aria-hidden="true"><use href="#i-task" /></svg
+                ><span class="t-title-s">Дела</span
+                ><span class="end"
+                  ><span class="t-label mono">3 сегодня · 1 просрочена</span
+                  ><button
+                    class="btn tonal s"
+                    type="button"
+                    data-open="quick"
+                    data-tab="note"
+                  >
+                    <svg class="ic s" aria-hidden="true">
+                      <use href="#i-note" /></svg
+                    >Заметка
+                  </button></span
+                >
+              </div>
+              <div class="check">
+                <i></i><span>Откалибровать браслет</span
+                ><span class="t-label mono" style="margin-left: auto"
+                  >11:00</span
+                >
+              </div>
+              <div class="check"><i></i><span>Позвонить маме</span></div>
+              <div class="check">
+                <i></i><span>Оплатить интернет</span
+                ><span class="badge warn" style="margin-left: auto"
+                  >до 03.11</span
+                >
+              </div>
+            </div>
 
-<a class="card tile" href="#" data-block="focus" data-name="Фокус и кодинг"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-code"/></svg><span class="t-title-s">Кодинг</span><span class="end"></span></div>
-<div class="kv"><span class="num-l">0:31</span><span class="delta ok">+12 % за 7 дн.</span></div>
-<svg class="spark" data-v="2.1,3.4,2.8,4.2,3.1,0,0.4,3.8,3.2,4.1,2.9,3.5,0.3,0.5"></svg>
-<span class="t-label">неделя 21:38 · фокус 0:50 · 4 коммита</span></a>
-<div class="card tile w2" data-block="tasks" data-name="Дела и заметки"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-task"/></svg><span class="t-title-s">Дела</span><span class="end"><span class="t-label mono">3 сегодня · 1 просрочена</span><button class="btn tonal s" type="button" data-open="quick" data-tab="note"><svg class="ic s" aria-hidden="true"><use href="#i-note"/></svg>Заметка</button></span></div>
-<div class="check"><i></i><span>Откалибровать браслет</span><span class="t-label mono" style="margin-left:auto">11:00</span></div>
-<div class="check"><i></i><span>Позвонить маме</span></div>
-<div class="check"><i></i><span>Оплатить интернет</span><span class="badge warn" style="margin-left:auto">до 03.11</span></div></div>
+            <a
+              class="card tile"
+              href="#"
+              data-block="mood"
+              data-name="Дневник и настроение"
+              ><div class="card-head">
+                <svg class="ic s" aria-hidden="true"><use href="#i-book" /></svg
+                ><span class="t-title-s">Дневник</span><span class="end"></span>
+              </div>
+              <div class="kv">
+                <span class="num-l">15 дн.</span
+                ><span class="delta warn">нет записи</span>
+              </div>
+              <div class="hs" data-h="23123323123332123332323332233-"></div>
+              <span class="t-label">настроение 4,1 из 5 за неделю</span></a
+            >
 
-<a class="card tile" href="#" data-block="mood" data-name="Дневник и настроение"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-book"/></svg><span class="t-title-s">Дневник</span><span class="end"></span></div>
-<div class="kv"><span class="num-l">15 дн.</span><span class="delta warn">нет записи</span></div>
-<div class="hs" data-h="23123323123332123332323332233-"></div>
-<span class="t-label">настроение 4,1 из 5 за неделю</span></a>
+            <a class="card tile" href="#" data-block="sleep" data-name="Сон"
+              ><div class="card-head">
+                <svg class="ic s" aria-hidden="true">
+                  <use href="#i-heart" /></svg
+                ><span class="t-title-s">Сон</span><span class="end"></span>
+              </div>
+              <div class="kv">
+                <span class="num-l">6,2 ч</span
+                ><span class="delta warn">−48 мин</span>
+              </div>
+              <svg
+                class="spark"
+                data-v="7.1,6.8,7.4,6.5,7.0,6.9,6.2"
+                data-f="7.4"
+              ></svg>
+              <span class="t-label">по телефону; браслет ждёт данных</span></a
+            >
 
-<a class="card tile" href="#" data-block="sleep" data-name="Сон"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-heart"/></svg><span class="t-title-s">Сон</span><span class="end"></span></div>
-<div class="kv"><span class="num-l">6,2 ч</span><span class="delta warn">−48 мин</span></div>
-<svg class="spark" data-v="7.1,6.8,7.4,6.5,7.0,6.9,6.2" data-f="7.4"></svg>
-<span class="t-label">по телефону; браслет ждёт данных</span></a>
+            <a
+              class="card tile"
+              href="#"
+              data-block="steps"
+              data-name="Шаги и места"
+              ><div class="card-head">
+                <svg class="ic s" aria-hidden="true"><use href="#i-pin" /></svg
+                ><span class="t-title-s">Шаги</span><span class="end"></span>
+              </div>
+              <div class="kv">
+                <span class="num-l">4 812</span
+                ><span class="delta warn">−22 %</span>
+              </div>
+              <svg
+                class="spark"
+                data-v="8200,6400,9100,5300,7700,6100,4812"
+              ></svg>
+              <span class="t-label">3,4 км · 2 места · дома 14 ч</span></a
+            >
 
-<a class="card tile" href="#" data-block="steps" data-name="Шаги и места"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-pin"/></svg><span class="t-title-s">Шаги</span><span class="end"></span></div>
-<div class="kv"><span class="num-l">4 812</span><span class="delta warn">−22 %</span></div>
-<svg class="spark" data-v="8200,6400,9100,5300,7700,6100,4812"></svg>
-<span class="t-label">3,4 км · 2 места · дома 14 ч</span></a>
+            <a class="card tile" href="#" data-block="music" data-name="Музыка"
+              ><div class="card-head">
+                <svg class="ic s" aria-hidden="true">
+                  <use href="#i-music" /></svg
+                ><span class="t-title-s">Музыка</span><span class="end"></span>
+              </div>
+              <div class="kv">
+                <span class="num-l">38</span><span class="delta ok">+5</span>
+              </div>
+              <svg class="spark" data-v="22,41,30,18,52,33,38"></svg>
+              <span class="t-label"
+                >прослушиваний · 3 533 дня с музыкой</span
+              ></a
+            >
+          </div>
 
-<a class="card tile" href="#" data-block="music" data-name="Музыка"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-music"/></svg><span class="t-title-s">Музыка</span><span class="end"></span></div>
-<div class="kv"><span class="num-l">38</span><span class="delta ok">+5</span></div>
-<svg class="spark" data-v="22,41,30,18,52,33,38"></svg>
-<span class="t-label">прослушиваний · 3 533 дня с музыкой</span></a>
-</div>
+          <aside
+            class="rail"
+            data-tier="Уровень 3 · под капотом"
+            aria-label="Под капотом"
+          >
+            <div class="card" data-block="server" data-name="Сервер">
+              <div class="card-head">
+                <svg class="ic s" aria-hidden="true">
+                  <use href="#i-server" /></svg
+                ><span class="t-title-s">Сервер</span
+                ><span class="end"><span class="badge ok">Норма</span></span>
+              </div>
+              <div class="vrow">
+                <span class="t-label">ЦП <span class="new">н</span></span
+                ><svg
+                  class="spark"
+                  style="height: 20px"
+                  data-v="8,12,9,14,30,11,10,12,9,12"
+                ></svg
+                ><span class="val">12 %</span>
+              </div>
+              <div class="vrow">
+                <span class="t-label">Память</span
+                ><svg
+                  class="spark"
+                  style="height: 20px"
+                  data-v="400,410,405,420,431,428,432"
+                ></svg
+                ><span class="val">432 MB</span>
+              </div>
+              <div class="vrow">
+                <span class="t-label">Диск <span class="new">н</span></span
+                ><svg
+                  class="spark"
+                  style="height: 20px"
+                  data-v="38,38.5,39,39.6,40,40.4,41"
+                  data-f="44,48"
+                ></svg
+                ><span class="val">41 %</span>
+              </div>
+              <div class="vrow">
+                <span class="t-label">p95</span
+                ><svg
+                  class="spark"
+                  style="height: 20px"
+                  data-v="180,175,210,190,186,201,192"
+                ></svg
+                ><span class="val">192 мс</span>
+              </div>
+            </div>
+            <div class="card" data-block="containers" data-name="Контейнеры">
+              <div class="card-head">
+                <svg class="ic s" aria-hidden="true"><use href="#i-box" /></svg
+                ><span class="t-title-s"
+                  >Контейнеры <span class="new">новое</span></span
+                ><span class="end mono t-label">5 / 6</span>
+              </div>
+              <div class="ctr-row">
+                <span class="dot crit"></span><span>languagetool</span
+                ><span class="t-label crit">не отвечает 17 ч</span
+                ><button
+                  class="icon-btn"
+                  type="button"
+                  aria-label="Перезапустить languagetool"
+                  data-open="quick"
+                  data-tab="restart"
+                >
+                  <svg class="ic s" aria-hidden="true">
+                    <use href="#i-restart" />
+                  </svg>
+                </button>
+              </div>
+              <div class="ctr-row">
+                <span class="dot"></span><span>app</span
+                ><span class="t-label mono">11 ч</span
+                ><button
+                  class="icon-btn"
+                  type="button"
+                  aria-label="Перезапустить app"
+                  data-open="quick"
+                  data-tab="restart"
+                >
+                  <svg class="ic s" aria-hidden="true">
+                    <use href="#i-restart" />
+                  </svg>
+                </button>
+              </div>
+              <div class="ctr-row">
+                <span class="dot"></span><span>db</span
+                ><span class="t-label mono">23 дн.</span><span></span>
+              </div>
+              <div class="ctr-row">
+                <span class="dot"></span><span>ollama</span
+                ><span class="t-label mono">3 дн.</span
+                ><button
+                  class="icon-btn"
+                  type="button"
+                  aria-label="Перезапустить ollama"
+                  data-open="quick"
+                  data-tab="restart"
+                >
+                  <svg class="ic s" aria-hidden="true">
+                    <use href="#i-restart" />
+                  </svg>
+                </button>
+              </div>
+              <div class="ctr-row">
+                <span class="dot"></span><span>caddy</span
+                ><span class="t-label mono">23 дн.</span><span></span>
+              </div>
+              <div class="ctr-row">
+                <span class="dot"></span><span>backup</span
+                ><span class="t-label mono">03:00</span><span></span>
+              </div>
+            </div>
+            <div class="card" data-block="log" data-name="Журнал">
+              <div class="card-head">
+                <svg class="ic s" aria-hidden="true"><use href="#i-log" /></svg
+                ><span class="t-title-s">Журнал</span
+                ><span class="end"
+                  ><a
+                    class="t-label"
+                    href="a2-system.html"
+                    style="text-decoration: underline"
+                    >все 5</a
+                  ></span
+                >
+              </div>
+              <div class="lg">
+                <span class="badge crit">×231</span
+                ><span>LanguageTool: нет ответа</span
+                ><span class="t-label mono">17 ч</span>
+              </div>
+              <div class="lg">
+                <span class="badge crit">×3</span><span>WakaTime: 502</span
+                ><span class="t-label mono">4 ч</span>
+              </div>
+              <div class="lg">
+                <span class="badge warn">×1</span><span>PKO отвечал 4,1 с</span
+                ><span class="t-label mono">12:15</span>
+              </div>
+              <div
+                class="hs"
+                data-h="000000000000000100000cc"
+                aria-label="Ошибки по часам за сутки"
+              ></div>
+            </div>
+            <div class="card" data-block="pc" data-name="Компьютер">
+              <div class="card-head">
+                <svg class="ic s" aria-hidden="true">
+                  <use href="#i-laptop" /></svg
+                ><span class="t-title-s">Компьютер</span
+                ><span class="end t-label">5 мин назад</span>
+              </div>
+              <div class="vrow">
+                <span class="t-label">ЦП</span
+                ><span class="meter"><i style="width: 23%"></i></span
+                ><span class="val">23 %</span>
+              </div>
+              <div class="vrow">
+                <span class="t-label">Память</span
+                ><span class="meter warn"><i style="width: 78%"></i></span
+                ><span class="val">78 %</span>
+              </div>
+              <div class="vrow">
+                <span class="t-label">C:</span
+                ><span class="meter"><i style="width: 62%"></i></span
+                ><span class="val">62 %</span>
+              </div>
+              <span class="t-label"
+                >ждёт перезагрузки после обновления ·
+                <span class="illus">иллюстрация</span></span
+              >
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+    <nav class="bottombar" aria-label="Главное меню">
+      <a href="a2-home.html" aria-current="page"
+        ><span class="pill"
+          ><svg class="ic" aria-hidden="true"><use href="#i-home" /></svg></span
+        >Главная</a
+      >
+      <a href="#"
+        ><span class="pill"
+          ><svg class="ic" aria-hidden="true"><use href="#i-ai" /></svg></span
+        >AI</a
+      >
+      <a href="#"
+        ><span class="pill"
+          ><svg class="ic" aria-hidden="true">
+            <use href="#i-wallet" /></svg></span
+        >Финансы</a
+      >
+      <a href="#"
+        ><span class="pill"
+          ><svg class="ic" aria-hidden="true"><use href="#i-life" /></svg></span
+        >Жизнь</a
+      >
+      <a href="#"
+        ><span class="pill"
+          ><svg class="ic" aria-hidden="true"><use href="#i-menu" /></svg
+          ><span class="dot crit"></span></span
+        >Ещё</a
+      >
+    </nav>
 
-<aside class="rail" data-tier="Уровень 3 · под капотом" aria-label="Под капотом">
-<div class="card" data-block="server" data-name="Сервер"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-server"/></svg><span class="t-title-s">Сервер</span><span class="end"><span class="badge ok">Норма</span></span></div>
-<div class="vrow"><span class="t-label">ЦП <span class="new">н</span></span><svg class="spark" style="height:20px" data-v="8,12,9,14,30,11,10,12,9,12"></svg><span class="val">12 %</span></div>
-<div class="vrow"><span class="t-label">Память</span><svg class="spark" style="height:20px" data-v="400,410,405,420,431,428,432"></svg><span class="val">432 MB</span></div>
-<div class="vrow"><span class="t-label">Диск <span class="new">н</span></span><svg class="spark" style="height:20px" data-v="38,38.5,39,39.6,40,40.4,41" data-f="44,48"></svg><span class="val">41 %</span></div>
-<div class="vrow"><span class="t-label">p95</span><svg class="spark" style="height:20px" data-v="180,175,210,190,186,201,192"></svg><span class="val">192 мс</span></div>
-</div>
-<div class="card" data-block="containers" data-name="Контейнеры"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-box"/></svg><span class="t-title-s">Контейнеры <span class="new">новое</span></span><span class="end mono t-label">5 / 6</span></div>
-<div class="ctr-row"><span class="dot crit"></span><span>languagetool</span><span class="t-label crit">не отвечает 17 ч</span><button class="icon-btn" type="button" aria-label="Перезапустить languagetool" data-open="quick" data-tab="restart"><svg class="ic s" aria-hidden="true"><use href="#i-restart"/></svg></button></div>
-<div class="ctr-row"><span class="dot"></span><span>app</span><span class="t-label mono">11 ч</span><button class="icon-btn" type="button" aria-label="Перезапустить app" data-open="quick" data-tab="restart"><svg class="ic s" aria-hidden="true"><use href="#i-restart"/></svg></button></div>
-<div class="ctr-row"><span class="dot"></span><span>db</span><span class="t-label mono">23 дн.</span><span></span></div>
-<div class="ctr-row"><span class="dot"></span><span>ollama</span><span class="t-label mono">3 дн.</span><button class="icon-btn" type="button" aria-label="Перезапустить ollama" data-open="quick" data-tab="restart"><svg class="ic s" aria-hidden="true"><use href="#i-restart"/></svg></button></div>
-<div class="ctr-row"><span class="dot"></span><span>caddy</span><span class="t-label mono">23 дн.</span><span></span></div>
-<div class="ctr-row"><span class="dot"></span><span>backup</span><span class="t-label mono">03:00</span><span></span></div>
-</div>
-<div class="card" data-block="log" data-name="Журнал"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-log"/></svg><span class="t-title-s">Журнал</span><span class="end"><a class="t-label" href="a2-system.html" style="text-decoration:underline">все 5</a></span></div>
-<div class="lg"><span class="badge crit">×231</span><span>LanguageTool: нет ответа</span><span class="t-label mono">17 ч</span></div>
-<div class="lg"><span class="badge crit">×3</span><span>WakaTime: 502</span><span class="t-label mono">4 ч</span></div>
-<div class="lg"><span class="badge warn">×1</span><span>PKO отвечал 4,1 с</span><span class="t-label mono">12:15</span></div>
-<div class="hs" data-h="000000000000000100000cc" aria-label="Ошибки по часам за сутки"></div>
-</div>
-<div class="card" data-block="pc" data-name="Компьютер"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-laptop"/></svg><span class="t-title-s">Компьютер</span><span class="end t-label">5 мин назад</span></div>
-<div class="vrow"><span class="t-label">ЦП</span><span class="meter"><i style="width:23%"></i></span><span class="val">23 %</span></div>
-<div class="vrow"><span class="t-label">Память</span><span class="meter warn"><i style="width:78%"></i></span><span class="val">78 %</span></div>
-<div class="vrow"><span class="t-label">C:</span><span class="meter"><i style="width:62%"></i></span><span class="val">62 %</span></div>
-<span class="t-label">ждёт перезагрузки после обновления · <span class="illus">иллюстрация</span></span></div>
-</aside>
-</div>
-</main>
-</div>
-<nav class="bottombar" aria-label="Главное меню">
-<a href="a2-home.html" aria-current="page"><span class="pill"><svg class="ic " aria-hidden="true"><use href="#i-home"/></svg></span>Главная</a>
-<a href="#"><span class="pill"><svg class="ic " aria-hidden="true"><use href="#i-ai"/></svg></span>AI</a>
-<a href="#"><span class="pill"><svg class="ic " aria-hidden="true"><use href="#i-wallet"/></svg></span>Финансы</a>
-<a href="#"><span class="pill"><svg class="ic " aria-hidden="true"><use href="#i-life"/></svg></span>Жизнь</a>
-<a href="#"><span class="pill"><svg class="ic " aria-hidden="true"><use href="#i-menu"/></svg><span class="dot crit"></span></span>Ещё</a>
-</nav>
+    <template id="t-health">
+      <div class="kv">
+        <span class="ring warn" style="--v: 86; --size: 56px"
+          ><span>86</span></span
+        >
+        <div>
+          <div class="t-title">Внимание</div>
+          <div class="t-label">90+ — норма, 70–89 — внимание, ниже — плохо</div>
+        </div>
+      </div>
+      <p class="t-body">
+        Оценка <span class="new">новое</span> складывается из того, что уже
+        собирается. Каждая потеря баллов — ссылка на причину.
+      </p>
+      <div class="list">
+        <div class="row">
+          <span class="dot crit"></span>
+          <div class="grow">
+            <div class="t-title-s">2 сервиса не отвечают</div>
+            <div class="t-label">
+              LanguageTool с 31.10 18:53, WakaTime с 07:40
+            </div>
+          </div>
+          <span class="val crit">−12</span>
+        </div>
+        <div class="row">
+          <span class="dot warn"></span>
+          <div class="grow">
+            <div class="t-title-s">
+              Браслет ещё ни разу не синхронизировался
+            </div>
+            <div class="t-label">Google Health подключён, данных нет</div>
+          </div>
+          <span class="val warn">−2</span>
+        </div>
+        <div class="row">
+          <span class="dot"></span>
+          <div class="grow">
+            <div class="t-title-s">Фоновые задачи 45 / 45</div>
+            <div class="t-label">последняя ошибка — 3 дня назад</div>
+          </div>
+          <span class="val">0</span>
+        </div>
+        <div class="row">
+          <span class="dot"></span>
+          <div class="grow">
+            <div class="t-title-s">Копия данных свежая</div>
+            <div class="t-label">
+              сегодня 03:00, восстановление проверено 27.10
+            </div>
+          </div>
+          <span class="val">0</span>
+        </div>
+        <div class="row">
+          <span class="dot"></span>
+          <div class="grow">
+            <div class="t-title-s">Сайты, SSL, синхронизация</div>
+            <div class="t-label">всё в норме</div>
+          </div>
+          <span class="val">0</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow"><div class="t-title-s">Оценка за 14 дней</div></div>
+        <svg
+          class="spark"
+          style="width: 96px; height: 24px"
+          data-v="96,96,94,98,98,92,96,96,90,94,96,98,88,86"
+          data-c="w"
+        ></svg
+        ><span class="val">86</span>
+      </div>
+      <a class="btn tonal" href="a2-system.html">Открыть «Систему»</a>
+    </template>
 
-<template id="t-health">
-<div class="kv"><span class="ring warn" style="--v:86;--size:56px"><span>86</span></span><div><div class="t-title">Внимание</div><div class="t-label">90+ — норма, 70–89 — внимание, ниже — плохо</div></div></div>
-<p class="t-body">Оценка <span class="new">новое</span> складывается из того, что уже собирается. Каждая потеря баллов — ссылка на причину.</p>
-<div class="list">
-<div class="row"><span class="dot crit"></span><div class="grow"><div class="t-title-s">2 сервиса не отвечают</div><div class="t-label">LanguageTool с 31.10 18:53, WakaTime с 07:40</div></div><span class="val crit">−12</span></div>
-<div class="row"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Браслет ещё ни разу не синхронизировался</div><div class="t-label">Google Health подключён, данных нет</div></div><span class="val warn">−2</span></div>
-<div class="row"><span class="dot"></span><div class="grow"><div class="t-title-s">Фоновые задачи 45 / 45</div><div class="t-label">последняя ошибка — 3 дня назад</div></div><span class="val">0</span></div>
-<div class="row"><span class="dot"></span><div class="grow"><div class="t-title-s">Копия данных свежая</div><div class="t-label">сегодня 03:00, восстановление проверено 27.10</div></div><span class="val">0</span></div>
-<div class="row"><span class="dot"></span><div class="grow"><div class="t-title-s">Сайты, SSL, синхронизация</div><div class="t-label">всё в норме</div></div><span class="val">0</span></div>
-</div>
-<div class="row"><div class="grow"><div class="t-title-s">Оценка за 14 дней</div></div><svg class="spark" style="width:96px;height:24px" data-v="96,96,94,98,98,92,96,96,90,94,96,98,88,86" data-c="w"></svg><span class="val">86</span></div>
-<a class="btn tonal" href="a2-system.html">Открыть «Систему»</a>
-</template>
+    <template id="t-alerts">
+      <p class="t-body">
+        Две тревоги — из 5 записей журнала. Повторы одной ошибки сложены в одну
+        строку.
+      </p>
+      <div class="list">
+        <div class="row">
+          <span class="dot crit"></span>
+          <div class="grow">
+            <div class="t-title-s">LanguageTool не отвечает</div>
+            <div class="t-label">
+              17 ч · проверка текста не работает в «Тексте», расширении и
+              приложении
+            </div>
+          </div>
+          <span class="badge crit">×231</span>
+        </div>
+        <div class="row">
+          <span class="dot crit"></span>
+          <div class="grow">
+            <div class="t-title-s">WakaTime не отвечает</div>
+            <div class="t-label">
+              с 07:40 · время кодинга за сегодня неполное
+            </div>
+          </div>
+          <span class="badge crit">×3</span>
+        </div>
+        <div class="row">
+          <span class="dot warn"></span>
+          <div class="grow">
+            <div class="t-title-s">Медленный ответ банка</div>
+            <div class="t-label">PKO, 12:15 · 4,1 с · прошло</div>
+          </div>
+          <span class="badge warn">×1</span>
+        </div>
+      </div>
+      <div class="chips">
+        <button
+          class="btn filled s"
+          type="button"
+          data-open="quick"
+          data-tab="restart"
+        >
+          <svg class="ic s" aria-hidden="true"><use href="#i-restart" /></svg
+          >Перезапустить LanguageTool</button
+        ><button class="btn outlined s" type="button">
+          Проверить WakaTime
+        </button>
+      </div>
+    </template>
 
-<template id="t-alerts">
-<p class="t-body">Две тревоги — из 5 записей журнала. Повторы одной ошибки сложены в одну строку.</p>
-<div class="list">
-<div class="row"><span class="dot crit"></span><div class="grow"><div class="t-title-s">LanguageTool не отвечает</div><div class="t-label">17 ч · проверка текста не работает в «Тексте», расширении и приложении</div></div><span class="badge crit">×231</span></div>
-<div class="row"><span class="dot crit"></span><div class="grow"><div class="t-title-s">WakaTime не отвечает</div><div class="t-label">с 07:40 · время кодинга за сегодня неполное</div></div><span class="badge crit">×3</span></div>
-<div class="row"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Медленный ответ банка</div><div class="t-label">PKO, 12:15 · 4,1 с · прошло</div></div><span class="badge warn">×1</span></div>
-</div>
-<div class="chips"><button class="btn filled s" type="button" data-open="quick" data-tab="restart"><svg class="ic s" aria-hidden="true"><use href="#i-restart"/></svg>Перезапустить LanguageTool</button><button class="btn outlined s" type="button">Проверить WakaTime</button></div>
-</template>
+    <template id="t-mcp">
+      <div class="kv">
+        <span class="badge ok"><span class="dot"></span>Отвечает</span
+        ><span class="t-label">2 токена · только чтение</span>
+      </div>
+      <div class="list">
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-plug" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Claude Code</div>
+            <div class="t-label">
+              последний вызов 11:52 · tasks.list · 140 мс
+            </div>
+          </div>
+          <span class="val">36 сег.</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-plug" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Телефон · ассистент</div>
+            <div class="t-label">последний вызов вчера 22:10</div>
+          </div>
+          <span class="val">4</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow"><div class="t-title-s">Вызовы за 14 дней</div></div>
+        <svg
+          class="spark"
+          style="width: 96px; height: 24px"
+          data-v="4,9,0,12,18,7,22,30,11,5,16,28,40,36"
+        ></svg
+        ><span class="val">36</span>
+      </div>
+      <p class="t-label">
+        Время последнего вызова уже хранится (<code>lastUsedAt</code> токена).
+        Число вызовов и задержка — <span class="new">новое</span>.
+      </p>
+    </template>
 
-<template id="t-mcp">
-<div class="kv"><span class="badge ok"><span class="dot"></span>Отвечает</span><span class="t-label">2 токена · только чтение</span></div>
-<div class="list">
-<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-plug"/></svg><div class="grow"><div class="t-title-s">Claude Code</div><div class="t-label">последний вызов 11:52 · tasks.list · 140 мс</div></div><span class="val">36 сег.</span></div>
-<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-plug"/></svg><div class="grow"><div class="t-title-s">Телефон · ассистент</div><div class="t-label">последний вызов вчера 22:10</div></div><span class="val">4</span></div>
-</div>
-<div class="row"><div class="grow"><div class="t-title-s">Вызовы за 14 дней</div></div><svg class="spark" style="width:96px;height:24px" data-v="4,9,0,12,18,7,22,30,11,5,16,28,40,36" ></svg><span class="val">36</span></div>
-<p class="t-label">Время последнего вызова уже хранится (<code>lastUsedAt</code> токена). Число вызовов и задержка — <span class="new">новое</span>.</p>
-</template>
+    <template id="t-bot">
+      <div class="kv">
+        <span class="badge ok"><span class="dot"></span>На связи</span
+        ><span class="t-label">пинг 140 мс <span class="new">новое</span></span>
+      </div>
+      <div class="list">
+        <div class="row">
+          <div class="grow">
+            <div class="t-title-s">Доставлено за сутки</div>
+            <div class="t-label">
+              утренний дайджест 08:30, 3 напоминания о лекарствах, браслет
+            </div>
+          </div>
+          <span class="val">11</span>
+        </div>
+        <div class="row">
+          <div class="grow"><div class="t-title-s">Не дошло</div></div>
+          <span class="val">0</span>
+        </div>
+        <div class="row">
+          <div class="grow"><div class="t-title-s">Ждут отправки</div></div>
+          <span class="val">0</span>
+        </div>
+        <div class="row">
+          <div class="grow">
+            <div class="t-title-s">Последняя команда</div>
+            <div class="t-label">«/d» — запись в дневник</div>
+          </div>
+          <span class="val">08:31</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow"><div class="t-title-s">Уведомлений в день</div></div>
+        <svg
+          class="spark"
+          style="width: 96px; height: 24px"
+          data-v="9,12,10,14,11,8,13,12,10,11,9,12,10,11"
+        ></svg
+        ><span class="val">11</span>
+      </div>
+    </template>
 
-<template id="t-bot">
-<div class="kv"><span class="badge ok"><span class="dot"></span>На связи</span><span class="t-label">пинг 140 мс <span class="new">новое</span></span></div>
-<div class="list">
-<div class="row"><div class="grow"><div class="t-title-s">Доставлено за сутки</div><div class="t-label">утренний дайджест 08:30, 3 напоминания о лекарствах, браслет</div></div><span class="val">11</span></div>
-<div class="row"><div class="grow"><div class="t-title-s">Не дошло</div></div><span class="val">0</span></div>
-<div class="row"><div class="grow"><div class="t-title-s">Ждут отправки</div></div><span class="val">0</span></div>
-<div class="row"><div class="grow"><div class="t-title-s">Последняя команда</div><div class="t-label">«/d» — запись в дневник</div></div><span class="val">08:31</span></div>
-</div>
-<div class="row"><div class="grow"><div class="t-title-s">Уведомлений в день</div></div><svg class="spark" style="width:96px;height:24px" data-v="9,12,10,14,11,8,13,12,10,11,9,12,10,11" ></svg><span class="val">11</span></div>
-</template>
+    <template id="t-backup">
+      <div class="kv">
+        <span class="badge ok"><span class="dot"></span>Свежая</span
+        ><span class="t-label">сегодня 03:00 · 14 копий на сервере</span>
+      </div>
+      <div class="list">
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-server" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Копия на сервере</div>
+            <div class="t-label">
+              ежедневно; проверка восстановления — раз в неделю
+            </div>
+          </div>
+          <span class="val">03:00</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-laptop" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Копия на компьютере</div>
+            <div class="t-label">переживёт потерю сервера</div>
+          </div>
+          <span class="val">04:12</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-restart" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Восстановление проверено</div>
+            <div class="t-label">копия открылась, таблицы на месте</div>
+          </div>
+          <span class="val">27.10</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-lock" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Где живут данные</div>
+            <div class="t-label">
+              свой сервер Hetzner + этот компьютер; пароли зашифрованы на
+              устройстве
+            </div>
+          </div>
+          <span class="badge">2 места</span>
+        </div>
+      </div>
+      <div
+        class="hs"
+        style="height: 14px"
+        data-h="3333333333333t"
+        aria-label="14 дней копий: все на месте"
+      ></div>
+      <div class="chips">
+        <a class="btn tonal s" href="#">Выгрузить всё (ZIP)</a
+        ><span class="t-label">JSON, Markdown, CSV</span>
+      </div>
+    </template>
 
-<template id="t-backup">
-<div class="kv"><span class="badge ok"><span class="dot"></span>Свежая</span><span class="t-label">сегодня 03:00 · 14 копий на сервере</span></div>
-<div class="list">
-<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-server"/></svg><div class="grow"><div class="t-title-s">Копия на сервере</div><div class="t-label">ежедневно; проверка восстановления — раз в неделю</div></div><span class="val">03:00</span></div>
-<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-laptop"/></svg><div class="grow"><div class="t-title-s">Копия на компьютере</div><div class="t-label">переживёт потерю сервера</div></div><span class="val">04:12</span></div>
-<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-restart"/></svg><div class="grow"><div class="t-title-s">Восстановление проверено</div><div class="t-label">копия открылась, таблицы на месте</div></div><span class="val">27.10</span></div>
-<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-lock"/></svg><div class="grow"><div class="t-title-s">Где живут данные</div><div class="t-label">свой сервер Hetzner + этот компьютер; пароли зашифрованы на устройстве</div></div><span class="badge">2 места</span></div>
-</div>
-<div class="hs" style="height:14px" data-h="3333333333333t" aria-label="14 дней копий: все на месте"></div>
-<div class="chips"><a class="btn tonal s" href="#">Выгрузить всё (ZIP)</a><span class="t-label">JSON, Markdown, CSV</span></div>
-</template>
+    <template id="t-sync">
+      <div class="kv">
+        <span class="badge ok"><span class="dot"></span>Совпадает</span
+        ><span class="t-label">последняя 12:22 · ничего не ждёт</span>
+      </div>
+      <div class="list">
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-phone" /></svg>
+          <div class="grow">
+            <div class="t-title-s">REDMI 17</div>
+            <div class="t-label">отправил 12:15 · очередь пуста</div>
+          </div>
+          <span class="val">8 мин</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-laptop" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Компьютер</div>
+            <div class="t-label">отправил 12:23</div>
+          </div>
+          <span class="val">1 мин</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-globe" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Расширение Chrome</div>
+            <div class="t-label">отправило 12:23</div>
+          </div>
+          <span class="val">1 мин</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-watch" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Браслет</div>
+            <div class="t-label">ещё ни разу</div>
+          </div>
+          <span class="badge warn">нет данных</span>
+        </div>
+      </div>
+    </template>
+    <script>
+      document.getElementById('edit').addEventListener('click', e => {
+        const on = document.getElementById('tiles').classList.toggle('edit-on');
+        e.currentTarget.lastChild.textContent = on ? 'Готово' : 'Изменить';
+        if (on) document.getElementById('blocks').showModal();
+      });
+    </script>
 
-<template id="t-sync">
-<div class="kv"><span class="badge ok"><span class="dot"></span>Совпадает</span><span class="t-label">последняя 12:22 · ничего не ждёт</span></div>
-<div class="list">
-<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-phone"/></svg><div class="grow"><div class="t-title-s">REDMI 17</div><div class="t-label">отправил 12:15 · очередь пуста</div></div><span class="val">8 мин</span></div>
-<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-laptop"/></svg><div class="grow"><div class="t-title-s">Компьютер</div><div class="t-label">отправил 12:23</div></div><span class="val">1 мин</span></div>
-<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-globe"/></svg><div class="grow"><div class="t-title-s">Расширение Chrome</div><div class="t-label">отправило 12:23</div></div><span class="val">1 мин</span></div>
-<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-watch"/></svg><div class="grow"><div class="t-title-s">Браслет</div><div class="t-label">ещё ни разу</div></div><span class="badge warn">нет данных</span></div>
-</div>
-</template>
-<script>document.getElementById('edit').addEventListener('click', e => { const on = document.getElementById('tiles').classList.toggle('edit-on'); e.currentTarget.lastChild.textContent = on ? 'Готово' : 'Изменить'; if (on) document.getElementById('blocks').showModal(); });</script>
+    <dialog id="palette" aria-label="Поиск и команды">
+      <div class="pal-input">
+        <svg class="ic" aria-hidden="true"><use href="#i-search" /></svg
+        ><input
+          type="text"
+          placeholder="Найти или сделать… «>» — команда, «/» — раздел, «?» — спросить"
+          aria-label="Поиск и команды"
+        /><kbd>Esc</kbd>
+      </div>
+      <div class="pal-list">
+        <div class="eyebrow">Сделать</div>
+        <button
+          class="pal-item sel"
+          type="button"
+          data-open="quick"
+          data-tab="tx"
+        >
+          <svg class="ic" aria-hidden="true"><use href="#i-wallet" /></svg
+          ><span class="grow">Записать операцию</span><kbd>&gt; расход</kbd>
+        </button>
+        <button
+          class="pal-item"
+          type="button"
+          data-open="quick"
+          data-tab="note"
+        >
+          <svg class="ic" aria-hidden="true"><use href="#i-note" /></svg
+          ><span class="grow"
+            >Заметка в черновик <span class="new">новое</span></span
+          ><kbd>&gt; заметка</kbd>
+        </button>
+        <button
+          class="pal-item"
+          type="button"
+          data-open="quick"
+          data-tab="restart"
+        >
+          <svg class="ic" aria-hidden="true"><use href="#i-restart" /></svg
+          ><span class="grow"
+            >Перезапустить LanguageTool <span class="new">новое</span></span
+          ><span class="badge crit">не отвечает</span>
+        </button>
+        <button class="pal-item" type="button">
+          <svg class="ic" aria-hidden="true"><use href="#i-target" /></svg
+          ><span class="grow">Фокус 25 минут</span><kbd>&gt; фокус</kbd>
+        </button>
+        <div class="eyebrow">Недавнее</div>
+        <button class="pal-item" type="button">
+          <svg class="ic" aria-hidden="true"><use href="#i-wallet" /></svg
+          ><span class="grow">Финансы · Обзор</span
+          ><span class="t-label">2 мин назад</span>
+        </button>
+        <button class="pal-item" type="button">
+          <svg class="ic" aria-hidden="true"><use href="#i-server" /></svg
+          ><span class="grow">Система · Что требует внимания</span
+          ><span class="t-label">вчера</span>
+        </button>
+        <button class="pal-item" type="button">
+          <svg class="ic" aria-hidden="true"><use href="#i-book" /></svg
+          ><span class="grow">Дневник · 31.10</span
+          ><span class="t-label">вчера</span>
+        </button>
+        <div class="eyebrow">Спросить</div>
+        <button class="pal-item" type="button">
+          <svg class="ic" aria-hidden="true"><use href="#i-ai" /></svg
+          ><span class="grow">? Хватит ли денег до 10-го</span
+          ><span class="t-label answer">≈ 150 PLN</span>
+        </button>
+      </div>
+      <div class="pal-hint t-label">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> выбрать</span
+        ><span><kbd>Enter</kbd> открыть</span
+        ><span><kbd>&gt;</kbd> команды</span><span><kbd>/</kbd> разделы</span
+        ><span><kbd>?</kbd> вопрос AI</span>
+      </div>
+    </dialog>
 
+    <dialog id="quick" aria-labelledby="quick-t">
+      <div class="dlg-head">
+        <span class="t-title" id="quick-t">Быстро</span
+        ><span class="t-label">Ctrl K → «&gt;»</span
+        ><button class="icon-btn" type="button" aria-label="Закрыть" data-close>
+          <svg class="ic" aria-hidden="true"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div class="dlg-body">
+        <div class="seg" role="tablist" aria-label="Что сделать">
+          <button
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="q-tx"
+            data-q="tx"
+          >
+            <svg class="ic s" aria-hidden="true"><use href="#i-wallet" /></svg
+            >Операция
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="q-note"
+            data-q="note"
+          >
+            <svg class="ic s" aria-hidden="true"><use href="#i-note" /></svg
+            >Заметка
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="q-restart"
+            data-q="restart"
+          >
+            <svg class="ic s" aria-hidden="true"><use href="#i-restart" /></svg
+            >Перезапуск
+          </button>
+        </div>
+        <div role="tabpanel" id="q-tx">
+          <div class="field">
+            <label class="t-label" for="q-amount">Сумма, PLN</label
+            ><input
+              id="q-amount"
+              class="amount"
+              inputmode="decimal"
+              value="36,98"
+            />
+          </div>
+          <div class="chips" style="margin-top: 12px" aria-label="Тип">
+            <button class="chip on" type="button" aria-pressed="true">
+              Расход</button
+            ><button class="chip" type="button" aria-pressed="false">
+              Доход
+            </button>
+          </div>
+          <div class="t-label" style="margin: 12px 0 8px">
+            Категория — AI предлагает по названию
+          </div>
+          <div class="chips">
+            <button class="chip on" type="button" aria-pressed="true">
+              Продукты</button
+            ><button class="chip" type="button" aria-pressed="false">
+              Транспорт</button
+            ><button class="chip" type="button" aria-pressed="false">
+              Кафе и рестораны</button
+            ><button class="chip" type="button" aria-pressed="false">
+              Связь
+            </button>
+          </div>
+          <div class="field" style="margin-top: 12px">
+            <label class="t-label" for="q-who">Где</label
+            ><input id="q-who" value="Żabka" />
+          </div>
+          <p class="t-label" style="margin-top: 8px">
+            PKO ••6677 · сегодня · остаток станет 3 607,68
+          </p>
+        </div>
+        <div role="tabpanel" id="q-note" hidden>
+          <div class="field">
+            <label class="t-label" for="q-text"
+              >Черновик <span class="new">новое</span></label
+            ><textarea id="q-text" rows="4">
+Спросить у врача про пульс в покое — браслет пишет 58–61</textarea>
+          </div>
+          <div class="t-label" style="margin: 12px 0 8px">Куда положить</div>
+          <div class="chips">
+            <button class="chip on" type="button" aria-pressed="true">
+              Входящие задач</button
+            ><button class="chip" type="button" aria-pressed="false">
+              Дневник за сегодня</button
+            ><button class="chip" type="button" aria-pressed="false">
+              Оставить в черновике
+            </button>
+          </div>
+          <p class="t-label" style="margin-top: 8px">
+            Черновик хранится, пока не разобран; «Входящие» задач уже есть.
+          </p>
+        </div>
+        <div role="tabpanel" id="q-restart" hidden>
+          <p class="t-body">
+            Перезапуск контейнера на сервере. <span class="new">новое</span>
+          </p>
+          <div class="list" style="margin-top: 8px">
+            <div class="row">
+              <span class="dot crit"></span>
+              <div class="grow">
+                <div class="t-title-s">languagetool</div>
+                <div class="t-label">не отвечает 17 ч · 231 ошибка</div>
+              </div>
+              <button
+                class="btn s danger"
+                type="button"
+                data-fake="Перезапуск… ~30 с"
+              >
+                Перезапустить
+              </button>
+            </div>
+            <div class="row">
+              <span class="dot"></span>
+              <div class="grow">
+                <div class="t-title-s">ollama</div>
+                <div class="t-label">работает 3 дн. · 1,9 GB</div>
+              </div>
+              <button
+                class="btn s outlined"
+                type="button"
+                data-fake="Перезапуск… ~40 с"
+              >
+                Перезапустить
+              </button>
+            </div>
+            <div class="row">
+              <span class="dot"></span>
+              <div class="grow">
+                <div class="t-title-s">app</div>
+                <div class="t-label">
+                  сам дашборд — страница пропадёт на ~20 с
+                </div>
+              </div>
+              <button
+                class="btn s outlined"
+                type="button"
+                data-fake="Перезапуск… ~20 с"
+              >
+                Перезапустить
+              </button>
+            </div>
+          </div>
+          <p class="t-label" style="margin-top: 8px">
+            db и backup здесь нет: их перезапуск — только с сервера.
+          </p>
+        </div>
+      </div>
+      <div class="dlg-foot">
+        <button class="btn" type="button" data-close>Отмена</button
+        ><button class="btn filled" type="button" data-close>Записать</button>
+      </div>
+    </dialog>
 
-<dialog id="palette" aria-label="Поиск и команды">
-<div class="pal-input"><svg class="ic " aria-hidden="true"><use href="#i-search"/></svg><input type="text" placeholder="Найти или сделать… «>» — команда, «/» — раздел, «?» — спросить" aria-label="Поиск и команды"/><kbd>Esc</kbd></div>
-<div class="pal-list">
-<div class="eyebrow">Сделать</div>
-<button class="pal-item sel" type="button" data-open="quick" data-tab="tx"><svg class="ic " aria-hidden="true"><use href="#i-wallet"/></svg><span class="grow">Записать операцию</span><kbd>&gt; расход</kbd></button>
-<button class="pal-item" type="button" data-open="quick" data-tab="note"><svg class="ic " aria-hidden="true"><use href="#i-note"/></svg><span class="grow">Заметка в черновик <span class="new">новое</span></span><kbd>&gt; заметка</kbd></button>
-<button class="pal-item" type="button" data-open="quick" data-tab="restart"><svg class="ic " aria-hidden="true"><use href="#i-restart"/></svg><span class="grow">Перезапустить LanguageTool <span class="new">новое</span></span><span class="badge crit">не отвечает</span></button>
-<button class="pal-item" type="button"><svg class="ic " aria-hidden="true"><use href="#i-target"/></svg><span class="grow">Фокус 25 минут</span><kbd>&gt; фокус</kbd></button>
-<div class="eyebrow">Недавнее</div>
-<button class="pal-item" type="button"><svg class="ic " aria-hidden="true"><use href="#i-wallet"/></svg><span class="grow">Финансы · Обзор</span><span class="t-label">2 мин назад</span></button>
-<button class="pal-item" type="button"><svg class="ic " aria-hidden="true"><use href="#i-server"/></svg><span class="grow">Система · Что требует внимания</span><span class="t-label">вчера</span></button>
-<button class="pal-item" type="button"><svg class="ic " aria-hidden="true"><use href="#i-book"/></svg><span class="grow">Дневник · 31.10</span><span class="t-label">вчера</span></button>
-<div class="eyebrow">Спросить</div>
-<button class="pal-item" type="button"><svg class="ic " aria-hidden="true"><use href="#i-ai"/></svg><span class="grow">? Хватит ли денег до 10-го</span><span class="t-label answer">≈ 150 PLN</span></button>
-</div>
-<div class="pal-hint t-label"><span><kbd>↑</kbd> <kbd>↓</kbd> выбрать</span><span><kbd>Enter</kbd> открыть</span><span><kbd>&gt;</kbd> команды</span><span><kbd>/</kbd> разделы</span><span><kbd>?</kbd> вопрос AI</span></div>
-</dialog>
+    <dialog id="blocks" aria-labelledby="blocks-t">
+      <div class="dlg-head">
+        <span class="t-title" id="blocks-t">Блоки этой страницы</span
+        ><button class="icon-btn" type="button" aria-label="Закрыть" data-close>
+          <svg class="ic" aria-hidden="true"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div class="dlg-body">
+        <div class="t-label">
+          Перетащите ⋮⋮, чтобы поменять порядок. Выключенный блок не пропадает —
+          он в «Ещё» внизу страницы.
+        </div>
+        <div class="list" id="blocks-list"></div>
+      </div>
+      <div class="dlg-foot">
+        <button class="btn" type="button" id="blocks-reset">Как было</button
+        ><button class="btn filled" type="button" data-close>Готово</button>
+      </div>
+    </dialog>
 
-<dialog id="quick" aria-labelledby="quick-t">
-<div class="dlg-head"><span class="t-title" id="quick-t">Быстро</span><span class="t-label">Ctrl K → «&gt;»</span><button class="icon-btn" type="button" aria-label="Закрыть" data-close><svg class="ic " aria-hidden="true"><use href="#i-close"/></svg></button></div>
-<div class="dlg-body">
-<div class="seg" role="tablist" aria-label="Что сделать">
-<button type="button" role="tab" aria-selected="true" aria-controls="q-tx" data-q="tx"><svg class="ic s" aria-hidden="true"><use href="#i-wallet"/></svg>Операция</button>
-<button type="button" role="tab" aria-selected="false" aria-controls="q-note" data-q="note"><svg class="ic s" aria-hidden="true"><use href="#i-note"/></svg>Заметка</button>
-<button type="button" role="tab" aria-selected="false" aria-controls="q-restart" data-q="restart"><svg class="ic s" aria-hidden="true"><use href="#i-restart"/></svg>Перезапуск</button>
-</div>
-<div role="tabpanel" id="q-tx">
-<div class="field"><label class="t-label" for="q-amount">Сумма, PLN</label><input id="q-amount" class="amount" inputmode="decimal" value="36,98"/></div>
-<div class="chips" style="margin-top:12px" aria-label="Тип"><button class="chip on" type="button" aria-pressed="true">Расход</button><button class="chip" type="button" aria-pressed="false">Доход</button></div>
-<div class="t-label" style="margin:12px 0 8px">Категория — AI предлагает по названию</div>
-<div class="chips"><button class="chip on" type="button" aria-pressed="true">Продукты</button><button class="chip" type="button" aria-pressed="false">Транспорт</button><button class="chip" type="button" aria-pressed="false">Кафе и рестораны</button><button class="chip" type="button" aria-pressed="false">Связь</button></div>
-<div class="field" style="margin-top:12px"><label class="t-label" for="q-who">Где</label><input id="q-who" value="Żabka"/></div>
-<p class="t-label" style="margin-top:8px">PKO ••6677 · сегодня · остаток станет 3 607,68</p>
-</div>
-<div role="tabpanel" id="q-note" hidden>
-<div class="field"><label class="t-label" for="q-text">Черновик <span class="new">новое</span></label><textarea id="q-text" rows="4">Спросить у врача про пульс в покое — браслет пишет 58–61</textarea></div>
-<div class="t-label" style="margin:12px 0 8px">Куда положить</div>
-<div class="chips"><button class="chip on" type="button" aria-pressed="true">Входящие задач</button><button class="chip" type="button" aria-pressed="false">Дневник за сегодня</button><button class="chip" type="button" aria-pressed="false">Оставить в черновике</button></div>
-<p class="t-label" style="margin-top:8px">Черновик хранится, пока не разобран; «Входящие» задач уже есть.</p>
-</div>
-<div role="tabpanel" id="q-restart" hidden>
-<p class="t-body">Перезапуск контейнера на сервере. <span class="new">новое</span></p>
-<div class="list" style="margin-top:8px">
-<div class="row"><span class="dot crit"></span><div class="grow"><div class="t-title-s">languagetool</div><div class="t-label">не отвечает 17 ч · 231 ошибка</div></div><button class="btn s danger" type="button" data-fake="Перезапуск… ~30 с">Перезапустить</button></div>
-<div class="row"><span class="dot"></span><div class="grow"><div class="t-title-s">ollama</div><div class="t-label">работает 3 дн. · 1,9 GB</div></div><button class="btn s outlined" type="button" data-fake="Перезапуск… ~40 с">Перезапустить</button></div>
-<div class="row"><span class="dot"></span><div class="grow"><div class="t-title-s">app</div><div class="t-label">сам дашборд — страница пропадёт на ~20 с</div></div><button class="btn s outlined" type="button" data-fake="Перезапуск… ~20 с">Перезапустить</button></div>
-</div>
-<p class="t-label" style="margin-top:8px">db и backup здесь нет: их перезапуск — только с сервера.</p>
-</div>
-</div>
-<div class="dlg-foot"><button class="btn" type="button" data-close>Отмена</button><button class="btn filled" type="button" data-close>Записать</button></div>
-</dialog>
-
-<dialog id="blocks" aria-labelledby="blocks-t">
-<div class="dlg-head"><span class="t-title" id="blocks-t">Блоки этой страницы</span><button class="icon-btn" type="button" aria-label="Закрыть" data-close><svg class="ic " aria-hidden="true"><use href="#i-close"/></svg></button></div>
-<div class="dlg-body"><div class="t-label">Перетащите ⋮⋮, чтобы поменять порядок. Выключенный блок не пропадает — он в «Ещё» внизу страницы.</div><div class="list" id="blocks-list"></div></div>
-<div class="dlg-foot"><button class="btn" type="button" id="blocks-reset">Как было</button><button class="btn filled" type="button" data-close>Готово</button></div>
-</dialog>
-
-<dialog id="drawer" aria-labelledby="drawer-t">
-<div class="dlg-head"><span class="t-title" id="drawer-t">Подробнее</span><button class="icon-btn" type="button" aria-label="Закрыть" data-close><svg class="ic " aria-hidden="true"><use href="#i-close"/></svg></button></div>
-<div class="dlg-body" id="drawer-body"></div>
-</dialog>
-<script>
-(() => {
-  const root = document.documentElement, body = document.body;
-  // theme: system → light → dark
-  const tb = document.getElementById('mock-theme'), order = [null, 'light', 'dark'], names = {null: 'как в системе', light: 'светлая', dark: 'тёмная'};
-  let ti = 0;
-  tb.addEventListener('click', () => { ti = (ti + 1) % 3; const t = order[ti]; if (t) root.dataset.theme = t; else delete root.dataset.theme; tb.textContent = 'Тема: ' + names[t]; });
-  // designer notes and tier outlines
-  const ab = document.getElementById('mock-anno');
-  const setAnno = on => { body.classList.toggle('anno-on', on); ab.setAttribute('aria-pressed', on); ab.textContent = 'Пояснения: ' + (on ? 'вкл' : 'выкл'); try { localStorage.setItem('r2-anno', on ? '1' : '0'); } catch (e) {} };
-  let annoStored = null; try { annoStored = localStorage.getItem('r2-anno'); } catch (e) {}
-  setAnno(annoStored !== '0');
-  ab.addEventListener('click', () => setAnno(!body.classList.contains('anno-on')));
-  // dialogs
-  const open = (id, el) => {
-    const d = document.getElementById(id); if (!d) return;
-    document.querySelectorAll('dialog[open]').forEach(x => x !== d && x.close());
-    if (id === 'quick' && el && el.dataset.tab) selectQ(el.dataset.tab);
-    if (id === 'drawer' && el && el.dataset.tpl) {
-      const t = document.getElementById(el.dataset.tpl);
-      document.getElementById('drawer-t').textContent = el.dataset.title || 'Подробнее';
-      document.getElementById('drawer-body').innerHTML = t ? t.innerHTML : '';
-      if (window.r2paint) window.r2paint(document.getElementById('drawer-body'));
-    }
-    if (!d.open) d.showModal();
-  };
-  document.addEventListener('click', e => {
-    const o = e.target.closest('[data-open]'); if (o) { e.preventDefault(); open(o.dataset.open, o); return; }
-    const c = e.target.closest('[data-close]'); if (c) { c.closest('dialog').close(); return; }
-    const f = e.target.closest('[data-fake]'); if (f) { f.textContent = f.dataset.fake; f.disabled = true; return; }
-    const ch = e.target.closest('.chip[aria-pressed]'); if (ch) { ch.parentElement.querySelectorAll('.chip[aria-pressed]').forEach(x => { x.setAttribute('aria-pressed', x === ch); x.classList.toggle('on', x === ch); }); }
-  });
-  document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
-  document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); open('palette'); } });
-  // quick-actions tabs
-  const selectQ = k => {
-    document.querySelectorAll('#quick [data-q]').forEach(b => b.setAttribute('aria-selected', b.dataset.q === k));
-    document.querySelectorAll('#quick [role=tabpanel]').forEach(p => p.hidden = p.id !== 'q-' + k);
-    const s = document.querySelector('#quick .dlg-foot .filled'); s.textContent = k === 'tx' ? 'Записать' : k === 'note' ? 'Сохранить' : 'Готово';
-  };
-  document.querySelectorAll('#quick [data-q]').forEach(b => b.addEventListener('click', () => selectQ(b.dataset.q)));
-  // toggleable blocks: every [data-block] with a data-name becomes a switch
-  const key = 'r2-blocks-' + location.pathname.split('/').pop();
-  let off = []; try { off = JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) {}
-  const list = document.getElementById('blocks-list');
-  const apply = () => document.querySelectorAll('[data-block]').forEach(b => { b.hidden = off.includes(b.dataset.block); });
-  document.querySelectorAll('[data-block][data-name]').forEach(b => {
-    const locked = b.hasAttribute('data-locked');
-    const row = document.createElement('label'); row.className = 'sw-row';
-    row.innerHTML = '<span class="grip" aria-hidden="true">⋮⋮</span><span class="grow"><span class="t-title-s">' + b.dataset.name + '</span>' + (locked ? '<br><span class="t-label">всегда сверху — ваш выбор</span>' : '') + '</span>';
-    const sw = document.createElement('input'); sw.type = 'checkbox'; sw.className = 'switch'; sw.checked = !off.includes(b.dataset.block); sw.disabled = locked;
-    sw.setAttribute('aria-label', b.dataset.name);
-    sw.addEventListener('change', () => { off = sw.checked ? off.filter(x => x !== b.dataset.block) : [...off, b.dataset.block]; try { localStorage.setItem(key, JSON.stringify(off)); } catch (e) {} apply(); });
-    row.appendChild(sw); list.appendChild(row);
-  });
-  document.getElementById('blocks-reset').addEventListener('click', () => { off = []; try { localStorage.removeItem(key); } catch (e) {} list.querySelectorAll('.switch').forEach(s => s.checked = true); apply(); });
-  apply();
-  // sparklines and heat strips from data attributes
-  window.r2paint = scope => {
-    scope.querySelectorAll('svg.spark[data-v]').forEach(s => {
-      const v = s.dataset.v.split(',').map(Number), f = (s.dataset.f || '').split(',').filter(Boolean).map(Number);
-      const all = v.concat(f), min = Math.min(...all), max = Math.max(...all), n = all.length - 1 || 1, h = 26;
-      const y = x => (h - ((x - min) / ((max - min) || 1)) * (h - 4) - 2).toFixed(1);
-      const pts = v.map((x, i) => (i * 100 / n).toFixed(1) + ',' + y(x)).join(' ');
-      s.setAttribute('viewBox', '0 0 100 ' + h); s.setAttribute('preserveAspectRatio', 'none');
-      let html = '<polyline class="p ' + (s.dataset.c || '') + '" points="' + pts + '"/>';
-      if (f.length) { const s0 = v.length - 1; html += '<polyline class="f" points="' + [v[s0]].concat(f).map((x, i) => ((s0 + i) * 100 / n).toFixed(1) + ',' + y(x)).join(' ') + '"/>'; }
-      s.innerHTML = html;
-    });
-    scope.querySelectorAll('.hs[data-h]').forEach(el => {
-      el.innerHTML = el.dataset.h.split('').map(c => '<i class="' + ({'0': '', '1': 'l1', '2': 'l2', '3': 'l3', w: 'w', c: 'c', '-': 'na', t: 'l3 t'}[c] ?? '') + '"></i>').join('');
-    });
-  };
-  window.r2paint(document);
-})();
-</script>
-</body>
+    <dialog id="drawer" aria-labelledby="drawer-t">
+      <div class="dlg-head">
+        <span class="t-title" id="drawer-t">Подробнее</span
+        ><button class="icon-btn" type="button" aria-label="Закрыть" data-close>
+          <svg class="ic" aria-hidden="true"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div class="dlg-body" id="drawer-body"></div>
+    </dialog>
+    <script>
+      (() => {
+        const root = document.documentElement,
+          body = document.body;
+        // theme: system → light → dark
+        const tb = document.getElementById('mock-theme'),
+          order = [null, 'light', 'dark'],
+          names = {null: 'как в системе', light: 'светлая', dark: 'тёмная'};
+        let ti = 0;
+        tb.addEventListener('click', () => {
+          ti = (ti + 1) % 3;
+          const t = order[ti];
+          if (t) root.dataset.theme = t;
+          else delete root.dataset.theme;
+          tb.textContent = 'Тема: ' + names[t];
+        });
+        // designer notes and tier outlines
+        const ab = document.getElementById('mock-anno');
+        const setAnno = on => {
+          body.classList.toggle('anno-on', on);
+          ab.setAttribute('aria-pressed', on);
+          ab.textContent = 'Пояснения: ' + (on ? 'вкл' : 'выкл');
+          try {
+            localStorage.setItem('r2-anno', on ? '1' : '0');
+          } catch (e) {}
+        };
+        let annoStored = null;
+        try {
+          annoStored = localStorage.getItem('r2-anno');
+        } catch (e) {}
+        setAnno(annoStored !== '0');
+        ab.addEventListener('click', () =>
+          setAnno(!body.classList.contains('anno-on')),
+        );
+        // dialogs
+        const open = (id, el) => {
+          const d = document.getElementById(id);
+          if (!d) return;
+          document
+            .querySelectorAll('dialog[open]')
+            .forEach(x => x !== d && x.close());
+          if (id === 'quick' && el && el.dataset.tab) selectQ(el.dataset.tab);
+          if (id === 'drawer' && el && el.dataset.tpl) {
+            const t = document.getElementById(el.dataset.tpl);
+            document.getElementById('drawer-t').textContent =
+              el.dataset.title || 'Подробнее';
+            document.getElementById('drawer-body').innerHTML = t
+              ? t.innerHTML
+              : '';
+            if (window.r2paint)
+              window.r2paint(document.getElementById('drawer-body'));
+          }
+          if (!d.open) d.showModal();
+        };
+        document.addEventListener('click', e => {
+          const o = e.target.closest('[data-open]');
+          if (o) {
+            e.preventDefault();
+            open(o.dataset.open, o);
+            return;
+          }
+          const c = e.target.closest('[data-close]');
+          if (c) {
+            c.closest('dialog').close();
+            return;
+          }
+          const f = e.target.closest('[data-fake]');
+          if (f) {
+            f.textContent = f.dataset.fake;
+            f.disabled = true;
+            return;
+          }
+          const ch = e.target.closest('.chip[aria-pressed]');
+          if (ch) {
+            ch.parentElement
+              .querySelectorAll('.chip[aria-pressed]')
+              .forEach(x => {
+                x.setAttribute('aria-pressed', x === ch);
+                x.classList.toggle('on', x === ch);
+              });
+          }
+        });
+        document.querySelectorAll('dialog').forEach(d =>
+          d.addEventListener('click', e => {
+            if (e.target === d) d.close();
+          }),
+        );
+        document.addEventListener('keydown', e => {
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            open('palette');
+          }
+        });
+        // quick-actions tabs
+        const selectQ = k => {
+          document
+            .querySelectorAll('#quick [data-q]')
+            .forEach(b => b.setAttribute('aria-selected', b.dataset.q === k));
+          document
+            .querySelectorAll('#quick [role=tabpanel]')
+            .forEach(p => (p.hidden = p.id !== 'q-' + k));
+          const s = document.querySelector('#quick .dlg-foot .filled');
+          s.textContent =
+            k === 'tx' ? 'Записать' : k === 'note' ? 'Сохранить' : 'Готово';
+        };
+        document
+          .querySelectorAll('#quick [data-q]')
+          .forEach(b =>
+            b.addEventListener('click', () => selectQ(b.dataset.q)),
+          );
+        // toggleable blocks: every [data-block] with a data-name becomes a switch
+        const key = 'r2-blocks-' + location.pathname.split('/').pop();
+        let off = [];
+        try {
+          off = JSON.parse(localStorage.getItem(key) || '[]');
+        } catch (e) {}
+        const list = document.getElementById('blocks-list');
+        const apply = () =>
+          document.querySelectorAll('[data-block]').forEach(b => {
+            b.hidden = off.includes(b.dataset.block);
+          });
+        document.querySelectorAll('[data-block][data-name]').forEach(b => {
+          const locked = b.hasAttribute('data-locked');
+          const row = document.createElement('label');
+          row.className = 'sw-row';
+          row.innerHTML =
+            '<span class="grip" aria-hidden="true">⋮⋮</span><span class="grow"><span class="t-title-s">' +
+            b.dataset.name +
+            '</span>' +
+            (locked
+              ? '<br><span class="t-label">всегда сверху — ваш выбор</span>'
+              : '') +
+            '</span>';
+          const sw = document.createElement('input');
+          sw.type = 'checkbox';
+          sw.className = 'switch';
+          sw.checked = !off.includes(b.dataset.block);
+          sw.disabled = locked;
+          sw.setAttribute('aria-label', b.dataset.name);
+          sw.addEventListener('change', () => {
+            off = sw.checked
+              ? off.filter(x => x !== b.dataset.block)
+              : [...off, b.dataset.block];
+            try {
+              localStorage.setItem(key, JSON.stringify(off));
+            } catch (e) {}
+            apply();
+          });
+          row.appendChild(sw);
+          list.appendChild(row);
+        });
+        document
+          .getElementById('blocks-reset')
+          .addEventListener('click', () => {
+            off = [];
+            try {
+              localStorage.removeItem(key);
+            } catch (e) {}
+            list.querySelectorAll('.switch').forEach(s => (s.checked = true));
+            apply();
+          });
+        apply();
+        // sparklines and heat strips from data attributes
+        window.r2paint = scope => {
+          scope.querySelectorAll('svg.spark[data-v]').forEach(s => {
+            const v = s.dataset.v.split(',').map(Number),
+              f = (s.dataset.f || '').split(',').filter(Boolean).map(Number);
+            const all = v.concat(f),
+              min = Math.min(...all),
+              max = Math.max(...all),
+              n = all.length - 1 || 1,
+              h = 26;
+            const y = x =>
+              (h - ((x - min) / (max - min || 1)) * (h - 4) - 2).toFixed(1);
+            const pts = v
+              .map((x, i) => ((i * 100) / n).toFixed(1) + ',' + y(x))
+              .join(' ');
+            s.setAttribute('viewBox', '0 0 100 ' + h);
+            s.setAttribute('preserveAspectRatio', 'none');
+            let html =
+              '<polyline class="p ' +
+              (s.dataset.c || '') +
+              '" points="' +
+              pts +
+              '"/>';
+            if (f.length) {
+              const s0 = v.length - 1;
+              html +=
+                '<polyline class="f" points="' +
+                [v[s0]]
+                  .concat(f)
+                  .map((x, i) => (((s0 + i) * 100) / n).toFixed(1) + ',' + y(x))
+                  .join(' ') +
+                '"/>';
+            }
+            s.innerHTML = html;
+          });
+          scope.querySelectorAll('.hs[data-h]').forEach(el => {
+            el.innerHTML = el.dataset.h
+              .split('')
+              .map(
+                c =>
+                  '<i class="' +
+                  ({
+                    0: '',
+                    1: 'l1',
+                    2: 'l2',
+                    3: 'l3',
+                    w: 'w',
+                    c: 'c',
+                    '-': 'na',
+                    t: 'l3 t',
+                  }[c] ?? '') +
+                  '"></i>',
+              )
+              .join('');
+          });
+        };
+        window.r2paint(document);
+      })();
+    </script>
+  </body>
 </html>
