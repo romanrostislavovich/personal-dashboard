@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Концепция «Письмо из завтра» — Personal Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Concept 12 "A letter from tomorrow": every morning the AI writes the home page as a letter
+   from you, one day older. The numbers are live chips; the margin keeps the sources and charts. */
+      :root {
+        color-scheme: dark;
+        --paper: #0f0e0c;
+        --paper-2: #17150f;
+        --ink: #efe8dc; /* 15:1 on paper */
+        --ink-2: #b3a995; /* 7.9:1 on paper */
+        --rule: #2a261e;
+        --glow: #ffd27a; /* the answer: warm, like lamplight */
+        --ok: #6ee7a8;
+        --warn: #fbbf24;
+        --crit: #fb7185;
+        --serif: Fraunces, Georgia, 'Times New Roman', serif;
+        --sans: Inter, 'Segoe UI', system-ui, sans-serif;
+        --mono: 'JetBrains Mono', Consolas, ui-monospace, monospace;
+      }
+      @media (prefers-color-scheme: light) {
+        :root {
+          color-scheme: light;
+          --paper: #f6f1e7;
+          --paper-2: #fffaf0;
+          --ink: #1d1a14;
+          --ink-2: #5c5444;
+          --rule: #ddd3c0;
+          --glow: #9a5b00;
+          --ok: #047857;
+          --warn: #a15c00;
+          --crit: #be123c;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font: 400 15px/24px var(--sans);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.5;
+        background: radial-gradient(
+          70% 50% at 50% 0%,
+          color-mix(in srgb, var(--glow) 9%, transparent),
+          transparent 70%
+        );
+      }
+      button,
+      textarea {
+        font: inherit;
+        color: inherit;
+      }
+      :focus-visible {
+        outline: 2px solid var(--glow);
+        outline-offset: 2px;
+      }
+      .mock {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 6px 16px;
+        font: 500 12px/18px var(--sans);
+        background: var(--ink);
+        color: var(--paper);
+        position: relative;
+      }
+      .mock a {
+        color: inherit;
+        text-decoration: none;
+        opacity: 0.8;
+      }
+      .mock a:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 20px 32px;
+        position: relative;
+      }
+      .top .brand {
+        font: 500 13px/20px var(--mono);
+        letter-spacing: 0.12em;
+        color: var(--ink-2);
+      }
+      .top .sp {
+        flex: 1;
+      }
+      .pill {
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid var(--rule);
+        background: none;
+        color: var(--ink-2);
+        cursor: pointer;
+        font: 500 13px/20px var(--sans);
+        text-decoration: none;
+      }
+      .pill kbd {
+        font: 500 11px/16px var(--mono);
+      }
+
+      .sheet {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 8px 32px 64px;
+        position: relative;
+      }
+      .head {
+        display: grid;
+        grid-template-columns: minmax(0, 680px) 1fr;
+        gap: 48px;
+        align-items: end;
+        border-bottom: 1px solid var(--rule);
+        padding-bottom: 24px;
+      }
+      .eyebrow {
+        font: 500 11px/16px var(--mono);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-2);
+      }
+      .head h1 {
+        font: 500 clamp(34px, 4.4vw, 56px)/1.05 var(--serif);
+        letter-spacing: -0.02em;
+        margin: 12px 0 8px;
+        font-variation-settings: 'opsz' 144;
+      }
+      .head .from {
+        font: italic 400 17px/26px var(--serif);
+        color: var(--ink-2);
+      }
+
+      /* The seal: level and achievements, always visible */
+      .seal {
+        justify-self: end;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        text-decoration: none;
+        color: inherit;
+      }
+      .seal .ring {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        position: relative;
+        background:
+          radial-gradient(closest-side, var(--paper) 82%, transparent 84%),
+          conic-gradient(var(--glow) 1.5%, var(--rule) 0);
+      }
+      .seal .ring b {
+        font: 600 32px/1 var(--serif);
+        color: var(--glow);
+      }
+      .seal .txt {
+        font: 500 12px/18px var(--mono);
+        color: var(--ink-2);
+      }
+      .seal .txt b {
+        display: block;
+        color: var(--ink);
+        font: 500 15px/22px var(--sans);
+      }
+
+      /* The letter: text column + margin notes */
+      .para {
+        display: grid;
+        grid-template-columns: minmax(0, 680px) minmax(0, 1fr);
+        gap: 48px;
+        align-items: start;
+      }
+      .para p {
+        font: 400 21px/1.62 var(--serif);
+        margin: 24px 0 0;
+        font-variation-settings: 'opsz' 24;
+        text-wrap: pretty;
+      }
+      .para.lead p::first-letter {
+        float: left;
+        font: 500 72px/0.9 var(--serif);
+        padding: 6px 10px 0 0;
+        color: var(--glow);
+      }
+      .d {
+        font: 500 0.82em/1 var(--mono);
+        color: var(--ink);
+        background: color-mix(in srgb, var(--glow) 10%, transparent);
+        border: 0;
+        border-bottom: 1px dashed var(--glow);
+        border-radius: 4px 4px 0 0;
+        padding: 2px 4px 3px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .d:hover,
+      .d.on {
+        background: color-mix(in srgb, var(--glow) 22%, transparent);
+      }
+      .d.warn {
+        border-bottom-color: var(--warn);
+        background: color-mix(in srgb, var(--warn) 12%, transparent);
+      }
+      .d.crit {
+        border-bottom-color: var(--crit);
+        background: color-mix(in srgb, var(--crit) 12%, transparent);
+      }
+      .note {
+        margin-top: 28px;
+        padding: 12px 0 0;
+        border-top: 1px solid var(--rule);
+        font: 400 13px/20px var(--sans);
+        color: var(--ink-2);
+        transition:
+          color 200ms ease,
+          border-color 200ms ease;
+      }
+      .note b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .note .src {
+        font: 500 11px/16px var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .note svg {
+        display: block;
+        width: 100%;
+        height: 40px;
+        margin: 8px 0;
+        overflow: visible;
+      }
+      .note.on {
+        color: var(--ink);
+        border-top-color: var(--glow);
+      }
+      .conf {
+        font: 500 11px/16px var(--mono);
+      }
+
+      .sign {
+        font: italic 400 21px/1.6 var(--serif);
+        margin: 32px 0 0;
+      }
+      .ps {
+        margin-top: 40px;
+        padding: 24px;
+        border: 1px solid var(--rule);
+        border-radius: 20px;
+        background: var(--paper-2);
+        max-width: 680px;
+      }
+      .ps h2 {
+        font: 500 20px/28px var(--serif);
+        margin: 0 0 8px;
+      }
+      .todo {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .todo li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 48px;
+        border-top: 1px solid var(--rule);
+      }
+      .todo li:first-child {
+        border-top: 0;
+      }
+      .todo .box {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        border: 2px solid var(--ink-2);
+        flex: none;
+      }
+      .todo span:nth-child(2) {
+        flex: 1;
+      }
+      .todo .t {
+        font: 500 12px/16px var(--mono);
+        color: var(--ink-2);
+      }
+      .reply {
+        margin-top: 24px;
+        max-width: 680px;
+      }
+      .reply label {
+        display: block;
+        font: italic 400 17px/26px var(--serif);
+        color: var(--ink-2);
+        margin-bottom: 8px;
+      }
+      .reply textarea {
+        width: 100%;
+        min-height: 96px;
+        resize: vertical;
+        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid var(--rule);
+        background: var(--paper-2);
+        font: 400 18px/1.5 var(--serif);
+      }
+      .reply .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        height: 44px;
+        padding: 0 18px;
+        border-radius: 999px;
+        border: 1px solid var(--rule);
+        background: none;
+        cursor: pointer;
+        font: 500 14px/20px var(--sans);
+      }
+      .btn.main {
+        background: var(--ink);
+        color: var(--paper);
+        border-color: var(--ink);
+      }
+      .reply small {
+        color: var(--ink-2);
+        font: 400 13px/20px var(--sans);
+      }
+
+      /* First open of the day: the letter appears paragraph by paragraph, once */
+      .para,
+      .sign,
+      .ps {
+        animation: ink 700ms cubic-bezier(0.2, 0, 0, 1) both;
+      }
+      .para:nth-of-type(2) {
+        animation-delay: 120ms;
+      }
+      .para:nth-of-type(3) {
+        animation-delay: 240ms;
+      }
+      .para:nth-of-type(4) {
+        animation-delay: 360ms;
+      }
+      .para:nth-of-type(5) {
+        animation-delay: 480ms;
+      }
+      @keyframes ink {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+          filter: blur(2px);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .para,
+        .sign,
+        .ps {
+          animation: none;
+        }
+      }
+
+      @media (max-width: 860px) {
+        .top {
+          padding: 12px 16px;
+        }
+        .top .brand {
+          display: none;
+        }
+        .sheet {
+          padding: 0 20px 48px;
+        }
+        .head {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 20px;
+        }
+        .seal {
+          justify-self: start;
+        }
+        .seal .ring {
+          width: 64px;
+          height: 64px;
+        }
+        .seal .ring b {
+          font-size: 24px;
+        }
+        .para {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0;
+        }
+        .para p {
+          font-size: 19px;
+        }
+        .note {
+          display: none;
+          margin-top: 12px;
+          padding: 12px 14px;
+          border: 1px solid var(--glow);
+          border-radius: 14px;
+          background: var(--paper-2);
+        }
+        .note.on {
+          display: block;
+        }
+        .sign {
+          font-size: 19px;
+        }
+        .ps {
+          padding: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="mock">
+      <b>Эксперименты:</b><a href="10-concept-horizon.html">10 · Горизонт</a
+      ><a href="11-concept-orbit.html">11 · Орбита</a
+      ><a href="12-concept-letter.html">12 · Письмо из завтра</a
+      ><a href="../01-home.html">← текущий вариант</a>
+    </nav>
+
+    <header class="top">
+      <span class="brand">PERSONAL DASHBOARD</span><span class="sp"></span>
+      <button class="pill" aria-label="Поиск">⌕ <kbd>Ctrl K</kbd></button>
+      <a class="pill" href="../01-home.html" title="Те же данные карточками"
+        >Приборы ↗</a
+      >
+    </header>
+
+    <main class="sheet">
+      <div class="head">
+        <div>
+          <div class="eyebrow">
+            письмо из завтра · написано AI в 07:10 · 21 раздел
+          </div>
+          <h1>Понедельник, 2&nbsp;ноября</h1>
+          <div class="from">от тебя — на день старше</div>
+        </div>
+        <a
+          class="seal"
+          href="#"
+          aria-label="Уровень 10, 10 из 1000 опыта, 175 из 504 ачивок"
+        >
+          <span class="ring"><b>10</b></span>
+          <span class="txt"
+            ><b>Уровень 10</b>10 / 1000 XP<br />175 из 504 ачивок</span
+          >
+        </a>
+      </div>
+
+      <div class="para lead">
+        <p>
+          Привет. Пишу из понедельника. Хорошая новость: проснулся я на
+          <button class="d" data-n="mood">7 из 10</button> — но только потому,
+          что ты вчера лёг <button class="d" data-n="sleep">до 23:30</button>.
+          Так было в восьми из одиннадцати похожих воскресений, не подведи.
+        </p>
+        <aside class="note" id="n-mood">
+          <div class="src">
+            <span>Жизнь → прогноз настроения</span
+            ><span class="conf">72 %</span>
+          </div>
+          <svg
+            viewBox="0 0 200 40"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <polyline
+              points="0,22 40,24 80,18 120,20 140,16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              vector-effect="non-scaling-stroke"
+            />
+            <polyline
+              points="140,16 200,12"
+              fill="none"
+              stroke="var(--glow)"
+              stroke-width="1.5"
+              stroke-dasharray="4 4"
+              vector-effect="non-scaling-stroke"
+            />
+          </svg>
+          <b>Поднимет:</b> сон дольше 7 ч, прогулка. <b>Тянет вниз:</b> 2:53 в
+          Instagram. Модель обгоняет «как в среднем за неделю».
+        </aside>
+      </div>
+
+      <div class="para">
+        <p>
+          Про деньги — честно. На счёте
+          <button class="d" data-n="money">3 644,66 PLN</button>, а тратим мы
+          около 412 в день. До зарплаты, которая обычно приходит десятого,
+          доедем на <button class="d warn" data-n="money">≈ 150 PLN</button>.
+          Треть ноября — это <button class="d" data-n="bolt">Bolt</button>.
+          Возьми проездной — и останется около шестисот.
+        </p>
+        <aside class="note" id="n-money">
+          <div class="src">
+            <span>Финансы · прогноз до 10.11</span
+            ><span class="conf">64 %</span>
+          </div>
+          <svg
+            viewBox="0 0 200 40"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <polygon
+              points="40,4 200,24 200,40"
+              fill="color-mix(in srgb, var(--warn) 18%, transparent)"
+            />
+            <polyline
+              points="0,4 40,4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              vector-effect="non-scaling-stroke"
+            />
+            <polyline
+              points="40,4 200,34"
+              fill="none"
+              stroke="var(--warn)"
+              stroke-width="1.5"
+              stroke-dasharray="4 4"
+              vector-effect="non-scaling-stroke"
+            />
+          </svg>
+          <b>Запас — 0,3 месяца</b> (~9 дней). Разброс к 10-му: −600…+900 PLN.
+        </aside>
+      </div>
+
+      <div class="para">
+        <p>
+          Во вторник —
+          <button class="d" data-n="bday">день рождения Бабы Тони</button>.
+          Позвони утром: в прошлом году ты звонил в 10:12. И не засиживайся — в
+          такие ночи мы ложимся после часа, а среда потом выходит
+          <button class="d warn" data-n="bday">на 1,2 балла хуже</button>.
+        </p>
+        <aside class="note" id="n-bday">
+          <div class="src">
+            <span>Дни рождения · Связи</span><span class="conf">62 %</span>
+          </div>
+          <b>Вт 03.11.</b> Риск недосыпа в ночь на среду — 62 % (4 из 5 прошлых
+          дней рождения). Дальше: Олиферчук 24.11, Даша 01.12.
+        </aside>
+      </div>
+
+      <div class="para">
+        <p>
+          Сервер подождёт, но недолго:
+          <button class="d crit" data-n="system">
+            LanguageTool молчит с субботы
+          </button>
+          и сам уже не поднимется. WakaTime отвалился утром — сегодняшние 31
+          минуту кода он не досчитал. Серия всё равно жива:
+          <button class="d" data-n="code">9 дней</button>, в пятницу будет
+          ачивка.
+        </p>
+        <aside class="note" id="n-system">
+          <div class="src">
+            <span>Система · журнал</span
+            ><span class="conf" style="color: var(--crit)">2 из 23</span>
+          </div>
+          <b>LanguageTool</b> — с 31.10 18:53, 231 одинаковая ошибка.
+          <b>WakaTime</b> — с 07:40. Остальные 21 подключение работают, 45 из 45
+          задач прошли.
+        </aside>
+      </div>
+
+      <div class="para">
+        <p>
+          И последнее.
+          <button class="d" data-n="diary">Пятнадцать дней</button> дневника
+          подряд — не обрывай. Пара строк сегодня, и нам станет на
+          <button class="d" data-n="diary">0,8</button> лучше; я проверял.
+        </p>
+        <aside class="note" id="n-diary">
+          <div class="src">
+            <span>Дневник · Связи</span><span class="conf">до/после</span>
+          </div>
+          В дни с записью настроение в среднем <b>7,1</b>, без записи —
+          <b>6,3</b>. Сегодня записи ещё нет.
+        </aside>
+      </div>
+
+      <p class="sign">
+        Обнимаю. Ты — уровень десять, до одиннадцатого ещё 990 XP. Ближе всего
+        «Десятилетие с музыкой»: 3 533 из 3 650.
+      </p>
+
+      <section class="ps" aria-labelledby="ps-t">
+        <h2 id="ps-t">P.S. Что сделать сегодня</h2>
+        <ul class="todo">
+          <li>
+            <span
+              class="box"
+              role="checkbox"
+              aria-checked="false"
+              tabindex="0"
+            ></span
+            ><span>Откалибровать браслет</span
+            ><span class="t" style="color: var(--warn)">11:00 · прошло</span>
+          </li>
+          <li>
+            <span
+              class="box"
+              role="checkbox"
+              aria-checked="false"
+              tabindex="0"
+            ></span
+            ><span>Позвонить маме</span><span class="t"></span>
+          </li>
+          <li>
+            <span
+              class="box"
+              role="checkbox"
+              aria-checked="false"
+              tabindex="0"
+            ></span
+            ><span>Пара строк в дневник</span><span class="t">15 дн.</span>
+          </li>
+          <li>
+            <span
+              class="box"
+              role="checkbox"
+              aria-checked="false"
+              tabindex="0"
+            ></span
+            ><span>Лечь до 23:30</span><span class="t">напомню в 23:00</span>
+          </li>
+        </ul>
+      </section>
+
+      <div class="reply">
+        <label for="reply">Ответить себе завтрашнему</label>
+        <textarea id="reply" placeholder="Сегодня было…"></textarea>
+        <div class="row">
+          <button class="btn main">Отправить в завтра</button
+          ><small
+            >Ответ ляжет в дневник за 1 ноября — серия не прервётся.</small
+          >
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // A chip lights its margin note (desktop) or opens it under the paragraph (phone).
+      document.querySelectorAll('.d').forEach(chip =>
+        chip.addEventListener('click', () => {
+          const note =
+            document.getElementById('n-' + chip.dataset.n) ||
+            chip.closest('.para')?.querySelector('.note');
+          const was = note?.classList.contains('on');
+          document
+            .querySelectorAll('.note.on, .d.on')
+            .forEach(x => x.classList.remove('on'));
+          if (note && !was) {
+            note.classList.add('on');
+            chip.classList.add('on');
+          }
+        }),
+      );
+      document.querySelectorAll('.box').forEach(b => {
+        const t = () =>
+          b.setAttribute(
+            'aria-checked',
+            b.getAttribute('aria-checked') === 'true' ? 'false' : 'true',
+          );
+        b.addEventListener('click', t);
+        b.addEventListener('keydown', e => {
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            t();
+          }
+        });
+      });
+    </script>
+    <style>
+      .box[aria-checked='true'] {
+        background: var(--glow);
+        border-color: var(--glow);
+      }
+    </style>
+  </body>
+</html>

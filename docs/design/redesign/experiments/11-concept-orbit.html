@@ -1,0 +1,1000 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Концепция «Орбита» — Personal Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Unbounded:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Concept 11 "Orbit": one calm answer in the centre; the areas of life orbit around it.
+   Size = how much an area needs you, glow = its state, distance = how soon. Tap an area — it unfolds. */
+      :root {
+        color-scheme: dark;
+        --bg: #05060a;
+        --panel: #0c0f15;
+        --line: #1a2029;
+        --text: #eef1f6;
+        --text-2: #9ba6b5; /* 7.7:1 on --bg */
+        --answer: #9be8ff;
+        --ok: #34d399;
+        --warn: #fbbf24;
+        --crit: #fb7185;
+        --calm: #a5b4fc;
+        --mono: 'JetBrains Mono', Consolas, ui-monospace, monospace;
+        --sans: Inter, 'Segoe UI', system-ui, sans-serif;
+        --display: Unbounded, 'Segoe UI', system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        min-height: 100%;
+      }
+      body {
+        margin: 0;
+        color: var(--text);
+        font: 400 14px/20px var(--sans);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+        background:
+          radial-gradient(60% 50% at 50% 46%, #0c1220 0%, var(--bg) 70%),
+          var(--bg);
+      }
+      button {
+        font: inherit;
+        color: inherit;
+      }
+      :focus-visible {
+        outline: 2px solid var(--answer);
+        outline-offset: 3px;
+      }
+      .mono {
+        font-family: var(--mono);
+      }
+      .muted {
+        color: var(--text-2);
+      }
+      .mock {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 6px 16px;
+        font: 500 12px/18px var(--sans);
+        background: #eef1f6;
+        color: #05060a;
+        position: relative;
+        z-index: 10;
+      }
+      .mock a {
+        color: inherit;
+        text-decoration: none;
+        opacity: 0.8;
+      }
+      .mock a:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 32px;
+        position: relative;
+        z-index: 5;
+      }
+      .top .brand {
+        font: 500 13px/20px var(--display);
+        letter-spacing: 0.04em;
+      }
+      .top .sp {
+        flex: 1;
+      }
+      .icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 1px solid var(--line);
+        background: rgba(12, 15, 21, 0.7);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        color: var(--text-2);
+      }
+      .top kbd {
+        font: 500 11px/16px var(--mono);
+        color: var(--text-2);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 0 6px;
+      }
+
+      /* ===== The stage ===== */
+      .stage-wrap {
+        display: grid;
+        place-items: center;
+        padding: 0 16px;
+      }
+      .stage {
+        position: relative;
+        width: min(84vh, 820px, 100%);
+        aspect-ratio: 1;
+      }
+      .stage svg.rings {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+      .ring {
+        fill: none;
+        stroke: var(--line);
+        stroke-width: 1;
+      }
+      .ticks {
+        transform-origin: 400px 400px;
+        animation: turn 240s linear infinite;
+      }
+      @keyframes turn {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .feed {
+        fill: none;
+        stroke-width: 1.5;
+        stroke-dasharray: 2 10;
+        animation: flow 1.6s linear infinite;
+        opacity: 0.8;
+      }
+      @keyframes flow {
+        to {
+          stroke-dashoffset: -24;
+        }
+      }
+
+      /* Level: the outermost arc */
+      .xp-track {
+        fill: none;
+        stroke: #161c25;
+        stroke-width: 6;
+      }
+      .xp {
+        fill: none;
+        stroke: var(--answer);
+        stroke-width: 6;
+        stroke-linecap: round;
+        filter: drop-shadow(0 0 6px var(--answer));
+      }
+      .lvl-label {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        transform: translate(-50%, -50%);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        font: 500 12px/16px var(--mono);
+        white-space: nowrap;
+        text-decoration: none;
+        color: var(--text);
+      }
+      .lvl-label b {
+        font: 600 13px/16px var(--display);
+        color: var(--answer);
+      }
+
+      /* The answer in the centre */
+      .core {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 46%;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+      .core .eyebrow {
+        font: 500 11px/16px var(--mono);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--text-2);
+      }
+      .core h1 {
+        margin: 0;
+        font: 500 clamp(22px, 2.6vw, 36px)/1.15 var(--display);
+        letter-spacing: -0.02em;
+      }
+      .core p {
+        margin: 0;
+        font: 400 clamp(14px, 1.2vw, 17px)/1.5 var(--sans);
+        color: var(--text-2);
+      }
+      .core p b {
+        color: var(--warn);
+        font-weight: 600;
+      }
+      .core .src {
+        font: 500 11px/16px var(--mono);
+        color: var(--text-2);
+      }
+      .halo {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 40%;
+        aspect-ratio: 1;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(155, 232, 255, 0.1),
+          transparent 65%
+        );
+        animation: breathe 6s ease-in-out infinite;
+        pointer-events: none;
+      }
+      @keyframes breathe {
+        50% {
+          transform: translate(-50%, -50%) scale(1.08);
+          opacity: 0.7;
+        }
+      }
+
+      /* Bodies: the areas of life */
+      .body {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        width: var(--s);
+        height: var(--s);
+        background: var(--c);
+        background-image: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.45), transparent 55%), radial-gradient(circle at 70% 80%, rgba(0, 0, 0, 0.35), transparent 60%);
+        box-shadow:
+          0 0 0 1px color-mix(in srgb, var(--c) 60%, transparent),
+          0 0 calc(var(--g) * 1px) color-mix(in srgb, var(--c) 55%, transparent);
+        transition: transform 200ms ease;
+      }
+      .body:hover,
+      .body.on {
+        transform: translate(-50%, -50%) scale(1.08);
+      }
+      .body.need {
+        animation: need 3.2s ease-in-out infinite;
+      }
+      @keyframes need {
+        50% {
+          box-shadow:
+            0 0 0 1px var(--c),
+            0 0 calc(var(--g) * 1.8px)
+              color-mix(in srgb, var(--c) 70%, transparent);
+        }
+      }
+      .body .v {
+        font: 600 12px/1 var(--mono);
+        color: #05060a;
+      }
+      .label {
+        position: absolute;
+        transform: translate(-50%, 0);
+        white-space: nowrap;
+        font: 500 12px/16px var(--sans);
+        color: var(--text);
+        text-align: center;
+        pointer-events: none;
+      }
+      .label small {
+        display: block;
+        font: 500 11px/14px var(--mono);
+        color: var(--text-2);
+      }
+
+      .alist { display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 16px 16px 0; }
+      .aitem { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 6px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); text-align: left; cursor: pointer; }
+      .aitem i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); flex: none; }
+      .aitem span { font: 500 13px/18px var(--sans); }
+      .aitem small { margin-left: auto; font: 500 11px/14px var(--mono); color: var(--text-2); text-align: right; }
+      .legend {
+        display: flex;
+        gap: 24px;
+        justify-content: center;
+        flex-wrap: wrap;
+        font: 500 12px/16px var(--mono);
+        color: var(--text-2);
+        margin: 8px 16px 0;
+      }
+      .ask {
+        margin: 16px auto 48px;
+        width: min(640px, calc(100% - 32px));
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 56px;
+        padding: 0 8px 0 20px;
+        border-radius: 999px;
+        border: 1px solid rgba(155, 232, 255, 0.3);
+        background: rgba(12, 15, 21, 0.8);
+      }
+      .ask input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        background: none;
+        outline: none;
+        color: var(--text);
+        font: 400 15px/24px var(--sans);
+      }
+      .ask input::placeholder {
+        color: var(--text-2);
+      }
+      .ask button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 0;
+        background: var(--answer);
+        color: var(--bg);
+        cursor: pointer;
+        font: 700 18px/1 var(--sans);
+      }
+
+      /* The unfolded area */
+      .panel {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        bottom: 16px;
+        width: min(400px, calc(100% - 32px));
+        z-index: 20;
+        background: rgba(12, 15, 21, 0.92);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow-y: auto;
+        transform: translateX(110%);
+        transition: transform 280ms cubic-bezier(0.2, 0, 0, 1);
+        box-shadow: 0 24px 80px -24px #000;
+      }
+      .panel.open {
+        transform: none;
+      }
+      .panel .head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .panel .head i {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--c);
+        box-shadow: 0 0 14px var(--c);
+      }
+      .panel h2 {
+        margin: 0;
+        font: 500 20px/28px var(--display);
+        flex: 1;
+      }
+      .panel .big {
+        font: 600 40px/48px var(--mono);
+        letter-spacing: -0.03em;
+      }
+      .panel .say {
+        font: 500 17px/26px var(--sans);
+      }
+      .panel .why {
+        color: var(--text-2);
+        margin: 0;
+      }
+      .panel ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .panel li {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 0;
+        border-top: 1px solid var(--line);
+      }
+      .panel li span:last-child {
+        font-family: var(--mono);
+        color: var(--text-2);
+        white-space: nowrap;
+      }
+      .panel .acts {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: auto;
+      }
+      .btn {
+        height: 44px;
+        padding: 0 18px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: none;
+        cursor: pointer;
+        font: 500 14px/20px var(--sans);
+      }
+      .btn.main {
+        background: var(--text);
+        color: var(--bg);
+        border-color: var(--text);
+      }
+      .spark {
+        width: 100%;
+        height: 56px;
+      }
+
+      /* Phone: the answer goes above the orbit, the centre keeps the level */
+      .core-phone {
+        display: none;
+      }
+      @media (max-width: 760px) {
+        .label, .lvl-label { display: none; }
+        .alist { display: grid; }
+        .top {
+          padding: 12px 16px;
+        }
+        .top .brand {
+          display: none;
+        }
+        .core-phone {
+          display: block;
+          padding: 8px 20px 0;
+        }
+        .core-phone .eyebrow {
+          font: 500 11px/16px var(--mono);
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--text-2);
+        }
+        .core-phone h1 {
+          font: 500 26px/1.2 var(--display);
+          margin: 8px 0;
+          letter-spacing: -0.02em;
+        }
+        .core-phone p {
+          margin: 0;
+          color: var(--text-2);
+          font-size: 15px;
+          line-height: 22px;
+        }
+        .core-phone p b {
+          color: var(--warn);
+          font-weight: 600;
+        }
+        .core {
+          width: 36%;
+          gap: 2px;
+        }
+        .core .eyebrow,
+        .core h1,
+        .core p,
+        .core .src {
+          display: none;
+        }
+        .core .lvl-phone {
+          display: flex;
+        }
+        .stage {
+          width: 100%;
+          margin-top: 24px;
+        }
+        .lvl-label {
+          top: auto;
+          bottom: 0;
+          transform: translate(-50%, 50%);
+        }
+        .label {
+          font-size: 11px;
+          line-height: 14px;
+        }
+        .label small {
+          font-size: 10px;
+        }
+        .panel {
+          top: auto;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 100%;
+          max-height: 80vh;
+          border-radius: 24px 24px 0 0;
+          transform: translateY(105%);
+        }
+        .panel.open {
+          transform: none;
+        }
+        .legend {
+          gap: 12px;
+        }
+      }
+      .lvl-phone {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        font: 500 11px/14px var(--mono);
+        color: var(--text-2);
+      }
+      .lvl-phone b {
+        font: 600 28px/32px var(--display);
+        color: var(--answer);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .ticks,
+        .feed,
+        .halo,
+        .body.need {
+          animation: none;
+        }
+        .panel {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="mock">
+      <b>Эксперименты:</b><a href="10-concept-horizon.html">10 · Горизонт</a
+      ><a href="11-concept-orbit.html">11 · Орбита</a
+      ><a href="12-concept-letter.html">12 · Письмо из завтра</a
+      ><a href="../01-home.html">← текущий вариант</a>
+    </nav>
+
+    <header class="top">
+      <span class="brand">PERSONAL DASHBOARD</span><span class="sp"></span>
+      <kbd>Ctrl K</kbd>
+      <button class="icon" aria-label="Поиск">⌕</button>
+      <button class="icon" aria-label="Уведомления: 3">◔</button>
+    </header>
+
+    <section class="core-phone">
+      <div class="eyebrow">вс 01.11 · 12:24</div>
+      <h1>Сегодня всё в порядке.</h1>
+      <p>
+        Одно важное: <b>деньги кончатся раньше зарплаты</b> — к 10-му останется
+        ≈ 150 PLN.
+      </p>
+    </section>
+
+    <div class="stage-wrap">
+      <div class="stage" id="stage">
+        <svg class="rings" viewBox="0 0 800 800" aria-hidden="true" id="svg">
+          <g class="ticks" id="ticks"></g>
+          <circle class="ring" cx="400" cy="400" r="208" />
+          <circle
+            class="ring"
+            cx="400"
+            cy="400"
+            r="288"
+            stroke-dasharray="2 6"
+          />
+          <circle
+            class="ring"
+            cx="400"
+            cy="400"
+            r="352"
+            stroke-dasharray="1 10"
+          />
+          <circle class="xp-track" cx="400" cy="400" r="392" />
+          <!-- 10 / 1000 XP = 1 %; the arc starts at the top -->
+          <circle
+            class="xp"
+            cx="400"
+            cy="400"
+            r="392"
+            pathLength="100"
+            stroke-dasharray="1.6 98.4"
+            transform="rotate(-90 400 400)"
+          />
+          <g id="feeds"></g>
+        </svg>
+        <a
+          class="lvl-label"
+          href="#"
+          aria-label="Уровень 10, 10 из 1000 опыта, 175 из 504 ачивок"
+          ><b>10</b>уровень · 10/1000 XP · 175/504</a
+        >
+        <div class="halo"></div>
+        <div class="core">
+          <div class="eyebrow">вс 01.11 · 12:24</div>
+          <h1>Сегодня всё в&nbsp;порядке.</h1>
+          <p>
+            Одно важное: <b>деньги кончатся раньше зарплаты</b> — к 10-му
+            останется ≈ 150 PLN.
+          </p>
+          <div class="src">собрано из 21 раздела · 08:30</div>
+          <div class="lvl-phone"><b>10</b>уровень</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alist" id="alist" aria-label="Области жизни по срочности"></div>
+    <div class="legend" aria-hidden="true">
+      <span>● размер — сколько требует вас</span
+      ><span>◌ ближе к центру — срочнее</span
+      ><span>✦ свечение — состояние</span>
+    </div>
+
+    <label class="ask"
+      ><span style="color: var(--answer)">✦</span
+      ><input
+        placeholder="Спросите: «что будет, если неделю без такси?»"
+        aria-label="Вопрос"
+      /><button type="button" aria-label="Спросить">→</button></label
+    >
+
+    <aside
+      class="panel"
+      id="panel"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="p-title"
+    >
+      <div class="head">
+        <i id="p-dot"></i>
+        <h2 id="p-title">Деньги</h2>
+        <button class="icon" id="p-close" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="big" id="p-big">≈ 150</div>
+      <div class="say" id="p-say">столько останется к зарплате (≈ 10.11)</div>
+      <svg
+        class="spark"
+        viewBox="0 0 300 56"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        id="p-spark"
+      ></svg>
+      <p class="why" id="p-why"></p>
+      <ul id="p-list"></ul>
+      <div class="acts" id="p-acts"></div>
+    </aside>
+
+    <script>
+      // Areas of life: ring 0 = needs you now, 1 = this week, 2 = background. size = how much it needs you.
+      const areas = [
+        {
+          id: 'money',
+          name: 'Деньги',
+          small: 'запас 9 дней',
+          v: '150',
+          c: 'var(--warn)',
+          ring: 0,
+          a: -40,
+          s: 84,
+          g: 36,
+          need: true,
+          feed: true,
+          big: '≈ 150 PLN',
+          say: 'останется к зарплате (≈ 10.11)',
+          why: 'Тратите ~412 PLN в день (среднее за 3 месяца), на счёте 3 645. Транспорт — треть ноября. Уверенность 64 %.',
+          list: [
+            ['На счёте', '3 644,66'],
+            ['Потрачено сегодня', '179,88'],
+            ['Ноябрь целиком', '≈ 11 800'],
+          ],
+          acts: ['Лимит до 10-го', 'Финансы'],
+          spark: [10, 11, 12, 26, 40, 54, 68, 80, 88],
+          cut: 3,
+        },
+        {
+          id: 'system',
+          name: 'Система',
+          small: '2 молчат',
+          v: '2',
+          c: 'var(--crit)',
+          ring: 0,
+          a: 205,
+          s: 64,
+          g: 30,
+          need: true,
+          feed: true,
+          big: '2 из 23',
+          say: 'сервиса не отвечают',
+          why: 'LanguageTool — с 31.10 18:53, сам скорее не поднимется (81 %). WakaTime — с 07:40, время кодинга за сегодня неполное.',
+          list: [
+            ['Фоновые задачи', '45/45'],
+            ['Запросы p95', '192 мс'],
+            ['Копия данных', '10:00'],
+          ],
+          acts: ['Открыть Систему', 'Проверить снова'],
+          spark: [50, 50, 50, 50, 46, 30, 20, 20, 20],
+          cut: 9,
+        },
+        {
+          id: 'mood',
+          name: 'Настроение',
+          small: 'прогноз 7/10',
+          v: '7',
+          c: 'var(--answer)',
+          ring: 1,
+          a: -95,
+          s: 64,
+          g: 28,
+          feed: true,
+          big: '7 / 10',
+          say: 'скорее хорошее сегодня',
+          why: 'Поднимет: сон дольше 7 ч и прогулка. Тянет вниз: 2 ч 53 мин в Instagram. Модель обгоняет «как в среднем за неделю». Уверенность 72 %.',
+          list: [
+            ['Вчера', '6,5'],
+            ['Среднее за неделю', '6,4'],
+            ['Вт (ДР)', '≈ 6'],
+          ],
+          acts: ['Что поднимет', 'Связи'],
+          spark: [30, 34, 28, 26, 24, 22, 26, 20, 18],
+          cut: 6,
+        },
+        {
+          id: 'sleep',
+          name: 'Сон',
+          small: '6,2 ч',
+          v: '6,2',
+          c: 'var(--warn)',
+          ring: 1,
+          a: 150,
+          s: 56,
+          g: 22,
+          need: true,
+          big: '6,2 ч',
+          say: 'прошлой ночью — на 48 мин меньше обычного',
+          why: 'Ляжете до 23:30 — будет ≈ 7,4 ч, и в 8 из 11 таких случаев следующий день был хорошим. Стресс сейчас 3 — спокойно.',
+          list: [
+            ['Качество', '82/100'],
+            ['Стресс', '3 · спокойно'],
+            ['Шаги', '375'],
+          ],
+          acts: ['Напомнить в 23:00', 'Здоровье'],
+          spark: [20, 18, 24, 16, 22, 19, 34],
+          cut: 7,
+        },
+        {
+          id: 'tasks',
+          name: 'Дела',
+          small: '3 сегодня',
+          v: '3',
+          c: 'var(--calm)',
+          ring: 1,
+          a: 30,
+          s: 52,
+          g: 16,
+          big: '3',
+          say: 'дела на сегодня',
+          why: 'Браслет в 11:00 уже прошёл — задача ещё открыта.',
+          list: [
+            ['Откалибровать браслет', '11:00'],
+            ['Позвонить маме', '—'],
+            ['Оплатить интернет', '—'],
+          ],
+          acts: ['Новая задача', 'Задачи'],
+          spark: [],
+          cut: 0,
+        },
+        {
+          id: 'diary',
+          name: 'Дневник',
+          small: '15 дн. подряд',
+          v: '15',
+          c: 'var(--warn)',
+          ring: 2,
+          a: 95,
+          s: 48,
+          g: 12,
+          big: '15 дней',
+          say: 'подряд — сегодня ещё нет записи',
+          why: 'В дни с записью настроение выше на 0,8. Пара строк вечером сохранит серию.',
+          list: [
+            ['Записей за октябрь', '29'],
+            ['Настроение за 30 дней', '6,6'],
+          ],
+          acts: ['Написать', 'Дневник'],
+          spark: [],
+          cut: 0,
+        },
+        {
+          id: 'dates',
+          name: 'Даты',
+          small: 'Баба Тоня · 2 дн.',
+          v: '2',
+          c: 'var(--calm)',
+          ring: 2,
+          a: 128,
+          s: 48,
+          g: 12,
+          big: 'вт 03.11',
+          say: 'день рождения Бабы Тони',
+          why: 'В прошлом году звонили в 10:12. Ночь на среду — риск недосыпа 62 %.',
+          list: [
+            ['Олиферчук', '24.11'],
+            ['Даша (сестра)', '01.12'],
+          ],
+          acts: ['Напомнить в 10:00', 'Дни рождения'],
+          spark: [],
+          cut: 0,
+        },
+        {
+          id: 'work',
+          name: 'Работа',
+          small: '21:38 за 7 дн.',
+          v: '9',
+          c: 'var(--ok)',
+          ring: 2,
+          a: 238,
+          s: 50,
+          g: 14,
+          big: '21 ч 38 мин',
+          say: 'кода за 7 дней, +12 %',
+          why: 'Серия 9 дней. В пятницу — 14 дней подряд и ачивка, если не прерывать.',
+          list: [
+            ['Сегодня', '31 мин'],
+            ['Вклады за неделю', '105'],
+            ['Звёзды', '64'],
+          ],
+          acts: ['Разработка'],
+          spark: [24, 20, 22, 14, 17, 7, 11],
+          cut: 7,
+        },
+        {
+          id: 'screen',
+          name: 'Экран',
+          small: '4:25 сегодня',
+          v: '4:25',
+          c: 'var(--warn)',
+          ring: 2,
+          a: 302,
+          s: 46,
+          g: 10,
+          big: '4 ч 25 мин',
+          say: 'за экраном сегодня',
+          why: 'Instagram — 2 ч 53 мин, это 65 %. Именно он тянет настроение вниз.',
+          list: [
+            ['Instagram', '2:53'],
+            ['WebStorm', '0:47'],
+            ['Chrome', '0:21'],
+          ],
+          acts: ['Лимит на Instagram', 'Активность'],
+          spark: [],
+          cut: 0,
+        },
+        {
+          id: 'music',
+          name: 'Досуг',
+          small: '162 трека',
+          v: '♪',
+          c: 'var(--calm)',
+          ring: 2,
+          a: 342,
+          s: 44,
+          g: 8,
+          big: '162',
+          say: 'трека сегодня',
+          why: 'Сейчас: Severny Flot — «Поднимая знамя». До ачивки «Десятилетие с музыкой» — 117 дней.',
+          list: [
+            ['Last.fm', '162'],
+            ['SoundCloud', '2 546'],
+          ],
+          acts: ['Музыка'],
+          spark: [],
+          cut: 0,
+        },
+      ];
+      const R = [208, 288, 352];
+      const stage = document.getElementById('stage');
+      const feeds = document.getElementById('feeds');
+      const ticks = document.getElementById('ticks');
+      for (let i = 0; i < 120; i++) {
+        const a = (i / 120) * Math.PI * 2,
+          r1 = 372,
+          r2 = i % 10 ? 376 : 382;
+        ticks.insertAdjacentHTML(
+          'beforeend',
+          `<line x1="${400 + r1 * Math.cos(a)}" y1="${400 + r1 * Math.sin(a)}" x2="${400 + r2 * Math.cos(a)}" y2="${400 + r2 * Math.sin(a)}" stroke="#2a3340" />`,
+        );
+      }
+      for (const ar of areas) {
+        const rad = (ar.a * Math.PI) / 180,
+          r = R[ar.ring];
+        const x = 400 + r * Math.cos(rad),
+          y = 400 + r * Math.sin(rad);
+        if (ar.feed)
+          feeds.insertAdjacentHTML(
+            'beforeend',
+            `<line class="feed" x1="${x}" y1="${y}" x2="400" y2="400" style="stroke:${ar.c}" />`,
+          );
+        const b = document.createElement('button');
+        b.className = 'body' + (ar.need ? ' need' : '');
+        b.style.cssText = `left:${x / 8}%;top:${y / 8}%;--c:${ar.c};--s:clamp(44px, ${ar.s / 8}vmin, ${ar.s}px);--g:${ar.g}`;
+        b.setAttribute('aria-label', `${ar.name}: ${ar.small}`);
+        b.innerHTML = `<span class="v">${ar.v}</span>`;
+        b.addEventListener('click', () => open(ar, b));
+        stage.appendChild(b);
+        const l = document.createElement('div');
+        l.className = 'label';
+        const below = y >= 400;
+        l.style.cssText = `left:${x / 8}%;top:calc(${y / 8}% + ${below ? 'var(--off)' : 'calc(-1 * var(--off) - 30px)'})`;
+        l.style.setProperty(
+          '--off',
+          `clamp(26px, ${ar.s / 16 + 1}vmin, ${ar.s / 2 + 8}px)`,
+        );
+        l.innerHTML = `${ar.name}<small>${ar.small}</small>`;
+        stage.appendChild(l);
+      }
+      // Phone: the same areas as a list under the orbit, the most urgent first.
+      const alist = document.getElementById("alist");
+      [...areas].sort((a, b) => a.ring - b.ring || b.s - a.s).forEach(ar => {
+        const li = document.createElement("button");
+        li.className = "aitem"; li.style.setProperty("--c", ar.c);
+        li.innerHTML = `<i></i><span>${ar.name}</span><small>${ar.small}</small>`;
+        li.addEventListener("click", () => open(ar, li));
+        alist.appendChild(li);
+      });
+      const panel = document.getElementById('panel');
+      const $ = id => document.getElementById(id);
+      function open(ar, btn) {
+        document
+          .querySelectorAll('.body')
+          .forEach(x => x.classList.remove('on'));
+        btn.classList.add('on');
+        panel.style.setProperty('--c', ar.c);
+        $('p-title').textContent = ar.name;
+        $('p-big').textContent = ar.big;
+        $('p-say').textContent = ar.say;
+        $('p-why').textContent = ar.why;
+        $('p-list').innerHTML = ar.list
+          .map(([k, v]) => `<li><span>${k}</span><span>${v}</span></li>`)
+          .join('');
+        $('p-acts').innerHTML = ar.acts
+          .map((t, i) => `<button class="btn${i ? '' : ' main'}">${t}</button>`)
+          .join('');
+        const sp = ar.spark,
+          w = 300 / Math.max(1, ar.id === 'money' ? 8 : sp.length - 1);
+        if (sp.length) {
+          const pts = sp.map((v, i) => `${i * w},${v / 2 + 4}`);
+          const cut = Math.min(ar.cut, sp.length) - 1;
+          $('p-spark').innerHTML =
+            `<polyline points="${pts.slice(0, cut + 1).join(' ')}" fill="none" stroke="#c7cfda" stroke-width="2" vector-effect="non-scaling-stroke"/>` +
+            (cut < sp.length - 1
+              ? `<polyline points="${pts.slice(cut).join(' ')}" fill="none" stroke="${ar.c}" stroke-width="2" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"/>`
+              : '');
+        } else $('p-spark').innerHTML = '';
+        panel.classList.add('open');
+        $('p-close').focus();
+      }
+      $('p-close').addEventListener('click', () => {
+        panel.classList.remove('open');
+        document
+          .querySelectorAll('.body')
+          .forEach(x => x.classList.remove('on'));
+      });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') $('p-close').click();
+      });
+    </script>
+  </body>
+</html>

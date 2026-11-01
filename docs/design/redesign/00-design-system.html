@@ -1,0 +1,1536 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Дизайн-система «Оракул» — Personal Dashboard</title>
+    <style>
+      /* ===== Type scale (Material 3 roles the app already has as --mat-sys-<role>) ===== */
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font: 400 14px/20px var(--pd-font);
+  color: var(--mat-sys-on-surface);
+  background: var(--mat-sys-surface);
+  -webkit-font-smoothing: antialiased;
+}
+.t-display {
+  font: 800 28px/36px var(--pd-font-heading);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.t-headline {
+  font: 700 22px/28px var(--pd-font-heading);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.t-title {
+  font: 600 16px/24px var(--pd-font);
+  margin: 0;
+}
+.t-title-s {
+  font: 600 14px/20px var(--pd-font);
+  margin: 0;
+}
+.t-body {
+  font: 400 14px/20px var(--pd-font);
+  margin: 0;
+}
+.t-label {
+  font: 500 12px/16px var(--pd-font);
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+.t-num-xl {
+  font: 700 32px/40px var(--pd-font);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.t-num-l {
+  font: 700 24px/32px var(--pd-font);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.t-num {
+  font-variant-numeric: tabular-nums;
+}
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+.ok {
+  color: var(--pd-ok-text);
+}
+.warn {
+  color: var(--pd-warn-text);
+}
+.crit {
+  color: var(--pd-crit-text);
+}
+a {
+  color: var(--mat-sys-primary);
+  text-decoration: none;
+}
+
+/* ===== Icons: Material Symbols drawn as inline SVG via mask-free glyph boxes ===== */
+.ic {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  display: inline-block;
+  vertical-align: middle;
+}
+.ic svg,
+svg.ic {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ===== Card pattern ===== */
+.card {
+  background: var(--pd-card);
+  border: 1px solid var(--pd-border);
+  border-radius: var(--pd-radius);
+  padding: var(--pd-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--pd-space-3);
+  min-width: 0;
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-2);
+  min-height: 24px;
+  color: var(--mat-sys-on-surface-variant);
+}
+.card-head .t-title-s {
+  color: var(--mat-sys-on-surface);
+}
+.card-head .more {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font: 500 12px/16px var(--pd-font);
+  color: var(--mat-sys-on-surface-variant);
+}
+a.card {
+  color: inherit;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease;
+}
+a.card:hover {
+  border-color: var(--mat-sys-outline);
+  background: var(--mat-sys-surface-container);
+}
+a.card:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+.kpi {
+  display: flex;
+  align-items: baseline;
+  gap: var(--pd-space-2);
+  flex-wrap: wrap;
+}
+.delta {
+  font: 600 12px/16px var(--pd-font);
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* ===== Status ===== */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-block;
+  background: var(--pd-ok-fill);
+}
+.dot.warn {
+  background: var(--pd-warn-fill);
+}
+.dot.crit {
+  background: var(--pd-crit-fill);
+}
+.dot.off {
+  background: var(--mat-sys-outline-variant);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 var(--pd-space-2);
+  border-radius: 999px;
+  font: 600 12px/16px var(--pd-font);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+}
+.badge.ok {
+  background: var(--pd-ok-container);
+  color: var(--pd-ok-text);
+}
+.badge.warn {
+  background: var(--pd-warn-container);
+  color: var(--pd-warn-text);
+}
+.badge.crit {
+  background: var(--pd-crit-container);
+  color: var(--pd-crit-text);
+}
+
+/* ===== Buttons (matButton: filled / tonal / text) ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pd-space-2);
+  height: 40px;
+  padding: 0 var(--pd-space-4);
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  font: 600 14px/20px var(--pd-font);
+  background: transparent;
+  color: var(--mat-sys-primary);
+  white-space: nowrap;
+}
+.btn.filled {
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+.btn.tonal {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+.btn.outlined {
+  border: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-on-surface);
+}
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  color: var(--mat-sys-on-surface-variant);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.icon-btn:hover,
+.btn:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--mat-sys-on-surface) 8%,
+    transparent
+  );
+}
+.btn.filled:hover {
+  background: color-mix(
+    in srgb,
+    var(--mat-sys-primary) 90%,
+    var(--mat-sys-on-primary)
+  );
+}
+kbd {
+  font: 500 11px/16px var(--pd-font);
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* ===== Chips (one period/filter chip instead of many fields) ===== */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 var(--pd-space-3);
+  border-radius: var(--pd-radius-xs);
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: transparent;
+  color: var(--mat-sys-on-surface);
+  font: 500 14px/20px var(--pd-font);
+  cursor: pointer;
+}
+.chip.on {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  border-color: transparent;
+}
+
+/* ===== List pattern ===== */
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-3);
+  min-height: 48px;
+  padding: var(--pd-space-2) 0;
+  border-top: 1px solid
+    color-mix(in srgb, var(--mat-sys-outline-variant) 60%, transparent);
+}
+.row:first-child {
+  border-top: 0;
+}
+.row .grow {
+  flex: 1;
+  min-width: 0;
+}
+.row .title {
+  font: 500 14px/20px var(--pd-font);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row .sub {
+  font: 400 12px/16px var(--pd-font);
+  color: var(--mat-sys-on-surface-variant);
+}
+.row .val {
+  font: 600 14px/20px var(--pd-font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.lead {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--pd-radius-small);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* ===== Disclosure (progressive disclosure: details/summary) ===== */
+details.fold {
+  border-top: 1px solid var(--pd-border);
+}
+details.fold > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-2);
+  min-height: 48px;
+  font: 500 14px/20px var(--pd-font);
+  color: var(--mat-sys-on-surface-variant);
+}
+details.fold > summary::-webkit-details-marker {
+  display: none;
+}
+details.fold > summary::after {
+  content: "";
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 160ms ease;
+}
+details.fold[open] > summary::after {
+  transform: rotate(-135deg);
+}
+
+/* ===== Skeleton (loading — never a fake zero) ===== */
+.sk {
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--mat-sys-surface-container-high),
+    var(--mat-sys-surface-container-highest),
+    var(--mat-sys-surface-container-high)
+  );
+  background-size: 200% 100%;
+  animation: sk 1.4s ease-in-out infinite;
+}
+@keyframes sk {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk {
+    animation: none;
+  }
+  * {
+    transition: none !important;
+  }
+}
+
+/* ===== Page header pattern ===== */
+.page-head {
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--pd-space-6);
+}
+.page-head .t-display {
+  margin-right: auto;
+}
+
+/* ===== Mockup frame (not part of the design) ===== */
+.mock-bar {
+  position: relative;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pd-space-2);
+  align-items: center;
+  padding: var(--pd-space-2) var(--pd-space-4);
+  background: var(--mat-sys-inverse-surface);
+  color: var(--mat-sys-inverse-on-surface);
+  font: 500 12px/16px var(--pd-font);
+}
+.mock-bar a {
+  color: inherit;
+  opacity: 0.85;
+}
+.mock-bar a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+.mock-bar .sp {
+  flex: 1;
+}
+.mock-bar button {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+.note {
+  border-left: 3px solid var(--mat-sys-tertiary);
+  padding: var(--pd-space-2) var(--pd-space-3);
+  background: color-mix(in srgb, var(--mat-sys-tertiary) 8%, transparent);
+  border-radius: 0 8px 8px 0;
+  font: 400 13px/20px var(--pd-font);
+  color: var(--mat-sys-on-surface-variant);
+  margin: var(--pd-space-3) 0;
+}
+.note b {
+  color: var(--mat-sys-on-surface);
+}
+.new-tag {
+  font: 700 10px/14px var(--pd-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mat-sys-tertiary);
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 0 4px;
+  vertical-align: 2px;
+}
+.sec-title {
+  font: 700 13px/16px var(--pd-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+  margin: var(--pd-space-12) 0 var(--pd-space-3);
+}
+
+@media (max-width: 600px) { .hide-s { display: none; } }
+
+.card-head { flex-wrap: wrap; row-gap: var(--pd-space-1); }
+.badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+/* ===== Tokens v2 "Oracle": graphite base, colour only for status and for the answer ===== */
+/* Dark is the primary look; light is the secondary one. Names are the app's (--mat-sys-*, --pd-*). */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  /* Material 3 roles from a neutral (graphite) seed: actions are light-on-dark, not violet */
+  --mat-sys-primary: #e6e9ee;
+  --mat-sys-on-primary: #111418;
+  --mat-sys-primary-container: #2a3038;
+  --mat-sys-on-primary-container: #e6e9ee;
+  --mat-sys-secondary-container: #262c34;
+  --mat-sys-on-secondary-container: #eef1f5;
+  --mat-sys-tertiary: #5eead4;
+  --mat-sys-error: #fb7185;
+  --mat-sys-surface: #0b0d10;
+  --mat-sys-surface-container-lowest: #07080a;
+  --mat-sys-surface-container-low: #111418;
+  --mat-sys-surface-container: #161a1f;
+  --mat-sys-surface-container-high: #1d2228;
+  --mat-sys-surface-container-highest: #252b32;
+  --mat-sys-on-surface: #e8eaed;
+  --mat-sys-on-surface-variant: #a3abb6;
+  --mat-sys-outline: #6b7480;
+  --mat-sys-outline-variant: #262c33;
+  --mat-sys-inverse-surface: #e8eaed;
+  --mat-sys-inverse-on-surface: #111418;
+
+  /* NEW: the answer. One calm luminous colour for forecasts, insights and "ask the future". */
+  --pd-oracle: #5eead4;
+  --pd-oracle-text: #5eead4;
+  --pd-oracle-dim: color-mix(in srgb, #5eead4 55%, transparent);
+  --pd-oracle-container: color-mix(in srgb, #5eead4 9%, transparent);
+  --pd-oracle-border: color-mix(in srgb, #5eead4 32%, transparent);
+  --pd-oracle-glow:
+    0 0 0 1px color-mix(in srgb, #5eead4 22%, transparent),
+    0 12px 48px -20px color-mix(in srgb, #5eead4 45%, transparent);
+  --pd-forecast-line: var(--pd-oracle);
+  --pd-forecast-band: color-mix(in srgb, #5eead4 14%, transparent);
+
+  /* Status: unchanged roles, tuned for graphite */
+  --pd-ok-fill: #10b981;
+  --pd-ok-text: #34d399;
+  --pd-warn-fill: #f59e0b;
+  --pd-warn-text: #fbbf24;
+  --pd-crit-fill: #f43f5e;
+  --pd-crit-text: #fb7185;
+  --pd-ok-container: color-mix(in srgb, var(--pd-ok-fill) 14%, transparent);
+  --pd-warn-container: color-mix(in srgb, var(--pd-warn-fill) 14%, transparent);
+  --pd-crit-container: color-mix(in srgb, var(--pd-crit-fill) 14%, transparent);
+
+  /* Charts: the past is neutral, the future is the oracle colour */
+  --pd-chart-primary: #c9cfd8;
+  --pd-chart-income: #34d399;
+  --pd-chart-expense: #a3abb6;
+  --pd-chart-empty: color-mix(in srgb, #e8eaed 9%, transparent);
+  --pd-grid-line: color-mix(in srgb, #e8eaed 6%, transparent);
+
+  --pd-radius: 16px;
+  --pd-radius-small: 12px;
+  --pd-radius-xs: 8px;
+  --pd-border: var(--mat-sys-outline-variant);
+  --pd-card: var(--mat-sys-surface-container-low);
+  --pd-shadow-overlay: 0 24px 64px -16px rgb(0 0 0 / 80%);
+
+  --pd-space-1: 4px;
+  --pd-space-2: 8px;
+  --pd-space-3: 12px;
+  --pd-space-4: 16px;
+  --pd-space-6: 24px;
+  --pd-space-8: 32px;
+  --pd-space-12: 48px;
+
+  --pd-font: Inter, Roboto, "Segoe UI", system-ui, sans-serif;
+  --pd-font-heading: Inter, "Segoe UI", system-ui, sans-serif;
+  /* NEW: numbers and the "instrument" labels */
+  --pd-font-mono:
+    "JetBrains Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --mat-sys-primary: #15181c;
+    --mat-sys-on-primary: #ffffff;
+    --mat-sys-primary-container: #e3e6ea;
+    --mat-sys-on-primary-container: #15181c;
+    --mat-sys-secondary-container: #e3e6ea;
+    --mat-sys-on-secondary-container: #15181c;
+    --mat-sys-tertiary: #0f766e;
+    --mat-sys-error: #be123c;
+    --mat-sys-surface: #f4f5f7;
+    --mat-sys-surface-container-lowest: #ffffff;
+    --mat-sys-surface-container-low: #ffffff;
+    --mat-sys-surface-container: #eef0f3;
+    --mat-sys-surface-container-high: #e7eaee;
+    --mat-sys-surface-container-highest: #dfe3e8;
+    --mat-sys-on-surface: #15181c;
+    --mat-sys-on-surface-variant: #4b5563;
+    --mat-sys-outline: #6b7280;
+    --mat-sys-outline-variant: #d9dde3;
+    --mat-sys-inverse-surface: #15181c;
+    --mat-sys-inverse-on-surface: #f4f5f7;
+    --pd-oracle: #14b8a6;
+    --pd-oracle-text: #0f766e;
+    --pd-oracle-dim: color-mix(in srgb, #14b8a6 60%, transparent);
+    --pd-oracle-container: color-mix(in srgb, #14b8a6 8%, transparent);
+    --pd-oracle-border: color-mix(in srgb, #0f766e 30%, transparent);
+    --pd-oracle-glow: 0 0 0 1px color-mix(in srgb, #0f766e 18%, transparent);
+    --pd-forecast-line: #0f766e;
+    --pd-forecast-band: color-mix(in srgb, #14b8a6 14%, transparent);
+    --pd-ok-text: #047857;
+    --pd-warn-text: #b45309;
+    --pd-crit-text: #be123c;
+    --pd-chart-primary: #374151;
+    --pd-chart-income: #059669;
+    --pd-chart-expense: #6b7280;
+    --pd-chart-empty: color-mix(in srgb, #15181c 8%, transparent);
+    --pd-grid-line: color-mix(in srgb, #15181c 7%, transparent);
+    --pd-shadow-overlay: 0 24px 48px -16px rgb(0 0 0 / 22%);
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --mat-sys-primary: #15181c;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #e3e6ea;
+  --mat-sys-on-primary-container: #15181c;
+  --mat-sys-secondary-container: #e3e6ea;
+  --mat-sys-on-secondary-container: #15181c;
+  --mat-sys-tertiary: #0f766e;
+  --mat-sys-error: #be123c;
+  --mat-sys-surface: #f4f5f7;
+  --mat-sys-surface-container-lowest: #ffffff;
+  --mat-sys-surface-container-low: #ffffff;
+  --mat-sys-surface-container: #eef0f3;
+  --mat-sys-surface-container-high: #e7eaee;
+  --mat-sys-surface-container-highest: #dfe3e8;
+  --mat-sys-on-surface: #15181c;
+  --mat-sys-on-surface-variant: #4b5563;
+  --mat-sys-outline: #6b7280;
+  --mat-sys-outline-variant: #d9dde3;
+  --mat-sys-inverse-surface: #15181c;
+  --mat-sys-inverse-on-surface: #f4f5f7;
+  --pd-oracle: #14b8a6;
+  --pd-oracle-text: #0f766e;
+  --pd-oracle-dim: color-mix(in srgb, #14b8a6 60%, transparent);
+  --pd-oracle-container: color-mix(in srgb, #14b8a6 8%, transparent);
+  --pd-oracle-border: color-mix(in srgb, #0f766e 30%, transparent);
+  --pd-oracle-glow: 0 0 0 1px color-mix(in srgb, #0f766e 18%, transparent);
+  --pd-forecast-line: #0f766e;
+  --pd-forecast-band: color-mix(in srgb, #14b8a6 14%, transparent);
+  --pd-ok-text: #047857;
+  --pd-warn-text: #b45309;
+  --pd-crit-text: #be123c;
+  --pd-chart-primary: #374151;
+  --pd-chart-income: #059669;
+  --pd-chart-expense: #6b7280;
+  --pd-chart-empty: color-mix(in srgb, #15181c 8%, transparent);
+  --pd-grid-line: color-mix(in srgb, #15181c 7%, transparent);
+  --pd-shadow-overlay: 0 24px 48px -16px rgb(0 0 0 / 22%);
+}
+
+/* ===== Oracle layer: shared pieces ===== */
+.mono,
+.t-num,
+.t-num-l,
+.t-num-xl,
+.delta,
+kbd {
+  font-family: var(--pd-font-mono);
+}
+.t-num-xl {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.t-num-l {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.eyebrow {
+  font: 500 11px/16px var(--pd-font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+}
+.answer {
+  color: var(--pd-oracle-text);
+}
+.oracle-card {
+  background:
+    radial-gradient(
+      120% 140% at 0% 0%,
+      var(--pd-oracle-container),
+      transparent 60%
+    ),
+    var(--mat-sys-surface-container-low);
+  border: 1px solid var(--pd-oracle-border);
+  box-shadow: var(--pd-oracle-glow);
+}
+.conf {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 12px/16px var(--pd-font-mono);
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+}
+.conf .bar {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--pd-chart-empty);
+  overflow: hidden;
+  display: inline-block;
+}
+.conf .bar i {
+  display: block;
+  height: 100%;
+  background: var(--pd-oracle);
+  border-radius: 2px;
+}
+.pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pd-oracle);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--pd-oracle) 60%, transparent);
+  animation: pulse 2.4s ease-out infinite;
+  flex: none;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--pd-oracle) 50%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}
+
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: var(--pd-space-8) var(--pd-space-6) var(--pd-space-12);
+      }
+      @media (max-width: 600px) {
+        main {
+          padding: var(--pd-space-6) var(--pd-space-4) var(--pd-space-12);
+        }
+      }
+      .lead-text {
+        max-width: 720px;
+        font: 400 16px/26px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: var(--pd-space-3);
+      }
+      .sw {
+        border: 1px solid var(--pd-border);
+        border-radius: var(--pd-radius-small);
+        overflow: hidden;
+        background: var(--pd-card);
+      }
+      .sw i {
+        display: block;
+        height: 56px;
+      }
+      .sw div {
+        padding: var(--pd-space-2) var(--pd-space-3);
+        font: 500 13px/20px var(--pd-font);
+      }
+      .sw code {
+        font: 400 11px/16px var(--pd-font-mono);
+        color: var(--mat-sys-on-surface-variant);
+        display: block;
+        word-break: break-all;
+      }
+      .type-row {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: var(--pd-space-4);
+        align-items: baseline;
+        padding: var(--pd-space-3) 0;
+        border-top: 1px solid var(--pd-border);
+      }
+      @media (max-width: 600px) {
+        .type-row {
+          grid-template-columns: minmax(0, 1fr);
+          gap: var(--pd-space-1);
+        }
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+        gap: var(--pd-space-4);
+        align-items: start;
+      }
+      table.tok {
+        width: 100%;
+        border-collapse: collapse;
+        font: 400 13px/20px var(--pd-font);
+      }
+      table.tok th,
+      table.tok td {
+        text-align: left;
+        padding: var(--pd-space-2);
+        border-top: 1px solid var(--pd-border);
+        vertical-align: top;
+      }
+      table.tok th {
+        font-weight: 600;
+        color: var(--mat-sys-on-surface-variant);
+      }
+      table.tok code,
+      table.tok .mono {
+        font: 400 12px/18px var(--pd-font-mono);
+      }
+      .wrap-x {
+        overflow-x: auto;
+      }
+      .space {
+        display: flex;
+        align-items: flex-end;
+        gap: var(--pd-space-4);
+        flex-wrap: wrap;
+      }
+      .space div {
+        text-align: center;
+      }
+      .space i {
+        display: block;
+        background: var(--pd-oracle-container);
+        border: 1px solid var(--pd-oracle-border);
+        margin: 0 auto var(--pd-space-1);
+      }
+      .ans {
+        display: flex;
+        flex-direction: column;
+        gap: var(--pd-space-1);
+      }
+      .ans .q {
+        font: 500 12px/16px var(--pd-font-mono);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .ans .a {
+        font: 600 18px/26px var(--pd-font);
+      }
+      .ask {
+        display: flex;
+        align-items: center;
+        gap: var(--pd-space-3);
+        height: 56px;
+        padding: 0 var(--pd-space-2) 0 var(--pd-space-4);
+        border-radius: 999px;
+        background: var(--mat-sys-surface-container-lowest);
+        border: 1px solid var(--pd-oracle-border);
+      }
+      .ask input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        background: none;
+        outline: none;
+        font: 400 15px/24px var(--pd-font);
+        color: var(--mat-sys-on-surface);
+      }
+      .ask input::placeholder {
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .ask .go {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 0;
+        background: var(--pd-oracle);
+        color: #0b0d10;
+        display: grid;
+        place-items: center;
+      }
+      .legend-line {
+        display: flex;
+        gap: var(--pd-space-4);
+        flex-wrap: wrap;
+        font: 500 12px/16px var(--pd-font-mono);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .legend-line i {
+        display: inline-block;
+        width: 16px;
+        height: 0;
+        border-top: 2px solid var(--pd-chart-primary);
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+      .legend-line i.f {
+        border-top: 2px dashed var(--pd-forecast-line);
+      }
+      .legend-line i.b {
+        height: 8px;
+        border: 0;
+        background: var(--pd-forecast-band);
+      }
+      .err-box {
+        display: flex;
+        gap: var(--pd-space-3);
+        align-items: flex-start;
+        padding: var(--pd-space-3);
+        border-radius: var(--pd-radius-small);
+        background: var(--pd-crit-container);
+      }
+      .dont {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+        gap: var(--pd-space-4);
+      }
+      .dont ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24">
+    <path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" />
+  </symbol>
+  <symbol id="i-search" viewBox="0 0 24 24">
+    <circle cx="11" cy="11" r="6.5" />
+    <path d="M16 16l4 4" />
+  </symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24">
+    <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" />
+    <path d="M10 20.5a2 2 0 0 0 4 0" />
+  </symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="3" />
+    <path
+      d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"
+    />
+  </symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24">
+    <rect x="3" y="6" width="18" height="13" rx="3" />
+    <path d="M16 12.5h2M3 9h18" />
+  </symbol>
+  <symbol id="i-task" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M8.5 12.2l2.4 2.3 4.6-4.8" />
+  </symbol>
+  <symbol id="i-book" viewBox="0 0 24 24">
+    <path d="M5 4.5h10a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z" />
+    <path d="M5 17a3 3 0 0 1 3-3h10" />
+  </symbol>
+  <symbol id="i-life" viewBox="0 0 24 24">
+    <path d="M3 12h4l2-5 4 10 2-5h6" />
+  </symbol>
+  <symbol id="i-ai" viewBox="0 0 24 24">
+    <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+    <path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" />
+  </symbol>
+  <symbol id="i-server" viewBox="0 0 24 24">
+    <rect x="4" y="4" width="16" height="7" rx="2" />
+    <rect x="4" y="13" width="16" height="7" rx="2" />
+    <path d="M8 7.5h.01M8 16.5h.01" />
+  </symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M10 6l6 6-6 6" /></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="M14 6l-6 6 6 6" /></symbol>
+  <symbol id="i-chev-d" viewBox="0 0 24 24"><path d="M6 10l6 6 6-6" /></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24">
+    <circle cx="6" cy="12" r="1.2" />
+    <circle cx="12" cy="12" r="1.2" />
+    <circle cx="18" cy="12" r="1.2" />
+  </symbol>
+  <symbol id="i-up" viewBox="0 0 24 24">
+    <path d="M12 19V5M6 11l6-6 6 6" />
+  </symbol>
+  <symbol id="i-down" viewBox="0 0 24 24">
+    <path d="M12 5v14M6 13l6 6 6-6" />
+  </symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24">
+    <path d="M7 18a4 4 0 0 1-.6-8A6 6 0 0 1 18 9.5a4.3 4.3 0 0 1-.5 8.5z" />
+  </symbol>
+  <symbol id="i-code" viewBox="0 0 24 24">
+    <path d="M9 7l-5 5 5 5M15 7l5 5-5 5" />
+  </symbol>
+  <symbol id="i-music" viewBox="0 0 24 24">
+    <path d="M9 18V6l10-2v12" />
+    <circle cx="6.5" cy="18" r="2.5" />
+    <circle cx="16.5" cy="16" r="2.5" />
+  </symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24">
+    <path
+      d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"
+    />
+  </symbol>
+  <symbol id="i-game" viewBox="0 0 24 24">
+    <rect x="3" y="7" width="18" height="11" rx="5" />
+    <path d="M8 11v3M6.5 12.5h3M15.5 12h.01M17.5 14h.01" />
+  </symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24">
+    <rect x="4" y="9" width="16" height="11" rx="2" />
+    <path d="M12 9v11M4 13h16M12 9c-2-4-6-3-5 0M12 9c2-4 6-3 5 0" />
+  </symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24">
+    <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
+  </symbol>
+  <symbol id="i-key" viewBox="0 0 24 24">
+    <circle cx="8" cy="14" r="4" />
+    <path d="M11 11l8-8M16 6l2 2M14 8l2 2" />
+  </symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24">
+    <rect x="4" y="4" width="7" height="7" rx="1.5" />
+    <rect x="13" y="4" width="7" height="7" rx="1.5" />
+    <rect x="4" y="13" width="7" height="7" rx="1.5" />
+    <rect x="13" y="13" width="7" height="7" rx="1.5" />
+  </symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24">
+    <path d="M9 4h6l-1 5 3 3H7l3-3zM12 12v8" />
+  </symbol>
+  <symbol id="i-drag" viewBox="0 0 24 24">
+    <path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" />
+  </symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24">
+    <path d="M19 12a7 7 0 1 1-2-5M19 4v4h-4" />
+  </symbol>
+  <symbol id="i-send" viewBox="0 0 24 24">
+    <path d="M4 12l16-8-6 16-2-6z" />
+  </symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24">
+    <path d="M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0zM12 16v5" />
+  </symbol>
+  <symbol id="i-db" viewBox="0 0 24 24">
+    <ellipse cx="12" cy="6" rx="7" ry="2.5" />
+    <path
+      d="M5 6v12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V6M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"
+    />
+  </symbol>
+  <symbol id="i-sync" viewBox="0 0 24 24">
+    <path
+      d="M4 12a8 8 0 0 1 14-5l2 2M20 12a8 8 0 0 1-14 5l-2-2M20 4v5h-5M4 20v-5h5"
+    />
+  </symbol>
+  <symbol id="i-x" viewBox="0 0 24 24">
+    <path d="M6 6l12 12M18 6L6 18" />
+  </symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24">
+    <path d="M12 4l9 16H3z" />
+    <path d="M12 10v4M12 17h.01" />
+  </symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24">
+    <path d="M4 7h16M4 12h16M4 17h16" />
+  </symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24">
+    <path
+      d="M12 4a8 8 0 1 0 0 16c1.2 0 1.5-1 1-2-.6-1.2.2-2 1.4-2H17a3 3 0 0 0 3-3c0-5-3.6-9-8-9z"
+    />
+    <path d="M8 11h.01M11 8h.01M15 8.5h.01" />
+  </symbol>
+  <symbol id="i-user" viewBox="0 0 24 24">
+    <circle cx="12" cy="9" r="4" />
+    <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+  </symbol>
+  <symbol id="i-devices" viewBox="0 0 24 24">
+    <rect x="3" y="5" width="13" height="10" rx="1.5" />
+    <path d="M7 19h5" />
+    <rect x="17" y="9" width="5" height="10" rx="1.2" />
+  </symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5V12l3 2" />
+  </symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24">
+    <path d="M13 3L5 13h6l-1 8 8-10h-6z" />
+  </symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24">
+    <path d="M4 5h2l2 10h10l2-7H7" />
+    <circle cx="9" cy="19" r="1.3" />
+    <circle cx="17" cy="19" r="1.3" />
+  </symbol>
+  <symbol id="i-bus" viewBox="0 0 24 24">
+    <rect x="5" y="4" width="14" height="13" rx="3" />
+    <path d="M5 11h14M8 17v2M16 17v2M8.5 14h.01M15.5 14h.01" />
+  </symbol>
+  <symbol id="i-food" viewBox="0 0 24 24">
+    <path d="M7 3v8a2 2 0 0 0 2 2v8M5 3v5M9 3v5M16 21V3c2 1 3 4 3 7h-3" />
+  </symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24">
+    <path
+      d="M3 9a13 13 0 0 1 18 0M6 12.5a8.5 8.5 0 0 1 12 0M9 16a4 4 0 0 1 6 0M12 19.5h.01"
+    />
+  </symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24">
+    <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />
+  </symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.5" />
+    <path
+      d="M3.5 12h17M12 3.5c2.5 2.5 3.5 5.5 3.5 8.5s-1 6-3.5 8.5c-2.5-2.5-3.5-5.5-3.5-8.5s1-6 3.5-8.5z"
+    />
+  </symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24">
+    <rect x="6" y="6" width="12" height="12" rx="2" />
+    <rect x="9.5" y="9.5" width="5" height="5" rx="1" />
+    <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" />
+  </symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="4" />
+    <path
+      d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+    />
+  </symbol>
+  <symbol id="i-flash" viewBox="0 0 24 24">
+    <path d="M5 12h14M12 5l7 7-7 7" />
+  </symbol>
+</svg>
+
+    <nav class="mock-bar" aria-label="Макеты">
+  <b>Макет</b>
+  <a href="00-design-system.html">Дизайн-система</a>
+  <a href="01-home.html">Главная</a>
+  <a href="02-shell.html">Меню</a>
+  <a href="03-palette.html">Ctrl+K</a>
+  <a href="04-finance.html">Финансы</a>
+  <a href="05-system.html">Система</a>
+  <a href="06-settings.html">Настройки</a>
+  <span class="sp"></span>
+  <button type="button" id="mock-theme">Тема: как в системе</button>
+</nav>
+<script>
+  (() => {
+    const b = document.getElementById("mock-theme");
+    const order = [null, "light", "dark"];
+    const names = { null: "как в системе", light: "светлая", dark: "тёмная" };
+    let i = 0;
+    b.addEventListener("click", () => {
+      i = (i + 1) % 3;
+      const t = order[i];
+      if (t) document.documentElement.dataset.theme = t;
+      else delete document.documentElement.dataset.theme;
+      b.textContent = "Тема: " + names[t];
+    });
+  })();
+</script>
+
+    <main>
+      <div class="eyebrow">дизайн-система · v2 «Оракул»</div>
+      <h1
+        class="t-display"
+        style="margin: var(--pd-space-1) 0 var(--pd-space-3)"
+      >
+        Прибор из будущего, который знает ответ
+      </h1>
+      <p class="lead-text">
+        Тот же простой порядок, что и в первом варианте: одно главное на экране,
+        остальное по клику. Сверху ложится новый слой. Основа —
+        <b>графит без цвета</b>. Цвет появляется только в двух случаях:
+        <b>состояние</b> (норма, внимание, беда) и <b>ответ</b> — прогноз,
+        подсказка, «что будет, если». Прошлое на графиках нейтральное, будущее
+        светится.
+      </p>
+
+      <h2 class="sec-title">1. Основа — графит</h2>
+      <div class="swatches">
+        <div class="sw">
+          <i style="background: var(--mat-sys-surface)"></i>
+          <div>Фон<code>surface #0b0d10</code></div>
+        </div>
+        <div class="sw">
+          <i style="background: var(--mat-sys-surface-container-low)"></i>
+          <div>Карточка<code>--pd-card = container-low #111418</code></div>
+        </div>
+        <div class="sw">
+          <i style="background: var(--mat-sys-surface-container-high)"></i>
+          <div>Поле, подложка<code>container-high #1d2228</code></div>
+        </div>
+        <div class="sw">
+          <i style="background: var(--mat-sys-outline-variant)"></i>
+          <div>Рамки<code>outline-variant #262c33</code></div>
+        </div>
+        <div class="sw">
+          <i style="background: var(--mat-sys-on-surface-variant)"></i>
+          <div>Подписи<code>on-surface-variant #a3abb6</code></div>
+        </div>
+        <div class="sw">
+          <i style="background: var(--mat-sys-on-surface)"></i>
+          <div>Текст<code>on-surface #e8eaed</code></div>
+        </div>
+        <div class="sw">
+          <i style="background: var(--mat-sys-primary)"></i>
+          <div>Главная кнопка<code>primary — светлая, без цвета</code></div>
+        </div>
+      </div>
+      <p class="note">
+        <b>Как это делается в приложении:</b>
+        <code>generatePalette(seed, neutral = true)</code> уже умеет нейтральную
+        схему («серая тема»). Графит — это она, с поверхностями чуть холоднее,
+        как у чёрной OLED-темы (<code>BLACK_SURFACES</code>).
+      </p>
+
+      <h2 class="sec-title">
+        2. Цвет ответа <span class="new-tag">новое</span>
+      </h2>
+      <div class="swatches">
+        <div class="sw oracle-card">
+          <i style="background: var(--pd-oracle)"></i>
+          <div>Ответ<code>--pd-oracle #5eead4 / светлая #0f766e</code></div>
+        </div>
+        <div class="sw">
+          <i style="background: var(--pd-oracle-container)"></i>
+          <div>Подложка ответа<code>--pd-oracle-container 9 %</code></div>
+        </div>
+        <div class="sw">
+          <i style="background: var(--pd-forecast-band)"></i>
+          <div>Разброс прогноза<code>--pd-forecast-band 14 %</code></div>
+        </div>
+        <div class="sw">
+          <i
+            style="
+              background: var(--mat-sys-surface-container-low);
+              box-shadow:
+                inset 0 0 0 1px var(--pd-oracle-border),
+                var(--pd-oracle-glow);
+            "
+          ></i>
+          <div>Свечение<code>--pd-oracle-glow</code></div>
+        </div>
+      </div>
+      <p class="muted">
+        Спокойный бирюзовый: не путается ни с зелёным «норма», ни с жёлтым
+        «внимание». На экране его <b>одно-два пятна</b>: карточка ответов,
+        кольцо уровня, пунктир прогноза. Если светится всё, не светится ничего.
+      </p>
+
+      <h2 class="sec-title">3. Состояние (не меняется)</h2>
+      <div style="display: flex; gap: var(--pd-space-2); flex-wrap: wrap">
+        <span class="badge ok"><span class="dot"></span>Работает</span>
+        <span class="badge warn"><span class="dot warn"></span>Медленно</span>
+        <span class="badge crit"
+          ><span class="dot crit"></span>Не отвечает</span
+        >
+        <span class="badge"><span class="dot off"></span>Не подключено</span>
+      </div>
+      <p class="muted">
+        emerald-500 / amber-500 / rose-500 — заливка точек и полос. Для текста
+        отдельные оттенки, проходящие AA: на графите 400-е (#34d399, #fbbf24,
+        #fb7185), в светлой теме 700-е.
+      </p>
+
+      <h2 class="sec-title">4. Шрифт: слова — Inter, числа — моноширинный</h2>
+      <div>
+        <div class="type-row">
+          <span class="t-label">Заголовок · Inter 28/36 · 800</span
+          ><span class="t-display">Ответы на сегодня</span>
+        </div>
+        <div class="type-row">
+          <span class="t-label">Ответ · Inter 18/26 · 600</span
+          ><span class="t-title" style="font-size: 18px; line-height: 26px"
+            >Скорее хорошим — <span class="answer">7 из 10</span></span
+          >
+        </div>
+        <div class="type-row">
+          <span class="t-label">Главное число · mono 32/40 · 600</span
+          ><span class="t-num-xl">3 644,66</span>
+        </div>
+        <div class="type-row">
+          <span class="t-label">Число в карточке · mono 24/32</span
+          ><span class="t-num-l">21:38</span>
+        </div>
+        <div class="type-row">
+          <span class="t-label">Метка прибора · mono 11/16 · капс</span
+          ><span class="eyebrow">прогноз · обновлён 08:30</span>
+        </div>
+        <div class="type-row">
+          <span class="t-label">Текст · Inter 14/20</span
+          ><span class="t-body">Поднимет: сон дольше 7 ч и прогулка.</span>
+        </div>
+      </div>
+      <p class="muted">
+        Моноширинные цифры (<code>--pd-font-mono</code>: JetBrains Mono →
+        Cascadia Mono → Consolas) не прыгают при обновлении и дают «приборную»
+        точность. Абзацы моноширинным не пишем — тяжело читать.
+      </p>
+
+      <h2 class="sec-title">5. Отступы, скругления, глубина</h2>
+      <div class="space">
+        <div>
+          <i style="width: 4px; height: 4px"></i><span class="t-label">4</span>
+        </div>
+        <div>
+          <i style="width: 8px; height: 8px"></i><span class="t-label">8</span>
+        </div>
+        <div>
+          <i style="width: 12px; height: 12px"></i
+          ><span class="t-label">12</span>
+        </div>
+        <div>
+          <i style="width: 16px; height: 16px"></i
+          ><span class="t-label">16</span>
+        </div>
+        <div>
+          <i style="width: 24px; height: 24px"></i
+          ><span class="t-label">24</span>
+        </div>
+        <div>
+          <i style="width: 32px; height: 32px"></i
+          ><span class="t-label">32</span>
+        </div>
+        <div>
+          <i style="width: 48px; height: 48px"></i
+          ><span class="t-label">48</span>
+        </div>
+      </div>
+      <p class="muted">
+        Шаг 4/8, радиус 16 (карточка ответов 20), как в первом варианте.
+        Глубина: обычные карточки плоские; свечение и мягкий радиальный градиент
+        — <b>только у карточки ответа</b>; тень — у того, что поверх (палитра,
+        лист, меню).
+      </p>
+
+      <h2 class="sec-title">6. Узоры «оракула»</h2>
+      <div class="grid-2">
+        <section class="card oracle-card">
+          <div class="card-head">
+            <span class="pulse" aria-hidden="true"></span
+            ><span class="t-title-s">Ответ</span
+            ><span class="more eyebrow">прогноз</span>
+          </div>
+          <div class="ans">
+            <span class="q">Каким будет настроение?</span>
+            <span class="a"
+              ><span class="answer">Скорее хорошим — 7 из 10.</span></span
+            >
+            <span class="t-label"
+              >Поднимет: сон дольше 7 ч. Тянет вниз: 2:53 в Instagram.</span
+            >
+            <span class="conf"
+              >уверенность
+              <span class="bar"><i style="width: 72%"></i></span> 72 %</span
+            >
+          </div>
+          <span class="t-label"
+            >Вопрос (mono, тихо) → ответ (крупно, цвет только у сути) → почему →
+            уверенность.</span
+          >
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <span class="t-title-s">Прогноз на графике</span>
+          </div>
+          <svg
+            viewBox="0 0 300 90"
+            width="100%"
+            height="90"
+            preserveAspectRatio="none"
+            role="img"
+            aria-label="Пример: прошлое сплошной линией, будущее пунктиром с полосой разброса"
+          >
+            <line
+              x1="180"
+              x2="180"
+              y1="0"
+              y2="90"
+              stroke="var(--mat-sys-outline-variant)"
+              stroke-dasharray="2 4"
+            />
+            <polygon
+              points="180,40 300,10 300,70"
+              fill="var(--pd-forecast-band)"
+            />
+            <polyline
+              points="0,70 30,62 60,66 90,50 120,56 150,44 180,40"
+              fill="none"
+              stroke="var(--pd-chart-primary)"
+              stroke-width="2"
+              vector-effect="non-scaling-stroke"
+            />
+            <polyline
+              points="180,40 220,36 260,40 300,38"
+              fill="none"
+              stroke="var(--pd-forecast-line)"
+              stroke-width="2"
+              stroke-dasharray="5 5"
+              vector-effect="non-scaling-stroke"
+            />
+            <circle
+              cx="180"
+              cy="40"
+              r="3.5"
+              fill="var(--mat-sys-surface)"
+              stroke="var(--pd-chart-primary)"
+              stroke-width="2"
+            />
+          </svg>
+          <div class="legend-line">
+            <span><i></i>было</span><span><i class="f"></i>вероятнее</span
+            ><span><i class="b"></i>разброс</span>
+          </div>
+          <span class="t-label"
+            >Граница «сегодня» — тонкий пунктир. Полоса шире, чем дальше в
+            будущее. Подписи — словами, цвет не единственный носитель
+            смысла.</span
+          >
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <span class="t-title-s">«Спросите будущее»</span>
+          </div>
+          <label class="ask"
+            ><svg class="ic answer"><use href="#i-ai" /></svg
+            ><input placeholder="Что будет, если…" aria-label="Вопрос" /><span
+              class="go"
+              ><svg class="ic"><use href="#i-flash" /></svg></span
+          ></label>
+          <span class="t-label"
+            >Одно поле на главной. Отвечает тот же AI, но коротко и с
+            уверенностью; «Открыть в чате» — для разговора.</span
+          >
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <span class="t-title-s">Честность</span
+            ><span class="badge" style="margin-left: auto">Рано</span>
+          </div>
+          <div class="t-body muted">
+            Прогноз появится после 40 дней с настроением в дневнике — пока 28.
+          </div>
+          <span class="t-label"
+            >Оракул, который не знает, так и говорит. Это правило уже есть в
+            прогнозе настроения: он показывается, только когда модель обгоняет
+            «как в среднем за неделю».</span
+          >
+        </section>
+
+        <section class="card" aria-busy="true">
+          <div class="card-head"><span class="t-title-s">Загрузка</span></div>
+          <div class="sk" style="height: 26px; width: 70%"></div>
+          <div class="sk" style="height: 16px; width: 45%"></div>
+          <span class="t-label"
+            >Скелет той же формы. Никаких «0 €» и «Уровень 1».</span
+          >
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <span class="t-title-s">Ошибка</span
+            ><span class="badge crit" style="margin-left: auto"
+              ><span class="dot crit"></span>Сбой</span
+            >
+          </div>
+          <div class="err-box">
+            <svg class="ic crit"><use href="#i-alert" /></svg>
+            <div>
+              <div class="t-title-s">WakaTime молчит с 07:40</div>
+              <div class="t-label">Время кодинга за сегодня неполное.</div>
+            </div>
+          </div>
+          <div>
+            <button class="btn tonal">
+              <svg class="ic"><use href="#i-refresh" /></svg>Повторить
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <h2 class="sec-title">7. Движение</h2>
+      <div class="wrap-x">
+        <table class="tok">
+          <tr>
+            <th>Что</th>
+            <th>Как</th>
+          </tr>
+          <tr>
+            <td>Точка «живой ответ»</td>
+            <td>
+              мягкий пульс раз в 2,4 с, <b>одна</b> на экране; при
+              <code>prefers-reduced-motion</code> стоит
+            </td>
+          </tr>
+          <tr>
+            <td>Появление ответа на вопрос</td>
+            <td>
+              200 мс, прозрачность + сдвиг 4 px; без эффекта печатной машинки
+            </td>
+          </tr>
+          <tr>
+            <td>Раскрытие групп и блоков</td>
+            <td>200 мс, <code>cubic-bezier(.2, 0, 0, 1)</code></td>
+          </tr>
+          <tr>
+            <td>Числа</td>
+            <td>не «пересчитываются» анимацией</td>
+          </tr>
+        </table>
+      </div>
+
+      <h2 class="sec-title">8. Контраст (WCAG AA)</h2>
+      <div class="wrap-x">
+        <table class="tok">
+          <tr>
+            <th>Пара</th>
+            <th>Тёмная</th>
+            <th>Светлая</th>
+          </tr>
+          <tr>
+            <td>Текст / карточка</td>
+            <td class="mono">#e8eaed / #111418 ≈ 15:1</td>
+            <td class="mono">#15181c / #fff ≈ 18:1</td>
+          </tr>
+          <tr>
+            <td>Подпись / карточка</td>
+            <td class="mono">#a3abb6 / #111418 ≈ 8:1</td>
+            <td class="mono">#4b5563 / #fff ≈ 7.6:1</td>
+          </tr>
+          <tr>
+            <td>Ответ / карточка</td>
+            <td class="mono">#5eead4 / #111418 ≈ 12:1</td>
+            <td class="mono">#0f766e / #fff ≈ 5.5:1</td>
+          </tr>
+          <tr>
+            <td>Внимание (текст)</td>
+            <td class="mono">#fbbf24 ≈ 11:1</td>
+            <td class="mono">#b45309 ≈ 5:1</td>
+          </tr>
+        </table>
+      </div>
+
+      <h2 class="sec-title">9. Чего не делаем</h2>
+      <div class="dont">
+        <div class="card">
+          <ul class="t-body">
+            <li>Неон по всему экрану, сетки «киберпанк», сканлайны.</li>
+            <li>Глитч, мерцание, бегущие цифры — мешают читать каждый день.</li>
+            <li>Прогноз без уверенности и без «почему».</li>
+          </ul>
+        </div>
+        <div class="card">
+          <ul class="t-body">
+            <li>
+              Стекло (<code>backdrop-filter</code>) на карточках — только у
+              того, что поверх.
+            </li>
+            <li>Моноширинный для текста абзацев.</li>
+            <li>
+              Цвет ответа на кнопках действий — кнопка «Операция» остаётся
+              светлой нейтральной.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

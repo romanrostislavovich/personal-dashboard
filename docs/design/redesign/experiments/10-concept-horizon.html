@@ -1,0 +1,1314 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Концепция «Горизонт» — Personal Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Concept 10 "Horizon": the home is a timeline from yesterday to the next salary.
+   The past is solid data; the future is a forecast that fades into fog as confidence drops. */
+      :root {
+        color-scheme: dark;
+        --bg: #07090c;
+        --bg-2: #0d1116;
+        --line: #1c232c;
+        --text: #e9edf2;
+        --text-2: #9aa5b3; /* 7.6:1 on --bg */
+        --answer: #7cf5e0; /* the future */
+        --answer-dim: rgba(124, 245, 224, 0.16);
+        --past: #c7cfda;
+        --ok: #34d399;
+        --warn: #fbbf24;
+        --crit: #fb7185;
+        --fog: 7, 9, 12;
+        --now: 15.2%; /* 1 Nov 12:24 on a scale of 31 Oct 00:00 … 10 Nov 00:00 */
+        --mono: 'JetBrains Mono', Consolas, ui-monospace, monospace;
+        --sans: Inter, 'Segoe UI', system-ui, sans-serif;
+        --display: 'Space Grotesk', Inter, system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 400 14px/20px var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: inherit;
+      }
+      .mono {
+        font-family: var(--mono);
+      }
+      .muted {
+        color: var(--text-2);
+      }
+      .answer {
+        color: var(--answer);
+      }
+      .warn {
+        color: var(--warn);
+      }
+      .crit {
+        color: var(--crit);
+      }
+      .ok {
+        color: var(--ok);
+      }
+      button {
+        font: inherit;
+        color: inherit;
+      }
+      :focus-visible {
+        outline: 2px solid var(--answer);
+        outline-offset: 2px;
+      }
+
+      /* Concepts switcher (not part of the design) */
+      .mock {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 6px 16px;
+        font: 500 12px/18px var(--sans);
+        background: #e9edf2;
+        color: #07090c;
+      }
+      .mock a {
+        text-decoration: none;
+        opacity: 0.8;
+      }
+      .mock a:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+      .mock b {
+        margin-right: 4px;
+      }
+
+      /* Top bar */
+      .top {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 32px;
+      }
+      .brand {
+        font: 600 15px/20px var(--display);
+        letter-spacing: 0.02em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand i {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--answer);
+        box-shadow: 0 0 16px var(--answer);
+      }
+      .zoom {
+        display: inline-flex;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 3px;
+        margin-left: 16px;
+      }
+      .zoom button {
+        border: 0;
+        background: none;
+        height: 32px;
+        padding: 0 14px;
+        border-radius: 999px;
+        color: var(--text-2);
+        cursor: pointer;
+        font: 500 13px/20px var(--sans);
+      }
+      .zoom button.on {
+        background: var(--bg-2);
+        color: var(--text);
+        box-shadow: inset 0 0 0 1px var(--line);
+      }
+      .sp {
+        flex: 1;
+      }
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 40px;
+        padding: 0 12px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        color: var(--text-2);
+        background: var(--bg-2);
+        min-width: 220px;
+        cursor: pointer;
+      }
+      .search kbd {
+        margin-left: auto;
+        font: 500 11px/16px var(--mono);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 0 6px;
+      }
+      .level {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 40px;
+        padding: 0 14px 0 6px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--bg-2);
+        text-decoration: none;
+      }
+      .level .ring {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font: 600 12px/1 var(--mono);
+        color: var(--answer);
+        background:
+          radial-gradient(closest-side, var(--bg-2) 78%, transparent 80%),
+          conic-gradient(var(--answer) 1%, #232b35 0);
+      }
+      .level small {
+        font: 500 12px/16px var(--mono);
+        color: var(--text-2);
+      }
+
+      /* The headline answer: the briefing in one sentence */
+      .hero {
+        padding: 24px 32px 8px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 24px;
+        align-items: end;
+      }
+      .eyebrow {
+        font: 500 11px/16px var(--mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-2);
+      }
+      .hero h1 {
+        font: 600 clamp(28px, 3.4vw, 48px)/1.1 var(--display);
+        letter-spacing: -0.02em;
+        margin: 8px 0 0;
+        max-width: 22ch;
+      }
+      .hero h1 em {
+        font-style: normal;
+        color: var(--warn);
+      }
+      .now-stats {
+        display: flex;
+        gap: 24px;
+      }
+      .now-stats div {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .now-stats b {
+        font: 600 22px/28px var(--mono);
+      }
+
+      /* ===== The horizon (desktop) ===== */
+      .horizon {
+        position: relative;
+        margin: 24px 32px 0;
+        padding: 0 0 8px;
+      }
+      .days {
+        display: grid;
+        grid-template-columns: 120px repeat(10, 1fr);
+        align-items: end;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 8px;
+      }
+      .days span {
+        font: 500 12px/16px var(--mono);
+        color: var(--text-2);
+      }
+      .days span b {
+        display: block;
+        color: var(--text);
+        font-weight: 500;
+      }
+      .days span i {
+        display: block;
+        font-style: normal;
+        font-size: 11px;
+        color: var(--answer);
+        opacity: 0.8;
+      }
+      .lanes {
+        position: relative;
+      }
+      .lane {
+        display: grid;
+        grid-template-columns: 120px minmax(0, 1fr);
+        align-items: center;
+        min-height: 84px;
+        border-bottom: 1px solid var(--line);
+      }
+      .lane > .name {
+        font: 500 13px/18px var(--sans);
+        color: var(--text-2);
+        padding-right: 12px;
+      }
+      .lane > .name b {
+        display: block;
+        font: 600 15px/20px var(--mono);
+        color: var(--text);
+      }
+      .track {
+        position: relative;
+        height: 84px;
+        cursor: pointer;
+      }
+      .track svg {
+        position: absolute;
+        inset: 8px 0;
+        width: 100%;
+        height: calc(100% - 16px);
+        overflow: visible;
+      }
+      .track:hover {
+        background: linear-gradient(
+          to right,
+          transparent,
+          rgba(124, 245, 224, 0.03),
+          transparent
+        );
+      }
+
+      /* Fog over the future: denser to the right, slowly drifting */
+      .fog {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: calc(120px + (100% - 120px) * 0.152);
+        right: 0;
+        pointer-events: none;
+        z-index: 2;
+        background: linear-gradient(
+          to right,
+          rgba(var(--fog), 0) 0%,
+          rgba(var(--fog), 0.35) 45%,
+          rgba(var(--fog), 0.62) 100%
+        );
+      }
+      .fog::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        opacity: 0.55;
+        background:
+          radial-gradient(
+            40% 60% at 30% 40%,
+            rgba(154, 165, 179, 0.06),
+            transparent 70%
+          ),
+          radial-gradient(
+            35% 50% at 70% 70%,
+            rgba(154, 165, 179, 0.07),
+            transparent 70%
+          ),
+          radial-gradient(
+            30% 45% at 85% 20%,
+            rgba(124, 245, 224, 0.05),
+            transparent 70%
+          );
+        background-size: 200% 200%;
+        animation: drift 24s ease-in-out infinite alternate;
+      }
+      @keyframes drift {
+        from {
+          background-position: 0% 0%;
+        }
+        to {
+          background-position: 100% 60%;
+        }
+      }
+      .nowline {
+        position: absolute;
+        top: -40px;
+        bottom: 0;
+        left: calc(120px + (100% - 120px) * 0.152);
+        width: 0;
+        z-index: 3;
+        pointer-events: none;
+      }
+      .nowline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: -1px;
+        width: 2px;
+        background: linear-gradient(var(--answer), rgba(124, 245, 224, 0.2));
+        box-shadow: 0 0 18px rgba(124, 245, 224, 0.6);
+      }
+      .nowline span {
+        position: absolute;
+        top: 0;
+        left: 8px;
+        font: 600 11px/16px var(--mono);
+        letter-spacing: 0.12em;
+        color: var(--answer);
+        white-space: nowrap;
+      }
+      .nowline::after {
+        content: '';
+        position: absolute;
+        top: -4px;
+        left: -6px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--answer);
+        animation: beat 2.4s ease-out infinite;
+      }
+      @keyframes beat {
+        0% {
+          box-shadow: 0 0 0 0 rgba(124, 245, 224, 0.5);
+        }
+        70% {
+          box-shadow: 0 0 0 12px rgba(124, 245, 224, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(124, 245, 224, 0);
+        }
+      }
+
+      /* Pins: answers placed where they happen (above the fog, always readable) */
+      .pin {
+        position: absolute;
+        z-index: 4;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        background: none;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+      }
+      .pin .tag {
+        font: 500 12px/16px var(--sans);
+        white-space: nowrap;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #0f141a;
+        border: 1px solid var(--line);
+        color: var(--text);
+      }
+      .pin .tag b {
+        font-family: var(--mono);
+        font-weight: 600;
+      }
+      .pin .stem {
+        width: 1px;
+        height: 14px;
+        background: currentColor;
+        opacity: 0.6;
+      }
+      .pin .knob {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 0 0 12px currentColor;
+      }
+      .pin.warn {
+        color: var(--warn);
+      }
+      .pin.crit {
+        color: var(--crit);
+      }
+      .pin.fut {
+        color: var(--answer);
+      }
+      .pin.past {
+        color: var(--past);
+      }
+      .pin.on .tag {
+        border-color: currentColor;
+        box-shadow:
+          0 0 0 1px currentColor,
+          0 8px 32px -8px currentColor;
+      }
+
+      /* The answer for the selected pin */
+      .reading {
+        margin: 24px 32px 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+        gap: 24px;
+      }
+      .card {
+        background: var(--bg-2);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 24px;
+      }
+      .card.lit {
+        border-color: rgba(124, 245, 224, 0.35);
+        box-shadow:
+          0 0 0 1px rgba(124, 245, 224, 0.08),
+          0 24px 64px -32px rgba(124, 245, 224, 0.45);
+      }
+      .reading h2 {
+        font: 600 24px/32px var(--display);
+        margin: 8px 0;
+        letter-spacing: -0.01em;
+      }
+      .reading p {
+        margin: 0 0 12px;
+        color: var(--text-2);
+        max-width: 60ch;
+      }
+      .conf {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font: 500 12px/16px var(--mono);
+        color: var(--text-2);
+      }
+      .conf i {
+        width: 64px;
+        height: 4px;
+        border-radius: 2px;
+        background: #1f2731;
+        overflow: hidden;
+        display: inline-block;
+      }
+      .conf i::after {
+        content: '';
+        display: block;
+        height: 100%;
+        width: var(--p);
+        background: var(--answer);
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+      .btn {
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: none;
+        cursor: pointer;
+        font: 500 14px/20px var(--sans);
+      }
+      .btn.main {
+        background: var(--text);
+        color: var(--bg);
+        border-color: var(--text);
+      }
+      .today {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .today .row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        min-height: 40px;
+        border-bottom: 1px solid var(--line);
+      }
+      .today .row:last-child {
+        border-bottom: 0;
+      }
+      .today .row .box {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #4a5563;
+        border-radius: 50%;
+        flex: none;
+      }
+      .today .row span:nth-child(2) {
+        flex: 1;
+      }
+      .ask {
+        margin: 24px 32px 48px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 56px;
+        padding: 0 8px 0 20px;
+        border-radius: 999px;
+        border: 1px solid rgba(124, 245, 224, 0.3);
+        background: var(--bg-2);
+      }
+      .ask input {
+        flex: 1;
+        min-width: 0;
+        background: none;
+        border: 0;
+        outline: none;
+        color: var(--text);
+        font: 400 15px/24px var(--sans);
+      }
+      .ask input::placeholder {
+        color: var(--text-2);
+      }
+      .ask button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 0;
+        background: var(--answer);
+        color: var(--bg);
+        font: 700 18px/1 var(--sans);
+        cursor: pointer;
+      }
+
+      /* ===== Phone: the horizon turns vertical — scroll down = into the future ===== */
+      .vlist {
+        display: none;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      @media (max-width: 760px) {
+        .top {
+          padding: 12px 16px;
+          gap: 8px;
+        }
+        .zoom,
+        .search .txt,
+        .search kbd,
+        .level small {
+          display: none;
+        }
+        .search {
+          min-width: 0;
+          width: 44px;
+          height: 44px;
+          justify-content: center;
+          padding: 0;
+        }
+        .hero {
+          grid-template-columns: minmax(0, 1fr);
+          padding: 16px 16px 0;
+          gap: 16px;
+        }
+        .hero h1 {
+          font-size: 28px;
+        }
+        .now-stats {
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+        .now-stats b {
+          font-size: 18px;
+          line-height: 24px;
+        }
+        .horizon {
+          display: none;
+        }
+        .vlist {
+          display: block;
+          position: relative;
+          margin: 24px 16px 0;
+          padding-left: 28px;
+          list-style: none;
+        }
+        .vlist::before {
+          content: '';
+          position: absolute;
+          left: 8px;
+          top: 0;
+          bottom: 0;
+          width: 2px;
+          background: linear-gradient(
+            var(--past) 0 12%,
+            var(--answer) 12% 14%,
+            rgba(124, 245, 224, 0.5) 30%,
+            rgba(124, 245, 224, 0.08)
+          );
+        }
+        .vlist li {
+          position: relative;
+          padding: 0 0 20px;
+        }
+        .vlist li::before {
+          content: '';
+          position: absolute;
+          left: -25px;
+          top: 6px;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: var(--bg);
+          border: 2px solid var(--past);
+        }
+        .vlist li.fut::before {
+          border-color: var(--answer);
+          border-style: dashed;
+        }
+        .vlist li.now::before {
+          background: var(--answer);
+          border-color: var(--answer);
+          box-shadow: 0 0 14px var(--answer);
+        }
+        .vlist .d {
+          display: flex;
+          justify-content: space-between;
+          gap: 8px;
+          font: 500 12px/16px var(--mono);
+          color: var(--text-2);
+        }
+        .vlist .d b {
+          color: var(--text);
+          font-weight: 600;
+        }
+        .vlist .d i {
+          font-style: normal;
+          color: var(--answer);
+        }
+        .vlist .chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-top: 8px;
+        }
+        .vlist .chip {
+          font: 500 12px/16px var(--mono);
+          padding: 4px 8px;
+          border-radius: 8px;
+          background: var(--bg-2);
+          border: 1px solid var(--line);
+        }
+        .vlist .ev {
+          margin-top: 8px;
+          padding: 10px 12px;
+          border-radius: 12px;
+          background: var(--bg-2);
+          border-left: 3px solid currentColor;
+          font: 400 14px/20px var(--sans);
+        }
+        .vlist .ev b {
+          display: block;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .vlist .ev span {
+          color: var(--text-2);
+        }
+        .vlist li.fut .chips {
+          opacity: var(--o, 1);
+        }
+        .reading {
+          grid-template-columns: minmax(0, 1fr);
+          margin: 8px 16px 0;
+          gap: 16px;
+        }
+        .card {
+          padding: 16px;
+          border-radius: 16px;
+        }
+        .reading h2 {
+          font-size: 20px;
+          line-height: 28px;
+        }
+        .ask {
+          margin: 16px 16px 32px;
+          height: 52px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .fog::before,
+        .nowline::after {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="mock">
+      <b>Эксперименты:</b><a href="10-concept-horizon.html">10 · Горизонт</a
+      ><a href="11-concept-orbit.html">11 · Орбита</a
+      ><a href="12-concept-letter.html">12 · Письмо из завтра</a
+      ><a href="../01-home.html">← текущий вариант</a>
+    </nav>
+
+    <header class="top">
+      <div class="brand"><i></i>Personal Dashboard</div>
+      <div
+        class="zoom"
+        role="radiogroup"
+        aria-label="Насколько далеко смотреть"
+      >
+        <button role="radio" aria-checked="false">День</button>
+        <button class="on" role="radio" aria-checked="true">До зарплаты</button>
+        <button role="radio" aria-checked="false">Месяц</button>
+      </div>
+      <span class="sp"></span>
+      <button class="search" aria-label="Поиск">
+        <span>⌕</span><span class="txt">Найти, спросить</span><kbd>Ctrl K</kbd>
+      </button>
+      <a
+        class="level"
+        href="#"
+        aria-label="Уровень 10: 10 из 1000 опыта, 175 из 504 ачивок"
+        ><span class="ring">10</span><small>10/1000 XP · 175/504</small></a
+      >
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">вс 01.11 · 12:24 · горизонт до 10.11</div>
+        <h1>
+          Впереди девять ровных дней и одна яма:
+          <em>деньги кончатся раньше зарплаты.</em>
+        </h1>
+      </div>
+      <div class="now-stats" aria-label="Сейчас">
+        <div>
+          <span class="eyebrow">настроение</span><b class="answer">7/10</b>
+        </div>
+        <div><span class="eyebrow">сон</span><b class="warn">6,2 ч</b></div>
+        <div><span class="eyebrow">на счёте</span><b>3 645</b></div>
+        <div><span class="eyebrow">система</span><b class="crit">2 ✕</b></div>
+      </div>
+    </section>
+
+    <!-- ===== Desktop: the horizon ===== -->
+    <section class="horizon" aria-label="Горизонт: от вчера до зарплаты">
+      <div class="days">
+        <span></span>
+        <span><b>сб 31</b>вчера</span>
+        <span><b>вс 01</b>сегодня</span>
+        <span><b>пн 02</b><i>90 %</i></span>
+        <span><b>вт 03</b><i>82 %</i></span>
+        <span><b>ср 04</b><i>74 %</i></span>
+        <span><b>чт 05</b><i>68 %</i></span>
+        <span><b>пт 06</b><i>62 %</i></span>
+        <span><b>сб 07</b><i>57 %</i></span>
+        <span><b>вс 08</b><i>52 %</i></span>
+        <span><b>пн 09</b><i>48 %</i></span>
+      </div>
+      <div class="lanes">
+        <div class="fog"></div>
+        <div class="nowline"><span>СЕЙЧАС</span></div>
+
+        <div class="lane" data-k="mood">
+          <div class="name">Настроение<b class="answer">7/10</b></div>
+          <div class="track">
+            <svg viewBox="0 0 1000 100" preserveAspectRatio="none">
+              <polygon
+                points="152,38 250,30 350,22 450,26 550,20 650,12 750,8 850,6 1000,4 1000,80 850,74 750,70 650,66 550,62 450,64 350,60 250,50 152,38"
+                fill="var(--answer-dim)"
+              />
+              <polyline
+                points="0,48 50,44 100,40 152,38"
+                fill="none"
+                stroke="var(--past)"
+                stroke-width="2.5"
+                vector-effect="non-scaling-stroke"
+              />
+              <polyline
+                points="152,38 250,40 350,46 450,44 550,40 650,36 750,34 850,40 1000,42"
+                fill="none"
+                stroke="var(--answer)"
+                stroke-width="2"
+                stroke-dasharray="6 6"
+                vector-effect="non-scaling-stroke"
+              />
+            </svg>
+            <button class="pin fut" style="left: 32%; top: -2px" data-a="mood">
+              <span class="tag">вт · ДР — настроение <b>6/10</b></span
+              ><span class="stem"></span><span class="knob"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="lane" data-k="sleep">
+          <div class="name">Сон<b class="warn">6,2 ч</b></div>
+          <div class="track">
+            <svg viewBox="0 0 1000 100" preserveAspectRatio="none">
+              <rect
+                x="30"
+                y="20"
+                width="40"
+                height="80"
+                rx="4"
+                fill="var(--past)"
+                opacity=".85"
+              />
+              <rect
+                x="130"
+                y="34"
+                width="40"
+                height="66"
+                rx="4"
+                fill="var(--warn)"
+              />
+              <rect
+                x="230"
+                y="16"
+                width="40"
+                height="84"
+                rx="4"
+                fill="none"
+                stroke="var(--answer)"
+                stroke-dasharray="4 4"
+              />
+              <rect
+                x="330"
+                y="26"
+                width="40"
+                height="74"
+                rx="4"
+                fill="none"
+                stroke="var(--answer)"
+                stroke-dasharray="4 4"
+                opacity=".8"
+              />
+              <rect
+                x="430"
+                y="52"
+                width="40"
+                height="48"
+                rx="4"
+                fill="rgba(251,191,36,.14)"
+                stroke="var(--warn)"
+                stroke-dasharray="4 4"
+              />
+              <rect
+                x="530"
+                y="24"
+                width="40"
+                height="76"
+                rx="4"
+                fill="none"
+                stroke="var(--answer)"
+                stroke-dasharray="4 4"
+                opacity=".6"
+              />
+              <rect
+                x="630"
+                y="22"
+                width="40"
+                height="78"
+                rx="4"
+                fill="none"
+                stroke="var(--answer)"
+                stroke-dasharray="4 4"
+                opacity=".5"
+              />
+              <rect
+                x="730"
+                y="14"
+                width="40"
+                height="86"
+                rx="4"
+                fill="none"
+                stroke="var(--answer)"
+                stroke-dasharray="4 4"
+                opacity=".4"
+              />
+              <rect
+                x="830"
+                y="18"
+                width="40"
+                height="82"
+                rx="4"
+                fill="none"
+                stroke="var(--answer)"
+                stroke-dasharray="4 4"
+                opacity=".35"
+              />
+              <rect
+                x="930"
+                y="26"
+                width="40"
+                height="74"
+                rx="4"
+                fill="none"
+                stroke="var(--answer)"
+                stroke-dasharray="4 4"
+                opacity=".3"
+              />
+            </svg>
+            <button
+              class="pin warn"
+              style="left: 45%; top: -2px"
+              data-a="sleep"
+            >
+              <span class="tag">ночь на ср · риск недосыпа <b>62 %</b></span
+              ><span class="stem"></span><span class="knob"></span>
+            </button>
+            <button
+              class="pin fut"
+              style="left: 25%; top: 44px"
+              data-a="tonight"
+            >
+              <span class="knob"></span><span class="stem"></span
+              ><span class="tag">сегодня до 23:30 → <b>7,4 ч</b></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="lane" data-k="money">
+          <div class="name">Деньги<b>3 645</b></div>
+          <div class="track">
+            <svg viewBox="0 0 1000 100" preserveAspectRatio="none">
+              <polygon
+                points="152,12 1000,70 1000,104 152,12"
+                fill="rgba(251,191,36,.12)"
+              />
+              <polyline
+                points="0,10 100,11 152,12"
+                fill="none"
+                stroke="var(--past)"
+                stroke-width="2.5"
+                vector-effect="non-scaling-stroke"
+              />
+              <polyline
+                points="152,12 300,26 450,40 600,54 750,68 900,80 1000,88"
+                fill="none"
+                stroke="var(--warn)"
+                stroke-width="2"
+                stroke-dasharray="6 6"
+                vector-effect="non-scaling-stroke"
+              />
+              <line
+                x1="0"
+                x2="1000"
+                y1="96"
+                y2="96"
+                stroke="var(--crit)"
+                stroke-width="1"
+                stroke-dasharray="2 6"
+                vector-effect="non-scaling-stroke"
+                opacity=".7"
+              />
+            </svg>
+            <button
+              class="pin warn on"
+              style="left: 88%; top: -2px"
+              data-a="money"
+            >
+              <span class="tag">≈ <b>150 PLN</b> к зарплате</span
+              ><span class="stem"></span><span class="knob"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="lane" data-k="system">
+          <div class="name">Система<b class="crit">2 молчат</b></div>
+          <div class="track">
+            <svg viewBox="0 0 1000 100" preserveAspectRatio="none">
+              <line
+                x1="0"
+                x2="1000"
+                y1="50"
+                y2="50"
+                stroke="#1f2731"
+                stroke-width="8"
+                stroke-linecap="round"
+                vector-effect="non-scaling-stroke"
+              />
+              <line
+                x1="79"
+                x2="152"
+                y1="42"
+                y2="42"
+                stroke="var(--crit)"
+                stroke-width="6"
+                stroke-linecap="round"
+                vector-effect="non-scaling-stroke"
+              />
+              <line
+                x1="132"
+                x2="152"
+                y1="58"
+                y2="58"
+                stroke="var(--crit)"
+                stroke-width="6"
+                stroke-linecap="round"
+                vector-effect="non-scaling-stroke"
+              />
+              <line
+                x1="152"
+                x2="300"
+                y1="42"
+                y2="42"
+                stroke="var(--crit)"
+                stroke-width="3"
+                stroke-dasharray="4 6"
+                vector-effect="non-scaling-stroke"
+                opacity=".7"
+              />
+            </svg>
+            <button
+              class="pin crit"
+              style="left: 8%; top: -2px"
+              data-a="system"
+            >
+              <span class="tag">LanguageTool · с 18:53</span
+              ><span class="stem"></span><span class="knob"></span>
+            </button>
+            <button
+              class="pin crit"
+              style="left: 22%; top: 46px"
+              data-a="system"
+            >
+              <span class="knob"></span><span class="stem"></span
+              ><span class="tag">сам не поднимется · 81 %</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="lane" data-k="life">
+          <div class="name">События<b>4</b></div>
+          <div class="track">
+            <button
+              class="pin past"
+              style="left: 14.6%; top: 10px"
+              data-a="task"
+            >
+              <span class="tag">11:00 · браслет</span><span class="stem"></span
+              ><span class="knob"></span>
+            </button>
+            <button class="pin fut" style="left: 30%; top: 10px" data-a="bday">
+              <span class="tag">ДР Бабы Тони</span><span class="stem"></span
+              ><span class="knob"></span>
+            </button>
+            <button
+              class="pin fut"
+              style="left: 60%; top: 10px"
+              data-a="streak"
+            >
+              <span class="tag">код: 14 дней подряд · ачивка</span
+              ><span class="stem"></span><span class="knob"></span>
+            </button>
+            <button
+              class="pin warn"
+              style="left: 96%; top: 10px"
+              data-a="money"
+            >
+              <span class="tag">≈ 10.11 зарплата</span><span class="stem"></span
+              ><span class="knob"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Phone: the same horizon, vertical (also the accessible version on desktop) ===== -->
+    <ol class="vlist" aria-label="Горизонт по дням">
+      <li>
+        <div class="d"><b>сб 31 · вчера</b><span>было</span></div>
+        <div class="chips">
+          <span class="chip">настр. 6,5</span><span class="chip">сон 7,0 ч</span
+          ><span class="chip">3 710 PLN</span>
+        </div>
+        <div class="ev crit">
+          <b>LanguageTool замолчал в 18:53</b
+          ><span>с тех пор 231 ошибка в журнале</span>
+        </div>
+      </li>
+      <li class="now">
+        <div class="d">
+          <b class="answer">вс 01 · сейчас 12:24</b><span>факт</span>
+        </div>
+        <div class="chips">
+          <span class="chip">настр. 7/10</span
+          ><span class="chip warn">сон 6,2 ч</span
+          ><span class="chip">3 645 PLN</span
+          ><span class="chip crit">WakaTime с 07:40</span>
+        </div>
+        <div class="ev" style="color: var(--answer)">
+          <b>Лечь до 23:30 → 7,4 ч сна</b
+          ><span>в 8 из 11 таких дней следующий был хорошим</span>
+        </div>
+      </li>
+      <li class="fut" style="--o: 0.95">
+        <div class="d"><b>пн 02</b><i>уверенность 90 %</i></div>
+        <div class="chips">
+          <span class="chip">настр. ≈ 7</span
+          ><span class="chip">≈ 3 230 PLN</span>
+        </div>
+      </li>
+      <li class="fut" style="--o: 0.9">
+        <div class="d"><b>вт 03</b><i>82 %</i></div>
+        <div class="ev" style="color: var(--answer)">
+          <b>День рождения Бабы Тони</b
+          ><span>подарок из списка желаний? позвонить утром</span>
+        </div>
+        <div class="ev warn">
+          <b>Ночь на среду — риск недосыпа 62 %</b
+          ><span>в дни рождения ложитесь после 01:00 (4 из 5 раз)</span>
+        </div>
+      </li>
+      <li class="fut" style="--o: 0.85">
+        <div class="d"><b>пт 06</b><i>62 %</i></div>
+        <div class="ev" style="color: var(--answer)">
+          <b>14 дней кода подряд — ачивка</b
+          ><span>если не прервать серию (сейчас 9)</span>
+        </div>
+      </li>
+      <li class="fut" style="--o: 0.75">
+        <div class="d"><b>пн 09 → вт 10</b><i>48 %</i></div>
+        <div class="ev warn">
+          <b>≈ 150 PLN к зарплате</b
+          ><span>разброс −600…+900; зарплата обычно 10-го</span>
+        </div>
+      </li>
+    </ol>
+
+    <!-- The reading of the selected pin -->
+    <section class="reading">
+      <article class="card lit" aria-live="polite">
+        <div class="eyebrow" id="r-eye">деньги · прогноз до 10.11</div>
+        <h2 id="r-title">Доедете до зарплаты на ≈ 150 PLN.</h2>
+        <p id="r-text">
+          На счёте 3 645 PLN, тратите в среднем ~412 PLN в день (за 3 месяца).
+          Транспорт уже треть ноября: две поездки Bolt сегодня — 60,80. Если
+          такси заменить проездным до 10-го, останется ≈ 600.
+        </p>
+        <span class="conf" id="r-conf" style="--p: 64%"
+          >уверенность <i></i> 64 %</span
+        >
+        <div class="actions" id="r-actions">
+          <button class="btn main">Задать лимит до 10-го</button
+          ><button class="btn">Почему так</button>
+        </div>
+      </article>
+      <aside class="card today" aria-label="Сегодня">
+        <div class="eyebrow">сегодня · 3 дела</div>
+        <div class="row">
+          <span class="box"></span><span>Откалибровать браслет</span
+          ><span class="mono muted">11:00</span>
+        </div>
+        <div class="row">
+          <span class="box"></span><span>Позвонить маме</span><span></span>
+        </div>
+        <div class="row">
+          <span class="box"></span><span>Пара строк в дневник</span
+          ><span class="mono warn">15 дн.</span>
+        </div>
+      </aside>
+    </section>
+
+    <label class="ask"
+      ><span class="answer">✦</span
+      ><input
+        placeholder="Спросите горизонт: «что будет в пятницу, если неделю без такси?»"
+        aria-label="Вопрос о будущем"
+      /><button type="button" aria-label="Спросить">→</button></label
+    >
+
+    <script>
+      // The reading follows the pin you pick. Content: plausible values from the real modules.
+      const A = {
+        money: [
+          'деньги · прогноз до 10.11',
+          'Доедете до зарплаты на ≈ 150 PLN.',
+          'На счёте 3 645 PLN, тратите в среднем ~412 PLN в день (за 3 месяца). Транспорт уже треть ноября: две поездки Bolt сегодня — 60,80. Если такси заменить проездным до 10-го, останется ≈ 600.',
+          64,
+          ['Задать лимит до 10-го', 'Почему так'],
+        ],
+        mood: [
+          'настроение · Жизнь → Связи',
+          'Во вторник настроение просядет до 6/10.',
+          'Перед днями рождения вы спите меньше и сидите дольше в Instagram — так было 4 раза из 5. Модель училась на 212 днях и обгоняет «как в среднем за неделю».',
+          57,
+          ['Что поднимает настроение', 'Почему так'],
+        ],
+        sleep: [
+          'сон · браслет',
+          'Ночь на среду — риск недосыпа 62 %.',
+          'В дни рождения вы ложитесь после 01:00 (4 из 5 раз), а за ними идёт день на 1,2 балла хуже. Напоминание в 23:00 во вторник?',
+          62,
+          ['Напомнить в 23:00', 'Почему так'],
+        ],
+        tonight: [
+          'сон · сегодня',
+          'Ляжете до 23:30 — будет ≈ 7,4 ч.',
+          'В 8 из 11 похожих воскресений после такого сна понедельник был хорошим. Сейчас средний за неделю — 6,6 ч.',
+          73,
+          ['Напомнить в 23:00', 'Почему так'],
+        ],
+        system: [
+          'система · журнал',
+          'LanguageTool сам, скорее всего, не поднимется.',
+          'С 31.10 18:53 — 231 одинаковая ошибка и ни одного восстановления. WakaTime молчит с 07:40: время кодинга за сегодня неполное.',
+          81,
+          ['Открыть Систему', 'Проверить снова'],
+        ],
+        task: [
+          'дела · сегодня',
+          'Браслет — в 11:00, уже прошло.',
+          'Задача «Откалибровать браслет» ещё открыта. Перенести на вечер?',
+          100,
+          ['Сделано', 'Перенести на 20:00'],
+        ],
+        bday: [
+          'дни рождения · вт 03.11',
+          'Через 2 дня — Баба Тоня.',
+          'В прошлом году вы звонили в 10:12. В списке желаний ничего не подходит — подсказать подарок?',
+          82,
+          ['Напомнить в 10:00', 'Подсказать подарок'],
+        ],
+        streak: [
+          'разработка · ачивка',
+          'В пятницу — 14 дней кода подряд.',
+          'Серия сейчас 9 дней, сегодня уже 31 минута. Если не прерывать, откроется ачивка и +50 XP к уровню 10.',
+          62,
+          ['Что за ачивка', 'Почему так'],
+        ],
+      };
+      const $ = id => document.getElementById(id);
+      document.querySelectorAll('.pin').forEach(pin =>
+        pin.addEventListener('click', () => {
+          const a = A[pin.dataset.a];
+          if (!a) return;
+          document
+            .querySelectorAll('.pin')
+            .forEach(p => p.classList.remove('on'));
+          pin.classList.add('on');
+          $('r-eye').textContent = a[0];
+          $('r-title').textContent = a[1];
+          $('r-text').textContent = a[2];
+          $('r-conf').style.setProperty('--p', a[3] + '%');
+          $('r-conf').lastChild.textContent = ' ' + a[3] + ' %';
+          $('r-actions').innerHTML = a[4]
+            .map(
+              (t, i) => `<button class="btn${i ? '' : ' main'}">${t}</button>`,
+            )
+            .join('');
+        }),
+      );
+    </script>
+  </body>
+</html>
