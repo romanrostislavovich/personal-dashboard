@@ -80,14 +80,9 @@ public class PlacesService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = notification();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // The microphone too once allowed: the noise level is heard from here (LiveSignals).
-            int types = ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-                | (LiveSignals.hasMicrophone(this) ? ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE : 0);
-            startForeground(NOTIFICATION_ID, notification, types);
-        } else {
-            startForeground(NOTIFICATION_ID, notification);
+        if (!enterForeground(notification())) {
+            stopSelf();
+            return START_NOT_STICKY;
         }
         if (!new SensorsStore(this).configured() || !PhoneLocation.allowed(this)) {
             stopSelf();
@@ -103,6 +98,37 @@ public class PlacesService extends Service {
         SensorsWorker.ensureScheduled(this);
         // Killed for memory: Android starts it again.
         return START_STICKY;
+    }
+
+    /**
+     * The service in the foreground, with the microphone too once allowed: the noise level is
+     * heard from here (LiveSignals). Android 14 and later refuse the microphone to a service
+     * started from the background (a restart after an update, a wake-up push): then it goes on
+     * with the location only, and the noise is heard again after the app is opened. `false` —
+     * not even that is allowed; the service stops instead of crashing the app.
+     */
+    private boolean enterForeground(Notification notification) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, notification);
+            return true;
+        }
+        int location = ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
+        if (LiveSignals.hasMicrophone(this)) {
+            try {
+                startForeground(NOTIFICATION_ID, notification,
+                    location | ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);
+                return true;
+            } catch (SecurityException e) {
+                Log.w(TAG, "No microphone from the background: the location only", e);
+            }
+        }
+        try {
+            startForeground(NOTIFICATION_ID, notification, location);
+            return true;
+        } catch (SecurityException | IllegalStateException e) {
+            Log.w(TAG, "The places service may not run in the foreground now", e);
+            return false;
+        }
     }
 
     @SuppressWarnings("MissingPermission")
