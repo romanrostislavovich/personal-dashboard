@@ -269,7 +269,17 @@
         width: var(--s);
         height: var(--s);
         background: var(--c);
-        background-image: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.45), transparent 55%), radial-gradient(circle at 70% 80%, rgba(0, 0, 0, 0.35), transparent 60%);
+        background-image:
+          radial-gradient(
+            circle at 32% 28%,
+            rgba(255, 255, 255, 0.45),
+            transparent 55%
+          ),
+          radial-gradient(
+            circle at 70% 80%,
+            rgba(0, 0, 0, 0.35),
+            transparent 60%
+          );
         box-shadow:
           0 0 0 1px color-mix(in srgb, var(--c) 60%, transparent),
           0 0 calc(var(--g) * 1px) color-mix(in srgb, var(--c) 55%, transparent);
@@ -309,11 +319,41 @@
         color: var(--text-2);
       }
 
-      .alist { display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 16px 16px 0; }
-      .aitem { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 6px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); text-align: left; cursor: pointer; }
-      .aitem i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); flex: none; }
-      .aitem span { font: 500 13px/18px var(--sans); }
-      .aitem small { margin-left: auto; font: 500 11px/14px var(--mono); color: var(--text-2); text-align: right; }
+      .alist {
+        display: none;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 16px 16px 0;
+      }
+      .aitem {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 48px;
+        padding: 6px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        text-align: left;
+        cursor: pointer;
+      }
+      .aitem i {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--c);
+        box-shadow: 0 0 10px var(--c);
+        flex: none;
+      }
+      .aitem span {
+        font: 500 13px/18px var(--sans);
+      }
+      .aitem small {
+        margin-left: auto;
+        font: 500 11px/14px var(--mono);
+        color: var(--text-2);
+        text-align: right;
+      }
       .legend {
         display: flex;
         gap: 24px;
@@ -457,8 +497,13 @@
         display: none;
       }
       @media (max-width: 760px) {
-        .label, .lvl-label { display: none; }
-        .alist { display: grid; }
+        .label,
+        .lvl-label {
+          display: none;
+        }
+        .alist {
+          display: grid;
+        }
         .top {
           padding: 12px 16px;
         }
@@ -946,14 +991,17 @@
         stage.appendChild(l);
       }
       // Phone: the same areas as a list under the orbit, the most urgent first.
-      const alist = document.getElementById("alist");
-      [...areas].sort((a, b) => a.ring - b.ring || b.s - a.s).forEach(ar => {
-        const li = document.createElement("button");
-        li.className = "aitem"; li.style.setProperty("--c", ar.c);
-        li.innerHTML = `<i></i><span>${ar.name}</span><small>${ar.small}</small>`;
-        li.addEventListener("click", () => open(ar, li));
-        alist.appendChild(li);
-      });
+      const alist = document.getElementById('alist');
+      [...areas]
+        .sort((a, b) => a.ring - b.ring || b.s - a.s)
+        .forEach(ar => {
+          const li = document.createElement('button');
+          li.className = 'aitem';
+          li.style.setProperty('--c', ar.c);
+          li.innerHTML = `<i></i><span>${ar.name}</span><small>${ar.small}</small>`;
+          li.addEventListener('click', () => open(ar, li));
+          alist.appendChild(li);
+        });
       const panel = document.getElementById('panel');
       const $ = id => document.getElementById(id);
       function open(ar, btn) {
