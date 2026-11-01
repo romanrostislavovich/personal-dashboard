@@ -9,6 +9,7 @@ import {
   zonedDateTime,
 } from '@pd/contracts';
 import {RemindersService} from './reminders.service';
+import {stepTitles} from './step-title';
 import {TasksService} from './tasks.service';
 
 /** Overdue tasks are listed up to this many in a message. */
@@ -44,16 +45,15 @@ export class TasksAutomations implements OnModuleInit {
         if (now.time < params['time']) {
           return null;
         }
-        const overdue = (await this.tasks.list(userId)).filter(
+        const all = await this.tasks.list(userId);
+        const title = stepTitles(all);
+        const overdue = all.filter(
           task => !task.completedAt && task.dueDate && task.dueDate < now.date,
         );
         return overdue.length
           ? {
               count: String(overdue.length),
-              titles: overdue
-                .slice(0, TITLES)
-                .map(task => task.title)
-                .join(', '),
+              titles: overdue.slice(0, TITLES).map(title).join(', '),
             }
           : null;
       },

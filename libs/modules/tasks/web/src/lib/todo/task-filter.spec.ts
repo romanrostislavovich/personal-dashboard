@@ -15,6 +15,8 @@ const task = (values: Partial<Task>): Task => ({
   tags: [],
   checklist: [],
   repeat: null,
+  parentId: null,
+  steps: null,
   completedAt: null,
   createdAt: '2026-10-01T00:00:00Z',
   reminderAt: null,

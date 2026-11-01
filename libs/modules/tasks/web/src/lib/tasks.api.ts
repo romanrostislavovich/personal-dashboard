@@ -6,6 +6,8 @@ import {
   ReminderInput,
   ReminderUpdate,
   Task,
+  TaskDeleteSteps,
+  TaskGroup,
   TaskInput,
   TaskList,
   TaskUpdate,
@@ -49,8 +51,14 @@ export class TasksApi {
     return fromCore(() => this.api.reopen(id));
   }
 
-  remove(id: string) {
-    return fromCore(() => this.api.remove(id));
+  /** With its steps, unless `keep` — then they stay as tasks of their own. */
+  remove(id: string, steps: TaskDeleteSteps = 'delete') {
+    return fromCore(() => this.api.remove(id, steps));
+  }
+
+  /** Makes the tasks steps of an existing task or of a new one. */
+  group(group: TaskGroup) {
+    return fromCore(() => this.api.group(group));
   }
 
   createList(name: string) {

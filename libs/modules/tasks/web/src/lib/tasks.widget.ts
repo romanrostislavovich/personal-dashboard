@@ -19,7 +19,10 @@ import {filterTasks, isOverdue} from './todo/task-filter';
 
 const WIDGET_MAX_TASKS = 6;
 
-/** Home widget: today's tasks (with the overdue ones) to tick off, and the next reminder. */
+/**
+ * Home widget: today's tasks (with the overdue ones) to tick off — a step with the title of its
+ * task, a task with steps with how far it has got — and the next reminder.
+ */
 @Component({
   selector: 'pd-tasks-widget',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,7 +52,15 @@ const WIDGET_MAX_TASKS = 6;
       <mat-card-content class="content">
         @for (task of shown(); track task.id) {
           <mat-checkbox (change)="complete(task)">
-            <span [class.overdue]="overdue(task)">{{ task.title }}</span>
+            <span [class.overdue]="overdue(task)">
+              @if (task.parentId && titles().get(task.parentId); as parent) {
+                <span class="parent">{{ parent }} ›</span>
+              }
+              {{ task.title }}
+              @if (task.steps; as steps) {
+                <span class="parent">· {{ steps.done }}/{{ steps.total }}</span>
+              }
+            </span>
           </mat-checkbox>
         } @empty {
           <p class="muted">{{ 'tasks.widget.empty' | transloco }}</p>
@@ -77,6 +88,9 @@ const WIDGET_MAX_TASKS = 6;
     .overdue {
       color: var(--mat-sys-error);
     }
+    .parent {
+      color: var(--mat-sys-on-surface-variant);
+    }
     .muted {
       margin: 8px 0 0;
       color: var(--mat-sys-on-surface-variant);
@@ -100,6 +114,10 @@ export class TasksWidget {
       {view: 'today', listId: null, tag: null},
       this.day,
     ),
+  );
+  /** Titles of the tasks a step of today's belongs to. */
+  protected readonly titles = computed(
+    () => new Map(this.tasks.value().map(task => [task.id, task.title])),
   );
   protected readonly shown = computed(() =>
     this.today().slice(0, WIDGET_MAX_TASKS),

@@ -33,13 +33,19 @@ import {EditedAtComponent, pickableProjects, ProjectsApi} from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
 import {RepeatFieldComponent} from '../repeat-field.component';
 import {TasksApi} from '../tasks.api';
+import {parentChoices} from './task-rows';
 
 export interface TaskDialogData {
   /** `null` — a new task. */
   task: Task | null;
   lists: TaskList[];
-  /** What a new task starts with: the list and the day of the view it was added from. */
-  defaults?: Pick<TaskUpdate, 'listId' | 'dueDate'>;
+  /** Every task: the ones it can become a step of. */
+  tasks: Task[];
+  /**
+   * What a new task starts with: the list and the day of the view it was added from, or the task
+   * it is a step of ("Add a step").
+   */
+  defaults?: Pick<TaskUpdate, 'listId' | 'dueDate' | 'parentId'>;
 }
 
 /**
@@ -65,7 +71,12 @@ export interface TaskDialogData {
   template: `
     <h2 mat-dialog-title>
       {{
-        (data.task ? 'tasks.todo.editTitle' : 'tasks.todo.newTitle') | transloco
+        (data.task
+          ? 'tasks.todo.editTitle'
+          : data.defaults?.parentId
+            ? 'tasks.steps.newTitle'
+            : 'tasks.todo.newTitle'
+        ) | transloco
       }}
     </h2>
     <mat-dialog-content class="form">
@@ -137,6 +148,20 @@ export interface TaskDialogData {
           </mat-select>
         </mat-form-field>
       </div>
+
+      @if (!hasSteps) {
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-label>{{ 'tasks.steps.parent' | transloco }}</mat-label>
+          <mat-select [(ngModel)]="parentId">
+            <mat-option [value]="null">{{
+              'tasks.steps.noParent' | transloco
+            }}</mat-option>
+            @for (choice of parents; track choice.id) {
+              <mat-option [value]="choice.id">{{ choice.title }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
 
       <mat-form-field subscriptSizing="dynamic">
         <mat-label>{{ 'tasks.todo.tags' | transloco }}</mat-label>
@@ -254,10 +279,25 @@ export class TaskFormDialog {
   protected readonly horizon = signal<TaskHorizon>(
     this.task?.horizon ?? 'normal',
   );
-  protected readonly listId = signal(
-    this.task?.listId ?? this.data.defaults?.listId ?? null,
+  /** A new step: the list and the project of its task, as the server would give. */
+  private readonly parent = this.data.tasks.find(
+    task => task.id === this.data.defaults?.parentId,
   );
-  protected readonly projectId = signal(this.task?.projectId ?? null);
+  protected readonly listId = signal(
+    this.task?.listId ??
+      this.parent?.listId ??
+      this.data.defaults?.listId ??
+      null,
+  );
+  protected readonly projectId = signal(
+    this.task?.projectId ?? this.parent?.projectId ?? null,
+  );
+  /** A task with steps cannot be a step itself: one level only. */
+  protected readonly hasSteps = Boolean(this.task?.steps);
+  protected readonly parents = parentChoices(this.data.tasks, this.task);
+  protected readonly parentId = signal<string | null>(
+    this.task?.parentId ?? this.data.defaults?.parentId ?? null,
+  );
   /** Tags as the user types them: separated by spaces or commas. */
   protected readonly tags = signal((this.task?.tags ?? []).join(' '));
   protected readonly repeat = signal<Repeat | null>(this.task?.repeat ?? null);
@@ -302,6 +342,7 @@ export class TaskFormDialog {
         .filter(Boolean),
       repeat: this.repeat(),
       checklist: this.checklist(),
+      ...(this.hasSteps ? {} : {parentId: this.parentId()}),
     };
     this.saving.set(true);
     try {

@@ -26,7 +26,10 @@ import {
   ReminderFormDialog,
 } from '../reminders/reminder-form.dialog';
 import {TasksApi} from '../tasks.api';
+import {TaskDeleteDialog} from './task-delete.dialog';
 import {TaskDialogData, TaskFormDialog} from './task-form.dialog';
+import {TaskGroupData, TaskGroupDialog} from './task-group.dialog';
+import {parentChoices, taskRows} from './task-rows';
 import {
   allTags,
   filterTasks,
@@ -39,6 +42,8 @@ import {
 /**
  * The TODO list: quick adding, views (today with the overdue, upcoming, all, done), the user's
  * own lists and tags as filters. A click on a task opens it; the bell sets a reminder about it.
+ * A task can have steps (one level): they sit under it and fold away; tasks are put into one by
+ * "Add a step", by choosing several and grouping them, or by dragging one onto another.
  */
 @Component({
   selector: 'pd-todo-page',
@@ -82,6 +87,16 @@ export class TodoPage {
   protected readonly shown = computed(() =>
     filterTasks(this.tasks.value(), this.filter(), this.today),
   );
+  /** Tasks whose steps are folded away. */
+  protected readonly collapsed = signal<ReadonlySet<string>>(new Set());
+  protected readonly rows = computed(() =>
+    taskRows(this.shown(), this.tasks.value(), this.collapsed()),
+  );
+  /** Choosing tasks to group; `null` — the usual list. */
+  protected readonly selected = signal<ReadonlySet<string> | null>(null);
+  /** The task being dragged onto another. */
+  private readonly dragged = signal<Task | null>(null);
+  protected readonly dropTarget = signal<string | null>(null);
   protected readonly tags = computed(() => allTags(this.tasks.value()));
   /** How many tasks each view holds — next to its name. */
   protected readonly counts = computed(() => {
@@ -105,6 +120,86 @@ export class TodoPage {
   /** Past its date, shown in red — unless the user asked for soft overdue (CalmSettings). */
   protected overdue(task: Task): boolean {
     return !this.auth.user()?.calm.softOverdue && isOverdue(task, this.today);
+  }
+
+  protected toggleCollapsed(id: string): void {
+    this.collapsed.update(ids => toggled(ids, id));
+  }
+
+  protected startSelecting(): void {
+    this.selected.set(new Set());
+  }
+
+  protected stopSelecting(): void {
+    this.selected.set(null);
+  }
+
+  protected toggleSelected(id: string): void {
+    this.selected.update(ids => ids && toggled(ids, id));
+  }
+
+  /** The chosen tasks become steps of a new task or of an existing one. */
+  protected async group(): Promise<void> {
+    const taskIds = [...(this.selected() ?? [])];
+    if (!taskIds.length) {
+      return;
+    }
+    const data: TaskGroupData = {
+      taskIds,
+      choices: parentChoices(this.tasks.value(), null).filter(
+        task => !taskIds.includes(task.id),
+      ),
+    };
+    if (
+      await firstValueFrom(
+        this.dialog.open(TaskGroupDialog, {data}).afterClosed(),
+      )
+    ) {
+      this.stopSelecting();
+      this.reload();
+    }
+  }
+
+  /** "Add a step" of a task: a new task inside it. */
+  protected addStep(task: Task): Promise<void> {
+    return this.openForm(null, {parentId: task.id});
+  }
+
+  protected dragStart(event: DragEvent, task: Task): void {
+    this.dragged.set(task);
+    event.dataTransfer?.setData('text/plain', task.title);
+  }
+
+  protected dragEnd(): void {
+    this.dragged.set(null);
+    this.dropTarget.set(null);
+  }
+
+  /** A task may go into another (or next to a step, into its task) — one level only. */
+  protected dragOver(event: DragEvent, target: Task): void {
+    const task = this.dragged();
+    const parentId = target.parentId ?? target.id;
+    if (
+      task &&
+      !task.steps &&
+      task.id !== parentId &&
+      task.parentId !== parentId
+    ) {
+      event.preventDefault();
+      this.dropTarget.set(target.id);
+    }
+  }
+
+  protected async drop(event: DragEvent, target: Task): Promise<void> {
+    event.preventDefault();
+    const task = this.dragged();
+    this.dragEnd();
+    if (task) {
+      await firstValueFrom(
+        this.api.update(task.id, {parentId: target.parentId ?? target.id}),
+      );
+      this.reload();
+    }
   }
 
   protected checklistDone(task: Task): number {
@@ -136,14 +231,23 @@ export class TodoPage {
     this.reload();
   }
 
-  protected async open(task: Task | null): Promise<void> {
+  protected open(task: Task | null): Promise<void> {
+    return this.openForm(task, {});
+  }
+
+  private async openForm(
+    task: Task | null,
+    defaults: TaskDialogData['defaults'],
+  ): Promise<void> {
     const {view, listId} = this.filter();
     const data: TaskDialogData = {
       task,
       lists: this.lists.value(),
+      tasks: this.tasks.value(),
       defaults: {
         listId: listId === 'inbox' ? null : listId,
         dueDate: view === 'today' ? this.today : null,
+        ...defaults,
       },
     };
     if (
@@ -171,7 +275,18 @@ export class TodoPage {
     }
   }
 
+  /** A task with steps asks whether they go too; both ways it lands in the trash. */
   protected async remove(task: Task): Promise<void> {
+    if (task.steps) {
+      const steps = await firstValueFrom(
+        this.dialog.open(TaskDeleteDialog, {data: task}).afterClosed(),
+      );
+      if (steps) {
+        await firstValueFrom(this.api.remove(task.id, steps));
+        this.reload();
+      }
+      return;
+    }
     if (
       confirm(
         this.transloco.translate('tasks.todo.confirmDelete', {
@@ -209,4 +324,13 @@ export class TodoPage {
     this.tasks.reload();
     this.lists.reload();
   }
+}
+
+/** The set with the id added, or taken out when it was there. */
+function toggled(ids: ReadonlySet<string>, id: string): Set<string> {
+  const next = new Set(ids);
+  if (!next.delete(id)) {
+    next.add(id);
+  }
+  return next;
 }

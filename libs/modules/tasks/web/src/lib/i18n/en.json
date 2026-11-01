@@ -124,5 +124,28 @@
     "open": "Open tasks",
     "done": "Tasks done",
     "created": "Tasks that came up"
+  },
+  "steps": {
+    "select": "Select",
+    "selected": "Selected: {{count}}",
+    "choose": "Choose “{{title}}”",
+    "group": "Group",
+    "groupTitle": "Group the tasks ({{count}})",
+    "groupInto": "Where to put them",
+    "intoNew": "Into a new task",
+    "intoExisting": "Into an existing one",
+    "newParent": "The new task",
+    "newParentHint": "Moving house",
+    "parent": "Part of the task",
+    "noParent": "— a task of its own",
+    "add": "Add a step",
+    "newTitle": "New step",
+    "progress": "Steps done",
+    "expand": "Show the steps",
+    "collapse": "Hide the steps",
+    "deleteTitle": "Delete “{{title}}”?",
+    "deleteText": "It has steps: {{count}}. Both ways it goes to the trash and can be restored.",
+    "deleteKeep": "Only the task, keep the steps",
+    "deleteAll": "With the steps ({{count}})"
   }
 }

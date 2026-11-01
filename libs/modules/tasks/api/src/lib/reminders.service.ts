@@ -21,8 +21,10 @@ import {
   zonedToUtc,
 } from '@pd/contracts';
 import {and, asc, eq, gt, inArray, lte, or} from 'drizzle-orm';
+import {alias} from 'drizzle-orm/pg-core';
 import {z} from 'zod';
 import {ReminderRow, reminders, tasks} from './tasks.schema';
+import {STEP_SEPARATOR} from './step-title';
 import {formatWhen, tasksMessages} from './tasks.messages';
 import {DEFAULT_TIME, parseWhen} from './when';
 
@@ -230,7 +232,7 @@ export class RemindersService {
     });
     await this.notifications.send(user.id, {
       title: text.reminderTitle,
-      body: reminder.text,
+      body: await this.withTaskOfStep(reminder),
       source: 'tasks',
       actions: [
         button(text.buttons.done, 'd'),
@@ -239,6 +241,24 @@ export class RemindersService {
         button(text.buttons.other, 'o'),
       ],
     });
+  }
+
+  /** The text of a reminder about a step, with the task it is a step of: "Move › Call the landlord". */
+  private async withTaskOfStep(reminder: ReminderRow): Promise<string> {
+    if (!reminder.taskId) {
+      return reminder.text;
+    }
+    const parent = alias(tasks, 'parent');
+    const [row] = await this.db
+      .select({title: parent.title})
+      .from(tasks)
+      .innerJoin(parent, eq(parent.id, tasks.parentId))
+      .where(
+        and(eq(tasks.id, reminder.taskId), eq(tasks.userId, reminder.userId)),
+      );
+    return row
+      ? `${row.title}${STEP_SEPARATOR}${reminder.text}`
+      : reminder.text;
   }
 
   /** `scheduled` → `fired`, unless another run did it first. */

@@ -8,6 +8,7 @@ import {
 import {taskInputSchema, zonedDateTime} from '@pd/contracts';
 import {REMINDER_ACTION, RemindersService} from './reminders.service';
 import {formatWhen, tasksMessages} from './tasks.messages';
+import {stepTitles} from './step-title';
 import {TasksService} from './tasks.service';
 import {parseWhen} from './when';
 
@@ -100,9 +101,9 @@ export class TasksJobs implements OnModuleInit {
   private async today(user: UserRow): Promise<string> {
     const messages = tasksMessages(user.locale);
     const today = zonedDateTime(new Date(), this.users.timeZoneOf(user)).date;
-    const open = (await this.tasks.list(user.id)).filter(
-      task => !task.completedAt,
-    );
+    const all = await this.tasks.list(user.id);
+    const title = stepTitles(all);
+    const open = all.filter(task => !task.completedAt);
     const section = (title: string, items: string[]) =>
       items.length
         ? `${title}:\n${items.map(item => `• ${item}`).join('\n')}`
@@ -110,13 +111,11 @@ export class TasksJobs implements OnModuleInit {
     const reply = [
       section(
         messages.tasksOverdue,
-        open
-          .filter(task => task.dueDate && task.dueDate < today)
-          .map(task => task.title),
+        open.filter(task => task.dueDate && task.dueDate < today).map(title),
       ),
       section(
         messages.tasksToday,
-        open.filter(task => task.dueDate === today).map(task => task.title),
+        open.filter(task => task.dueDate === today).map(title),
       ),
     ]
       .filter(Boolean)

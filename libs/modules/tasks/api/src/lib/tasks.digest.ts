@@ -1,6 +1,7 @@
 import {Injectable, OnModuleInit} from '@nestjs/common';
 import {MorningDigestService, UsersService} from '@pd/api-core';
 import {NO_CALM, zonedDateTime} from '@pd/contracts';
+import {stepTitles} from './step-title';
 import {TasksService} from './tasks.service';
 
 /**
@@ -31,7 +32,9 @@ export class TasksDigest implements OnModuleInit {
           this.users.timeZoneOf(user),
         ).date;
         const soft = (user?.calm ?? NO_CALM).softOverdue;
-        const open = (await this.tasks.list(userId))
+        const all = await this.tasks.list(userId);
+        const title = stepTitles(all);
+        const open = all
           .filter(
             task =>
               !task.completedAt &&
@@ -43,12 +46,10 @@ export class TasksDigest implements OnModuleInit {
           return null;
         }
         return {
-          today: open
-            .filter(task => task.dueDate === today)
-            .map(task => task.title),
+          today: open.filter(task => task.dueDate === today).map(title),
           overdue: open
             .filter(task => task.dueDate !== today)
-            .map(task => ({title: task.title, dueDate: task.dueDate})),
+            .map(task => ({title: title(task), dueDate: task.dueDate})),
         };
       },
     });
