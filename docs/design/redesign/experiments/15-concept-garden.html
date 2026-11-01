@@ -1,0 +1,1375 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Концепция «Сад» — Personal Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Concept 15 "The Garden": the product from scratch as a living garden that grows from your own data.
+   The diary is a tree, habits are flowers, money is the well, the server is the greenhouse,
+   tasks are seedlings to water, sleep is the moon. You tend it rather than read it. */
+      :root {
+        color-scheme: dark;
+        --sky-1: #0d1a24;
+        --sky-2: #1d3242;
+        --ground: #16261b;
+        --ground-2: #1f3626;
+        --path: #4a3f2c;
+        --leaf: #6fcf8a;
+        --leaf-2: #2f7a48;
+        --bloom: #ff9fc3;
+        --bloom-2: #ffd36e;
+        --water: #5cc7e6;
+        --lamp: #ffd98a;
+        --glass: rgba(170, 220, 255, 0.18);
+        --card: rgba(16, 26, 20, 0.9);
+        --text: #eef3e8; /* 14:1 on card */
+        --text-2: #b4c4ad; /* 8:1 */
+        --warn: #ffcf5a;
+        --crit: #ff8a80;
+        --head: 'Young Serif', Georgia, serif;
+        --body: Nunito, 'Segoe UI', system-ui, sans-serif;
+      }
+      @media (prefers-color-scheme: light) {
+        /* Daytime garden */
+        :root {
+          color-scheme: light;
+          --sky-1: #bfe3f5;
+          --sky-2: #eaf6e6;
+          --ground: #9ccf84;
+          --ground-2: #7db966;
+          --path: #d9c49a;
+          --leaf: #2f8f4e;
+          --leaf-2: #1f6a37;
+          --card: rgba(255, 253, 245, 0.95);
+          --text: #1d2a1c;
+          --text-2: #4a5a45;
+          --warn: #9a5b00;
+          --crit: #b42318;
+          --lamp: #fff3c4;
+          --glass: rgba(255, 255, 255, 0.5);
+          --water: #2b8db0;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        color: var(--text);
+        font: 400 16px/24px var(--body);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+        background: var(--sky-1);
+      }
+      button {
+        font: inherit;
+        color: inherit;
+      }
+      :focus-visible {
+        outline: 3px solid var(--lamp);
+        outline-offset: 3px;
+      }
+      .mock {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 6px 16px;
+        font:
+          500 12px/18px system-ui,
+          sans-serif;
+        background: #eef3e8;
+        color: #102016;
+      }
+      .mock a {
+        color: inherit;
+        text-decoration: none;
+        opacity: 0.8;
+      }
+      .mock a:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 28px;
+        position: relative;
+        z-index: 3;
+      }
+      .top h1 {
+        font: 400 22px/28px var(--head);
+        margin: 0;
+      }
+      .top .sp {
+        flex: 1;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 40px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: var(--card);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font: 700 14px/20px var(--body);
+        cursor: pointer;
+      }
+      .lvl {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font: 800 12px/1 var(--body);
+        color: #102016;
+        background:
+          radial-gradient(closest-side, var(--lamp) 78%, transparent 80%),
+          conic-gradient(var(--leaf) 1%, rgba(255, 255, 255, 0.15) 0);
+      }
+
+      .screen {
+        display: none;
+      }
+      .screen.on {
+        display: block;
+      }
+
+      /* The gardener's note: the AI briefing */
+      .note {
+        position: absolute;
+        z-index: 3;
+        left: 28px;
+        top: 8px;
+        max-width: 460px;
+        padding: 18px 20px;
+        border-radius: 20px 20px 20px 4px;
+        background: var(--card);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.6);
+      }
+      .note .who {
+        font: 800 12px/16px var(--body);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--leaf);
+      }
+      .note p {
+        margin: 6px 0 0;
+        font: 400 18px/27px var(--head);
+      }
+      .note p b {
+        font-weight: 400;
+        color: var(--warn);
+      }
+      .note .acts {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .btn {
+        min-height: 44px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 0;
+        cursor: pointer;
+        font: 800 14px/20px var(--body);
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .btn.main {
+        background: var(--leaf);
+        color: #0d1a12;
+      }
+
+      /* The scene */
+      .scene-wrap {
+        position: relative;
+        background: linear-gradient(var(--sky-1), var(--sky-2) 58%, var(--ground-2) 60%, var(--ground));
+      }
+      .scene {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-height: calc(100vh - 150px);
+      }
+      .hot {
+        cursor: pointer;
+      }
+      .hot:hover .halo,
+      .hot:focus-visible .halo,
+      .hot.on .halo {
+        opacity: 1;
+      }
+      .halo {
+        opacity: 0;
+        transition: opacity 200ms ease;
+      }
+      .tagbox {
+        fill: var(--card);
+        stroke: rgba(255, 255, 255, 0.12);
+      }
+      .tagt {
+        font: 800 15px/1 var(--body);
+        fill: var(--text);
+      }
+      .tags {
+        font: 600 13px/1 var(--body);
+        fill: var(--text-2);
+      }
+      .firefly {
+        fill: var(--lamp);
+        filter: drop-shadow(0 0 4px var(--lamp));
+        animation: fly 7s ease-in-out infinite alternate;
+      }
+      .firefly:nth-of-type(2) {
+        animation-duration: 9s;
+        animation-delay: -3s;
+      }
+      .firefly:nth-of-type(3) {
+        animation-duration: 11s;
+        animation-delay: -5s;
+      }
+      @keyframes fly {
+        0% {
+          transform: translate(0, 0);
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          transform: translate(40px, -30px);
+          opacity: 0.4;
+        }
+      }
+      .sway {
+        transform-origin: bottom center;
+        transform-box: fill-box;
+        animation: sway 5s ease-in-out infinite alternate;
+      }
+      @keyframes sway {
+        from {
+          transform: rotate(-2deg);
+        }
+        to {
+          transform: rotate(2deg);
+        }
+      }
+      .shimmer {
+        animation: shimmer 3s ease-in-out infinite;
+      }
+      @keyframes shimmer {
+        50% {
+          opacity: 0.6;
+        }
+      }
+
+      /* Detail card for a plant */
+      .detail {
+        position: absolute;
+        z-index: 4;
+        right: 28px;
+        top: 8px;
+        width: 360px;
+        padding: 20px;
+        border-radius: 20px;
+        background: var(--card);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .detail h2 {
+        margin: 0;
+        font: 400 24px/30px var(--head);
+      }
+      .detail .big {
+        font: 800 34px/40px var(--body);
+      }
+      .detail p {
+        margin: 0;
+        color: var(--text-2);
+      }
+      .detail ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .detail li {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .detail li span:last-child {
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      /* Paths: the navigation */
+      .paths {
+        position: fixed;
+        left: 50%;
+        bottom: 16px;
+        transform: translateX(-50%);
+        z-index: 10;
+        display: flex;
+        gap: 4px;
+        padding: 6px;
+        border-radius: 999px;
+        background: var(--card);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.7);
+      }
+      .paths button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 48px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 0;
+        background: none;
+        cursor: pointer;
+        font: 800 14px/20px var(--body);
+        color: var(--text-2);
+      }
+      .paths button svg {
+        width: 22px;
+        height: 22px;
+      }
+      .paths button.on {
+        background: var(--leaf);
+        color: #0d1a12;
+      }
+      .can {
+        position: fixed;
+        right: 24px;
+        bottom: 16px;
+        z-index: 10;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 0;
+        cursor: pointer;
+        background: var(--water);
+        color: #08202a;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 12px 32px -10px rgba(92, 199, 230, 0.7);
+      }
+      .can svg {
+        width: 30px;
+        height: 30px;
+      }
+
+      /* Beds list (phone) */
+      .beds {
+        display: none;
+      }
+      .bed {
+        display: grid;
+        grid-template-columns: 52px minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 14px;
+        border-radius: 18px;
+        background: var(--card);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        text-align: left;
+        width: 100%;
+        cursor: pointer;
+      }
+      .bed svg {
+        width: 52px;
+        height: 52px;
+      }
+      .bed b {
+        display: block;
+        font: 800 16px/22px var(--body);
+      }
+      .bed small {
+        color: var(--text-2);
+        font: 600 13px/18px var(--body);
+      }
+      .bed .v {
+        font: 800 16px/22px var(--body);
+        white-space: nowrap;
+      }
+
+      /* ===== The well (finance) ===== */
+      .well-wrap {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+        gap: 28px;
+        padding: 8px 28px 120px;
+        align-items: start;
+        max-width: 1280px;
+        margin: 0 auto;
+      }
+      .panel {
+        background: var(--card);
+        border-radius: 24px;
+        padding: 24px;
+      }
+      .panel h2 {
+        margin: 0 0 6px;
+        font: 400 26px/32px var(--head);
+      }
+      .bucket {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .bucket .ic {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: rgba(92, 199, 230, 0.14);
+        font-size: 20px;
+      }
+      .bucket b {
+        display: block;
+      }
+      .bucket small {
+        color: var(--text-2);
+      }
+      .bucket .v {
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .wave {
+        animation: wave 6s ease-in-out infinite alternate;
+      }
+      @keyframes wave {
+        to {
+          transform: translateX(-40px);
+        }
+      }
+
+      @media (max-width: 900px) {
+        .top {
+          padding: 12px 16px;
+        }
+        .top .chip .txt {
+          display: none;
+        }
+        .note {
+          position: relative;
+          left: auto;
+          top: auto;
+          margin: 0 16px 12px;
+          max-width: none;
+        }
+        .note p {
+          font-size: 17px;
+          line-height: 25px;
+        }
+        .detail {
+          position: fixed;
+          left: 0;
+          right: 0;
+          top: auto;
+          bottom: 0;
+          width: 100%;
+          border-radius: 24px 24px 0 0;
+          z-index: 20;
+          max-height: 70vh;
+          overflow-y: auto;
+          transform: translateY(105%);
+          transition: transform 240ms cubic-bezier(0.2, 0, 0, 1);
+        }
+        .detail.open {
+          transform: none;
+        }
+        .scene .tag {
+          display: none;
+        }
+        .beds {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          padding: 12px 16px 120px;
+        }
+        .paths {
+          left: 8px;
+          right: 8px;
+          transform: none;
+          justify-content: space-between;
+          bottom: 8px;
+        }
+        .paths button {
+          flex-direction: column;
+          gap: 2px;
+          height: 56px;
+          padding: 0 8px;
+          font-size: 11px;
+          line-height: 14px;
+          flex: 1;
+        }
+        .paths button.on {
+          border-radius: 16px;
+        }
+        .can {
+          bottom: 84px;
+          right: 16px;
+          width: 56px;
+          height: 56px;
+        }
+        .well-wrap {
+          grid-template-columns: minmax(0, 1fr);
+          padding: 8px 16px 120px;
+          gap: 16px;
+        }
+        .panel {
+          padding: 18px;
+        }
+      }
+      @media (min-width: 901px) {
+        .detail .close {
+          display: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .firefly,
+        .sway,
+        .shimmer,
+        .wave {
+          animation: none;
+        }
+        .detail {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="mock">
+      <b>Эксперименты:</b><a href="13-concept-cyberpunk.html">13 · Сетка</a
+      ><a href="14-concept-rpg.html">14 · Герой</a
+      ><a href="15-concept-garden.html">15 · Сад</a
+      ><a href="16-concept-analog.html">16 · Приёмник</a>
+    </nav>
+
+    <header class="top">
+      <h1>Сад Романа</h1>
+      <span class="sp"></span>
+      <button class="chip" aria-label="Поиск, Ctrl K">
+        ⌕ <span class="txt">Найти</span>
+      </button>
+      <button
+        class="chip"
+        aria-label="Уровень сада 10: 10 из 1000 опыта, 175 из 504 растений в гербарии"
+      >
+        <span class="lvl">10</span><span class="txt">гербарий 175/504</span>
+      </button>
+    </header>
+
+    <!-- ===== GARDEN (home) ===== -->
+    <section class="screen on" id="garden" aria-label="Сад">
+      <div class="scene-wrap">
+        <div class="note" role="status">
+          <div class="who">Садовник · 08:30</div>
+          <p>
+            Сад в порядке, но <b>колодец мелеет</b> — воды до дождя (≈ 10.11)
+            едва хватит. В теплице разбиты два стекла. Полей дерево дневника:
+            пятнадцатое кольцо ещё не легло.
+          </p>
+          <div class="acts">
+            <button class="btn main" data-go="well">К колодцу</button
+            ><button class="btn">Что полить</button>
+          </div>
+        </div>
+
+        <aside class="detail" id="detail" aria-live="polite">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <h2 id="d-title" style="flex: 1">Дерево дневника</h2>
+            <button class="btn close" id="d-close" aria-label="Закрыть">
+              ✕
+            </button>
+          </div>
+          <div class="big" id="d-big">15 колец</div>
+          <p id="d-text">
+            Каждый день с записью — новое кольцо. В такие дни настроение выше на
+            0,8. Сегодня кольца ещё нет.
+          </p>
+          <ul id="d-list">
+            <li><span>Записей за октябрь</span><span>29</span></li>
+            <li><span>Настроение за 30 дней</span><span>6,6</span></li>
+          </ul>
+          <button class="btn main" id="d-act">Написать пару строк</button>
+        </aside>
+
+        <svg
+          class="scene"
+          viewBox="0 0 1400 700"
+          role="img"
+          aria-label="Сад: колодец мелеет, теплица с двумя разбитыми стёклами, дерево дневника, цветы привычек, всходы дел, лоза кода, луна сна"
+        >
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="var(--sky-1)" />
+              <stop offset="1" stop-color="var(--sky-2)" />
+            </linearGradient>
+            <linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="var(--ground-2)" />
+              <stop offset="1" stop-color="var(--ground)" />
+            </linearGradient>
+            <radialGradient id="glow">
+              <stop offset="0" stop-color="var(--lamp)" stop-opacity=".55" />
+              <stop offset="1" stop-color="var(--lamp)" stop-opacity="0" />
+            </radialGradient>
+          </defs>
+          <rect width="1400" height="700" fill="url(#sky)" />
+          <!-- Moon: sleep. A thinner crescent = less sleep -->
+          <g
+            class="hot"
+            tabindex="0"
+            role="button"
+            aria-label="Луна — сон 6,2 часа"
+            data-k="moon"
+          >
+            <circle class="halo" cx="1000" cy="110" r="70" fill="url(#glow)" />
+            <circle cx="1000" cy="110" r="38" fill="#f4f0d6" />
+            <circle cx="1016" cy="100" r="34" fill="var(--sky-1)" />
+            <g class="tag">
+              <rect
+                class="tagbox"
+                x="900"
+                y="160"
+                width="200"
+                height="50"
+                rx="12"
+              />
+              <text class="tagt" x="916" y="182">Луна · сон</text>
+              <text class="tags" x="916" y="200">6,2 ч · тоньше обычного</text>
+            </g>
+          </g>
+          <path
+            d="M0 430 C200 400 400 420 700 410 S1200 400 1400 420 V700 H0z"
+            fill="url(#gr)"
+          />
+          <path
+            d="M560 700 C600 600 680 520 700 430"
+            fill="none"
+            stroke="var(--path)"
+            stroke-width="60"
+            stroke-linecap="round"
+            opacity=".8"
+          />
+
+          <!-- The well: money -->
+          <g
+            class="hot"
+            tabindex="0"
+            role="button"
+            aria-label="Колодец — деньги, запас 9 дней"
+            data-k="well"
+          >
+            <ellipse
+              class="halo"
+              cx="230"
+              cy="480"
+              rx="140"
+              ry="90"
+              fill="url(#glow)"
+            />
+            <path
+              d="M160 470 h140 v70 a70 18 0 0 1 -140 0z"
+              fill="#6f6a5e"
+              stroke="#2c2a24"
+              stroke-width="3"
+            />
+            <ellipse cx="230" cy="470" rx="70" ry="16" fill="#1a2a33" />
+            <ellipse
+              class="shimmer"
+              cx="230"
+              cy="474"
+              rx="52"
+              ry="9"
+              fill="var(--water)"
+              opacity=".85"
+            />
+            <path
+              d="M170 470 V380 M290 470 V380 M160 382 h140"
+              stroke="#5a3d22"
+              stroke-width="8"
+              stroke-linecap="round"
+            />
+            <path
+              d="M150 384 L230 340 L310 384z"
+              fill="#7a4a2a"
+              stroke="#2c1a0e"
+              stroke-width="3"
+            />
+            <g class="tag">
+              <rect
+                class="tagbox"
+                x="120"
+                y="560"
+                width="230"
+                height="50"
+                rx="12"
+              />
+              <text class="tagt" x="136" y="582">Колодец · 3 645 PLN</text>
+              <text class="tags" x="136" y="600" style="fill: var(--warn)">
+                мелеет · до дождя 9 дней
+              </text>
+            </g>
+          </g>
+
+          <!-- The diary tree -->
+          <g
+            class="hot on"
+            tabindex="0"
+            role="button"
+            aria-label="Дерево дневника — 15 дней подряд"
+            data-k="tree"
+          >
+            <circle class="halo" cx="720" cy="250" r="190" fill="url(#glow)" />
+            <path
+              d="M700 440 C705 380 690 330 700 280 M712 440 C716 380 730 330 724 280"
+              stroke="#5a3d22"
+              stroke-width="16"
+              fill="none"
+              stroke-linecap="round"
+            />
+            <g class="sway">
+              <circle cx="712" cy="220" r="110" fill="var(--leaf-2)" />
+              <circle cx="640" cy="250" r="70" fill="var(--leaf)" />
+              <circle cx="790" cy="240" r="76" fill="var(--leaf)" />
+              <circle cx="716" cy="160" r="72" fill="var(--leaf)" />
+              <circle cx="690" cy="200" r="7" fill="var(--bloom-2)" />
+              <circle cx="760" cy="190" r="7" fill="var(--bloom-2)" />
+              <circle cx="730" cy="260" r="7" fill="var(--bloom-2)" />
+            </g>
+            <g class="tag">
+              <rect
+                class="tagbox"
+                x="470"
+                y="330"
+                width="220"
+                height="50"
+                rx="12"
+              />
+              <text class="tagt" x="486" y="352">Дерево дневника</text>
+              <text class="tags" x="486" y="370" style="fill: var(--warn)">
+                15 колец · сегодня ещё нет
+              </text>
+            </g>
+          </g>
+
+          <!-- Flowers: habits -->
+          <g
+            class="hot"
+            tabindex="0"
+            role="button"
+            aria-label="Клумба привычек"
+            data-k="flowers"
+          >
+            <ellipse
+              class="halo"
+              cx="470"
+              cy="520"
+              rx="120"
+              ry="60"
+              fill="url(#glow)"
+            />
+            <g class="sway">
+              <path
+                d="M420 560 v-50 M460 560 v-60 M500 560 v-44"
+                stroke="var(--leaf-2)"
+                stroke-width="4"
+              />
+              <circle cx="420" cy="506" r="12" fill="var(--bloom)" />
+              <circle cx="460" cy="496" r="14" fill="var(--bloom-2)" />
+              <circle cx="500" cy="512" r="10" fill="#ffffff" opacity=".4" />
+            </g>
+            <g class="tag">
+              <rect
+                class="tagbox"
+                x="380"
+                y="580"
+                width="200"
+                height="50"
+                rx="12"
+              />
+              <text class="tagt" x="396" y="602">Клумба привычек</text>
+              <text class="tags" x="396" y="620">
+                без алкоголя 2 дн. · цветёт
+              </text>
+            </g>
+          </g>
+
+          <!-- Seedlings: today's tasks -->
+          <g
+            class="hot"
+            tabindex="0"
+            role="button"
+            aria-label="Всходы — 3 дела на сегодня"
+            data-k="seeds"
+          >
+            <ellipse
+              class="halo"
+              cx="880"
+              cy="540"
+              rx="110"
+              ry="50"
+              fill="url(#glow)"
+            />
+            <rect
+              x="800"
+              y="540"
+              width="170"
+              height="26"
+              rx="6"
+              fill="#4a3522"
+            />
+            <path
+              d="M830 540 c0 -16 -12 -20 -16 -22 M830 540 c0 -14 10 -20 16 -20"
+              stroke="var(--leaf)"
+              stroke-width="4"
+              fill="none"
+            />
+            <path
+              d="M885 540 c0 -16 -12 -20 -16 -22 M885 540 c0 -14 10 -20 16 -20"
+              stroke="var(--leaf)"
+              stroke-width="4"
+              fill="none"
+            />
+            <path
+              d="M940 540 c0 -10 -6 -14 -10 -14"
+              stroke="var(--warn)"
+              stroke-width="4"
+              fill="none"
+            />
+            <g class="tag">
+              <rect
+                class="tagbox"
+                x="790"
+                y="580"
+                width="200"
+                height="50"
+                rx="12"
+              />
+              <text class="tagt" x="806" y="602">Всходы · 3 дела</text>
+              <text class="tags" x="806" y="620" style="fill: var(--warn)">
+                один вянет: браслет 11:00
+              </text>
+            </g>
+          </g>
+
+          <!-- The greenhouse: the server -->
+          <g
+            class="hot"
+            tabindex="0"
+            role="button"
+            aria-label="Теплица — сервер, 2 из 23 сервисов не отвечают"
+            data-k="greenhouse"
+          >
+            <rect
+              class="halo"
+              x="1040"
+              y="300"
+              width="300"
+              height="260"
+              rx="40"
+              fill="url(#glow)"
+            />
+            <path
+              d="M1080 520 V410 L1180 340 L1280 410 V520z"
+              fill="var(--glass)"
+              stroke="#a9c4cf"
+              stroke-width="3"
+            />
+            <path
+              d="M1130 520 V376 M1180 520 V340 M1230 520 V376 M1080 465 H1280"
+              stroke="#a9c4cf"
+              stroke-width="2"
+            />
+            <path
+              d="M1133 412 l40 40 M1173 412 l-40 40"
+              stroke="var(--crit)"
+              stroke-width="3"
+            />
+            <path
+              d="M1233 470 l40 40 M1273 470 l-40 40"
+              stroke="var(--crit)"
+              stroke-width="3"
+            />
+            <g class="tag">
+              <rect
+                class="tagbox"
+                x="1080"
+                y="540"
+                width="220"
+                height="50"
+                rx="12"
+              />
+              <text class="tagt" x="1096" y="562">Теплица · сервер</text>
+              <text class="tags" x="1096" y="580" style="fill: var(--crit)">
+                2 стекла разбиты
+              </text>
+            </g>
+          </g>
+
+          <!-- Vine: code streak -->
+          <g
+            class="hot"
+            tabindex="0"
+            role="button"
+            aria-label="Лоза кода — 9 дней подряд"
+            data-k="vine"
+          >
+            <rect
+              class="halo"
+              x="920"
+              y="250"
+              width="120"
+              height="220"
+              rx="40"
+              fill="url(#glow)"
+            />
+            <path
+              d="M950 460 V280 M1010 460 V280 M945 300 H1015 M945 360 H1015 M945 420 H1015"
+              stroke="#5a3d22"
+              stroke-width="5"
+            />
+            <path
+              d="M980 460 C960 420 1000 400 980 360 C960 320 1000 300 980 270"
+              stroke="var(--leaf)"
+              stroke-width="5"
+              fill="none"
+            />
+            <g fill="var(--leaf)">
+              <circle cx="968" cy="440" r="8" />
+              <circle cx="994" cy="410" r="8" />
+              <circle cx="966" cy="380" r="8" />
+              <circle cx="996" cy="350" r="8" />
+              <circle cx="970" cy="320" r="8" />
+              <circle cx="992" cy="292" r="8" />
+            </g>
+            <g class="tag">
+              <rect
+                class="tagbox"
+                x="900"
+                y="210"
+                width="180"
+                height="50"
+                rx="12"
+              />
+              <text class="tagt" x="916" y="232">Лоза кода</text>
+              <text class="tags" x="916" y="250">9 дней · пт будет 14</text>
+            </g>
+          </g>
+
+          <circle class="firefly" cx="520" cy="380" r="3" />
+          <circle class="firefly" cx="880" cy="300" r="3" />
+          <circle class="firefly" cx="360" cy="330" r="2.5" />
+        </svg>
+      </div>
+
+      <!-- Phone: the beds as a list under the scene -->
+      <div class="beds">
+        <button class="bed" data-k="well">
+          <svg viewBox="0 0 52 52">
+            <ellipse cx="26" cy="22" rx="16" ry="5" fill="var(--water)" />
+            <path d="M10 22v16a16 5 0 0 0 32 0V22" fill="#6f6a5e" /></svg
+          ><span
+            ><b>Колодец · деньги</b
+            ><small style="color: var(--warn)"
+              >мелеет · до дождя 9 дней</small
+            ></span
+          ><span class="v">3 645</span>
+        </button>
+        <button class="bed" data-k="greenhouse">
+          <svg viewBox="0 0 52 52">
+            <path
+              d="M8 44V24l18-12 18 12v20z"
+              fill="var(--glass)"
+              stroke="#a9c4cf"
+              stroke-width="2"
+            />
+            <path
+              d="M14 28l10 10M24 28l-10 10"
+              stroke="var(--crit)"
+              stroke-width="2.5"
+            /></svg
+          ><span
+            ><b>Теплица · сервер</b
+            ><small style="color: var(--crit)">2 стекла разбиты</small></span
+          ><span class="v">21/23</span>
+        </button>
+        <button class="bed" data-k="tree">
+          <svg viewBox="0 0 52 52">
+            <rect x="23" y="30" width="6" height="16" fill="#5a3d22" />
+            <circle cx="26" cy="22" r="16" fill="var(--leaf)" /></svg
+          ><span
+            ><b>Дерево дневника</b
+            ><small style="color: var(--warn)"
+              >сегодня кольца ещё нет</small
+            ></span
+          ><span class="v">15</span>
+        </button>
+        <button class="bed" data-k="seeds">
+          <svg viewBox="0 0 52 52">
+            <rect x="6" y="34" width="40" height="10" rx="3" fill="#4a3522" />
+            <path
+              d="M16 34c0-8-6-10-8-11M16 34c0-7 5-10 8-10M34 34c0-8-6-10-8-11"
+              stroke="var(--leaf)"
+              stroke-width="3"
+              fill="none"
+            /></svg
+          ><span><b>Всходы · дела</b><small>браслет 11:00 вянет</small></span
+          ><span class="v">3</span>
+        </button>
+        <button class="bed" data-k="moon">
+          <svg viewBox="0 0 52 52">
+            <circle cx="26" cy="26" r="16" fill="#f4f0d6" />
+            <circle cx="33" cy="21" r="15" fill="var(--sky-1)" /></svg
+          ><span><b>Луна · сон</b><small>до 23:30 → ≈ 7,4 ч</small></span
+          ><span class="v">6,2 ч</span>
+        </button>
+        <button class="bed" data-k="vine">
+          <svg viewBox="0 0 52 52">
+            <path
+              d="M26 46C18 36 34 30 26 20S30 8 26 4"
+              stroke="var(--leaf)"
+              stroke-width="4"
+              fill="none"
+            /></svg
+          ><span><b>Лоза кода</b><small>пятница — 14 дней</small></span
+          ><span class="v">9 дн.</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== THE WELL (finance, inner screen) ===== -->
+    <section class="screen" id="well" aria-label="Колодец — деньги">
+      <div class="well-wrap">
+        <div class="panel">
+          <h2>Колодец</h2>
+          <p style="margin: 0; color: var(--text-2)">
+            Вода — деньги на счёте. Каждый день уходит ~412 PLN; дождь —
+            жалование, обычно 10-го.
+          </p>
+          <svg
+            viewBox="0 0 600 380"
+            style="width: 100%; height: auto; margin-top: 12px"
+            role="img"
+            aria-label="Разрез колодца: вода на 30 % (3 645 из среднего месяца 12 355); отметка дождя 10.11 (иллюстрация)"
+          >
+            <rect
+              x="150"
+              y="40"
+              width="300"
+              height="320"
+              rx="20"
+              fill="#2c2a24"
+              stroke="#6f6a5e"
+              stroke-width="6"
+            />
+            <clipPath id="wc">
+              <rect x="156" y="46" width="288" height="308" rx="16" />
+            </clipPath>
+            <g clip-path="url(#wc)">
+              <rect
+                x="150"
+                y="262"
+                width="300"
+                height="100"
+                fill="var(--water)"
+                opacity=".85"
+              />
+              <path
+                class="wave"
+                d="M140 262 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 v10 h-360z"
+                fill="var(--water)"
+              />
+              <line
+                x1="150"
+                x2="450"
+                y1="340"
+                y2="340"
+                stroke="var(--warn)"
+                stroke-dasharray="6 6"
+                stroke-width="2"
+              />
+            </g>
+            <text
+              x="470"
+              y="270"
+              style="font: 800 16px var(--body); fill: var(--text)"
+            >
+              3 645 сейчас
+            </text>
+            <text
+              x="470"
+              y="344"
+              style="font: 700 14px var(--body); fill: var(--warn)"
+            >
+              ≈ 150 к 10.11
+            </text>
+            <text
+              x="470"
+              y="70"
+              style="font: 700 14px var(--body); fill: var(--text-2)"
+            >
+              12 355 — средний месяц
+            </text>
+            <g transform="translate(40 40)">
+              <ellipse cx="40" cy="20" rx="40" ry="18" fill="#a9c4cf" />
+              <ellipse cx="70" cy="26" rx="30" ry="14" fill="#a9c4cf" />
+              <path
+                d="M30 46 l-6 14 M50 46 l-6 14 M70 46 l-6 14"
+                stroke="var(--water)"
+                stroke-width="3"
+              />
+              <text
+                x="0"
+                y="86"
+                style="font: 700 13px var(--body); fill: var(--text-2)"
+              >
+                дождь ≈ 10.11
+              </text>
+            </g>
+          </svg>
+          <div
+            style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px"
+          >
+            <button class="btn main">Набрать ведро — расход</button
+            ><button class="btn">Огородить: лимит до 10-го</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Вёдра сегодня</h2>
+          <div class="bucket">
+            <span class="ic">🛒</span
+            ><span><b>Żabka</b><small>продукты</small></span
+            ><span class="v">−36,98</span>
+          </div>
+          <div class="bucket">
+            <span class="ic">🚕</span
+            ><span><b>Bolt ×2</b><small>транспорт · 34 % ноября</small></span
+            ><span class="v">−60,80</span>
+          </div>
+          <div class="bucket">
+            <span class="ic">☕</span
+            ><span><b>Sam Plus</b><small>кафе</small></span
+            ><span class="v">−47,10</span>
+          </div>
+          <div class="bucket">
+            <span class="ic">📶</span
+            ><span><b>Orange Flex</b><small>связь</small></span
+            ><span class="v">−35,00</span>
+          </div>
+          <p style="color: var(--text-2); margin: 12px 0 0">
+            Садовник: «Проездной вместо такси до дождя — и в колодце останется ≈
+            600».
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Navigation: paths of the garden + the watering can (quick add) -->
+    <nav class="paths" aria-label="Тропинки">
+      <button class="on" data-go="garden">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M12 21V9M12 9C12 5 9 3 5 3c0 4 3 6 7 6zM12 12c0-3 3-5 7-5 0 3-3 5-7 5z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          /></svg
+        >Сад
+      </button>
+      <button data-go="well">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M5 10h14v8a7 3 0 0 1-14 0zM5 10V5M19 10V5M3 5h18"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          /></svg
+        >Колодец
+      </button>
+      <button>
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M4 20h16M7 20v-6M12 20v-9M17 20v-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          /></svg
+        >Грядки
+      </button>
+      <button>
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M4 20V11l8-6 8 6v9z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          /></svg
+        >Теплица
+      </button>
+      <button>
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          /></svg
+        >Дневник
+      </button>
+    </nav>
+    <button
+      class="can"
+      aria-label="Лейка: быстро записать — задача, расход, строка в дневник"
+    >
+      <svg viewBox="0 0 32 32">
+        <path
+          d="M6 12h14v12H6zM20 14l8-5M8 12V8h10v4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        />
+        <circle cx="29" cy="8" r="1.5" fill="currentColor" />
+      </svg>
+    </button>
+
+    <script>
+      const D = {
+        tree: [
+          'Дерево дневника',
+          '15 колец',
+          'Каждый день с записью — новое кольцо. В такие дни настроение выше на 0,8. Сегодня кольца ещё нет.',
+          [
+            ['Записей за октябрь', '29'],
+            ['Настроение за 30 дней', '6,6'],
+          ],
+          'Написать пару строк',
+        ],
+        well: [
+          'Колодец · деньги',
+          '3 644,66 PLN',
+          'Воды до дождя (≈ 10.11) едва хватит: останется ≈ 150 PLN (прогноз 64 %). Треть ноября ушла на такси.',
+          [
+            ['Тратится в день', '~412'],
+            ['Запас', '9 дней'],
+          ],
+          'К колодцу',
+        ],
+        greenhouse: [
+          'Теплица · сервер',
+          '2 стекла',
+          'LanguageTool не отвечает с 31.10 18:53, WakaTime — с 07:40. Остальные 21 подключение и 45 фоновых задач в порядке.',
+          [
+            ['Запросы p95', '192 мс'],
+            ['Копия данных', '10:00'],
+          ],
+          'Починить',
+        ],
+        moon: [
+          'Луна · сон',
+          '6,2 ч',
+          'Прошлой ночью на 48 мин меньше обычного, качество 82, стресс 3. Ляжете до 23:30 — будет ≈ 7,4 ч.',
+          [
+            ['Шаги', '375'],
+            ['Устойчивость', '90'],
+          ],
+          'Напомнить в 23:00',
+        ],
+        seeds: [
+          'Всходы · дела',
+          '3',
+          'Браслет в 11:00 уже прошёл — всход вянет. Ещё: позвонить маме, оплатить интернет.',
+          [
+            ['Откалибровать браслет', '11:00'],
+            ['Позвонить маме', '—'],
+            ['Оплатить интернет', '—'],
+          ],
+          'Полить: новая задача',
+        ],
+        flowers: [
+          'Клумба привычек',
+          '2 дня',
+          'Без алкоголя — второй день, цветок раскрывается. Вечером Telegram спросит, как прошёл день.',
+          [['Лучшая серия', '—']],
+          'Привычки',
+        ],
+        vine: [
+          'Лоза кода',
+          '9 дней',
+          'Каждый день с кодом — новый лист. В пятницу будет 14 и ачивка. За неделю 21 ч 38 мин.',
+          [
+            ['Сегодня', '31 мин'],
+            ['Звёзды', '64'],
+          ],
+          'Разработка',
+        ],
+      };
+      const $ = id => document.getElementById(id);
+      const det = $('detail');
+      function show(k) {
+        const d = D[k];
+        if (!d) return;
+        $('d-title').textContent = d[0];
+        $('d-big').textContent = d[1];
+        $('d-text').textContent = d[2];
+        $('d-list').innerHTML = d[3]
+          .map(([a, b]) => `<li><span>${a}</span><span>${b}</span></li>`)
+          .join('');
+        $('d-act').textContent = d[4];
+        document
+          .querySelectorAll('.hot')
+          .forEach(h => h.classList.toggle('on', h.dataset.k === k));
+        det.classList.add('open');
+      }
+      document.querySelectorAll('[data-k]').forEach(el => {
+        el.addEventListener('click', () => show(el.dataset.k));
+        el.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            show(el.dataset.k);
+          }
+        });
+      });
+      $('d-close').addEventListener('click', () =>
+        det.classList.remove('open'),
+      );
+      const go = id => {
+        document
+          .querySelectorAll('.screen')
+          .forEach(s => s.classList.toggle('on', s.id === id));
+        document
+          .querySelectorAll('.paths [data-go]')
+          .forEach(b => b.classList.toggle('on', b.dataset.go === id));
+        det.classList.remove('open');
+        window.scrollTo({top: 0});
+      };
+      document
+        .querySelectorAll('[data-go]')
+        .forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+    </script>
+  </body>
+</html>

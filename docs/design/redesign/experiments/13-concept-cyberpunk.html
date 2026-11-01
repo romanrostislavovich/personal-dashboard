@@ -1,0 +1,1180 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Концепция «Сетка» (киберпанк) — Personal Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Concept 13 "The Grid": the product from scratch as a netrunner's deck. The owner's data is the grid,
+   the AI is the fixer who talks to you, every action is a command. Effects are decoration only. */
+      :root {
+        color-scheme: dark;
+        --bg: #07060b;
+        --panel: #0e0c16;
+        --panel-2: #141120;
+        --edge: #2a2340;
+        --text: #e6f1ff; /* 17:1 on --bg */
+        --text-2: #94a6c2; /* 7.6:1 */
+        --cyan: #00f0ff; /* 13:1 */
+        --mag: #ff3fd8; /* 6.4:1 */
+        --acid: #e8ff3b; /* warn, 17:1 */
+        --red: #ff4d6a; /* crit, 6:1 */
+        --green: #3bff9d;
+        --ui: 'Chakra Petch', 'Segoe UI', system-ui, sans-serif;
+        --mono: 'Share Tech Mono', Consolas, ui-monospace, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 400 15px/22px var(--ui);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 100;
+        opacity: 0.35;
+        background: repeating-linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.025) 0 1px,
+          transparent 1px 3px
+        );
+      }
+      body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -1;
+        background:
+          linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px) 0 0 /
+            48px 48px,
+          linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px) 0
+            0 / 48px 48px,
+          radial-gradient(
+            60% 40% at 80% 0%,
+            rgba(255, 63, 216, 0.14),
+            transparent 70%
+          ),
+          radial-gradient(
+            50% 40% at 0% 100%,
+            rgba(0, 240, 255, 0.1),
+            transparent 70%
+          );
+      }
+      button,
+      input {
+        font: inherit;
+        color: inherit;
+      }
+      :focus-visible {
+        outline: 2px solid var(--acid);
+        outline-offset: 2px;
+      }
+      .mono {
+        font-family: var(--mono);
+      }
+      .muted {
+        color: var(--text-2);
+      }
+      .c {
+        color: var(--cyan);
+      }
+      .m {
+        color: var(--mag);
+      }
+      .warn {
+        color: var(--acid);
+      }
+      .crit {
+        color: var(--red);
+      }
+      .ok {
+        color: var(--green);
+      }
+      .mock {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 6px 16px;
+        font:
+          500 12px/18px system-ui,
+          sans-serif;
+        background: #e6f1ff;
+        color: #07060b;
+        position: relative;
+        z-index: 101;
+      }
+      .mock a {
+        color: inherit;
+        text-decoration: none;
+        opacity: 0.8;
+      }
+      .mock a:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      /* Cut-corner panels: the deck's one shape */
+      .cut {
+        --k: 14px;
+        clip-path: polygon(
+          var(--k) 0,
+          100% 0,
+          100% calc(100% - var(--k)),
+          calc(100% - var(--k)) 100%,
+          0 100%,
+          0 var(--k)
+        );
+      }
+      .panel {
+        position: relative;
+        background: linear-gradient(180deg, var(--panel-2), var(--panel));
+        padding: 16px 18px;
+      }
+      .panel::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        clip-path: inherit;
+        padding: 1px;
+        background: linear-gradient(
+          135deg,
+          var(--cyan),
+          var(--edge) 30%,
+          var(--edge) 70%,
+          var(--mag)
+        );
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+      }
+      .tag {
+        font: 400 11px/16px var(--mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-2);
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .tag b {
+        color: var(--cyan);
+        font-weight: 400;
+      }
+      .big {
+        font: 600 34px/40px var(--mono);
+        letter-spacing: -0.02em;
+      }
+      .mid {
+        font: 600 22px/28px var(--mono);
+      }
+      .bar {
+        height: 6px;
+        background: #1b1730;
+        position: relative;
+        overflow: hidden;
+      }
+      .bar i {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: var(--p);
+        background: var(--col, var(--cyan));
+        box-shadow: 0 0 10px var(--col, var(--cyan));
+      }
+      .seg {
+        display: grid;
+        grid-template-columns: repeat(30, 1fr);
+        gap: 2px;
+        height: 14px;
+      }
+      .seg i {
+        background: #1b1730;
+      }
+      .seg i.f {
+        background: var(--acid);
+        box-shadow: 0 0 6px var(--acid);
+      }
+      .seg i.x {
+        background: var(--red);
+      }
+
+      /* ===== Shell ===== */
+      .deck {
+        display: grid;
+        grid-template-columns: 240px minmax(0, 1fr);
+        min-height: calc(100vh - 30px);
+      }
+      .jacks {
+        border-right: 1px solid var(--edge);
+        padding: 20px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        position: sticky;
+        top: 0;
+        height: calc(100vh - 30px);
+      }
+      .logo {
+        font: 700 18px/22px var(--ui);
+        letter-spacing: 0.12em;
+        margin: 0 6px 16px;
+      }
+      .logo span {
+        color: var(--mag);
+        text-shadow: 0 0 12px var(--mag);
+      }
+      .jack {
+        display: grid;
+        grid-template-columns: 26px 1fr auto;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 0 10px;
+        border: 0;
+        background: none;
+        text-align: left;
+        cursor: pointer;
+        color: var(--text-2);
+        font: 500 15px/20px var(--ui);
+        letter-spacing: 0.04em;
+      }
+      .jack kbd {
+        font: 400 11px/16px var(--mono);
+        color: var(--text-2);
+        border: 1px solid var(--edge);
+        padding: 0 5px;
+      }
+      .jack .k {
+        font: 400 12px/16px var(--mono);
+        color: var(--edge);
+      }
+      .jack:hover {
+        color: var(--text);
+        background: rgba(0, 240, 255, 0.06);
+      }
+      .jack.on {
+        color: var(--bg);
+        background: var(--cyan);
+        box-shadow: 0 0 24px rgba(0, 240, 255, 0.35);
+      }
+      .jack.on .k,
+      .jack.on kbd {
+        color: var(--bg);
+        border-color: var(--bg);
+      }
+      .jack .dot {
+        width: 8px;
+        height: 8px;
+        background: var(--red);
+        box-shadow: 0 0 8px var(--red);
+      }
+      .jacks .sp {
+        flex: 1;
+      }
+      .id {
+        border-top: 1px dashed var(--edge);
+        padding-top: 14px;
+        font: 400 12px/18px var(--mono);
+        color: var(--text-2);
+      }
+      .id b {
+        display: block;
+        color: var(--text);
+        font: 600 14px/20px var(--ui);
+        letter-spacing: 0.06em;
+      }
+      main {
+        padding: 20px 28px 120px;
+        min-width: 0;
+      }
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        font: 400 12px/18px var(--mono);
+        color: var(--text-2);
+        margin-bottom: 18px;
+      }
+      .status .lvl {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .status .lvl b {
+        font: 700 15px/1 var(--ui);
+        color: var(--acid);
+        text-shadow: 0 0 10px rgba(232, 255, 59, 0.5);
+      }
+      .status .lvl .bar {
+        width: 140px;
+      }
+      .status .sp {
+        flex: 1;
+      }
+
+      /* The command line: always there (the old Ctrl+K) */
+      .cmd {
+        position: fixed;
+        left: 240px;
+        right: 0;
+        bottom: 0;
+        z-index: 20;
+        padding: 12px 28px 16px;
+        background: linear-gradient(to top, var(--bg) 60%, transparent);
+      }
+      .cmd label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 52px;
+        padding: 0 16px;
+        background: #0b0a12;
+        border: 1px solid var(--edge);
+        box-shadow:
+          0 0 0 1px rgba(0, 240, 255, 0.15),
+          0 0 32px -8px rgba(0, 240, 255, 0.35);
+      }
+      .cmd .pr {
+        font: 400 15px/1 var(--mono);
+        color: var(--cyan);
+      }
+      .cmd input {
+        flex: 1;
+        min-width: 0;
+        background: none;
+        border: 0;
+        outline: none;
+        font: 400 15px/24px var(--mono);
+        color: var(--text);
+        caret-color: var(--acid);
+      }
+      .cmd input::placeholder {
+        color: var(--text-2);
+      }
+      .cmd .hint {
+        font: 400 11px/16px var(--mono);
+        color: var(--text-2);
+        white-space: nowrap;
+      }
+
+      /* ===== Home: the grid ===== */
+      .screen {
+        display: none;
+      }
+      .screen.on {
+        display: block;
+      }
+      .fixer {
+        display: grid;
+        grid-template-columns: 72px minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+        margin-bottom: 16px;
+      }
+      .avatar {
+        width: 72px;
+        height: 72px;
+        position: relative;
+        background: #120f1e;
+        display: grid;
+        place-items: center;
+      }
+      .avatar svg {
+        width: 56px;
+        height: 56px;
+      }
+      .fixer .who {
+        font: 400 11px/16px var(--mono);
+        letter-spacing: 0.14em;
+        color: var(--mag);
+      }
+      .fixer p {
+        margin: 6px 0 0;
+        font: 500 19px/28px var(--ui);
+        max-width: 70ch;
+      }
+      .fixer p .hl {
+        color: var(--acid);
+      }
+      .fixer p .hc {
+        color: var(--red);
+      }
+      .fixer .acts {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .btn {
+        min-height: 40px;
+        padding: 0 14px;
+        border: 1px solid var(--edge);
+        background: rgba(0, 240, 255, 0.04);
+        cursor: pointer;
+        font: 600 13px/20px var(--ui);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .btn.main {
+        background: var(--cyan);
+        color: var(--bg);
+        border-color: var(--cyan);
+        box-shadow: 0 0 18px rgba(0, 240, 255, 0.4);
+      }
+      .btn:hover {
+        border-color: var(--cyan);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .s3 {
+        grid-column: span 3;
+      }
+      .s4 {
+        grid-column: span 4;
+      }
+      .s5 {
+        grid-column: span 5;
+      }
+      .s6 {
+        grid-column: span 6;
+      }
+      .s7 {
+        grid-column: span 7;
+      }
+      .s8 {
+        grid-column: span 8;
+      }
+      .s12 {
+        grid-column: span 12;
+      }
+      .readout {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 100%;
+      }
+      .kv {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 6px 12px;
+        font: 400 13px/18px var(--mono);
+      }
+      .kv span:nth-child(odd) {
+        color: var(--text-2);
+      }
+      .net {
+        position: relative;
+        height: 260px;
+      }
+      .net svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+      .node text {
+        font: 400 12px/1 var(--mono);
+        fill: var(--text);
+      }
+      .node .sub {
+        fill: var(--text-2);
+        font-size: 10px;
+      }
+      .link {
+        stroke: rgba(0, 240, 255, 0.25);
+        stroke-width: 1;
+      }
+      .link.live {
+        stroke: var(--cyan);
+        stroke-dasharray: 3 7;
+        animation: pulse-flow 1.4s linear infinite;
+      }
+      @keyframes pulse-flow {
+        to {
+          stroke-dashoffset: -20;
+        }
+      }
+      .dead {
+        animation: glitch 3.6s steps(1) infinite;
+      }
+      @keyframes glitch {
+        0%,
+        92%,
+        100% {
+          transform: none;
+          opacity: 1;
+        }
+        93% {
+          transform: translate(2px, -1px);
+          opacity: 0.6;
+        }
+        95% {
+          transform: translate(-3px, 1px);
+        }
+        97% {
+          transform: translate(1px, 0);
+          opacity: 0.8;
+        }
+      }
+      .contract {
+        display: grid;
+        grid-template-columns: 22px minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+        min-height: 44px;
+        border-bottom: 1px dashed var(--edge);
+      }
+      .contract:last-child {
+        border-bottom: 0;
+      }
+      .contract .box {
+        width: 18px;
+        height: 18px;
+        border: 1px solid var(--cyan);
+      }
+      .contract small {
+        font: 400 12px/16px var(--mono);
+        color: var(--text-2);
+      }
+      .spark {
+        width: 100%;
+        height: 44px;
+      }
+
+      /* ===== Credits screen ===== */
+      .ledger {
+        width: 100%;
+        border-collapse: collapse;
+        font: 400 14px/20px var(--mono);
+      }
+      .ledger td {
+        padding: 10px 8px;
+        border-bottom: 1px dashed var(--edge);
+      }
+      .ledger td:first-child {
+        color: var(--text-2);
+        white-space: nowrap;
+      }
+      .ledger td.n {
+        text-align: right;
+        white-space: nowrap;
+      }
+      .ledger .cat {
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        color: var(--mag);
+      }
+      .ice {
+        border-left: 3px solid var(--acid);
+        padding: 10px 12px;
+        background: rgba(232, 255, 59, 0.06);
+        font: 500 14px/20px var(--ui);
+      }
+
+      /* ===== Phone ===== */
+      .tabbar {
+        display: none;
+      }
+      @media (max-width: 900px) {
+        .deck {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .jacks {
+          display: none;
+        }
+        main {
+          padding: 14px 14px 170px;
+        }
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+        .s3,
+        .s4 {
+          grid-column: span 1;
+        }
+        .s5,
+        .s6,
+        .s7,
+        .s8,
+        .s12 {
+          grid-column: 1 / -1;
+        }
+        .fixer {
+          grid-template-columns: 48px minmax(0, 1fr);
+          gap: 12px;
+        }
+        .avatar {
+          width: 48px;
+          height: 48px;
+        }
+        .avatar svg {
+          width: 38px;
+          height: 38px;
+        }
+        .fixer p {
+          font-size: 17px;
+          line-height: 25px;
+        }
+        .big {
+          font-size: 26px;
+          line-height: 32px;
+        }
+        .panel {
+          padding: 12px 14px;
+        }
+        .net {
+          height: 220px;
+        }
+        .status .lvl .bar {
+          width: 80px;
+        }
+        .cmd {
+          left: 0;
+          bottom: 64px;
+          padding: 8px 12px;
+        }
+        .cmd .hint {
+          display: none;
+        }
+        .tabbar {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          height: 64px;
+          z-index: 21;
+          background: #0b0a12;
+          border-top: 1px solid var(--edge);
+        }
+        .tabbar button {
+          border: 0;
+          background: none;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 2px;
+          font: 600 11px/14px var(--ui);
+          letter-spacing: 0.08em;
+          color: var(--text-2);
+          cursor: pointer;
+          position: relative;
+        }
+        .tabbar button span {
+          font: 400 16px/1 var(--mono);
+        }
+        .tabbar button.on {
+          color: var(--cyan);
+          text-shadow: 0 0 10px var(--cyan);
+        }
+        .tabbar button.on::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 20%;
+          right: 20%;
+          height: 2px;
+          background: var(--cyan);
+          box-shadow: 0 0 10px var(--cyan);
+        }
+        .ledger {
+          font-size: 13px;
+        }
+        .ledger td {
+          padding: 8px 4px;
+        }
+        .hide-s {
+          display: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .dead,
+        .link.live,
+        .caret {
+          animation: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="mock">
+      <b>Эксперименты:</b><a href="10-concept-horizon.html">10</a
+      ><a href="11-concept-orbit.html">11</a
+      ><a href="12-concept-letter.html">12</a
+      ><a href="13-concept-cyberpunk.html">13 · Сетка</a
+      ><a href="14-concept-rpg.html">14 · Герой</a
+      ><a href="15-concept-garden.html">15 · Сад</a
+      ><a href="16-concept-analog.html">16 · Приёмник</a>
+    </nav>
+
+    <div class="deck">
+      <!-- Desktop navigation: the jacks of the deck, number keys switch them -->
+      <nav class="jacks" aria-label="Разъёмы деки">
+        <div class="logo">PD<span>//</span>DECK</div>
+        <button class="jack on" data-go="home">
+          <span class="k">01</span>Сетка<kbd>1</kbd>
+        </button>
+        <button class="jack" data-go="credits">
+          <span class="k">02</span>Кредиты<kbd>2</kbd>
+        </button>
+        <button class="jack" data-go="home">
+          <span class="k">03</span>Биомонитор<kbd>3</kbd>
+        </button>
+        <button class="jack" data-go="home">
+          <span class="k">04</span>Контракты<kbd>4</kbd>
+        </button>
+        <button class="jack" data-go="home">
+          <span class="k">05</span>Лайфлог<kbd>5</kbd>
+        </button>
+        <button class="jack" data-go="home">
+          <span class="k">06</span>Узлы<span
+            class="dot"
+            title="2 узла мертвы"
+          ></span>
+        </button>
+        <button class="jack" data-go="home">
+          <span class="k">07</span>Архив<kbd>7</kbd>
+        </button>
+        <div class="sp"></div>
+        <div class="id">
+          <b>R.ROSTISLAVOVICH</b>LVL 10 · 175/504 ачивок<br />деку собрал:
+          сервер · телефон · браслет
+        </div>
+      </nav>
+
+      <main>
+        <div class="status" role="status">
+          <span>ВС 01.11 · <span class="c">12:24</span></span>
+          <span class="lvl"
+            ><b>LVL 10</b
+            ><span class="bar" style="--p: 1%; --col: var(--acid)"><i></i></span
+            >10/1000 XP</span
+          >
+          <span class="sp"></span>
+          <span>синк <span class="ok">●</span> 12:22</span>
+          <span>узлы <span class="crit">21/23</span></span>
+        </div>
+
+        <!-- ===== HOME ===== -->
+        <section class="screen on" id="home" aria-label="Сетка">
+          <div class="fixer">
+            <div class="avatar cut panel" aria-hidden="true">
+              <svg viewBox="0 0 56 56">
+                <path
+                  d="M8 48 L14 18 L28 8 L42 18 L48 48 Z"
+                  fill="none"
+                  stroke="#ff3fd8"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M18 26 h8 M30 26 h8"
+                  stroke="#00f0ff"
+                  stroke-width="3"
+                />
+                <path d="M22 38 h12" stroke="#e8ff3b" stroke-width="1.5" />
+              </svg>
+            </div>
+            <div>
+              <div class="who">ВХОДЯЩЕЕ · ФИКСЕР · 08:30 · ШИФР OK</div>
+              <p>
+                Слушай, раннер. Два узла в сетке мертвы —
+                <span class="hc">LanguageTool с 18:53, WakaTime с 07:40</span>.
+                Кредитов хватит впритык:
+                <span class="hl">≈ 150 до зарплаты</span>. Ляжешь до 23:30 —
+                завтра выйдешь на <span class="c">7/10</span>. Дневник не
+                пропускай, 15 дней подряд.
+              </p>
+              <div class="acts">
+                <button class="btn main">Перезапустить узлы</button
+                ><button class="btn" data-go="credits">Кредиты</button
+                ><button class="btn">Почему так</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid">
+            <article class="panel cut s5" aria-label="Карта сетки">
+              <div class="tag"><span>// карта сетки</span><b>23 узла</b></div>
+              <div class="net">
+                <svg
+                  viewBox="0 0 400 240"
+                  role="img"
+                  aria-label="Узлы: ядро, банк, браслет, телефон, GitHub, Last.fm работают; LanguageTool и WakaTime мертвы"
+                >
+                  <g>
+                    <line class="link live" x1="200" y1="120" x2="70" y2="50" />
+                    <line
+                      class="link live"
+                      x1="200"
+                      y1="120"
+                      x2="330"
+                      y2="50"
+                    />
+                    <line
+                      class="link live"
+                      x1="200"
+                      y1="120"
+                      x2="60"
+                      y2="180"
+                    />
+                    <line class="link" x1="200" y1="120" x2="340" y2="190" />
+                    <line
+                      class="link live"
+                      x1="200"
+                      y1="120"
+                      x2="200"
+                      y2="20"
+                    />
+                    <line
+                      class="link"
+                      x1="200"
+                      y1="120"
+                      x2="130"
+                      y2="220"
+                      stroke-dasharray="2 4"
+                    />
+                    <line
+                      class="link live"
+                      x1="200"
+                      y1="120"
+                      x2="270"
+                      y2="220"
+                    />
+                  </g>
+                  <g class="node">
+                    <circle
+                      cx="200"
+                      cy="120"
+                      r="22"
+                      fill="#0b0a12"
+                      stroke="#00f0ff"
+                      stroke-width="2"
+                    />
+                    <text x="200" y="124" text-anchor="middle">ЯДРО</text>
+                  </g>
+                  <g class="node">
+                    <circle cx="70" cy="50" r="7" fill="#3bff9d" />
+                    <text x="82" y="46">PKO</text>
+                    <text class="sub" x="82" y="60">12:15</text>
+                  </g>
+                  <g class="node">
+                    <circle cx="330" cy="50" r="7" fill="#3bff9d" />
+                    <text x="300" y="34">БРАСЛЕТ</text>
+                  </g>
+                  <g class="node">
+                    <circle cx="200" cy="20" r="7" fill="#3bff9d" />
+                    <text x="212" y="24">GITHUB</text>
+                  </g>
+                  <g class="node">
+                    <circle cx="60" cy="180" r="7" fill="#3bff9d" />
+                    <text x="72" y="184">ТЕЛЕФОН</text>
+                  </g>
+                  <g class="node">
+                    <circle cx="270" cy="220" r="7" fill="#3bff9d" />
+                    <text x="282" y="224">LAST.FM</text>
+                  </g>
+                  <g class="node dead">
+                    <rect
+                      x="333"
+                      y="183"
+                      width="14"
+                      height="14"
+                      fill="#ff4d6a"
+                    />
+                    <text x="300" y="214" fill="#ff4d6a">LANGTOOL ✕</text>
+                  </g>
+                  <g class="node dead">
+                    <rect
+                      x="123"
+                      y="213"
+                      width="14"
+                      height="14"
+                      fill="#ff4d6a"
+                    />
+                    <text x="90" y="206" fill="#ff4d6a">WAKATIME ✕</text>
+                  </g>
+                </svg>
+              </div>
+            </article>
+
+            <article class="panel cut s4 readout">
+              <div class="tag"><span>// биомонитор</span><b>браслет</b></div>
+              <div class="big warn">6,2 ч</div>
+              <div class="kv">
+                <span>сон / норма</span><span>−48 мин</span><span>стресс</span
+                ><span class="ok">3 · ровно</span><span>шаги</span
+                ><span>375</span>
+              </div>
+              <div class="bar" style="--p: 62%; --col: var(--acid)">
+                <i></i>
+              </div>
+              <div class="tag">
+                <span>прогноз сна</span><b>≈ 7,4 ч если до 23:30</b>
+              </div>
+            </article>
+
+            <article class="panel cut s3 readout">
+              <div class="tag"><span>// лайфлог</span><b>72 %</b></div>
+              <div class="big c">7/10</div>
+              <div class="muted" style="font-size: 13px; line-height: 18px">
+                настроение сегодня. вниз тянет: 2:53 в Instagram
+              </div>
+              <svg
+                class="spark"
+                viewBox="0 0 120 44"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <polyline
+                  points="0,30 20,26 40,32 60,24 80,26"
+                  fill="none"
+                  stroke="#e6f1ff"
+                  stroke-width="1.5"
+                  vector-effect="non-scaling-stroke"
+                />
+                <polyline
+                  points="80,26 120,14"
+                  fill="none"
+                  stroke="#00f0ff"
+                  stroke-width="1.5"
+                  stroke-dasharray="3 3"
+                  vector-effect="non-scaling-stroke"
+                />
+              </svg>
+            </article>
+
+            <article
+              class="panel cut s4 readout"
+              role="button"
+              tabindex="0"
+              data-go="credits"
+              style="cursor: pointer"
+            >
+              <div class="tag"><span>// кредиты</span><b>PLN</b></div>
+              <div class="big">3 644,66</div>
+              <div class="tag">
+                <span>запас — дни</span
+                ><b class="warn" style="color: var(--acid)">9 / 30</b>
+              </div>
+              <div class="seg" aria-label="Запас: 9 дней из 30">
+                <i class="f"></i><i class="f"></i><i class="f"></i
+                ><i class="f"></i><i class="f"></i><i class="f"></i
+                ><i class="f"></i><i class="f"></i><i class="f"></i><i></i
+                ><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i
+                ><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i
+                ><i></i><i></i>
+              </div>
+              <div class="muted" style="font-size: 13px">
+                к 10.11 ≈ 150 · прогноз 64 %
+              </div>
+            </article>
+
+            <article class="panel cut s5">
+              <div class="tag">
+                <span>// контракты на сегодня</span><b>3</b>
+              </div>
+              <div class="contract">
+                <span class="box"></span><span>Откалибровать браслет</span
+                ><small class="warn">11:00 · просрочен</small>
+              </div>
+              <div class="contract">
+                <span class="box"></span><span>Позвонить маме</span
+                ><small>—</small>
+              </div>
+              <div class="contract">
+                <span class="box"></span><span>Оплатить интернет</span
+                ><small>—</small>
+              </div>
+            </article>
+
+            <article class="panel cut s3 readout">
+              <div class="tag"><span>// серии</span><b>не рвать</b></div>
+              <div class="kv">
+                <span>дневник</span><span class="warn">15 · сегодня 0</span
+                ><span>код</span><span class="c">9 дн.</span
+                ><span>без алкоголя</span><span>2 дн.</span>
+              </div>
+              <div class="tag">
+                <span>ближайший трофей</span><b>пт · 14 дн. кода</b>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ===== CREDITS (inner screen) ===== -->
+        <section class="screen" id="credits" aria-label="Кредиты">
+          <div class="grid">
+            <article class="panel cut s7 readout">
+              <div class="tag">
+                <span>// кредиты · PKO ••6677</span><b>12:15</b>
+              </div>
+              <div class="big" style="font-size: 48px; line-height: 56px">
+                3 644,66 <span class="muted" style="font-size: 20px">PLN</span>
+              </div>
+              <svg
+                viewBox="0 0 600 120"
+                style="width: 100%; height: 120px"
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="Остаток с 19.10 и прогноз до 10.11 (иллюстрация)"
+              >
+                <polygon
+                  points="380,20 600,92 600,120"
+                  fill="rgba(232,255,59,.12)"
+                />
+                <polyline
+                  points="0,116 80,114 160,112 240,116 300,118 330,18 380,20"
+                  fill="none"
+                  stroke="#e6f1ff"
+                  stroke-width="2"
+                  vector-effect="non-scaling-stroke"
+                />
+                <polyline
+                  points="380,20 460,48 540,80 600,108"
+                  fill="none"
+                  stroke="#e8ff3b"
+                  stroke-width="2"
+                  stroke-dasharray="6 5"
+                  vector-effect="non-scaling-stroke"
+                />
+                <line
+                  x1="0"
+                  x2="600"
+                  y1="118"
+                  y2="118"
+                  stroke="#ff4d6a"
+                  stroke-dasharray="2 6"
+                />
+              </svg>
+              <div class="tag">
+                <span>19.10</span><span>сейчас</span><b>10.11 · ≈ 150</b>
+              </div>
+            </article>
+            <article class="panel cut s5 readout">
+              <div class="tag"><span>// burn rate</span><b>3 мес.</b></div>
+              <div class="mid">~412 / день</div>
+              <div class="kv">
+                <span>сегодня</span><span>179,88</span
+                ><span>ноябрь целиком</span><span>≈ 11 800</span
+                ><span>запас</span><span class="warn">0,3 мес.</span>
+              </div>
+              <div class="ice">
+                <span class="warn">ЛЁД:</span> транспорт — 34 % ноября.
+                Проездной до 10-го → останется ≈ 600.
+              </div>
+              <div
+                class="acts"
+                style="display: flex; gap: 8px; flex-wrap: wrap"
+              >
+                <button class="btn main">Лимит до 10-го</button
+                ><button class="btn">Импорт выписки</button>
+              </div>
+            </article>
+            <article class="panel cut s12">
+              <div class="tag">
+                <span>// журнал транзакций</span><b>сегодня</b>
+              </div>
+              <table class="ledger">
+                <tr>
+                  <td>12:02</td>
+                  <td>ŻABKA <span class="cat">ПРОДУКТЫ</span></td>
+                  <td class="n">−36,98</td>
+                </tr>
+                <tr>
+                  <td>10:41</td>
+                  <td>BOLT ×2 <span class="cat">ТРАНСПОРТ</span></td>
+                  <td class="n">−60,80</td>
+                </tr>
+                <tr>
+                  <td>09:15</td>
+                  <td>SAM PLUS <span class="cat">КАФЕ</span></td>
+                  <td class="n">−47,10</td>
+                </tr>
+                <tr>
+                  <td>08:00</td>
+                  <td>ORANGE FLEX <span class="cat">СВЯЗЬ</span></td>
+                  <td class="n">−35,00</td>
+                </tr>
+              </table>
+              <p
+                class="muted"
+                style="margin: 12px 0 0; font: 400 13px/18px var(--mono)"
+              >
+                &gt; расход 14 кофе вчера — пишется прямо в командной строке
+                внизу
+              </p>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- The command line: search, commands and quick add in one place -->
+    <div class="cmd">
+      <label
+        ><span class="pr">&gt;</span
+        ><input
+          placeholder="команда, поиск или вопрос: «расход 14 кофе», «/кредиты», «? что будет в пятницу»"
+          aria-label="Командная строка"
+        /><span class="hint">Ctrl K · 1–7 разъёмы</span></label
+      >
+    </div>
+    <nav class="tabbar" aria-label="Разъёмы">
+      <button class="on" data-go="home"><span>◉</span>Сетка</button>
+      <button data-go="credits"><span>¤</span>Кредиты</button>
+      <button data-go="home"><span>♥</span>Био</button>
+      <button data-go="home"><span>▤</span>Контр.</button>
+      <button data-go="home"><span>⋯</span>Ещё</button>
+    </nav>
+
+    <script>
+      // Switching screens: jacks on desktop, tab bar on phone, number keys 1–2 in this mockup.
+      const go = id => {
+        document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
+        document.querySelectorAll(".jack, .tabbar button").forEach(b => b.classList.remove("on"));
+        document.querySelector(`.jack[data-go="${id}"]`)?.classList.add("on");
+        document.querySelector(`.tabbar [data-go="${id}"]`)?.classList.add("on");
+        window.scrollTo({top: 0});
+      };
+      document.querySelectorAll('[data-go]').forEach(b => {
+        b.addEventListener('click', () => go(b.dataset.go));
+        b.addEventListener('keydown', e => {
+          if (e.key === 'Enter' && b.tagName !== 'BUTTON') go(b.dataset.go);
+        });
+      });
+      document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT') return;
+        if (e.key === '1') go('home');
+        if (e.key === '2') go('credits');
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          document.querySelector('.cmd input').focus();
+        }
+      });
+    </script>
+  </body>
+</html>

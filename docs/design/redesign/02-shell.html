@@ -1,0 +1,1782 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Меню и каркас — Personal Dashboard</title>
+    <style>
+      /* ===== Type scale (Material 3 roles the app already has as --mat-sys-<role>) ===== */
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font: 400 14px/20px var(--pd-font);
+  color: var(--mat-sys-on-surface);
+  background: var(--mat-sys-surface);
+  -webkit-font-smoothing: antialiased;
+}
+.t-display {
+  font: 800 28px/36px var(--pd-font-heading);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.t-headline {
+  font: 700 22px/28px var(--pd-font-heading);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.t-title {
+  font: 600 16px/24px var(--pd-font);
+  margin: 0;
+}
+.t-title-s {
+  font: 600 14px/20px var(--pd-font);
+  margin: 0;
+}
+.t-body {
+  font: 400 14px/20px var(--pd-font);
+  margin: 0;
+}
+.t-label {
+  font: 500 12px/16px var(--pd-font);
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+.t-num-xl {
+  font: 700 32px/40px var(--pd-font);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.t-num-l {
+  font: 700 24px/32px var(--pd-font);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.t-num {
+  font-variant-numeric: tabular-nums;
+}
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+.ok {
+  color: var(--pd-ok-text);
+}
+.warn {
+  color: var(--pd-warn-text);
+}
+.crit {
+  color: var(--pd-crit-text);
+}
+a {
+  color: var(--mat-sys-primary);
+  text-decoration: none;
+}
+
+/* ===== Icons: Material Symbols drawn as inline SVG via mask-free glyph boxes ===== */
+.ic {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  display: inline-block;
+  vertical-align: middle;
+}
+.ic svg,
+svg.ic {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ===== Card pattern ===== */
+.card {
+  background: var(--pd-card);
+  border: 1px solid var(--pd-border);
+  border-radius: var(--pd-radius);
+  padding: var(--pd-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--pd-space-3);
+  min-width: 0;
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-2);
+  min-height: 24px;
+  color: var(--mat-sys-on-surface-variant);
+}
+.card-head .t-title-s {
+  color: var(--mat-sys-on-surface);
+}
+.card-head .more {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font: 500 12px/16px var(--pd-font);
+  color: var(--mat-sys-on-surface-variant);
+}
+a.card {
+  color: inherit;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease;
+}
+a.card:hover {
+  border-color: var(--mat-sys-outline);
+  background: var(--mat-sys-surface-container);
+}
+a.card:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+.kpi {
+  display: flex;
+  align-items: baseline;
+  gap: var(--pd-space-2);
+  flex-wrap: wrap;
+}
+.delta {
+  font: 600 12px/16px var(--pd-font);
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* ===== Status ===== */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-block;
+  background: var(--pd-ok-fill);
+}
+.dot.warn {
+  background: var(--pd-warn-fill);
+}
+.dot.crit {
+  background: var(--pd-crit-fill);
+}
+.dot.off {
+  background: var(--mat-sys-outline-variant);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 var(--pd-space-2);
+  border-radius: 999px;
+  font: 600 12px/16px var(--pd-font);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+}
+.badge.ok {
+  background: var(--pd-ok-container);
+  color: var(--pd-ok-text);
+}
+.badge.warn {
+  background: var(--pd-warn-container);
+  color: var(--pd-warn-text);
+}
+.badge.crit {
+  background: var(--pd-crit-container);
+  color: var(--pd-crit-text);
+}
+
+/* ===== Buttons (matButton: filled / tonal / text) ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pd-space-2);
+  height: 40px;
+  padding: 0 var(--pd-space-4);
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  font: 600 14px/20px var(--pd-font);
+  background: transparent;
+  color: var(--mat-sys-primary);
+  white-space: nowrap;
+}
+.btn.filled {
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+.btn.tonal {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+.btn.outlined {
+  border: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-on-surface);
+}
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  color: var(--mat-sys-on-surface-variant);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.icon-btn:hover,
+.btn:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--mat-sys-on-surface) 8%,
+    transparent
+  );
+}
+.btn.filled:hover {
+  background: color-mix(
+    in srgb,
+    var(--mat-sys-primary) 90%,
+    var(--mat-sys-on-primary)
+  );
+}
+kbd {
+  font: 500 11px/16px var(--pd-font);
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* ===== Chips (one period/filter chip instead of many fields) ===== */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 var(--pd-space-3);
+  border-radius: var(--pd-radius-xs);
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: transparent;
+  color: var(--mat-sys-on-surface);
+  font: 500 14px/20px var(--pd-font);
+  cursor: pointer;
+}
+.chip.on {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  border-color: transparent;
+}
+
+/* ===== List pattern ===== */
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-3);
+  min-height: 48px;
+  padding: var(--pd-space-2) 0;
+  border-top: 1px solid
+    color-mix(in srgb, var(--mat-sys-outline-variant) 60%, transparent);
+}
+.row:first-child {
+  border-top: 0;
+}
+.row .grow {
+  flex: 1;
+  min-width: 0;
+}
+.row .title {
+  font: 500 14px/20px var(--pd-font);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row .sub {
+  font: 400 12px/16px var(--pd-font);
+  color: var(--mat-sys-on-surface-variant);
+}
+.row .val {
+  font: 600 14px/20px var(--pd-font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.lead {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--pd-radius-small);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* ===== Disclosure (progressive disclosure: details/summary) ===== */
+details.fold {
+  border-top: 1px solid var(--pd-border);
+}
+details.fold > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-2);
+  min-height: 48px;
+  font: 500 14px/20px var(--pd-font);
+  color: var(--mat-sys-on-surface-variant);
+}
+details.fold > summary::-webkit-details-marker {
+  display: none;
+}
+details.fold > summary::after {
+  content: "";
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 160ms ease;
+}
+details.fold[open] > summary::after {
+  transform: rotate(-135deg);
+}
+
+/* ===== Skeleton (loading — never a fake zero) ===== */
+.sk {
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--mat-sys-surface-container-high),
+    var(--mat-sys-surface-container-highest),
+    var(--mat-sys-surface-container-high)
+  );
+  background-size: 200% 100%;
+  animation: sk 1.4s ease-in-out infinite;
+}
+@keyframes sk {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk {
+    animation: none;
+  }
+  * {
+    transition: none !important;
+  }
+}
+
+/* ===== Page header pattern ===== */
+.page-head {
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--pd-space-6);
+}
+.page-head .t-display {
+  margin-right: auto;
+}
+
+/* ===== Mockup frame (not part of the design) ===== */
+.mock-bar {
+  position: relative;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pd-space-2);
+  align-items: center;
+  padding: var(--pd-space-2) var(--pd-space-4);
+  background: var(--mat-sys-inverse-surface);
+  color: var(--mat-sys-inverse-on-surface);
+  font: 500 12px/16px var(--pd-font);
+}
+.mock-bar a {
+  color: inherit;
+  opacity: 0.85;
+}
+.mock-bar a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+.mock-bar .sp {
+  flex: 1;
+}
+.mock-bar button {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+.note {
+  border-left: 3px solid var(--mat-sys-tertiary);
+  padding: var(--pd-space-2) var(--pd-space-3);
+  background: color-mix(in srgb, var(--mat-sys-tertiary) 8%, transparent);
+  border-radius: 0 8px 8px 0;
+  font: 400 13px/20px var(--pd-font);
+  color: var(--mat-sys-on-surface-variant);
+  margin: var(--pd-space-3) 0;
+}
+.note b {
+  color: var(--mat-sys-on-surface);
+}
+.new-tag {
+  font: 700 10px/14px var(--pd-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mat-sys-tertiary);
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 0 4px;
+  vertical-align: 2px;
+}
+.sec-title {
+  font: 700 13px/16px var(--pd-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+  margin: var(--pd-space-12) 0 var(--pd-space-3);
+}
+
+@media (max-width: 600px) { .hide-s { display: none; } }
+
+.card-head { flex-wrap: wrap; row-gap: var(--pd-space-1); }
+.badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+/* ===== Tokens v2 "Oracle": graphite base, colour only for status and for the answer ===== */
+/* Dark is the primary look; light is the secondary one. Names are the app's (--mat-sys-*, --pd-*). */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  /* Material 3 roles from a neutral (graphite) seed: actions are light-on-dark, not violet */
+  --mat-sys-primary: #e6e9ee;
+  --mat-sys-on-primary: #111418;
+  --mat-sys-primary-container: #2a3038;
+  --mat-sys-on-primary-container: #e6e9ee;
+  --mat-sys-secondary-container: #262c34;
+  --mat-sys-on-secondary-container: #eef1f5;
+  --mat-sys-tertiary: #5eead4;
+  --mat-sys-error: #fb7185;
+  --mat-sys-surface: #0b0d10;
+  --mat-sys-surface-container-lowest: #07080a;
+  --mat-sys-surface-container-low: #111418;
+  --mat-sys-surface-container: #161a1f;
+  --mat-sys-surface-container-high: #1d2228;
+  --mat-sys-surface-container-highest: #252b32;
+  --mat-sys-on-surface: #e8eaed;
+  --mat-sys-on-surface-variant: #a3abb6;
+  --mat-sys-outline: #6b7480;
+  --mat-sys-outline-variant: #262c33;
+  --mat-sys-inverse-surface: #e8eaed;
+  --mat-sys-inverse-on-surface: #111418;
+
+  /* NEW: the answer. One calm luminous colour for forecasts, insights and "ask the future". */
+  --pd-oracle: #5eead4;
+  --pd-oracle-text: #5eead4;
+  --pd-oracle-dim: color-mix(in srgb, #5eead4 55%, transparent);
+  --pd-oracle-container: color-mix(in srgb, #5eead4 9%, transparent);
+  --pd-oracle-border: color-mix(in srgb, #5eead4 32%, transparent);
+  --pd-oracle-glow:
+    0 0 0 1px color-mix(in srgb, #5eead4 22%, transparent),
+    0 12px 48px -20px color-mix(in srgb, #5eead4 45%, transparent);
+  --pd-forecast-line: var(--pd-oracle);
+  --pd-forecast-band: color-mix(in srgb, #5eead4 14%, transparent);
+
+  /* Status: unchanged roles, tuned for graphite */
+  --pd-ok-fill: #10b981;
+  --pd-ok-text: #34d399;
+  --pd-warn-fill: #f59e0b;
+  --pd-warn-text: #fbbf24;
+  --pd-crit-fill: #f43f5e;
+  --pd-crit-text: #fb7185;
+  --pd-ok-container: color-mix(in srgb, var(--pd-ok-fill) 14%, transparent);
+  --pd-warn-container: color-mix(in srgb, var(--pd-warn-fill) 14%, transparent);
+  --pd-crit-container: color-mix(in srgb, var(--pd-crit-fill) 14%, transparent);
+
+  /* Charts: the past is neutral, the future is the oracle colour */
+  --pd-chart-primary: #c9cfd8;
+  --pd-chart-income: #34d399;
+  --pd-chart-expense: #a3abb6;
+  --pd-chart-empty: color-mix(in srgb, #e8eaed 9%, transparent);
+  --pd-grid-line: color-mix(in srgb, #e8eaed 6%, transparent);
+
+  --pd-radius: 16px;
+  --pd-radius-small: 12px;
+  --pd-radius-xs: 8px;
+  --pd-border: var(--mat-sys-outline-variant);
+  --pd-card: var(--mat-sys-surface-container-low);
+  --pd-shadow-overlay: 0 24px 64px -16px rgb(0 0 0 / 80%);
+
+  --pd-space-1: 4px;
+  --pd-space-2: 8px;
+  --pd-space-3: 12px;
+  --pd-space-4: 16px;
+  --pd-space-6: 24px;
+  --pd-space-8: 32px;
+  --pd-space-12: 48px;
+
+  --pd-font: Inter, Roboto, "Segoe UI", system-ui, sans-serif;
+  --pd-font-heading: Inter, "Segoe UI", system-ui, sans-serif;
+  /* NEW: numbers and the "instrument" labels */
+  --pd-font-mono:
+    "JetBrains Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --mat-sys-primary: #15181c;
+    --mat-sys-on-primary: #ffffff;
+    --mat-sys-primary-container: #e3e6ea;
+    --mat-sys-on-primary-container: #15181c;
+    --mat-sys-secondary-container: #e3e6ea;
+    --mat-sys-on-secondary-container: #15181c;
+    --mat-sys-tertiary: #0f766e;
+    --mat-sys-error: #be123c;
+    --mat-sys-surface: #f4f5f7;
+    --mat-sys-surface-container-lowest: #ffffff;
+    --mat-sys-surface-container-low: #ffffff;
+    --mat-sys-surface-container: #eef0f3;
+    --mat-sys-surface-container-high: #e7eaee;
+    --mat-sys-surface-container-highest: #dfe3e8;
+    --mat-sys-on-surface: #15181c;
+    --mat-sys-on-surface-variant: #4b5563;
+    --mat-sys-outline: #6b7280;
+    --mat-sys-outline-variant: #d9dde3;
+    --mat-sys-inverse-surface: #15181c;
+    --mat-sys-inverse-on-surface: #f4f5f7;
+    --pd-oracle: #14b8a6;
+    --pd-oracle-text: #0f766e;
+    --pd-oracle-dim: color-mix(in srgb, #14b8a6 60%, transparent);
+    --pd-oracle-container: color-mix(in srgb, #14b8a6 8%, transparent);
+    --pd-oracle-border: color-mix(in srgb, #0f766e 30%, transparent);
+    --pd-oracle-glow: 0 0 0 1px color-mix(in srgb, #0f766e 18%, transparent);
+    --pd-forecast-line: #0f766e;
+    --pd-forecast-band: color-mix(in srgb, #14b8a6 14%, transparent);
+    --pd-ok-text: #047857;
+    --pd-warn-text: #b45309;
+    --pd-crit-text: #be123c;
+    --pd-chart-primary: #374151;
+    --pd-chart-income: #059669;
+    --pd-chart-expense: #6b7280;
+    --pd-chart-empty: color-mix(in srgb, #15181c 8%, transparent);
+    --pd-grid-line: color-mix(in srgb, #15181c 7%, transparent);
+    --pd-shadow-overlay: 0 24px 48px -16px rgb(0 0 0 / 22%);
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --mat-sys-primary: #15181c;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #e3e6ea;
+  --mat-sys-on-primary-container: #15181c;
+  --mat-sys-secondary-container: #e3e6ea;
+  --mat-sys-on-secondary-container: #15181c;
+  --mat-sys-tertiary: #0f766e;
+  --mat-sys-error: #be123c;
+  --mat-sys-surface: #f4f5f7;
+  --mat-sys-surface-container-lowest: #ffffff;
+  --mat-sys-surface-container-low: #ffffff;
+  --mat-sys-surface-container: #eef0f3;
+  --mat-sys-surface-container-high: #e7eaee;
+  --mat-sys-surface-container-highest: #dfe3e8;
+  --mat-sys-on-surface: #15181c;
+  --mat-sys-on-surface-variant: #4b5563;
+  --mat-sys-outline: #6b7280;
+  --mat-sys-outline-variant: #d9dde3;
+  --mat-sys-inverse-surface: #15181c;
+  --mat-sys-inverse-on-surface: #f4f5f7;
+  --pd-oracle: #14b8a6;
+  --pd-oracle-text: #0f766e;
+  --pd-oracle-dim: color-mix(in srgb, #14b8a6 60%, transparent);
+  --pd-oracle-container: color-mix(in srgb, #14b8a6 8%, transparent);
+  --pd-oracle-border: color-mix(in srgb, #0f766e 30%, transparent);
+  --pd-oracle-glow: 0 0 0 1px color-mix(in srgb, #0f766e 18%, transparent);
+  --pd-forecast-line: #0f766e;
+  --pd-forecast-band: color-mix(in srgb, #14b8a6 14%, transparent);
+  --pd-ok-text: #047857;
+  --pd-warn-text: #b45309;
+  --pd-crit-text: #be123c;
+  --pd-chart-primary: #374151;
+  --pd-chart-income: #059669;
+  --pd-chart-expense: #6b7280;
+  --pd-chart-empty: color-mix(in srgb, #15181c 8%, transparent);
+  --pd-grid-line: color-mix(in srgb, #15181c 7%, transparent);
+  --pd-shadow-overlay: 0 24px 48px -16px rgb(0 0 0 / 22%);
+}
+
+/* ===== Oracle layer: shared pieces ===== */
+.mono,
+.t-num,
+.t-num-l,
+.t-num-xl,
+.delta,
+kbd {
+  font-family: var(--pd-font-mono);
+}
+.t-num-xl {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.t-num-l {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.eyebrow {
+  font: 500 11px/16px var(--pd-font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+}
+.answer {
+  color: var(--pd-oracle-text);
+}
+.oracle-card {
+  background:
+    radial-gradient(
+      120% 140% at 0% 0%,
+      var(--pd-oracle-container),
+      transparent 60%
+    ),
+    var(--mat-sys-surface-container-low);
+  border: 1px solid var(--pd-oracle-border);
+  box-shadow: var(--pd-oracle-glow);
+}
+.conf {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 12px/16px var(--pd-font-mono);
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+}
+.conf .bar {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--pd-chart-empty);
+  overflow: hidden;
+  display: inline-block;
+}
+.conf .bar i {
+  display: block;
+  height: 100%;
+  background: var(--pd-oracle);
+  border-radius: 2px;
+}
+.pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pd-oracle);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--pd-oracle) 60%, transparent);
+  animation: pulse 2.4s ease-out infinite;
+  flex: none;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--pd-oracle) 50%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}
+
+      /* ===== Shell: side menu on a computer, bottom bar on a phone ===== */
+.app {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100vh;
+}
+.side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pd-space-1);
+  padding: var(--pd-space-4) var(--pd-space-3);
+  border-right: 1px solid var(--pd-border);
+  background: var(--mat-sys-surface);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-2);
+  padding: 0 var(--pd-space-2);
+  height: 40px;
+  font: 700 15px/20px var(--pd-font-heading);
+  color: var(--mat-sys-on-surface);
+}
+.brand .logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  display: grid;
+  place-items: center;
+}
+.brand .logo svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  stroke: none;
+}
+.brand .icon-btn {
+  margin-left: auto;
+}
+.search-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-2);
+  height: 40px;
+  margin: var(--pd-space-2) 0;
+  padding: 0 var(--pd-space-3);
+  border-radius: var(--pd-radius-small);
+  border: 1px solid var(--pd-border);
+  background: var(--mat-sys-surface-container-low);
+  color: var(--mat-sys-on-surface-variant);
+  font: 500 14px/20px var(--pd-font);
+  cursor: pointer;
+  width: 100%;
+}
+.search-btn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1;
+  text-align: left;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-3);
+  height: 40px;
+  padding: 0 var(--pd-space-3);
+  border-radius: 999px;
+  color: var(--mat-sys-on-surface-variant);
+  font: 500 14px/20px var(--pd-font);
+}
+.nav-item:hover {
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+  color: var(--mat-sys-on-surface);
+}
+.nav-item .count {
+  margin-left: auto;
+  font: 600 12px/16px var(--pd-font);
+  font-variant-numeric: tabular-nums;
+}
+.nav-item .dot {
+  margin-left: auto;
+}
+.nav-label {
+  font: 600 12px/16px var(--pd-font);
+  color: var(--mat-sys-on-surface-variant);
+  padding: var(--pd-space-4) var(--pd-space-3) var(--pd-space-1);
+  display: flex;
+  align-items: center;
+}
+.nav-label button {
+  margin-left: auto;
+  font: 500 12px/16px var(--pd-font);
+  color: var(--mat-sys-primary);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 4px;
+}
+.side .spacer {
+  flex: 1;
+}
+.user {
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-3);
+  padding: var(--pd-space-2) var(--pd-space-3);
+  border-top: 1px solid var(--pd-border);
+  margin-top: var(--pd-space-2);
+  padding-top: var(--pd-space-3);
+}
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  font: 700 12px/16px var(--pd-font);
+  flex: none;
+  position: relative;
+}
+.avatar .lvl {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  padding: 0 4px;
+  background: var(--mat-sys-surface);
+  border: 1px solid var(--pd-border);
+  font: 700 10px/16px var(--pd-font);
+  color: var(--mat-sys-on-surface);
+  text-align: center;
+}
+.content {
+  padding: var(--pd-space-8) var(--pd-space-8) var(--pd-space-12);
+  max-width: 1360px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+body[data-page="home"] [data-nav="home"],
+body[data-page="finance"] [data-nav="finance"],
+body[data-page="system"] [data-nav="system"],
+body[data-page="settings"] [data-nav="settings"],
+body[data-page="tasks"] [data-nav="tasks"] {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font-weight: 600;
+}
+
+.topbar,
+.bottombar {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .side {
+    display: none;
+  }
+  .content {
+    padding: var(--pd-space-4) var(--pd-space-4) 96px;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: var(--pd-space-1);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    height: 56px;
+    padding: 0 var(--pd-space-1) 0 var(--pd-space-4);
+    background: color-mix(in srgb, var(--mat-sys-surface) 86%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--pd-border) 60%, transparent);
+  }
+  .topbar .t-title {
+    margin-right: auto;
+    font: 700 18px/24px var(--pd-font-heading);
+  }
+  .topbar .icon-btn {
+    width: 48px;
+    height: 48px;
+  }
+  .bottombar {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    height: 72px;
+    padding: var(--pd-space-2) var(--pd-space-1)
+      calc(var(--pd-space-2) + env(safe-area-inset-bottom));
+    background: color-mix(
+      in srgb,
+      var(--mat-sys-surface-container) 92%,
+      transparent
+    );
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--pd-border);
+  }
+  .bottombar a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 48px;
+    font: 500 12px/16px var(--pd-font);
+    color: var(--mat-sys-on-surface-variant);
+  }
+  .bottombar a .pill {
+    width: 56px;
+    height: 32px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+  .bottombar a .pill .dot {
+    position: absolute;
+    top: 4px;
+    right: 14px;
+  }
+  body[data-page="home"] .bottombar [data-nav="home"],
+  body[data-page="finance"] .bottombar [data-nav="finance"],
+  body[data-page="tasks"] .bottombar [data-nav="tasks"] {
+    background: none;
+    color: var(--mat-sys-on-surface);
+    font-weight: 600;
+  }
+  body[data-page="home"] .bottombar [data-nav="home"] .pill,
+  body[data-page="finance"] .bottombar [data-nav="finance"] .pill,
+  body[data-page="tasks"] .bottombar [data-nav="tasks"] .pill {
+    background: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+  }
+  body[data-page="system"] .bottombar [data-nav="more"] .pill,
+  body[data-page="settings"] .bottombar [data-nav="more"] .pill {
+    background: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+  }
+}
+
+/* ===== v2: groups as in the app, folded by default ===== */
+.brand-link { display: flex; align-items: center; gap: var(--pd-space-2); color: inherit; min-width: 0; }
+.brand .logo { background: var(--mat-sys-surface-container-high); color: var(--pd-oracle); box-shadow: var(--pd-oracle-glow); }
+.nav-group { margin: 0; }
+.nav-group > summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; gap: var(--pd-space-3);
+  height: 40px; padding: 0 var(--pd-space-3); border-radius: 999px;
+  font: 500 14px/20px var(--pd-font); color: var(--mat-sys-on-surface-variant);
+}
+.nav-group > summary::-webkit-details-marker { display: none; }
+.nav-group > summary:hover { background: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent); color: var(--mat-sys-on-surface); }
+.nav-group > summary .dot { margin-left: auto; }
+.nav-group > summary .count { margin-left: auto; font: 500 12px/16px var(--pd-font-mono); color: var(--mat-sys-on-surface-variant); }
+.nav-group > summary .dot + .count { margin-left: var(--pd-space-2); }
+.nav-group > summary::after { content: ''; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); margin-left: var(--pd-space-2); transition: transform 200ms cubic-bezier(.2, 0, 0, 1); }
+.nav-group[open] > summary::after { transform: rotate(45deg); }
+.nav-item.sub { padding-left: 44px; height: 36px; }
+.lvl-ring {
+  width: 22px; height: 22px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  font: 600 10px/1 var(--pd-font-mono); color: var(--pd-oracle-text);
+  background: radial-gradient(closest-side, var(--mat-sys-surface) 76%, transparent 78%), conic-gradient(var(--pd-oracle) 10%, var(--pd-chart-empty) 0);
+}
+.nav-item .count.mono { font-family: var(--pd-font-mono); color: var(--mat-sys-on-surface-variant); }
+body[data-page='home'] .side [data-nav='home'], body[data-page='finance'] .side [data-nav='finance'], body[data-page='system'] .side [data-nav='system'], body[data-page='settings'] .side [data-nav='settings'] { box-shadow: inset 2px 0 0 var(--pd-oracle); }
+
+      .cols {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(390px, 100%), 1fr));
+        gap: var(--pd-space-8);
+        align-items: start;
+      }
+      .rules {
+        margin: 0;
+        padding-left: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: var(--pd-space-2);
+      }
+      .phone {
+        width: 100%;
+        max-width: 390px;
+        height: 780px;
+        margin: 0 auto;
+        border-radius: 40px;
+        border: 8px solid var(--mat-sys-surface-container-highest);
+        overflow: hidden;
+        position: relative;
+        background: var(--mat-sys-surface);
+        display: flex;
+        flex-direction: column;
+      }
+      .p-top {
+        display: flex;
+        align-items: center;
+        height: 56px;
+        padding: 0 var(--pd-space-1) 0 var(--pd-space-4);
+        border-bottom: 1px solid var(--pd-border);
+      }
+      .p-top .t-title {
+        margin-right: auto;
+        font: 700 18px/24px var(--pd-font-heading);
+      }
+      .p-top .icon-btn {
+        width: 48px;
+        height: 48px;
+      }
+      .p-body {
+        flex: 1;
+        padding: var(--pd-space-4);
+        display: flex;
+        flex-direction: column;
+        gap: var(--pd-space-3);
+        opacity: 0.35;
+      }
+      .p-bottom {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        height: 72px;
+        padding: var(--pd-space-2) var(--pd-space-1);
+        border-top: 1px solid var(--pd-border);
+        background: var(--mat-sys-surface-container);
+      }
+      .p-bottom a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font: 500 12px/16px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .p-bottom .pill {
+        width: 56px;
+        height: 32px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        position: relative;
+      }
+      .p-bottom .on {
+        color: var(--mat-sys-on-surface);
+        font-weight: 600;
+      }
+      .p-bottom .on .pill {
+        background: var(--mat-sys-secondary-container);
+      }
+      .p-bottom .pill .dot {
+        position: absolute;
+        top: 4px;
+        right: 14px;
+      }
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 72px;
+        max-height: 80%;
+        overflow-y: auto;
+        background: var(--mat-sys-surface-container-low);
+        border-radius: 28px 28px 0 0;
+        box-shadow: var(--pd-shadow-overlay);
+        border-top: 1px solid var(--pd-border);
+        padding: var(--pd-space-2) var(--pd-space-4) var(--pd-space-4);
+      }
+      .sheet .handle {
+        width: 32px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--mat-sys-outline-variant);
+        margin: var(--pd-space-1) auto var(--pd-space-3);
+      }
+      .sheet details {
+        border-top: 1px solid var(--pd-border);
+      }
+      .sheet summary {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: var(--pd-space-3);
+        min-height: 56px;
+        font: 500 15px/20px var(--pd-font);
+        cursor: pointer;
+      }
+      .sheet summary::-webkit-details-marker {
+        display: none;
+      }
+      .sheet summary .count {
+        margin-left: auto;
+        font: 500 12px/16px var(--pd-font-mono);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .sheet summary .dot + .count {
+        margin-left: var(--pd-space-2);
+      }
+      .sheet summary .dot {
+        margin-left: auto;
+      }
+      .tiles {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--pd-space-1);
+        padding-bottom: var(--pd-space-3);
+      }
+      .tiles a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: var(--pd-space-2) 0;
+        min-height: 72px;
+        border-radius: var(--pd-radius-small);
+        color: var(--mat-sys-on-surface);
+        font: 500 12px/16px var(--pd-font);
+        text-align: center;
+        position: relative;
+      }
+      .tiles .lead {
+        width: 40px;
+        height: 40px;
+      }
+      .tiles .dot {
+        position: absolute;
+        top: 8px;
+        right: 18px;
+      }
+      .foot-rows .row {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body data-page="home">
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24">
+    <path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" />
+  </symbol>
+  <symbol id="i-search" viewBox="0 0 24 24">
+    <circle cx="11" cy="11" r="6.5" />
+    <path d="M16 16l4 4" />
+  </symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24">
+    <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" />
+    <path d="M10 20.5a2 2 0 0 0 4 0" />
+  </symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="3" />
+    <path
+      d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"
+    />
+  </symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24">
+    <rect x="3" y="6" width="18" height="13" rx="3" />
+    <path d="M16 12.5h2M3 9h18" />
+  </symbol>
+  <symbol id="i-task" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M8.5 12.2l2.4 2.3 4.6-4.8" />
+  </symbol>
+  <symbol id="i-book" viewBox="0 0 24 24">
+    <path d="M5 4.5h10a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z" />
+    <path d="M5 17a3 3 0 0 1 3-3h10" />
+  </symbol>
+  <symbol id="i-life" viewBox="0 0 24 24">
+    <path d="M3 12h4l2-5 4 10 2-5h6" />
+  </symbol>
+  <symbol id="i-ai" viewBox="0 0 24 24">
+    <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+    <path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" />
+  </symbol>
+  <symbol id="i-server" viewBox="0 0 24 24">
+    <rect x="4" y="4" width="16" height="7" rx="2" />
+    <rect x="4" y="13" width="16" height="7" rx="2" />
+    <path d="M8 7.5h.01M8 16.5h.01" />
+  </symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M10 6l6 6-6 6" /></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="M14 6l-6 6 6 6" /></symbol>
+  <symbol id="i-chev-d" viewBox="0 0 24 24"><path d="M6 10l6 6 6-6" /></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24">
+    <circle cx="6" cy="12" r="1.2" />
+    <circle cx="12" cy="12" r="1.2" />
+    <circle cx="18" cy="12" r="1.2" />
+  </symbol>
+  <symbol id="i-up" viewBox="0 0 24 24">
+    <path d="M12 19V5M6 11l6-6 6 6" />
+  </symbol>
+  <symbol id="i-down" viewBox="0 0 24 24">
+    <path d="M12 5v14M6 13l6 6 6-6" />
+  </symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24">
+    <path d="M7 18a4 4 0 0 1-.6-8A6 6 0 0 1 18 9.5a4.3 4.3 0 0 1-.5 8.5z" />
+  </symbol>
+  <symbol id="i-code" viewBox="0 0 24 24">
+    <path d="M9 7l-5 5 5 5M15 7l5 5-5 5" />
+  </symbol>
+  <symbol id="i-music" viewBox="0 0 24 24">
+    <path d="M9 18V6l10-2v12" />
+    <circle cx="6.5" cy="18" r="2.5" />
+    <circle cx="16.5" cy="16" r="2.5" />
+  </symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24">
+    <path
+      d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"
+    />
+  </symbol>
+  <symbol id="i-game" viewBox="0 0 24 24">
+    <rect x="3" y="7" width="18" height="11" rx="5" />
+    <path d="M8 11v3M6.5 12.5h3M15.5 12h.01M17.5 14h.01" />
+  </symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24">
+    <rect x="4" y="9" width="16" height="11" rx="2" />
+    <path d="M12 9v11M4 13h16M12 9c-2-4-6-3-5 0M12 9c2-4 6-3 5 0" />
+  </symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24">
+    <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
+  </symbol>
+  <symbol id="i-key" viewBox="0 0 24 24">
+    <circle cx="8" cy="14" r="4" />
+    <path d="M11 11l8-8M16 6l2 2M14 8l2 2" />
+  </symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24">
+    <rect x="4" y="4" width="7" height="7" rx="1.5" />
+    <rect x="13" y="4" width="7" height="7" rx="1.5" />
+    <rect x="4" y="13" width="7" height="7" rx="1.5" />
+    <rect x="13" y="13" width="7" height="7" rx="1.5" />
+  </symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24">
+    <path d="M9 4h6l-1 5 3 3H7l3-3zM12 12v8" />
+  </symbol>
+  <symbol id="i-drag" viewBox="0 0 24 24">
+    <path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" />
+  </symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24">
+    <path d="M19 12a7 7 0 1 1-2-5M19 4v4h-4" />
+  </symbol>
+  <symbol id="i-send" viewBox="0 0 24 24">
+    <path d="M4 12l16-8-6 16-2-6z" />
+  </symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24">
+    <path d="M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0zM12 16v5" />
+  </symbol>
+  <symbol id="i-db" viewBox="0 0 24 24">
+    <ellipse cx="12" cy="6" rx="7" ry="2.5" />
+    <path
+      d="M5 6v12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V6M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"
+    />
+  </symbol>
+  <symbol id="i-sync" viewBox="0 0 24 24">
+    <path
+      d="M4 12a8 8 0 0 1 14-5l2 2M20 12a8 8 0 0 1-14 5l-2-2M20 4v5h-5M4 20v-5h5"
+    />
+  </symbol>
+  <symbol id="i-x" viewBox="0 0 24 24">
+    <path d="M6 6l12 12M18 6L6 18" />
+  </symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24">
+    <path d="M12 4l9 16H3z" />
+    <path d="M12 10v4M12 17h.01" />
+  </symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24">
+    <path d="M4 7h16M4 12h16M4 17h16" />
+  </symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24">
+    <path
+      d="M12 4a8 8 0 1 0 0 16c1.2 0 1.5-1 1-2-.6-1.2.2-2 1.4-2H17a3 3 0 0 0 3-3c0-5-3.6-9-8-9z"
+    />
+    <path d="M8 11h.01M11 8h.01M15 8.5h.01" />
+  </symbol>
+  <symbol id="i-user" viewBox="0 0 24 24">
+    <circle cx="12" cy="9" r="4" />
+    <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+  </symbol>
+  <symbol id="i-devices" viewBox="0 0 24 24">
+    <rect x="3" y="5" width="13" height="10" rx="1.5" />
+    <path d="M7 19h5" />
+    <rect x="17" y="9" width="5" height="10" rx="1.2" />
+  </symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5V12l3 2" />
+  </symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24">
+    <path d="M13 3L5 13h6l-1 8 8-10h-6z" />
+  </symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24">
+    <path d="M4 5h2l2 10h10l2-7H7" />
+    <circle cx="9" cy="19" r="1.3" />
+    <circle cx="17" cy="19" r="1.3" />
+  </symbol>
+  <symbol id="i-bus" viewBox="0 0 24 24">
+    <rect x="5" y="4" width="14" height="13" rx="3" />
+    <path d="M5 11h14M8 17v2M16 17v2M8.5 14h.01M15.5 14h.01" />
+  </symbol>
+  <symbol id="i-food" viewBox="0 0 24 24">
+    <path d="M7 3v8a2 2 0 0 0 2 2v8M5 3v5M9 3v5M16 21V3c2 1 3 4 3 7h-3" />
+  </symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24">
+    <path
+      d="M3 9a13 13 0 0 1 18 0M6 12.5a8.5 8.5 0 0 1 12 0M9 16a4 4 0 0 1 6 0M12 19.5h.01"
+    />
+  </symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24">
+    <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />
+  </symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.5" />
+    <path
+      d="M3.5 12h17M12 3.5c2.5 2.5 3.5 5.5 3.5 8.5s-1 6-3.5 8.5c-2.5-2.5-3.5-5.5-3.5-8.5s1-6 3.5-8.5z"
+    />
+  </symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24">
+    <rect x="6" y="6" width="12" height="12" rx="2" />
+    <rect x="9.5" y="9.5" width="5" height="5" rx="1" />
+    <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" />
+  </symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="4" />
+    <path
+      d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+    />
+  </symbol>
+  <symbol id="i-flash" viewBox="0 0 24 24">
+    <path d="M5 12h14M12 5l7 7-7 7" />
+  </symbol>
+</svg>
+
+    <nav class="mock-bar" aria-label="Макеты">
+  <b>Макет</b>
+  <a href="00-design-system.html">Дизайн-система</a>
+  <a href="01-home.html">Главная</a>
+  <a href="02-shell.html">Меню</a>
+  <a href="03-palette.html">Ctrl+K</a>
+  <a href="04-finance.html">Финансы</a>
+  <a href="05-system.html">Система</a>
+  <a href="06-settings.html">Настройки</a>
+  <span class="sp"></span>
+  <button type="button" id="mock-theme">Тема: как в системе</button>
+</nav>
+<script>
+  (() => {
+    const b = document.getElementById("mock-theme");
+    const order = [null, "light", "dark"];
+    const names = { null: "как в системе", light: "светлая", dark: "тёмная" };
+    let i = 0;
+    b.addEventListener("click", () => {
+      i = (i + 1) % 3;
+      const t = order[i];
+      if (t) document.documentElement.dataset.theme = t;
+      else delete document.documentElement.dataset.theme;
+      b.textContent = "Тема: " + names[t];
+    });
+  })();
+</script>
+
+    <header class="topbar">
+      <span class="t-title">Меню</span>
+      <button class="icon-btn" aria-label="Поиск">
+        <svg class="ic"><use href="#i-search" /></svg>
+      </button>
+      <button class="icon-btn" aria-label="Уведомления">
+        <svg class="ic"><use href="#i-bell" /></svg>
+      </button>
+    </header>
+    <div class="app">
+      <aside class="side" aria-label="Меню">
+  <div class="brand">
+    <a href="01-home.html" class="brand-link"
+      ><span class="logo"
+        ><svg class="ic"><use href="#i-bolt" /></svg></span
+      >Personal Dashboard</a
+    >
+    <button class="icon-btn" aria-label="Уведомления: 3 новых">
+      <svg class="ic"><use href="#i-bell" /></svg>
+    </button>
+  </div>
+  <button class="search-btn" type="button">
+    <svg class="ic"><use href="#i-search" /></svg><span>Поиск</span
+    ><kbd>Ctrl K</kbd>
+  </button>
+  <a class="nav-item" data-nav="home" href="01-home.html"
+    ><svg class="ic"><use href="#i-home" /></svg>Главная</a
+  >
+  <a class="nav-item" href="#"
+    ><svg class="ic"><use href="#i-ai" /></svg>AI</a
+  >
+  <a class="nav-item" data-nav="finance" href="04-finance.html"
+    ><svg class="ic"><use href="#i-wallet" /></svg>Финансы</a
+  >
+  <a class="nav-item" href="#"
+    ><svg class="ic"><use href="#i-life" /></svg>Жизнь</a
+  >
+
+  <details class="nav-group">
+    <summary>
+      <svg class="ic"><use href="#i-task" /></svg>Дела<span class="count"
+        >3</span
+      >
+    </summary>
+    <a class="nav-item sub" data-nav="tasks" href="#"
+      >Задачи<span class="count">3</span></a
+    >
+    <a class="nav-item sub" href="#">Скриншоты</a>
+    <a class="nav-item sub" href="#">Дни рождения</a>
+  </details>
+  <details class="nav-group">
+    <summary>
+      <svg class="ic"><use href="#i-user" /></svg>Я<span
+        class="dot warn"
+        title="Дневник: сегодня ещё нет записи"
+      ></span
+      ><span class="count">4</span>
+    </summary>
+    <a class="nav-item sub" href="#">Дневник<span class="dot warn"></span></a>
+    <a class="nav-item sub" href="#">Психология</a>
+    <a class="nav-item sub" href="#">Здоровье</a>
+    <a class="nav-item sub" href="#">Привычки</a>
+  </details>
+  <details class="nav-group">
+    <summary>
+      <svg class="ic"><use href="#i-code" /></svg>Работа<span class="count"
+        >5</span
+      >
+    </summary>
+    <a class="nav-item sub" href="#">Проекты</a>
+    <a class="nav-item sub" href="#">Текст</a>
+    <a class="nav-item sub" href="#">Разработка</a>
+    <a class="nav-item sub" href="#">Мониторинг</a>
+    <a class="nav-item sub" href="#">Активность</a>
+  </details>
+  <details class="nav-group">
+    <summary>
+      <svg class="ic"><use href="#i-game" /></svg>Досуг<span class="count"
+        >3</span
+      >
+    </summary>
+    <a class="nav-item sub" href="#">Музыка</a>
+    <a class="nav-item sub" href="#">Кино</a>
+    <a class="nav-item sub" href="#">Игры</a>
+  </details>
+  <details class="nav-group">
+    <summary>
+      <svg class="ic"><use href="#i-shield" /></svg>Безопасность<span
+        class="count"
+        >2</span
+      >
+    </summary>
+    <a class="nav-item sub" href="#">Пароли</a>
+    <a class="nav-item sub" href="#">Безопасность</a>
+  </details>
+
+  <div class="spacer"></div>
+  <a class="nav-item" href="#"
+    ><span class="lvl-ring" aria-hidden="true">10</span>Ачивки<span
+      class="count mono"
+      >175/504</span
+    ></a
+  >
+  <a class="nav-item" data-nav="system" href="05-system.html"
+    ><svg class="ic"><use href="#i-server" /></svg>Система<span
+      class="dot crit"
+      title="2 сервиса не отвечают"
+    ></span
+  ></a>
+  <a class="nav-item" data-nav="settings" href="06-settings.html"
+    ><svg class="ic"><use href="#i-settings" /></svg>Настройки</a
+  >
+  <div class="user">
+    <span class="avatar">РР</span
+    ><span class="t-title-s" style="flex: 1">Роман</span
+    ><button class="icon-btn" aria-label="Выйти">
+      <svg class="ic"><use href="#i-flash" /></svg>
+    </button>
+  </div>
+</aside>
+
+      <main class="content">
+        <div class="page-head"><h1 class="t-display">Меню и каркас</h1></div>
+        <p class="muted" style="max-width: 720px">
+          Владелец выбрал «как сейчас»: те же четыре пункта сверху и те же пять
+          групп. Меняется одно — <b>группы по умолчанию свёрнуты</b>, поэтому
+          меню помещается на экран без прокрутки. Попробуйте меню слева: группы
+          раскрываются по клику.
+        </p>
+
+        <div class="cols" style="margin-top: var(--pd-space-6)">
+          <section>
+            <h2 class="sec-title" style="margin-top: 0">Компьютер</h2>
+            <ol class="rules t-body">
+              <li>
+                <b>Сверху как сейчас:</b> Поиск (Ctrl K), Главная, AI, Финансы,
+                Жизнь.
+              </li>
+              <li>
+                <b>Группы как сейчас</b> — Дела, Я, Работа, Досуг, Безопасность
+                — но свёрнуты. Справа число разделов внутри.
+              </li>
+              <li>
+                <b>Сигнал всплывает наверх:</b> если в свёрнутой группе что-то
+                требует внимания (сегодня нет записи в дневнике), точка видна у
+                названия группы. Не нужно раскрывать, чтобы узнать.
+              </li>
+              <li>
+                Группа открытой страницы раскрыта всегда (как и сейчас в коде:
+                <code>isOpen</code>). Остальные помнят выбор в этом браузере
+                (<code>pd.nav.folded</code>) — только значение по умолчанию
+                становится «свёрнуто».
+              </li>
+              <li>
+                <b>Внизу:</b> Ачивки с кольцом уровня и счётом 175/504, Система
+                (точка только при проблеме), Настройки. Имя и «Выйти» — одной
+                строкой.
+              </li>
+              <li>
+                Выбранный пункт — тонкая светящаяся черта слева цвета «ответа» и
+                подложка; больше цвета в меню нет.
+              </li>
+            </ol>
+            <p class="note">
+              <b>Было:</b> 22 пункта и 5 раскрытых групп — меню длиннее экрана
+              768 px, снизу горизонтальная прокрутка. <b>Стало:</b> 14 строк в
+              свёрнутом виде, без прокрутки. Набор и порядок разделов не
+              меняются — привычка сохраняется.
+            </p>
+          </section>
+
+          <section id="more">
+            <h2 class="sec-title" style="margin-top: 0">
+              Телефон — нижняя панель остаётся
+            </h2>
+            <div class="phone" aria-label="Телефон 390 px">
+              <div class="p-top">
+                <span class="t-title">Главная</span
+                ><button class="icon-btn" aria-label="Поиск">
+                  <svg class="ic"><use href="#i-search" /></svg></button
+                ><button class="icon-btn" aria-label="Уведомления">
+                  <svg class="ic"><use href="#i-bell" /></svg>
+                </button>
+              </div>
+              <div class="p-body">
+                <div class="card" style="height: 200px"></div>
+                <div class="card" style="height: 120px"></div>
+              </div>
+              <div class="sheet" role="dialog" aria-label="Все разделы">
+                <div class="handle"></div>
+                <div class="search-btn" style="margin-top: 0">
+                  <svg class="ic"><use href="#i-search" /></svg
+                  ><span>Найти раздел или запись</span>
+                </div>
+                <details>
+                  <summary>
+                    <svg class="ic"><use href="#i-task" /></svg>Дела<span
+                      class="count"
+                      >3</span
+                    >
+                  </summary>
+                  <div class="tiles">
+                    <a href="#"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-task" /></svg></span
+                      >Задачи</a
+                    ><a href="#"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-grid" /></svg></span
+                      >Скриншоты</a
+                    ><a href="#"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-gift" /></svg></span
+                      >Дни рождения</a
+                    >
+                  </div>
+                </details>
+                <details open>
+                  <summary>
+                    <svg class="ic"><use href="#i-user" /></svg>Я<span
+                      class="dot warn"
+                    ></span
+                    ><span class="count">4</span>
+                  </summary>
+                  <div class="tiles">
+                    <a href="#"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-book" /></svg></span
+                      >Дневник<span class="dot warn"></span></a
+                    ><a href="#"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-user" /></svg></span
+                      >Психология</a
+                    ><a href="#"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-heart" /></svg></span
+                      >Здоровье</a
+                    ><a href="#"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-sun" /></svg></span
+                      >Привычки</a
+                    >
+                  </div>
+                </details>
+                <details>
+                  <summary>
+                    <svg class="ic"><use href="#i-code" /></svg>Работа<span
+                      class="count"
+                      >5</span
+                    >
+                  </summary>
+                  <div class="tiles">
+                    <a href="#"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-code" /></svg></span
+                      >Разработка</a
+                    >
+                  </div>
+                </details>
+                <details>
+                  <summary>
+                    <svg class="ic"><use href="#i-game" /></svg>Досуг<span
+                      class="count"
+                      >3</span
+                    >
+                  </summary>
+                  <div class="tiles">
+                    <a href="#"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-music" /></svg></span
+                      >Музыка</a
+                    >
+                  </div>
+                </details>
+                <details>
+                  <summary>
+                    <svg class="ic"><use href="#i-shield" /></svg
+                    >Безопасность<span class="count">2</span>
+                  </summary>
+                  <div class="tiles">
+                    <a href="#"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-key" /></svg></span
+                      >Пароли</a
+                    >
+                  </div>
+                </details>
+                <ul
+                  class="list foot-rows"
+                  style="border-top: 1px solid var(--pd-border)"
+                >
+                  <li>
+                    <a class="row" href="#"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-bolt" /></svg></span
+                      ><span class="grow"
+                        ><div class="title">Ачивки</div>
+                        <div class="sub mono">уровень 10 · 175 / 504</div></span
+                      ></a
+                    >
+                  </li>
+                  <li>
+                    <a class="row" href="05-system.html"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-server" /></svg></span
+                      ><span class="grow"
+                        ><div class="title">Система</div>
+                        <div class="sub">2 сервиса молчат</div></span
+                      ><span class="dot crit"></span
+                    ></a>
+                  </li>
+                  <li>
+                    <a class="row" href="06-settings.html"
+                      ><span class="lead"
+                        ><svg class="ic"><use href="#i-settings" /></svg></span
+                      ><span class="grow"
+                        ><div class="title">Настройки</div></span
+                      ></a
+                    >
+                  </li>
+                </ul>
+              </div>
+              <nav class="p-bottom" aria-label="Главное меню">
+                <a href="#"
+                  ><span class="pill"
+                    ><svg class="ic"><use href="#i-home" /></svg></span
+                  >Главная</a
+                >
+                <a href="#"
+                  ><span class="pill"
+                    ><svg class="ic"><use href="#i-ai" /></svg></span
+                  >AI</a
+                >
+                <a href="#"
+                  ><span class="pill"
+                    ><svg class="ic"><use href="#i-wallet" /></svg></span
+                  >Финансы</a
+                >
+                <a href="#"
+                  ><span class="pill"
+                    ><svg class="ic"><use href="#i-life" /></svg></span
+                  >Жизнь</a
+                >
+                <a class="on" href="#"
+                  ><span class="pill"
+                    ><svg class="ic"><use href="#i-grid" /></svg
+                    ><span class="dot crit"></span></span
+                  >Ещё</a
+                >
+              </nav>
+            </div>
+            <p class="muted t-body">
+              Нижняя панель не противоречит выбору «как сейчас»: в ней
+              <b>те же четыре пункта, что наверху меню</b> на компьютере
+              (Главная, AI, Финансы, Жизнь), а «Ещё» открывает
+              <b>те же пять групп</b>, тоже свёрнутых, плюс Ачивки, Система и
+              Настройки. Сейчас на телефоне всё это за «☰» — любой переход в
+              два нажатия, и до кнопки сверху трудно дотянуться пальцем. Цели
+              нажатия — 48 px и больше.
+            </p>
+          </section>
+        </div>
+      </main>
+    </div>
+    <nav class="bottombar" aria-label="Главное меню">
+  <a data-nav="home" href="01-home.html"
+    ><span class="pill"
+      ><svg class="ic"><use href="#i-home" /></svg></span
+    >Главная</a
+  >
+  <a data-nav="ai" href="#"
+    ><span class="pill"
+      ><svg class="ic"><use href="#i-ai" /></svg></span
+    >AI</a
+  >
+  <a data-nav="finance" href="04-finance.html"
+    ><span class="pill"
+      ><svg class="ic"><use href="#i-wallet" /></svg></span
+    >Финансы</a
+  >
+  <a data-nav="life" href="#"
+    ><span class="pill"
+      ><svg class="ic"><use href="#i-life" /></svg></span
+    >Жизнь</a
+  >
+  <a data-nav="more" href="02-shell.html#more"
+    ><span class="pill"
+      ><svg class="ic"><use href="#i-grid" /></svg
+      ><span class="dot crit"></span></span
+    >Ещё</a
+  >
+</nav>
+
+  </body>
+</html>

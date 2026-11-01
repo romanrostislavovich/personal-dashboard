@@ -1,0 +1,1838 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Концепция «Герой» (фэнтези-MMO) — Personal Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Alegreya+Sans:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Concept 14 "The Hero": the product from scratch as an original fantasy-MMO interface.
+   You are the character: sleep is health, calm is mana, tasks are quests, habits are dailies,
+   money is gold, the wishlist is a vendor, the diary is the journal. Own frames, own icons. */
+      :root {
+        color-scheme: dark;
+        --night: #0f0c09;
+        --stone: #1b1611;
+        --stone-2: #241d16;
+        --gold: #d6b26a; /* 9:1 on --night */
+        --gold-2: #8a6a33;
+        --parch: #efe2c4;
+        --ink: #2a1c0e; /* 13:1 on --parch */
+        --ink-2: #5b4426; /* 7:1 on --parch */
+        --text: #f3e9d6; /* 15:1 on --stone */
+        --text-2: #c4b393; /* 8:1 on --stone */
+        --hp: #d8463e;
+        --mana: #3f7fe0;
+        --xp: #a35bd8;
+        --q-common: #c9ccd1;
+        --q-uncommon: #46d17a;
+        --q-rare: #4d9bff;
+        --q-epic: #c27bff;
+        --q-legend: #ffa53d;
+        --head: Cinzel, Georgia, serif;
+        --body: 'Alegreya Sans', 'Segoe UI', system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        color: var(--text);
+        font: 400 16px/22px var(--body);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+        min-height: 100vh;
+        background:
+          radial-gradient(
+            80% 60% at 50% 30%,
+            rgba(214, 178, 106, 0.08),
+            transparent 70%
+          ),
+          radial-gradient(
+            40% 40% at 10% 90%,
+            rgba(63, 127, 224, 0.08),
+            transparent 70%
+          ),
+          repeating-linear-gradient(
+            45deg,
+            rgba(255, 255, 255, 0.012) 0 2px,
+            transparent 2px 6px
+          ),
+          var(--night);
+      }
+      button,
+      input {
+        font: inherit;
+        color: inherit;
+      }
+      :focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 2px;
+      }
+      .mock {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 6px 16px;
+        font:
+          500 12px/18px system-ui,
+          sans-serif;
+        background: var(--parch);
+        color: var(--ink);
+        position: relative;
+        z-index: 50;
+      }
+      .mock a {
+        color: inherit;
+        text-decoration: none;
+        opacity: 0.8;
+      }
+      .mock a:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      /* The frame: a stone panel with a double gold trim and corner studs, drawn in CSS */
+      .frame {
+        position: relative;
+        background: linear-gradient(180deg, var(--stone-2), var(--stone));
+        border: 1px solid #000;
+        border-radius: 10px;
+        box-shadow:
+          inset 0 0 0 1px var(--gold-2),
+          inset 0 0 0 3px #120e0a,
+          inset 0 0 0 4px rgba(214, 178, 106, 0.45),
+          0 8px 24px rgba(0, 0, 0, 0.6);
+        padding: 16px 18px;
+      }
+      .frame::before,
+      .frame::after {
+        content: '';
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        top: -4px;
+        left: -4px;
+        background: radial-gradient(circle at 35% 35%, #f6dc9c, var(--gold-2));
+        box-shadow: 0 0 0 1px #000;
+      }
+      .frame::after {
+        left: auto;
+        right: -4px;
+      }
+      .parch {
+        background: linear-gradient(180deg, #f3e7cb, #e6d4ad);
+        color: var(--ink);
+        border-radius: 6px;
+        padding: 18px 20px;
+        position: relative;
+        box-shadow:
+          inset 0 0 40px rgba(122, 86, 34, 0.25),
+          0 0 0 1px #6e5226,
+          0 0 0 4px #1b1611,
+          0 0 0 5px var(--gold-2);
+      }
+      .title {
+        font: 700 13px/18px var(--head);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--gold);
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        margin: 0 0 10px;
+      }
+      .title small {
+        font: 500 13px/18px var(--body);
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--text-2);
+      }
+
+      /* ===== Layout of the world screen ===== */
+      .world {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr) 320px;
+        gap: 20px;
+        padding: 16px 20px 150px;
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+      .screen {
+        display: none;
+      }
+      .screen.on {
+        display: contents;
+      }
+
+      /* Unit frame */
+      .unit {
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+      }
+      .portrait {
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        position: relative;
+        background: radial-gradient(circle at 40% 35%, #3a2e22, #120e0a);
+        box-shadow:
+          0 0 0 2px var(--gold),
+          0 0 0 4px #000,
+          0 0 0 5px var(--gold-2);
+        display: grid;
+        place-items: center;
+      }
+      .portrait svg {
+        width: 52px;
+        height: 52px;
+      }
+      .portrait .lvl {
+        position: absolute;
+        left: -6px;
+        bottom: -6px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: #120e0a;
+        box-shadow: 0 0 0 2px var(--gold);
+        font: 700 13px/1 var(--head);
+        color: var(--gold);
+      }
+      .name {
+        font: 700 18px/22px var(--head);
+        color: var(--text);
+      }
+      .bars {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-top: 6px;
+      }
+      .res {
+        position: relative;
+        height: 18px;
+        border-radius: 3px;
+        background: #0b0907;
+        box-shadow:
+          inset 0 0 0 1px #000,
+          0 0 0 1px var(--gold-2);
+        overflow: hidden;
+      }
+      .res i {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: var(--p);
+        background: linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--c) 70%, #fff),
+          var(--c) 45%,
+          color-mix(in srgb, var(--c) 60%, #000)
+        );
+      }
+      .res span {
+        position: relative;
+        display: block;
+        text-align: center;
+        font: 700 12px/18px var(--body);
+        color: #fff;
+        text-shadow:
+          0 1px 2px #000,
+          0 0 2px #000;
+      }
+      .auras {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .aura {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        position: relative;
+        cursor: help;
+        background: #120e0a;
+        box-shadow:
+          0 0 0 1px #000,
+          0 0 0 2px var(--ac, var(--q-uncommon));
+      }
+      .aura svg {
+        width: 24px;
+        height: 24px;
+      }
+      .aura b {
+        position: absolute;
+        right: -4px;
+        bottom: -6px;
+        font: 700 12px/1 var(--body);
+        color: #fff;
+        text-shadow:
+          0 0 3px #000,
+          0 0 3px #000;
+      }
+      .aura.bad {
+        --ac: var(--hp);
+      }
+
+      /* Tooltip in the genre: dark box, gold-ish border, rarity-coloured name */
+      .tt {
+        position: relative;
+      }
+      .tt .tip {
+        position: absolute;
+        z-index: 40;
+        left: 50%;
+        top: calc(100% + 10px);
+        transform: translateX(-50%);
+        width: 260px;
+        padding: 10px 12px;
+        border-radius: 6px;
+        text-align: left;
+        background: rgba(10, 12, 20, 0.97);
+        box-shadow:
+          0 0 0 1px #000,
+          0 0 0 2px #5b6a8a,
+          0 12px 32px rgba(0, 0, 0, 0.7);
+        font: 400 14px/20px var(--body);
+        color: var(--text);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 120ms ease;
+      }
+      .tt:hover .tip,
+      .tt:focus-visible .tip {
+        opacity: 1;
+      }
+      .tip .n {
+        font-weight: 700;
+        font-size: 15px;
+        display: block;
+      }
+      .tip .g {
+        color: #ffd34d;
+      }
+      .tip .flav {
+        color: #e3c77a;
+        font-style: italic;
+        display: block;
+        margin-top: 6px;
+      }
+      .tip .bad {
+        color: #ff7a6e;
+      }
+      .tip .good {
+        color: #6fe08f;
+      }
+
+      /* Herald: the AI as the quest-giver */
+      .herald {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+      }
+      .herald .face {
+        width: 64px;
+        height: 64px;
+        border-radius: 8px;
+        background: #2b2013;
+        box-shadow: 0 0 0 2px #6e5226;
+        display: grid;
+        place-items: center;
+      }
+      .herald h2 {
+        margin: 0 0 6px;
+        font: 700 20px/26px var(--head);
+        color: var(--ink);
+      }
+      .herald p {
+        margin: 0 0 10px;
+        font: 400 18px/27px var(--body);
+        color: var(--ink);
+      }
+      .herald p b {
+        color: #7a1d12;
+      }
+      .herald .who {
+        font: 700 12px/16px var(--head);
+        letter-spacing: 0.12em;
+        color: var(--ink-2);
+        text-transform: uppercase;
+      }
+      .rbtn {
+        min-height: 40px;
+        padding: 0 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font: 700 14px/20px var(--head);
+        letter-spacing: 0.06em;
+        color: #fff3d6;
+        text-shadow: 0 1px 1px #000;
+        background: linear-gradient(180deg, #a3271d, #6e140d);
+        border: 0;
+        box-shadow:
+          0 0 0 1px #000,
+          0 0 0 2px var(--gold),
+          inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      }
+      .rbtn.alt {
+        background: linear-gradient(180deg, #4a3a26, #2b2013);
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      /* Quest log */
+      .quests {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .qgroup {
+        font: 700 12px/16px var(--head);
+        letter-spacing: 0.14em;
+        color: var(--text-2);
+        text-transform: uppercase;
+        margin: 4px 0 -4px;
+      }
+      .q {
+        display: grid;
+        grid-template-columns: 20px minmax(0, 1fr);
+        gap: 8px;
+      }
+      .q .mark {
+        font: 700 18px/22px var(--head);
+        color: #ffd34d;
+        text-shadow: 0 0 6px rgba(255, 211, 77, 0.6);
+      }
+      .q .mark.daily {
+        color: #6fb4ff;
+        text-shadow: 0 0 6px rgba(111, 180, 255, 0.6);
+      }
+      .q .mark.elite {
+        color: var(--hp);
+      }
+      .q h3 {
+        margin: 0;
+        font: 700 15px/20px var(--body);
+        color: var(--text);
+      }
+      .q .obj {
+        font: 400 14px/20px var(--body);
+        color: var(--text-2);
+      }
+      .q .obj.done {
+        color: var(--q-uncommon);
+      }
+      .q .obj.late {
+        color: #ff8b7f;
+      }
+
+      /* Centre: the realm (life areas as a map of regions) */
+      .realm {
+        position: relative;
+        aspect-ratio: 16 / 10;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .realm svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .realm .lbl {
+        font: 700 20px/1 var(--head);
+        fill: #f8ecd0;
+        paint-order: stroke;
+        stroke: #1b1611;
+        stroke-width: 4px;
+        letter-spacing: 0.06em;
+      }
+      .realm .sub {
+        font: 600 17px/1 var(--body);
+        fill: #f8ecd0;
+        paint-order: stroke;
+        stroke: #1b1611;
+        stroke-width: 4px;
+      }
+      .realm .alarm {
+        animation: alarm 2.4s ease-in-out infinite;
+        transform-origin: center;
+        transform-box: fill-box;
+      }
+      @keyframes alarm {
+        50% {
+          opacity: 0.35;
+        }
+      }
+
+      /* Minimap */
+      .minimap {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+        box-shadow:
+          0 0 0 3px var(--gold-2),
+          0 0 0 5px #000,
+          0 0 0 6px var(--gold);
+        background: radial-gradient(circle, #2f3b2a, #1a2117);
+      }
+      .minimap svg {
+        width: 100%;
+        height: 100%;
+      }
+      .mm-cap {
+        text-align: center;
+        font: 700 13px/18px var(--head);
+        color: var(--gold);
+        margin-top: 10px;
+        letter-spacing: 0.06em;
+      }
+      .mm-cap small {
+        display: block;
+        font: 400 13px/18px var(--body);
+        color: var(--text-2);
+        letter-spacing: 0;
+      }
+
+      /* Action bar + menu + XP */
+      .hud {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px 8px;
+        background: linear-gradient(
+          to top,
+          rgba(15, 12, 9, 0.98) 70%,
+          transparent
+        );
+      }
+      .hud-row {
+        display: flex;
+        gap: 16px;
+        align-items: end;
+        width: 100%;
+        max-width: 1400px;
+        justify-content: center;
+      }
+      .actionbar {
+        display: flex;
+        gap: 6px;
+        padding: 8px;
+        border-radius: 10px;
+        background: #120e0a;
+        box-shadow:
+          0 0 0 1px #000,
+          0 0 0 2px var(--gold-2),
+          inset 0 0 0 1px rgba(214, 178, 106, 0.25);
+      }
+      .slot {
+        width: 52px;
+        height: 52px;
+        border-radius: 6px;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+        position: relative;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at 40% 35%, #3a2e22, #15100b);
+        box-shadow:
+          0 0 0 1px #000,
+          0 0 0 2px #5a4526,
+          inset 0 0 12px rgba(0, 0, 0, 0.7);
+      }
+      .slot svg {
+        width: 30px;
+        height: 30px;
+      }
+      .slot .key {
+        position: absolute;
+        top: 2px;
+        right: 4px;
+        font: 700 11px/1 var(--body);
+        color: #fff;
+        text-shadow:
+          0 0 2px #000,
+          0 0 2px #000;
+      }
+      .slot:hover {
+        box-shadow:
+          0 0 0 1px #000,
+          0 0 0 2px var(--gold),
+          0 0 14px rgba(214, 178, 106, 0.5);
+      }
+      .slot.cd::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 6px;
+        background: conic-gradient(rgba(0, 0, 0, 0.6) 0 70%, transparent 0);
+      }
+      .micro {
+        display: flex;
+        gap: 4px;
+      }
+      .mbtn {
+        width: 44px;
+        height: 44px;
+        border-radius: 6px;
+        border: 0;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(180deg, #3b2d1c, #1b140c);
+        box-shadow:
+          0 0 0 1px #000,
+          0 0 0 2px var(--gold-2);
+        color: var(--gold);
+        font: 700 14px/1 var(--head);
+      }
+      .mbtn.on {
+        box-shadow:
+          0 0 0 1px #000,
+          0 0 0 2px var(--gold),
+          0 0 12px rgba(214, 178, 106, 0.6);
+        color: #fff3d6;
+      }
+      .gold {
+        font: 700 15px/1 var(--body);
+        color: #ffd34d;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+      .gold i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #fff2a8, #c99a1d);
+        box-shadow: 0 0 0 1px #000;
+        display: inline-block;
+      }
+      .gold i.s {
+        background: radial-gradient(circle at 35% 35%, #fff, #9aa3ad);
+      }
+      .xpbar {
+        width: 100%;
+        max-width: 1400px;
+        height: 10px;
+        border-radius: 2px;
+        background: #0b0907;
+        box-shadow:
+          0 0 0 1px #000,
+          0 0 0 2px var(--gold-2);
+        position: relative;
+        overflow: hidden;
+      }
+      .xpbar i {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 1%;
+        min-width: 6px;
+        background: linear-gradient(180deg, #d59cff, var(--xp));
+      }
+      .xpbar span {
+        position: absolute;
+        inset: 0;
+        text-align: center;
+        font: 700 10px/10px var(--body);
+        color: #fff;
+        text-shadow: 0 0 2px #000;
+      }
+      .xpbar::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          90deg,
+          transparent 0 calc(5% - 1px),
+          rgba(0, 0, 0, 0.7) calc(5% - 1px) 5%
+        );
+        z-index: 1;
+      }
+
+      /* ===== Bag & treasury (inner screen) ===== */
+      .bag {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 6px;
+        padding: 10px;
+        border-radius: 8px;
+        background: #120e0a;
+        box-shadow:
+          inset 0 0 0 1px #000,
+          0 0 0 1px var(--gold-2);
+      }
+      .item {
+        aspect-ratio: 1;
+        border-radius: 6px;
+        position: relative;
+        display: grid;
+        place-items: center;
+        cursor: help;
+        background: radial-gradient(circle at 40% 35%, #33281d, #15100b);
+        box-shadow:
+          0 0 0 1px #000,
+          0 0 0 2px var(--rq, #3a2e22);
+      }
+      .item svg {
+        width: 60%;
+        height: 60%;
+      }
+      .item b {
+        position: absolute;
+        right: 4px;
+        bottom: 2px;
+        font: 700 12px/1 var(--body);
+        color: #fff;
+        text-shadow:
+          0 0 2px #000,
+          0 0 2px #000;
+      }
+      .item.empty {
+        cursor: default;
+        background: #15100b;
+        box-shadow: inset 0 0 0 1px #2a2016;
+      }
+      .vendor {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .ware {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        padding: 8px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.25);
+      }
+      .ware .item {
+        width: 48px;
+      }
+      .ware .nm {
+        font: 700 15px/20px var(--body);
+      }
+      .ware .pr {
+        font: 700 14px/20px var(--body);
+        color: #ffd34d;
+        white-space: nowrap;
+      }
+      .ledger {
+        width: 100%;
+        border-collapse: collapse;
+        color: var(--ink);
+        font: 400 16px/22px var(--body);
+      }
+      .ledger td {
+        padding: 8px 4px;
+        border-bottom: 1px dashed rgba(91, 68, 38, 0.4);
+      }
+      .ledger td.n {
+        text-align: right;
+        font-weight: 700;
+        white-space: nowrap;
+        color: #7a1d12;
+      }
+      .rations {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 4px;
+        margin: 10px 0 6px;
+      }
+      .rations i {
+        aspect-ratio: 1;
+        border-radius: 4px;
+        background: #e2cfa4;
+        box-shadow: inset 0 0 0 1px #b39762;
+      }
+      .rations i.f {
+        background: radial-gradient(circle at 40% 35%, #f6d48a, #b07a1f);
+        box-shadow: inset 0 0 0 1px #6e5226;
+      }
+
+      /* ===== Phone ===== */
+      .menu-sheet {
+        display: none;
+      }
+      @media (max-width: 1100px) {
+        .world {
+          grid-template-columns: minmax(0, 1fr);
+          padding: 10px 12px 190px;
+          gap: 14px;
+        }
+        .left-col { display: contents !important; }
+        .left-col > :first-child { order: -3; }
+        .center-col { order: -2; }
+        .left-col > :nth-child(2) { order: -1; }
+        .minimap-wrap {
+          display: none;
+        }
+        .realm {
+          aspect-ratio: 4 / 3;
+        }
+        .slot {
+          width: 46px;
+          height: 46px;
+        }
+        .actionbar {
+          gap: 4px;
+          padding: 6px;
+        }
+        .slot.more-desk {
+          display: none;
+        }
+        .micro {
+          display: none;
+        }
+        .hud-row {
+          gap: 8px;
+        }
+        .gold {
+          position: absolute;
+          top: -28px;
+          right: 16px;
+        }
+        .herald {
+          grid-template-columns: 44px minmax(0, 1fr);
+          gap: 10px;
+        }
+        .herald .face {
+          width: 44px;
+          height: 44px;
+        }
+        .herald p {
+          font-size: 17px;
+          line-height: 25px;
+        }
+        .bag {
+          grid-template-columns: repeat(5, 1fr);
+        }
+        .tt .tip {
+          width: min(260px, 80vw);
+        }
+        .menu-btn {
+          display: grid !important;
+        }
+      }
+      .menu-btn {
+        display: none !important;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .realm .alarm {
+          animation: none;
+        }
+        .tt .tip {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="mock">
+      <b>Эксперименты:</b><a href="12-concept-letter.html">12</a
+      ><a href="13-concept-cyberpunk.html">13 · Сетка</a
+      ><a href="14-concept-rpg.html">14 · Герой</a
+      ><a href="15-concept-garden.html">15 · Сад</a
+      ><a href="16-concept-analog.html">16 · Приёмник</a>
+    </nav>
+
+    <!-- SVG icons drawn for this concept (original, simple shapes) -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="g-scroll" viewBox="0 0 32 32">
+        <path
+          d="M8 6h16a3 3 0 0 1 0 6H12v14a3 3 0 0 1-6 0V9a3 3 0 0 1 2-3z"
+          fill="#e6d4ad"
+          stroke="#6e5226"
+          stroke-width="1.5"
+        />
+        <path d="M14 16h8M14 20h6" stroke="#6e5226" stroke-width="1.5" />
+      </symbol>
+      <symbol id="g-coin" viewBox="0 0 32 32">
+        <circle
+          cx="16"
+          cy="16"
+          r="10"
+          fill="#e3b341"
+          stroke="#7a5512"
+          stroke-width="2"
+        />
+        <path
+          d="M16 10v12M12 13h6a2 2 0 0 1 0 4h-4a2 2 0 0 0 0 4h6"
+          stroke="#7a5512"
+          stroke-width="1.6"
+          fill="none"
+        />
+      </symbol>
+      <symbol id="g-quill" viewBox="0 0 32 32">
+        <path
+          d="M26 4C14 8 9 16 8 26l3-3c6 0 11-5 15-19z"
+          fill="#dfe6ee"
+          stroke="#5b6a8a"
+          stroke-width="1.5"
+        />
+        <path d="M8 26l9-10" stroke="#5b6a8a" stroke-width="1.5" />
+      </symbol>
+      <symbol id="g-orb" viewBox="0 0 32 32">
+        <circle cx="16" cy="15" r="9" fill="#5fd0ff" opacity=".85" />
+        <circle cx="13" cy="12" r="3" fill="#fff" opacity=".7" />
+        <path
+          d="M9 27h14"
+          stroke="#c9a45c"
+          stroke-width="3"
+          stroke-linecap="round"
+        />
+      </symbol>
+      <symbol id="g-hourglass" viewBox="0 0 32 32">
+        <path
+          d="M9 5h14M9 27h14M10 5c0 7 12 8 12 11S10 20 10 27M22 5c0 7-12 8-12 11s12 4 12 11"
+          fill="none"
+          stroke="#e3c77a"
+          stroke-width="2"
+        />
+      </symbol>
+      <symbol id="g-leaf" viewBox="0 0 32 32">
+        <path
+          d="M6 26C6 14 14 6 26 6c0 12-8 20-20 20z"
+          fill="#5ec27a"
+          stroke="#235c34"
+          stroke-width="1.5"
+        />
+        <path d="M6 26L20 12" stroke="#235c34" stroke-width="1.5" />
+      </symbol>
+      <symbol id="g-eye" viewBox="0 0 32 32">
+        <path
+          d="M4 16s5-8 12-8 12 8 12 8-5 8-12 8S4 16 4 16z"
+          fill="none"
+          stroke="#e3c77a"
+          stroke-width="2"
+        />
+        <circle cx="16" cy="16" r="4" fill="#e3c77a" />
+      </symbol>
+      <symbol id="g-map" viewBox="0 0 32 32">
+        <path
+          d="M5 8l7-3 8 3 7-3v19l-7 3-8-3-7 3z"
+          fill="#e6d4ad"
+          stroke="#6e5226"
+          stroke-width="1.5"
+        />
+        <path d="M12 5v19M20 8v19" stroke="#6e5226" stroke-width="1.2" />
+      </symbol>
+      <symbol id="g-moon" viewBox="0 0 32 32">
+        <path d="M22 22A10 10 0 1 1 14 6a8 8 0 0 0 8 16z" fill="#b8c6ff" />
+      </symbol>
+      <symbol id="g-flame" viewBox="0 0 32 32">
+        <path
+          d="M16 4c2 6 8 8 8 15a8 8 0 0 1-16 0c0-4 2-6 4-8 0 3 1 5 3 5-1-5 1-9 1-12z"
+          fill="#ff9b2f"
+        />
+      </symbol>
+      <symbol id="g-gear" viewBox="0 0 32 32">
+        <circle
+          cx="16"
+          cy="16"
+          r="5"
+          fill="none"
+          stroke="#c4b393"
+          stroke-width="2.5"
+        />
+        <path
+          d="M16 4v5M16 23v5M4 16h5M23 16h5M7.5 7.5l3.5 3.5M21 21l3.5 3.5M7.5 24.5l3.5-3.5M21 11l3.5-3.5"
+          stroke="#c4b393"
+          stroke-width="2.5"
+        />
+      </symbol>
+      <symbol id="g-phone" viewBox="0 0 32 32">
+        <rect
+          x="10"
+          y="4"
+          width="12"
+          height="24"
+          rx="2"
+          fill="#2b3346"
+          stroke="#9fb0d6"
+          stroke-width="1.5"
+        />
+        <circle cx="16" cy="24" r="1.3" fill="#9fb0d6" />
+      </symbol>
+      <symbol id="g-box" viewBox="0 0 32 32">
+        <path
+          d="M5 11l11-5 11 5v12l-11 5-11-5z"
+          fill="#9c6b34"
+          stroke="#3e2a12"
+          stroke-width="1.5"
+        />
+        <path
+          d="M5 11l11 5 11-5M16 16v12"
+          stroke="#3e2a12"
+          stroke-width="1.5"
+        />
+      </symbol>
+      <symbol id="g-cup" viewBox="0 0 32 32">
+        <path
+          d="M8 10h14v8a7 7 0 0 1-14 0z"
+          fill="#e9e1d1"
+          stroke="#6b5a3e"
+          stroke-width="1.5"
+        />
+        <path
+          d="M22 12h3a3 3 0 0 1 0 6h-3"
+          fill="none"
+          stroke="#6b5a3e"
+          stroke-width="1.5"
+        />
+      </symbol>
+      <symbol id="g-keys" viewBox="0 0 32 32">
+        <rect
+          x="4"
+          y="11"
+          width="24"
+          height="12"
+          rx="2"
+          fill="#3a3f4b"
+          stroke="#aab3c5"
+          stroke-width="1.5"
+        />
+        <path
+          d="M8 15h2M12 15h2M16 15h2M20 15h2M10 19h12"
+          stroke="#aab3c5"
+          stroke-width="1.5"
+        />
+      </symbol>
+      <symbol id="g-wheel" viewBox="0 0 32 32">
+        <circle
+          cx="16"
+          cy="16"
+          r="10"
+          fill="none"
+          stroke="#c9ccd1"
+          stroke-width="2.5"
+        />
+        <circle cx="16" cy="16" r="3" fill="#c9ccd1" />
+        <path d="M16 6v20M6 16h20" stroke="#c9ccd1" stroke-width="1.5" />
+      </symbol>
+      <symbol id="g-bread" viewBox="0 0 32 32">
+        <path
+          d="M6 18c0-6 5-9 10-9s10 3 10 9v5H6z"
+          fill="#d79a4b"
+          stroke="#6b4318"
+          stroke-width="1.5"
+        />
+      </symbol>
+      <symbol id="g-signal" viewBox="0 0 32 32">
+        <path
+          d="M6 24h3M12 24v-6M17 24v-10M22 24V8"
+          stroke="#8fd6ff"
+          stroke-width="3"
+          stroke-linecap="round"
+        />
+      </symbol>
+    </svg>
+
+    <div class="world">
+      <!-- ===== WORLD (home) ===== -->
+      <div class="screen on" id="world">
+        <aside
+          class="left-col"
+          style="display: flex; flex-direction: column; gap: 16px"
+        >
+          <section class="frame" aria-label="Персонаж">
+            <div class="unit">
+              <div class="portrait">
+                <svg viewBox="0 0 52 52" aria-hidden="true">
+                  <path
+                    d="M26 6l14 8v12c0 10-7 16-14 20-7-4-14-10-14-20V14z"
+                    fill="#3b2d1c"
+                    stroke="#d6b26a"
+                    stroke-width="2"
+                  />
+                  <text
+                    x="26"
+                    y="32"
+                    text-anchor="middle"
+                    font-family="Cinzel"
+                    font-weight="700"
+                    font-size="14"
+                    fill="#d6b26a"
+                  >
+                    РР
+                  </text></svg
+                ><span class="lvl">10</span>
+              </div>
+              <div>
+                <div class="name">Роман</div>
+                <div class="bars">
+                  <div
+                    class="res tt"
+                    tabindex="0"
+                    style="--c: var(--hp); --p: 62%"
+                  >
+                    <i></i><span>Здоровье 62 %</span>
+                    <div class="tip">
+                      <span class="n" style="color: #ff7a6e"
+                        >Здоровье — восстановление</span
+                      >Восстановление по браслету: сон 6,2 ч (на 48 мин меньше обычного), качество
+                      82.<span class="flav"
+                        >Сегодня до 23:30 — и к утру будет 90 %.</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="res tt"
+                    tabindex="0"
+                    style="--c: var(--mana); --p: 78%"
+                  >
+                    <i></i><span>Мана 78 %</span>
+                    <div class="tip">
+                      <span class="n" style="color: #8fb8ff"
+                        >Мана — спокойствие</span
+                      >Индекс стресса 3 — спокойно. Тратится на Instagram (2:53
+                      сегодня).
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="auras" aria-label="Эффекты">
+              <span class="aura tt" tabindex="0"
+                ><svg><use href="#g-quill" /></svg><b>15</b
+                ><span class="tip"
+                  ><span class="n" style="color: var(--q-uncommon)"
+                    >Летописец</span
+                  >15 дней дневника подряд.<span class="flav"
+                    >В такие дни настроение выше на 0,8.</span
+                  ><span class="bad">Сегодня записи ещё нет.</span></span
+                ></span
+              >
+              <span class="aura tt" tabindex="0"
+                ><svg><use href="#g-flame" /></svg><b>9</b
+                ><span class="tip"
+                  ><span class="n" style="color: var(--q-uncommon)"
+                    >Кузнец кода</span
+                  >9 дней кода подряд, 21 ч 38 мин за неделю.</span
+                ></span
+              >
+              <span class="aura tt" tabindex="0"
+                ><svg><use href="#g-leaf" /></svg><b>2</b
+                ><span class="tip"
+                  ><span class="n" style="color: var(--q-uncommon)"
+                    >Трезвый ум</span
+                  >2 дня без алкоголя.</span
+                ></span
+              >
+              <span class="aura bad tt" tabindex="0"
+                ><svg><use href="#g-moon" /></svg
+                ><span class="tip"
+                  ><span class="n" style="color: #ff7a6e">Недосып</span>−48 мин
+                  сна. <span class="bad">−10 % к Здоровью.</span></span
+                ></span
+              >
+              <span class="aura bad tt" tabindex="0"
+                ><svg><use href="#g-eye" /></svg
+                ><span class="tip"
+                  ><span class="n" style="color: #ff7a6e">Зов ленты</span
+                  >Instagram 2 ч 53 мин сегодня.
+                  <span class="bad">Тянет настроение вниз.</span></span
+                ></span
+              >
+            </div>
+          </section>
+
+          <section class="frame quests" aria-label="Журнал заданий">
+            <div class="title">Журнал заданий <small>L</small></div>
+            <div class="qgroup">Сегодня</div>
+            <div class="q">
+              <span class="mark">!</span>
+              <div>
+                <h3>Настройка браслета</h3>
+                <div class="obj late">
+                  Откалибровать браслет — 11:00, просрочено
+                </div>
+              </div>
+            </div>
+            <div class="q">
+              <span class="mark">!</span>
+              <div>
+                <h3>Голос из дома</h3>
+                <div class="obj">Позвонить маме: 0/1</div>
+              </div>
+            </div>
+            <div class="q">
+              <span class="mark">!</span>
+              <div>
+                <h3>Плата за связь</h3>
+                <div class="obj">Оплатить интернет: 0/1</div>
+              </div>
+            </div>
+            <div class="qgroup">Ежедневные</div>
+            <div class="q">
+              <span class="mark daily">!</span>
+              <div>
+                <h3>Летопись дня</h3>
+                <div class="obj">
+                  Пара строк в дневник: 0/1 ·
+                  <span style="color: var(--q-uncommon)">+20 XP</span>
+                </div>
+              </div>
+            </div>
+            <div class="q">
+              <span class="mark daily">!</span>
+              <div>
+                <h3>Ранний привал</h3>
+                <div class="obj">Лечь до 23:30: 0/1</div>
+              </div>
+            </div>
+            <div class="q">
+              <span class="mark daily">✓</span>
+              <div>
+                <h3>Трезвый ум</h3>
+                <div class="obj done">День без алкоголя: 1/1</div>
+              </div>
+            </div>
+            <div class="qgroup">Событие мира</div>
+            <div class="q">
+              <span class="mark elite">☠</span>
+              <div>
+                <h3 style="color: #ff8b7f">Безмолвная башня</h3>
+                <div class="obj">
+                  LanguageTool молчит с 18:53, WakaTime — с 07:40. Сами не
+                  поднимутся.
+                </div>
+              </div>
+            </div>
+          </section>
+        </aside>
+
+        <section
+          class="center-col"
+          style="display: flex; flex-direction: column; gap: 16px; min-width: 0"
+        >
+          <div class="parch herald">
+            <div class="face" aria-hidden="true">
+              <svg viewBox="0 0 44 44" width="40" height="40">
+                <circle cx="22" cy="18" r="9" fill="#e3c77a" />
+                <path d="M8 40c2-9 8-13 14-13s12 4 14 13" fill="#7a1d12" />
+                <path
+                  d="M14 10l8-6 8 6"
+                  fill="none"
+                  stroke="#e3c77a"
+                  stroke-width="2"
+                />
+              </svg>
+            </div>
+            <div>
+              <div class="who">Хронист · утренний свиток · 08:30</div>
+              <h2>Странник, два важных дела</h2>
+              <p>
+                Казна тает: до дня жалования (≈ 10.11) дойдёшь с
+                <b>≈ 150 золотыми</b>. Отдохнёшь до 23:30 — завтра дух будет
+                крепок, <b>7 из 10</b>. В Безмолвной башне беда: служители Слова
+                и Времени молчат с вечера.
+              </p>
+              <div class="row">
+                <button class="rbtn">Принять задания</button
+                ><button class="rbtn alt" data-go="bag">Открыть казну</button>
+              </div>
+            </div>
+          </div>
+
+          <section class="frame" aria-label="Карта владений">
+            <div class="title">Владения <small>области жизни · M</small></div>
+            <div class="realm">
+              <svg
+                viewBox="0 0 800 500"
+                role="img"
+                aria-label="Карта: Казна (тревога), Башня (сбой), Святилище сна, Кузня кода, Библиотека дневника, Таверна досуга, Дом"
+              >
+                <defs>
+                  <radialGradient id="sea" cx="50%" cy="50%" r="70%">
+                    <stop offset="0" stop-color="#2b4a5e" />
+                    <stop offset="1" stop-color="#14232e" />
+                  </radialGradient>
+                  <pattern
+                    id="hatch"
+                    width="8"
+                    height="8"
+                    patternUnits="userSpaceOnUse"
+                    patternTransform="rotate(45)"
+                  >
+                    <line
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="8"
+                      stroke="rgba(0,0,0,.18)"
+                      stroke-width="2"
+                    />
+                  </pattern>
+                </defs>
+                <rect width="800" height="500" fill="url(#sea)" />
+                <path
+                  d="M90 120 C150 40 330 30 420 70 C520 20 690 60 720 160 C770 260 700 420 560 440 C430 480 300 470 200 420 C90 380 40 230 90 120z"
+                  fill="#c9b07a"
+                  stroke="#6e5226"
+                  stroke-width="3"
+                />
+                <path
+                  d="M90 120 C150 40 330 30 420 70 C520 20 690 60 720 160 C770 260 700 420 560 440 C430 480 300 470 200 420 C90 380 40 230 90 120z"
+                  fill="url(#hatch)"
+                />
+                <path
+                  d="M160 300 C240 250 330 290 400 250 C470 210 560 260 640 230"
+                  fill="none"
+                  stroke="#6e5226"
+                  stroke-width="2"
+                  stroke-dasharray="6 6"
+                />
+                <path
+                  d="M120 180 l20 -30 l20 30 z M150 190 l18 -26 l18 26 z M180 175 l16 -22 l16 22 z"
+                  fill="#8a7a5a"
+                  stroke="#4a3d24"
+                  stroke-width="1.5"
+                />
+                <!-- Treasury: warning -->
+                <g>
+                  <circle
+                    class="alarm"
+                    cx="560"
+                    cy="150"
+                    r="46"
+                    fill="rgba(255,165,61,.28)"
+                  />
+                  <rect
+                    x="530"
+                    y="122"
+                    width="60"
+                    height="50"
+                    rx="4"
+                    fill="#8a6a33"
+                    stroke="#3e2a12"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M526 124l34-22 34 22z"
+                    fill="#6e5226"
+                    stroke="#3e2a12"
+                    stroke-width="2"
+                  />
+                  <text class="lbl" x="560" y="200" text-anchor="middle">
+                    КАЗНА
+                  </text>
+                  <text class="sub" x="560" y="220" text-anchor="middle">
+                    3 645 · запас 9 дней
+                  </text>
+                </g>
+                <!-- Tower: failure -->
+                <g>
+                  <circle
+                    class="alarm"
+                    cx="660"
+                    cy="330"
+                    r="40"
+                    fill="rgba(216,70,62,.35)"
+                  />
+                  <rect
+                    x="646"
+                    y="282"
+                    width="28"
+                    height="70"
+                    fill="#5b5b66"
+                    stroke="#222"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M640 284l20-24 20 24z"
+                    fill="#3b3b44"
+                    stroke="#222"
+                    stroke-width="2"
+                  />
+                  <text class="lbl" x="660" y="380" text-anchor="middle">
+                    БАШНЯ
+                  </text>
+                  <text class="sub" x="660" y="400" text-anchor="middle">
+                    2 из 23 молчат
+                  </text>
+                </g>
+                <!-- Sanctuary of sleep -->
+                <g>
+                  <circle
+                    cx="250"
+                    cy="140"
+                    r="26"
+                    fill="#3b4a7a"
+                    stroke="#1c2340"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M262 128a14 14 0 1 1-12 -6 10 10 0 0 0 12 6z"
+                    fill="#dfe6ff"
+                  />
+                  <text class="lbl" x="250" y="190" text-anchor="middle">
+                    СВЯТИЛИЩЕ СНА
+                  </text>
+                  <text class="sub" x="250" y="210" text-anchor="middle">
+                    6,2 ч · недосып
+                  </text>
+                </g>
+                <!-- Forge of code -->
+                <g>
+                  <rect
+                    x="380"
+                    y="300"
+                    width="50"
+                    height="36"
+                    fill="#6b4a2c"
+                    stroke="#2b1c10"
+                    stroke-width="2"
+                  />
+                  <path d="M394 300v-16h10v16" fill="#3b2d1c" />
+                  <circle cx="420" cy="290" r="6" fill="#ff9b2f" />
+                  <text class="lbl" x="405" y="360" text-anchor="middle">
+                    КУЗНЯ
+                  </text>
+                  <text class="sub" x="405" y="380" text-anchor="middle">
+                    код 9 дней подряд
+                  </text>
+                </g>
+                <!-- Library of the diary -->
+                <g>
+                  <rect
+                    x="170"
+                    y="330"
+                    width="60"
+                    height="40"
+                    fill="#7a5a3a"
+                    stroke="#2b1c10"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M166 332l34-20 34 20z"
+                    fill="#4a3522"
+                    stroke="#2b1c10"
+                    stroke-width="2"
+                  />
+                  <text class="lbl" x="200" y="392" text-anchor="middle">
+                    БИБЛИОТЕКА
+                  </text>
+                  <text class="sub" x="200" y="412" text-anchor="middle">
+                    летопись 15 дней
+                  </text>
+                </g>
+                <!-- Home -->
+                <g>
+                  <path
+                    d="M380 160l26-20 26 20v26h-52z"
+                    fill="#a0522d"
+                    stroke="#2b1c10"
+                    stroke-width="2"
+                  />
+                  <text class="lbl" x="406" y="210" text-anchor="middle">
+                    ДОМ
+                  </text>
+                  <text class="sub" x="406" y="230" text-anchor="middle">
+                    3 дела · дух 7/10
+                  </text>
+                </g>
+              </svg>
+            </div>
+          </section>
+        </section>
+
+        <aside
+          class="right-col"
+          style="display: flex; flex-direction: column; gap: 16px"
+        >
+          <section class="frame minimap-wrap" aria-label="Мини-карта">
+            <div class="minimap">
+              <svg viewBox="0 0 160 160" aria-hidden="true">
+                <path
+                  d="M0 100 C40 90 60 110 100 96 S150 80 160 86"
+                  stroke="#4d7fa3"
+                  stroke-width="10"
+                  fill="none"
+                />
+                <path
+                  d="M30 0 L60 160 M0 50 L160 70"
+                  stroke="#6b6046"
+                  stroke-width="3"
+                />
+                <circle cx="80" cy="80" r="5" fill="#ffd34d" />
+                <path d="M80 70l5 10h-10z" fill="#ffd34d" />
+                <circle cx="110" cy="50" r="4" fill="#f3e9d6" />
+                <circle cx="48" cy="118" r="4" fill="#f3e9d6" />
+              </svg>
+            </div>
+            <div class="mm-cap">
+              Варшава · дом<small>8° облачно · куртка поверх свитера</small>
+            </div>
+          </section>
+          <section class="frame" aria-label="Достижения">
+            <div class="title">Достижения <small>175 / 504 · Y</small></div>
+            <div class="q">
+              <span class="mark" style="color: var(--q-legend)">★</span>
+              <div>
+                <h3 style="color: var(--q-legend)">Десятилетие с музыкой</h3>
+                <div class="obj">3 533 / 3 650 дней · легендарное</div>
+              </div>
+            </div>
+            <div class="q" style="margin-top: 10px">
+              <span class="mark" style="color: var(--q-epic)">★</span>
+              <div>
+                <h3 style="color: var(--q-epic)">День, который запомнится</h3>
+                <div class="obj">получено 31.10 · +50 XP</div>
+              </div>
+            </div>
+            <div class="q" style="margin-top: 10px">
+              <span class="mark" style="color: var(--q-rare)">★</span>
+              <div>
+                <h3 style="color: var(--q-rare)">Две недели у горна</h3>
+                <div class="obj">код 9 / 14 дней · пятница</div>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+      <!-- ===== BAG & TREASURY (inner screen) ===== -->
+      <div class="screen" id="bag">
+        <aside
+          class="left-col"
+          style="display: flex; flex-direction: column; gap: 16px"
+        >
+          <section class="parch" aria-label="Казна">
+            <div class="title" style="color: var(--ink-2)">
+              Казна
+              <small style="color: var(--ink-2)">PKO ••6677 · 12:15</small>
+            </div>
+            <div style="font: 700 40px/44px var(--head); color: #7a5512">
+              3 644 <span style="font-size: 22px">зол.</span> 66
+              <span style="font-size: 18px">сер.</span>
+            </div>
+            <div
+              style="
+                font: 500 15px/22px var(--body);
+                color: var(--ink-2);
+                margin-top: 8px;
+              "
+            >
+              Провизии на <b style="color: #7a1d12">9 дней</b> из 30 — до
+              жалования хватит впритык (≈ 150 зол. к 10.11, прогноз 64 %).
+            </div>
+            <div class="rations" aria-label="Провизия: 9 из 30 дней">
+              <i class="f"></i><i class="f"></i><i class="f"></i
+              ><i class="f"></i><i class="f"></i><i class="f"></i
+              ><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i
+              ><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i
+              ><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i
+              ><i></i>
+            </div>
+            <div class="row" style="margin-top: 12px">
+              <button class="rbtn">Записать трату</button
+              ><button class="rbtn alt">Свиток выписки</button>
+            </div>
+          </section>
+          <section class="parch">
+            <div class="title" style="color: var(--ink-2)">
+              Книга казны <small style="color: var(--ink-2)">сегодня</small>
+            </div>
+            <table class="ledger">
+              <tr>
+                <td>Лавка Żabka · съестное</td>
+                <td class="n">−36,98</td>
+              </tr>
+              <tr>
+                <td>Повозки Bolt ×2</td>
+                <td class="n">−60,80</td>
+              </tr>
+              <tr>
+                <td>Трактир Sam Plus</td>
+                <td class="n">−47,10</td>
+              </tr>
+              <tr>
+                <td>Гонцы Orange Flex</td>
+                <td class="n">−35,00</td>
+              </tr>
+            </table>
+          </section>
+        </aside>
+        <section class="center-col frame" aria-label="Сумка">
+          <div class="title">
+            Сумка — куда ушло золото <small>ноябрь · B</small>
+          </div>
+          <div class="bag">
+            <span class="item tt" tabindex="0" style="--rq: var(--q-legend)"
+              ><svg><use href="#g-wheel" /></svg><b>2</b
+              ><span class="tip"
+                ><span class="n" style="color: var(--q-legend)">Повозки</span
+                >Транспорт · <span class="g">60,80 зол.</span> · 34 %
+                ноября<span class="flav"
+                  >Самая тяжёлая ноша в сумке.</span
+                ></span
+              ></span
+            >
+            <span class="item tt" tabindex="0" style="--rq: var(--q-epic)"
+              ><svg><use href="#g-cup" /></svg><b>1</b
+              ><span class="tip"
+                ><span class="n" style="color: var(--q-epic)"
+                  >Трапеза в трактире</span
+                >Кафе и рестораны · <span class="g">47,10 зол.</span> · 26
+                %</span
+              ></span
+            >
+            <span class="item tt" tabindex="0" style="--rq: var(--q-rare)"
+              ><svg><use href="#g-bread" /></svg><b>1</b
+              ><span class="tip"
+                ><span class="n" style="color: var(--q-rare)"
+                  >Съестные припасы</span
+                >Продукты · <span class="g">36,98 зол.</span> · 21 %</span
+              ></span
+            >
+            <span class="item tt" tabindex="0" style="--rq: var(--q-uncommon)"
+              ><svg><use href="#g-signal" /></svg><b>1</b
+              ><span class="tip"
+                ><span class="n" style="color: var(--q-uncommon)">Гонцы</span
+                >Связь · <span class="g">35,00 зол.</span> · 19 %</span
+              ></span
+            >
+            <span class="item empty"></span><span class="item empty"></span
+            ><span class="item empty"></span><span class="item empty"></span
+            ><span class="item empty"></span><span class="item empty"></span
+            ><span class="item empty"></span><span class="item empty"></span>
+          </div>
+          <p style="color: var(--text-2); margin: 12px 0 0">
+            Рамка предмета — его «редкость»: чем больше доля трат, тем ярче.
+            Наведите или нажмите на предмет.
+          </p>
+          <div class="title" style="margin-top: 20px">Полгода казны</div>
+          <svg
+            viewBox="0 0 600 140"
+            style="width: 100%; height: 140px"
+            role="img"
+            aria-label="Доходы и расходы июнь–ноябрь; ноябрь — прогноз (иллюстрация)"
+          >
+            <g fill="#46d17a">
+              <rect x="20" y="22" width="30" height="118" />
+              <rect x="120" y="30" width="30" height="110" />
+              <rect x="220" y="72" width="30" height="68" />
+              <rect x="320" y="57" width="30" height="83" />
+              <rect x="420" y="69" width="30" height="71" />
+            </g>
+            <g fill="#c4b393">
+              <rect x="52" y="4" width="30" height="136" />
+              <rect x="152" y="30" width="30" height="110" />
+              <rect x="252" y="59" width="30" height="81" />
+              <rect x="352" y="14" width="30" height="126" />
+              <rect x="452" y="88" width="30" height="52" />
+            </g>
+            <rect
+              x="552"
+              y="57"
+              width="30"
+              height="83"
+              fill="none"
+              stroke="#d6b26a"
+              stroke-dasharray="4 4"
+            />
+          </svg>
+        </section>
+        <aside
+          class="right-col frame vendor"
+          aria-label="Торговец — список желаний"
+        >
+          <div class="title">Торговец <small>список желаний</small></div>
+          <div class="ware tt" tabindex="0">
+            <span class="item" style="--rq: var(--q-epic)"
+              ><svg><use href="#g-cup" /></svg
+            ></span>
+            <div>
+              <div class="nm" style="color: var(--q-epic)">Кофемашина</div>
+              <div style="color: var(--text-2); font-size: 14px">
+                цену проверяют каждое утро
+              </div>
+            </div>
+            <span class="pr">—</span>
+            <span class="tip"
+              ><span class="n" style="color: var(--q-epic)">Кофемашина</span>В
+              списке желаний. Цена не менялась.<span class="flav"
+                >Подождите жалования: казна сейчас на 9 дней.</span
+              ></span
+            >
+          </div>
+          <div class="ware tt" tabindex="0">
+            <span class="item" style="--rq: var(--q-rare)"
+              ><svg><use href="#g-keys" /></svg
+            ></span>
+            <div>
+              <div class="nm" style="color: var(--q-rare)">
+                Кнопки для клавы
+              </div>
+              <div style="color: var(--text-2); font-size: 14px">
+                или новая клавиатура
+              </div>
+            </div>
+            <span class="pr">—</span>
+            <span class="tip"
+              ><span class="n" style="color: var(--q-rare)"
+                >Кнопки для клавы</span
+              >В списке желаний. Добавьте ссылку — торговец будет следить за
+              ценой.</span
+            >
+          </div>
+          <button class="rbtn alt" style="align-self: flex-start">
+            Добавить желание
+          </button>
+        </aside>
+      </div>
+    </div>
+
+    <!-- HUD: action bar (quick actions), menu (sections), gold, XP — the navigation of the whole product -->
+    <div class="hud">
+      <div class="hud-row" style="position: relative">
+        <div class="actionbar" role="toolbar" aria-label="Быстрые действия">
+          <button class="slot tt" aria-label="Новое задание (1)">
+            <svg><use href="#g-scroll" /></svg><span class="key">1</span
+            ><span class="tip"
+              ><span class="n">Новое задание</span>Задача в журнал. «Позвонить
+              бабушке во вторник в 10».</span
+            >
+          </button>
+          <button class="slot tt" aria-label="Записать трату (2)">
+            <svg><use href="#g-coin" /></svg><span class="key">2</span
+            ><span class="tip"
+              ><span class="n">Записать трату</span>«кофе 14 вчера» — и в книгу
+              казны.</span
+            >
+          </button>
+          <button class="slot tt" aria-label="Летопись (3)">
+            <svg><use href="#g-quill" /></svg><span class="key">3</span
+            ><span class="tip"
+              ><span class="n">Летопись</span>Запись в дневник.
+              <span class="good">+20 XP, серия 16.</span></span
+            >
+          </button>
+          <button class="slot tt" aria-label="Спросить оракула (4)">
+            <svg><use href="#g-orb" /></svg><span class="key">4</span
+            ><span class="tip"
+              ><span class="n">Спросить оракула</span>Вопрос к AI о твоих
+              днях.</span
+            >
+          </button>
+          <button class="slot cd tt" aria-label="Фокус (5)">
+            <svg><use href="#g-hourglass" /></svg><span class="key">5</span
+            ><span class="tip"
+              ><span class="n">Фокус</span>Сессия фокуса идёт: осталось 8
+              мин.</span
+            >
+          </button>
+          <button class="slot tt more-desk" aria-label="Бережный день (6)">
+            <svg><use href="#g-leaf" /></svg><span class="key">6</span
+            ><span class="tip"
+              ><span class="n">Бережный день</span>Если сегодня тяжело: 1–3
+              маленьких шага.</span
+            >
+          </button>
+          <button class="slot tt more-desk" aria-label="Поиск (7)">
+            <svg><use href="#g-eye" /></svg><span class="key">7</span
+            ><span class="tip"
+              ><span class="n">Всевидящее око</span>Поиск по всему. Ctrl
+              K.</span
+            >
+          </button>
+          <button class="slot menu-btn" aria-label="Меню разделов">
+            <svg><use href="#g-map" /></svg>
+          </button>
+        </div>
+        <nav class="micro" aria-label="Разделы">
+          <button class="mbtn on" data-go="world" title="Мир (H)">⌂</button>
+          <button class="mbtn" title="Персонаж (C) — здоровье, сон, привычки">
+            C
+          </button>
+          <button class="mbtn" data-go="bag" title="Сумка (B) — финансы">
+            B
+          </button>
+          <button class="mbtn" title="Журнал заданий (L) — задачи">L</button>
+          <button class="mbtn" title="Книга (J) — дневник, жизнь">J</button>
+          <button class="mbtn" title="Достижения (Y)">Y</button>
+          <button class="mbtn" title="Ремёсла (P) — разработка, музыка, игры">
+            P
+          </button>
+          <button class="mbtn" title="Настройки">
+            <svg width="22" height="22"><use href="#g-gear" /></svg>
+          </button>
+        </nav>
+        <div class="gold" aria-label="Золото: 3 644 и 66">
+          <i></i>3 644 <i class="s"></i>66
+        </div>
+      </div>
+      <div
+        class="xpbar"
+        role="progressbar"
+        aria-valuenow="10"
+        aria-valuemax="1000"
+        aria-label="Опыт"
+      >
+        <i></i><span>Уровень 10 · 10 / 1000 опыта</span>
+      </div>
+    </div>
+
+    <script>
+      const go = id => {
+        document
+          .querySelectorAll('.screen')
+          .forEach(s => s.classList.toggle('on', s.id === id));
+        document
+          .querySelectorAll('.mbtn[data-go]')
+          .forEach(b => b.classList.toggle('on', b.dataset.go === id));
+        window.scrollTo({top: 0});
+      };
+      document
+        .querySelectorAll('[data-go]')
+        .forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+      // Phone: the map button in the action bar toggles between the world and the bag in this mockup.
+      document
+        .querySelector('.menu-btn')
+        .addEventListener('click', () =>
+          go(
+            document.getElementById('world').classList.contains('on')
+              ? 'bag'
+              : 'world',
+          ),
+        );
+      document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT') return;
+        const k = e.key.toLowerCase();
+        if (k === 'b' || k === 'и') go('bag');
+        if (k === 'h' || k === 'р' || k === 'escape') go('world');
+      });
+    </script>
+  </body>
+</html>

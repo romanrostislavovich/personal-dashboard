@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Концепция «Приёмник» (аналоговый пульт) — Personal Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Concept 16 "The Receiver": the product from scratch as one physical instrument.
+   Needles instead of charts, toggles instead of checkboxes, a paper tape for events,
+   a channel dial for sections and the AI on air. Calm, tactile, readable from across the room. */
+      :root {
+        color-scheme: dark;
+        --case: #121110;
+        --plate: #1b1a18;
+        --plate-2: #242220;
+        --bezel: #3a3631;
+        --text: #ece5d8; /* 14:1 on plate */
+        --text-2: #b0a693; /* 7:1 */
+        --amber: #ffb547; /* lamps and needles, 10:1 */
+        --amber-dim: rgba(255, 181, 71, 0.16);
+        --red: #ff6b5a;
+        --green: #7ee08a;
+        --paper: #efe9da;
+        --paper-ink: #2a251c;
+        --label: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+        --mono: 'IBM Plex Mono', Consolas, monospace;
+        --sans: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        color: var(--text);
+        font: 400 15px/22px var(--sans);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+        background: radial-gradient(
+          80% 60% at 50% 0%,
+          #1f1c18,
+          var(--case) 70%
+        );
+        min-height: 100vh;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+      }
+      :focus-visible {
+        outline: 2px solid var(--amber);
+        outline-offset: 3px;
+      }
+      .mock {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 6px 16px;
+        font:
+          500 12px/18px system-ui,
+          sans-serif;
+        background: var(--paper);
+        color: var(--paper-ink);
+      }
+      .mock a {
+        color: inherit;
+        text-decoration: none;
+        opacity: 0.8;
+      }
+      .mock a:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      /* The device */
+      .device {
+        max-width: 1320px;
+        margin: 20px auto 40px;
+        padding: 20px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, #2a2723, #191714);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          inset 0 -2px 0 rgba(0, 0, 0, 0.5),
+          0 30px 60px -20px #000;
+      }
+      .face {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 260px;
+        gap: 20px;
+      }
+      .module {
+        position: relative;
+        background: linear-gradient(180deg, var(--plate-2), var(--plate));
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow:
+          inset 0 0 0 1px #000,
+          inset 0 2px 0 rgba(255, 255, 255, 0.05);
+      }
+      .module::before,
+      .module::after {
+        content: '';
+        position: absolute;
+        top: 8px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #8a8378, #2a2722);
+        box-shadow: inset 0 0 0 1px #000;
+      }
+      .module::before {
+        left: 8px;
+      }
+      .module::after {
+        right: 8px;
+      }
+      .lbl {
+        font: 600 13px/16px var(--label);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--text-2);
+        text-align: center;
+      }
+      .lamp {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #3a2a14;
+        box-shadow: inset 0 0 0 1px #000;
+        vertical-align: 0;
+      }
+      .lamp.on {
+        background: var(--amber);
+        box-shadow:
+          0 0 10px var(--amber),
+          inset 0 0 0 1px #6b4a12;
+      }
+      .lamp.red {
+        background: var(--red);
+        box-shadow: 0 0 10px var(--red);
+      }
+      .lamp.green {
+        background: var(--green);
+        box-shadow: 0 0 8px var(--green);
+      }
+
+      /* Top row: brand plate, level odometer, clock */
+      .head {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 4px 8px 16px;
+        flex-wrap: wrap;
+      }
+      .brand {
+        font: 700 22px/24px var(--label);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+      }
+      .brand small {
+        display: block;
+        font: 500 11px/14px var(--label);
+        letter-spacing: 0.3em;
+        color: var(--text-2);
+      }
+      .sp {
+        flex: 1;
+      }
+      .odo {
+        display: flex;
+        gap: 2px;
+        padding: 4px;
+        border-radius: 6px;
+        background: #000;
+        box-shadow: inset 0 0 0 1px var(--bezel);
+      }
+      .odo span {
+        width: 22px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        font: 600 20px/1 var(--mono);
+        color: var(--text);
+        border-radius: 3px;
+        background: linear-gradient(180deg, #0a0a0a, #2a2722 50%, #0a0a0a);
+      }
+      .odo span.hl {
+        color: #111;
+        background: linear-gradient(180deg, #c99a3a, #f2d48c 50%, #c99a3a);
+      }
+      .plaque {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        background: linear-gradient(180deg, #b8964f, #8a6d33);
+        color: #1c150a;
+        font: 700 13px/16px var(--label);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.35),
+          0 0 0 1px #000;
+      }
+      .plaque small {
+        font: 600 12px/14px var(--label);
+        letter-spacing: 0.06em;
+        text-transform: none;
+      }
+
+      /* On air: the AI briefing */
+      .air {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+      .speaker {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle, #000 1.5px, transparent 2px) 0 0 / 8px 8px,
+          radial-gradient(circle at 40% 35%, #2e2b27, #151311);
+        box-shadow:
+          inset 0 0 0 3px #000,
+          0 0 0 2px var(--bezel);
+      }
+      .air .onair {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font: 700 12px/16px var(--label);
+        letter-spacing: 0.2em;
+        color: var(--red);
+      }
+      .air p {
+        margin: 6px 0 0;
+        font: 500 19px/28px var(--sans);
+        max-width: 70ch;
+      }
+      .air p b {
+        color: var(--amber);
+        font-weight: 600;
+      }
+      .keys {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .key {
+        min-height: 44px;
+        padding: 0 16px;
+        border-radius: 6px;
+        border: 0;
+        cursor: pointer;
+        font: 700 14px/18px var(--label);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        background: linear-gradient(180deg, #4a453e, #2b2823);
+        color: var(--text);
+        box-shadow:
+          0 3px 0 #000,
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      }
+      .key:active {
+        transform: translateY(2px);
+        box-shadow: 0 1px 0 #000;
+      }
+      .key.amber {
+        background: linear-gradient(180deg, #ffcc73, #e09a2a);
+        color: #1c150a;
+      }
+
+      /* Gauges */
+      .gauges {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 14px;
+      }
+      .gauge svg {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      .gauge .read {
+        text-align: center;
+        font: 600 22px/28px var(--mono);
+        margin-top: 4px;
+      }
+      .gauge .read small {
+        font: 400 13px/18px var(--sans);
+        color: var(--text-2);
+        display: block;
+      }
+      .needle {
+        transform-origin: 100px 100px;
+        transform: rotate(var(--a));
+        animation: settle 1.4s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+      }
+      @keyframes settle {
+        from {
+          transform: rotate(-90deg);
+        }
+      }
+      .tick {
+        stroke: var(--text-2);
+        stroke-width: 2;
+      }
+      .zone-red {
+        stroke: var(--red);
+      }
+      .zone-amb {
+        stroke: var(--amber);
+      }
+      .zone-grn {
+        stroke: var(--green);
+      }
+      .gtext {
+        font: 600 11px/1 var(--label);
+        fill: var(--text-2);
+        letter-spacing: 0.1em;
+      }
+
+      /* Toggles: habits and today's tasks */
+      .switches {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .sw {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 4px;
+        border: 0;
+        background: none;
+        cursor: pointer;
+        text-align: center;
+      }
+      .sw .base {
+        width: 44px;
+        height: 64px;
+        border-radius: 10px;
+        background: linear-gradient(180deg, #0c0b0a, #26231f);
+        box-shadow:
+          inset 0 0 0 1px #000,
+          0 0 0 2px var(--bezel);
+        position: relative;
+      }
+      .sw .lever {
+        position: absolute;
+        left: 50%;
+        width: 14px;
+        height: 34px;
+        margin-left: -7px;
+        border-radius: 7px;
+        background: linear-gradient(90deg, #8e8a82, #e8e2d6, #8e8a82);
+        top: 26px;
+        transform-origin: 50% 0;
+        transition: transform 160ms ease;
+      }
+      .sw[aria-checked='true'] .lever {
+        top: 4px;
+      }
+      .sw span.t {
+        font: 600 14px/16px var(--label);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .sw small {
+        font: 400 12px/16px var(--sans);
+        color: var(--text-2);
+      }
+
+      /* Ticker tape */
+      .tape {
+        background: var(--paper);
+        color: var(--paper-ink);
+        border-radius: 4px;
+        padding: 10px 14px;
+        font: 500 13px/22px var(--mono);
+        max-height: 260px;
+        overflow: hidden;
+        position: relative;
+        -webkit-mask: linear-gradient(to bottom, transparent, #000 18%);
+        mask: linear-gradient(to bottom, transparent, #000 18%);
+        background-image: radial-gradient(
+          circle,
+          rgba(0, 0, 0, 0.25) 2px,
+          transparent 2.5px
+        );
+        background-size: 100% 22px;
+        background-position: -48% 0;
+        background-repeat: repeat-y;
+      }
+      .tape div {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px dashed rgba(42, 37, 28, 0.25);
+        padding-left: 10px;
+      }
+      .tape .r {
+        color: #a02010;
+      }
+      .tape > .tape-feed { display: block; border: 0; padding: 0; }
+      .tape-feed {
+        animation: feed 40s linear infinite;
+      }
+      @keyframes feed {
+        from {
+          transform: translateY(0);
+        }
+        to {
+          transform: translateY(-50%);
+        }
+      }
+
+      /* Channel dial: the navigation */
+      .dialmod {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+      }
+      .dial {
+        position: relative;
+        width: 220px;
+        height: 220px;
+      }
+      .dial .knob {
+        position: absolute;
+        inset: 50px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 40% 35%, #5a554c, #1a1815 70%);
+        box-shadow:
+          0 6px 14px rgba(0, 0, 0, 0.8),
+          inset 0 0 0 2px #000,
+          inset 0 2px 0 rgba(255, 255, 255, 0.15);
+        transition: transform 300ms cubic-bezier(0.3, 1.4, 0.5, 1);
+        transform: rotate(var(--r, -60deg));
+      }
+      .dial .knob::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 8px;
+        width: 4px;
+        height: 24px;
+        margin-left: -2px;
+        border-radius: 2px;
+        background: var(--amber);
+        box-shadow: 0 0 8px var(--amber);
+      }
+      .dial .grip {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: repeating-conic-gradient(
+          rgba(0, 0, 0, 0.35) 0 4deg,
+          transparent 4deg 10deg
+        );
+        -webkit-mask: radial-gradient(circle, transparent 72%, #000 73%);
+        mask: radial-gradient(circle, transparent 72%, #000 73%);
+      }
+      .ch {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        border: 0;
+        background: none;
+        cursor: pointer;
+        font: 700 13px/16px var(--label);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-2);
+        padding: 6px;
+        min-width: 44px;
+        min-height: 44px;
+        display: grid;
+        place-items: center;
+      }
+      .ch .lamp {
+        margin-bottom: 2px;
+      }
+      .ch.on {
+        color: var(--amber);
+        text-shadow: 0 0 8px rgba(255, 181, 71, 0.6);
+      }
+      .presets {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        width: 100%;
+      }
+      .presets .key {
+        padding: 0 6px;
+        font-size: 13px;
+      }
+      .presets .key.on {
+        background: linear-gradient(180deg, #ffcc73, #e09a2a);
+        color: #1c150a;
+      }
+
+      .screen {
+        display: none;
+      }
+      .screen.on {
+        display: block;
+      }
+      .row2 {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 14px;
+        margin-top: 14px;
+      }
+
+      /* Finance channel */
+      .fuel {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+        gap: 14px;
+      }
+      .counter {
+        display: flex;
+        gap: 3px;
+        justify-content: center;
+        margin: 8px 0;
+      }
+      .counter span {
+        width: 34px;
+        height: 52px;
+        display: grid;
+        place-items: center;
+        font: 600 32px/1 var(--mono);
+        color: var(--text);
+        border-radius: 4px;
+        background: linear-gradient(180deg, #050505, #2a2722 50%, #050505);
+        box-shadow: inset 0 0 0 1px #000;
+      }
+      .counter span.sep {
+        width: 12px;
+        background: none;
+        box-shadow: none;
+      }
+      .counter span.red {
+        color: var(--red);
+      }
+
+      /* Phone */
+      .phone-keys {
+        display: none;
+      }
+      @media (max-width: 960px) {
+        .device {
+          margin: 8px;
+          padding: 12px;
+          border-radius: 16px;
+        }
+        .face {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .dialmod {
+          display: none;
+        }
+        .gauges {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+        .row2,
+        .fuel {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .air {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .speaker {
+          display: none;
+        }
+        .air p {
+          font-size: 17px;
+          line-height: 25px;
+        }
+        .head {
+          gap: 12px;
+          padding-bottom: 12px;
+        }
+        .odo span {
+          width: 18px;
+          height: 28px;
+          font-size: 16px;
+        }
+        .counter span {
+          width: 26px;
+          height: 42px;
+          font-size: 24px;
+        }
+        .phone-keys {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 4px;
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 10;
+          padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+          background: linear-gradient(180deg, #2a2723, #191714);
+          box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.6);
+        }
+        .phone-keys .key {
+          padding: 0 2px;
+          font-size: 12px;
+          letter-spacing: 0.06em;
+          min-height: 52px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+        }
+        .phone-keys .key.on {
+          background: linear-gradient(180deg, #ffcc73, #e09a2a);
+          color: #1c150a;
+        }
+        body {
+          padding-bottom: 80px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .needle,
+        .tape-feed {
+          animation: none;
+        }
+        .dial .knob,
+        .sw .lever {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="mock">
+      <b>Эксперименты:</b><a href="13-concept-cyberpunk.html">13 · Сетка</a
+      ><a href="14-concept-rpg.html">14 · Герой</a
+      ><a href="15-concept-garden.html">15 · Сад</a
+      ><a href="16-concept-analog.html">16 · Приёмник</a>
+    </nav>
+
+    <div class="device">
+      <div class="head">
+        <div class="brand">
+          PD-10 «Приёмник»<small>личный · серия Р. Ростиславович</small>
+        </div>
+        <span class="sp"></span>
+        <div
+          style="display: flex; align-items: center; gap: 8px"
+          aria-label="Опыт: 10 из 1000"
+        >
+          <span class="lbl">опыт</span>
+          <div class="odo">
+            <span>0</span><span>0</span><span class="hl">1</span
+            ><span class="hl">0</span>
+          </div>
+          <span class="lbl">/1000</span>
+        </div>
+        <div class="plaque">Уровень 10<small>175 из 504 ачивок</small></div>
+        <div class="odo" aria-label="Время 12:24">
+          <span>1</span><span>2</span
+          ><span style="width: 10px; background: none">:</span><span>2</span
+          ><span>4</span>
+        </div>
+      </div>
+
+      <div class="face">
+        <div>
+          <!-- ===== CHANNEL: AIR (home) ===== -->
+          <section class="screen on" id="air">
+            <div class="module air">
+              <div class="speaker" aria-hidden="true"></div>
+              <div>
+                <div class="onair">
+                  <span class="lamp red"></span>В ЭФИРЕ · СВОДКА 08:30
+                </div>
+                <p>
+                  Доброе утро. Стрелка денег в жёлтой зоне:
+                  <b>до зарплаты ≈ 150 PLN</b>. На линии связи два сбоя —
+                  LanguageTool и WakaTime. Ляжете до 23:30 — завтра настроение
+                  около <b>семи из десяти</b>.
+                </p>
+                <div class="keys">
+                  <button class="key amber">Повторить вслух</button
+                  ><button class="key" data-go="money">Канал «Деньги»</button
+                  ><button class="key">Почему так</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="gauges">
+              <div
+                class="module gauge"
+                aria-label="Настроение: прогноз 7 из 10"
+              >
+                <div class="lbl">настроение</div>
+                <svg viewBox="0 0 200 120" aria-hidden="true">
+                  <path
+                    d="M20 100 A80 80 0 0 1 60 31"
+                    class="zone-red"
+                    fill="none"
+                    stroke-width="6"
+                  />
+                  <path
+                    d="M60 31 A80 80 0 0 1 140 31"
+                    class="zone-amb"
+                    fill="none"
+                    stroke-width="6"
+                  />
+                  <path
+                    d="M140 31 A80 80 0 0 1 180 100"
+                    class="zone-grn"
+                    fill="none"
+                    stroke-width="6"
+                  />
+                  <text class="gtext" x="16" y="116">0</text>
+                  <text class="gtext" x="176" y="116">10</text>
+                  <g class="needle" style="--a: 36deg">
+                    <line
+                      x1="100"
+                      y1="100"
+                      x2="100"
+                      y2="30"
+                      stroke="var(--amber)"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    />
+                  </g>
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="8"
+                    fill="#2a2722"
+                    stroke="#000"
+                  />
+                </svg>
+                <div class="read">7/10<small>прогноз · 72 %</small></div>
+              </div>
+              <div class="module gauge" aria-label="Сон: 6,2 часа">
+                <div class="lbl">сон</div>
+                <svg viewBox="0 0 200 120" aria-hidden="true">
+                  <path
+                    d="M20 100 A80 80 0 0 1 100 20"
+                    class="zone-red"
+                    fill="none"
+                    stroke-width="6"
+                  />
+                  <path
+                    d="M100 20 A80 80 0 0 1 180 100"
+                    class="zone-grn"
+                    fill="none"
+                    stroke-width="6"
+                  />
+                  <text class="gtext" x="16" y="116">4 ч</text>
+                  <text class="gtext" x="168" y="116">9 ч</text>
+                  <g class="needle" style="--a: -10deg">
+                    <line
+                      x1="100"
+                      y1="100"
+                      x2="100"
+                      y2="30"
+                      stroke="var(--amber)"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    />
+                  </g>
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="8"
+                    fill="#2a2722"
+                    stroke="#000"
+                  />
+                </svg>
+                <div class="read">6,2 ч<small>−48 мин · стресс 3</small></div>
+              </div>
+              <div
+                class="module gauge"
+                role="button"
+                tabindex="0"
+                data-go="money"
+                aria-label="Деньги: запас 9 дней, канал Деньги"
+                style="cursor: pointer"
+              >
+                <div class="lbl">запас денег</div>
+                <svg viewBox="0 0 200 120" aria-hidden="true">
+                  <path
+                    d="M20 100 A80 80 0 0 1 60 31"
+                    class="zone-red"
+                    fill="none"
+                    stroke-width="6"
+                  />
+                  <path
+                    d="M60 31 A80 80 0 0 1 180 100"
+                    class="zone-grn"
+                    fill="none"
+                    stroke-width="6"
+                    opacity=".6"
+                  />
+                  <text class="gtext" x="16" y="116">0</text>
+                  <text class="gtext" x="160" y="116">30 дн</text>
+                  <g class="needle" style="--a: -36deg">
+                    <line
+                      x1="100"
+                      y1="100"
+                      x2="100"
+                      y2="30"
+                      stroke="var(--amber)"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    />
+                  </g>
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="8"
+                    fill="#2a2722"
+                    stroke="#000"
+                  />
+                </svg>
+                <div class="read" style="color: var(--amber)">
+                  9 дней<small>3 644,66 PLN</small>
+                </div>
+              </div>
+              <div class="module gauge" aria-label="Связь: 21 из 23 линий">
+                <div class="lbl">линии связи</div>
+                <svg viewBox="0 0 200 120" aria-hidden="true">
+                  <path
+                    d="M20 100 A80 80 0 0 1 140 31"
+                    class="zone-red"
+                    fill="none"
+                    stroke-width="6"
+                  />
+                  <path
+                    d="M140 31 A80 80 0 0 1 180 100"
+                    class="zone-grn"
+                    fill="none"
+                    stroke-width="6"
+                  />
+                  <text class="gtext" x="16" y="116">0</text>
+                  <text class="gtext" x="168" y="116">23</text>
+                  <g class="needle" style="--a: 74deg">
+                    <line
+                      x1="100"
+                      y1="100"
+                      x2="100"
+                      y2="30"
+                      stroke="var(--amber)"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    />
+                  </g>
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="8"
+                    fill="#2a2722"
+                    stroke="#000"
+                  />
+                </svg>
+                <div class="read">
+                  21/23<small
+                    ><span class="lamp red"></span> LanguageTool ·
+                    WakaTime</small
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="row2">
+              <div class="module">
+                <div class="lbl" style="margin-bottom: 8px">тумблеры дня</div>
+                <div class="switches">
+                  <button class="sw" role="switch" aria-checked="false">
+                    <span class="base"><span class="lever"></span></span
+                    ><span class="t">Браслет</span
+                    ><small style="color: var(--amber)">11:00 · прошло</small>
+                  </button>
+                  <button class="sw" role="switch" aria-checked="false">
+                    <span class="base"><span class="lever"></span></span
+                    ><span class="t">Маме</span><small>позвонить</small>
+                  </button>
+                  <button class="sw" role="switch" aria-checked="false">
+                    <span class="base"><span class="lever"></span></span
+                    ><span class="t">Интернет</span><small>оплатить</small>
+                  </button>
+                  <button class="sw" role="switch" aria-checked="false">
+                    <span class="base"><span class="lever"></span></span
+                    ><span class="t">Дневник</span><small>серия 15</small>
+                  </button>
+                  <button class="sw" role="switch" aria-checked="true">
+                    <span class="base"><span class="lever"></span></span
+                    ><span class="t">Без алкоголя</span><small>2 дня</small>
+                  </button>
+                  <button class="sw" role="switch" aria-checked="false">
+                    <span class="base"><span class="lever"></span></span
+                    ><span class="t">До 23:30</span><small>сон ≈ 7,4 ч</small>
+                  </button>
+                </div>
+              </div>
+              <div class="module">
+                <div class="lbl" style="margin-bottom: 8px">лента событий</div>
+                <div class="tape" aria-label="Лента событий">
+                  <div class="tape-feed">
+                    <div><span>12:22 синхронизация</span><span>ок</span></div>
+                    <div>
+                      <span>12:15 банк · 4 операции</span
+                      ><span class="r">−179,88</span>
+                    </div>
+                    <div><span>12:05 Steam · Dota 2</span><span>ок</span></div>
+                    <div>
+                      <span>11:00 напоминание · браслет</span><span>—</span>
+                    </div>
+                    <div>
+                      <span>07:40 WakaTime</span><span class="r">сбой</span>
+                    </div>
+                    <div>
+                      <span>06:41 проверка безопасности</span><span>чисто</span>
+                    </div>
+                    <div>
+                      <span>сб 18:53 LanguageTool</span
+                      ><span class="r">сбой</span>
+                    </div>
+                    <div>
+                      <span>сб 18:10 музыка · 162 трека</span><span>—</span>
+                    </div>
+                    <div><span>12:22 синхронизация</span><span>ок</span></div>
+                    <div>
+                      <span>12:15 банк · 4 операции</span
+                      ><span class="r">−179,88</span>
+                    </div>
+                    <div><span>12:05 Steam · Dota 2</span><span>ок</span></div>
+                    <div>
+                      <span>11:00 напоминание · браслет</span><span>—</span>
+                    </div>
+                    <div>
+                      <span>07:40 WakaTime</span><span class="r">сбой</span>
+                    </div>
+                    <div>
+                      <span>06:41 проверка безопасности</span><span>чисто</span>
+                    </div>
+                    <div>
+                      <span>сб 18:53 LanguageTool</span
+                      ><span class="r">сбой</span>
+                    </div>
+                    <div>
+                      <span>сб 18:10 музыка · 162 трека</span><span>—</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== CHANNEL: MONEY (inner screen) ===== -->
+          <section class="screen" id="money">
+            <div class="fuel">
+              <div class="module">
+                <div class="lbl">на счёте · PKO ••6677</div>
+                <div class="counter" aria-label="3 644,66 PLN">
+                  <span>3</span><span>6</span><span>4</span><span>4</span
+                  ><span class="sep">,</span><span>6</span><span>6</span>
+                </div>
+                <svg
+                  viewBox="0 0 400 210"
+                  style="width: 100%; height: auto"
+                  role="img"
+                  aria-label="Указатель запаса: стрелка на 9 днях из 30, отметка зарплаты 10.11"
+                >
+                  <path
+                    d="M40 190 A160 160 0 0 1 360 190"
+                    fill="none"
+                    stroke="#3a3631"
+                    stroke-width="22"
+                  />
+                  <path
+                    d="M40 190 A160 160 0 0 1 90 75"
+                    fill="none"
+                    stroke="var(--red)"
+                    stroke-width="22"
+                    opacity=".85"
+                  />
+                  <g
+                    style="
+                      font: 700 14px var(--label);
+                      fill: var(--text-2);
+                      letter-spacing: 0.1em;
+                    "
+                  >
+                    <text x="26" y="206">ПУСТО</text>
+                    <text x="340" y="206">30 ДН</text>
+                    <text x="170" y="22">15 ДН</text>
+                  </g>
+                  <g
+                    class="needle"
+                    style="--a: -36deg; transform-origin: 200px 190px"
+                  >
+                    <line
+                      x1="200"
+                      y1="190"
+                      x2="200"
+                      y2="52"
+                      stroke="var(--amber)"
+                      stroke-width="4"
+                      stroke-linecap="round"
+                    />
+                  </g>
+                  <circle
+                    cx="200"
+                    cy="190"
+                    r="14"
+                    fill="#2a2722"
+                    stroke="#000"
+                    stroke-width="2"
+                  />
+                  <text
+                    x="200"
+                    y="150"
+                    text-anchor="middle"
+                    style="font: 600 26px var(--mono); fill: var(--amber)"
+                  >
+                    9 дней
+                  </text>
+                </svg>
+                <p style="margin: 0; color: var(--text-2); text-align: center">
+                  Расход ~412 в день. К зарплате (≈ 10.11) — ≈ 150 PLN · прогноз
+                  64 %.
+                </p>
+                <div class="keys" style="justify-content: center">
+                  <button class="key amber">Лимит до 10-го</button
+                  ><button class="key">Записать расход</button
+                  ><button class="key">Выписка</button>
+                </div>
+              </div>
+              <div class="module">
+                <div class="lbl" style="margin-bottom: 8px">
+                  чековая лента · сегодня
+                </div>
+                <div
+                  class="tape"
+                  style="max-height: none; -webkit-mask: none; mask: none"
+                >
+                  <div>
+                    <span>12:02 ŻABKA · продукты</span
+                    ><span class="r">−36,98</span>
+                  </div>
+                  <div>
+                    <span>10:41 BOLT ×2 · транспорт</span
+                    ><span class="r">−60,80</span>
+                  </div>
+                  <div>
+                    <span>09:15 SAM PLUS · кафе</span
+                    ><span class="r">−47,10</span>
+                  </div>
+                  <div>
+                    <span>08:00 ORANGE FLEX · связь</span
+                    ><span class="r">−35,00</span>
+                  </div>
+                  <div
+                    style="
+                      border-top: 2px solid var(--paper-ink);
+                      margin-top: 6px;
+                      font-weight: 600;
+                    "
+                  >
+                    <span>ИТОГО ЗА ДЕНЬ</span><span class="r">−179,88</span>
+                  </div>
+                  <div><span>ТРАНСПОРТ В НОЯБРЕ</span><span>34 %</span></div>
+                  <div><span>НОЯБРЬ ЦЕЛИКОМ ≈</span><span>11 800</span></div>
+                </div>
+                <div class="lbl" style="margin: 14px 0 6px">шесть месяцев</div>
+                <svg
+                  viewBox="0 0 300 90"
+                  style="width: 100%; height: 90px"
+                  role="img"
+                  aria-label="Расходы июнь–ноябрь, ноябрь — прогноз (иллюстрация)"
+                >
+                  <g fill="var(--text-2)">
+                    <rect x="10" y="4" width="30" height="86" />
+                    <rect x="60" y="20" width="30" height="70" />
+                    <rect x="110" y="38" width="30" height="52" />
+                    <rect x="160" y="10" width="30" height="80" />
+                    <rect x="210" y="57" width="30" height="33" />
+                  </g>
+                  <rect
+                    x="260"
+                    y="38"
+                    width="30"
+                    height="52"
+                    fill="none"
+                    stroke="var(--amber)"
+                    stroke-dasharray="4 3"
+                    stroke-width="2"
+                  />
+                </svg>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Channel dial and presets: navigation on a computer -->
+        <aside class="module dialmod" aria-label="Каналы">
+          <div class="lbl">канал</div>
+          <div class="dial" id="dial">
+            <div class="grip"></div>
+            <div class="knob" id="knob"></div>
+          </div>
+          <div class="presets">
+            <button class="key on" data-go="air">1 Эфир</button>
+            <button class="key" data-go="money">2 Деньги</button>
+            <button class="key">3 Тело</button>
+            <button class="key">4 Дела</button>
+            <button class="key">5 Жизнь</button>
+            <button class="key">6 Связь</button>
+          </div>
+          <div class="lbl">←/→ крутить · 1–6 пресеты · Ctrl K поиск</div>
+        </aside>
+      </div>
+    </div>
+
+    <nav class="phone-keys" aria-label="Каналы">
+      <button class="key on" data-go="air">
+        <span class="lamp on"></span>Эфир
+      </button>
+      <button class="key" data-go="money">
+        <span class="lamp"></span>Деньги
+      </button>
+      <button class="key"><span class="lamp"></span>Тело</button>
+      <button class="key"><span class="lamp"></span>Дела</button>
+      <button class="key"><span class="lamp red"></span>Ещё</button>
+    </nav>
+
+    <script>
+      // Channels around the dial; the knob turns to the chosen one.
+      const channels = [
+        ['air', 'Эфир'],
+        ['money', 'Деньги'],
+        [null, 'Тело'],
+        [null, 'Дела'],
+        [null, 'Жизнь'],
+        [null, 'Связь'],
+      ];
+      const dial = document.getElementById('dial'),
+        knob = document.getElementById('knob');
+      const angles = [-120, -72, -24, 24, 72, 120];
+      channels.forEach(([id, name], i) => {
+        const a = ((angles[i] - 90) * Math.PI) / 180,
+          r = 100;
+        const b = document.createElement('button');
+        b.className = 'ch' + (i === 0 ? ' on' : '');
+        b.dataset.i = i;
+        if (id) b.dataset.go = id;
+        b.style.left = 110 + r * Math.cos(a) + 'px';
+        b.style.top = 110 + r * Math.sin(a) + 'px';
+        b.innerHTML = `<span><span class="lamp${i === 0 ? ' on' : ''}"></span><br>${name}</span>`;
+        b.addEventListener('click', () => turn(i));
+        dial.appendChild(b);
+      });
+      let cur = 0;
+      function turn(i) {
+        cur = (i + channels.length) % channels.length;
+        knob.style.setProperty('--r', angles[cur] + 'deg');
+        dial.querySelectorAll('.ch').forEach((c, j) => {
+          c.classList.toggle('on', j === cur);
+          c.querySelector('.lamp').classList.toggle('on', j === cur);
+        });
+        const id = channels[cur][0];
+        if (id) show(id);
+      }
+      function show(id) {
+        document
+          .querySelectorAll('.screen')
+          .forEach(s => s.classList.toggle('on', s.id === id));
+        document
+          .querySelectorAll('.presets .key, .phone-keys .key')
+          .forEach(k => k.classList.toggle('on', k.dataset.go === id));
+        document
+          .querySelectorAll('.phone-keys .key .lamp')
+          .forEach(l =>
+            l.classList.toggle('on', l.parentElement.dataset.go === id),
+          );
+      }
+      document.querySelectorAll('[data-go]').forEach(b => {
+        if (b.classList.contains('ch')) return;
+        const go = () => {
+          const i = channels.findIndex(c => c[0] === b.dataset.go);
+          i >= 0 ? turn(i) : show(b.dataset.go);
+        };
+        b.addEventListener('click', go);
+        b.addEventListener('keydown', e => {
+          if (e.key === 'Enter' && b.tagName !== 'BUTTON') go();
+        });
+      });
+      knob.style.setProperty('--r', angles[0] + 'deg');
+      document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight') turn(cur + 1);
+        if (e.key === 'ArrowLeft') turn(cur - 1);
+        if (e.key === '1') turn(0);
+        if (e.key === '2') turn(1);
+      });
+      document
+        .querySelectorAll('.sw')
+        .forEach(s =>
+          s.addEventListener('click', () =>
+            s.setAttribute(
+              'aria-checked',
+              s.getAttribute('aria-checked') === 'true' ? 'false' : 'true',
+            ),
+          ),
+        );
+    </script>
+  </body>
+</html>

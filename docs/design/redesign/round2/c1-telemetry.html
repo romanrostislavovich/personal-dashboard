@@ -1,0 +1,1696 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>C1 Телеметрия одним экраном — Personal Dashboard, раунд 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ===== Tokens: the 00–06 "Oracle" graphite set, names as in apps/web/src/styles.scss ===== */
+:root {
+  color-scheme: dark;
+  --mat-sys-primary: #e6e9ee;
+  --mat-sys-on-primary: #111418;
+  --mat-sys-secondary-container: #262c34;
+  --mat-sys-on-secondary-container: #eef1f5;
+  --mat-sys-surface: #0b0d10;
+  --mat-sys-surface-container-lowest: #07080a;
+  --mat-sys-surface-container-low: #111418;
+  --mat-sys-surface-container: #161a1f;
+  --mat-sys-surface-container-high: #1d2228;
+  --mat-sys-surface-container-highest: #252b32;
+  --mat-sys-on-surface: #e8eaed;
+  --mat-sys-on-surface-variant: #a3abb6;
+  --mat-sys-outline: #6b7480;
+  --mat-sys-outline-variant: #262c33;
+  --mat-sys-inverse-surface: #e8eaed;
+  --mat-sys-inverse-on-surface: #111418;
+  --pd-oracle: #5eead4;
+  --pd-oracle-text: #5eead4;
+  --pd-oracle-container: color-mix(in srgb, #5eead4 9%, transparent);
+  --pd-oracle-border: color-mix(in srgb, #5eead4 32%, transparent);
+  --pd-oracle-glow:
+    0 0 0 1px color-mix(in srgb, #5eead4 22%, transparent),
+    0 0 48px -12px color-mix(in srgb, #5eead4 30%, transparent);
+  --pd-forecast-line: var(--pd-oracle);
+  --pd-forecast-band: color-mix(in srgb, #5eead4 14%, transparent);
+  --pd-ok-fill: #10b981;
+  --pd-ok-text: #34d399;
+  --pd-warn-fill: #f59e0b;
+  --pd-warn-text: #fbbf24;
+  --pd-crit-fill: #f43f5e;
+  --pd-crit-text: #fb7185;
+  --pd-ok-container: color-mix(in srgb, #10b981 14%, transparent);
+  --pd-warn-container: color-mix(in srgb, #f59e0b 14%, transparent);
+  --pd-crit-container: color-mix(in srgb, #f43f5e 14%, transparent);
+  --pd-chart-primary: #c9cfd8;
+  --pd-chart-empty: color-mix(in srgb, #e8eaed 9%, transparent);
+  --pd-grid-line: color-mix(in srgb, #e8eaed 6%, transparent);
+  --pd-heat-0: color-mix(in srgb, #e8eaed 7%, transparent);
+  --pd-heat-1: color-mix(in srgb, #c9cfd8 28%, transparent);
+  --pd-heat-2: color-mix(in srgb, #c9cfd8 52%, transparent);
+  --pd-heat-3: color-mix(in srgb, #c9cfd8 80%, transparent);
+  --pd-radius: 16px;
+  --pd-radius-l: 20px;
+  --pd-radius-small: 12px;
+  --pd-radius-xs: 8px;
+  --pd-border: var(--mat-sys-outline-variant);
+  --pd-card: var(--mat-sys-surface-container-low);
+  --pd-shadow-overlay: 0 24px 64px -16px rgb(0 0 0 / 80%);
+  --pd-space-1: 4px;
+  --pd-space-2: 8px;
+  --pd-space-3: 12px;
+  --pd-space-4: 16px;
+  --pd-space-6: 24px;
+  --pd-space-8: 32px;
+  --pd-space-12: 48px;
+  --pd-font: Inter, Roboto, "Segoe UI", system-ui, sans-serif;
+  --pd-font-heading: Inter, "Segoe UI", system-ui, sans-serif;
+  --pd-font-mono:
+    "JetBrains Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
+  /* designer annotations, not part of the app */
+  --anno: #c4b5fd;
+  --anno-bg: color-mix(in srgb, #c4b5fd 14%, #0b0d10);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --mat-sys-primary: #15181c;
+    --mat-sys-on-primary: #ffffff;
+    --mat-sys-secondary-container: #e3e6ea;
+    --mat-sys-on-secondary-container: #15181c;
+    --mat-sys-surface: #f4f5f7;
+    --mat-sys-surface-container-lowest: #ffffff;
+    --mat-sys-surface-container-low: #ffffff;
+    --mat-sys-surface-container: #eef0f3;
+    --mat-sys-surface-container-high: #e7eaee;
+    --mat-sys-surface-container-highest: #dfe3e8;
+    --mat-sys-on-surface: #15181c;
+    --mat-sys-on-surface-variant: #4b5563;
+    --mat-sys-outline: #6b7280;
+    --mat-sys-outline-variant: #d9dde3;
+    --mat-sys-inverse-surface: #15181c;
+    --mat-sys-inverse-on-surface: #f4f5f7;
+    --pd-oracle: #14b8a6;
+    --pd-oracle-text: #0f766e;
+    --pd-oracle-container: color-mix(in srgb, #14b8a6 8%, transparent);
+    --pd-oracle-border: color-mix(in srgb, #0f766e 30%, transparent);
+    --pd-oracle-glow: 0 0 0 1px color-mix(in srgb, #0f766e 18%, transparent);
+    --pd-forecast-line: #0f766e;
+    --pd-forecast-band: color-mix(in srgb, #14b8a6 14%, transparent);
+    --pd-ok-text: #047857;
+    --pd-warn-text: #b45309;
+    --pd-crit-text: #be123c;
+    --pd-chart-primary: #374151;
+    --pd-chart-empty: color-mix(in srgb, #15181c 8%, transparent);
+    --pd-grid-line: color-mix(in srgb, #15181c 7%, transparent);
+    --pd-heat-0: color-mix(in srgb, #15181c 7%, transparent);
+    --pd-heat-1: color-mix(in srgb, #374151 25%, transparent);
+    --pd-heat-2: color-mix(in srgb, #374151 50%, transparent);
+    --pd-heat-3: color-mix(in srgb, #374151 82%, transparent);
+    --pd-shadow-overlay: 0 24px 48px -16px rgb(0 0 0 / 22%);
+    --anno: #6d28d9;
+    --anno-bg: #f3efff;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --mat-sys-primary: #15181c;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-secondary-container: #e3e6ea;
+  --mat-sys-on-secondary-container: #15181c;
+  --mat-sys-surface: #f4f5f7;
+  --mat-sys-surface-container-lowest: #ffffff;
+  --mat-sys-surface-container-low: #ffffff;
+  --mat-sys-surface-container: #eef0f3;
+  --mat-sys-surface-container-high: #e7eaee;
+  --mat-sys-surface-container-highest: #dfe3e8;
+  --mat-sys-on-surface: #15181c;
+  --mat-sys-on-surface-variant: #4b5563;
+  --mat-sys-outline: #6b7280;
+  --mat-sys-outline-variant: #d9dde3;
+  --mat-sys-inverse-surface: #15181c;
+  --mat-sys-inverse-on-surface: #f4f5f7;
+  --pd-oracle: #14b8a6;
+  --pd-oracle-text: #0f766e;
+  --pd-oracle-container: color-mix(in srgb, #14b8a6 8%, transparent);
+  --pd-oracle-border: color-mix(in srgb, #0f766e 30%, transparent);
+  --pd-oracle-glow: 0 0 0 1px color-mix(in srgb, #0f766e 18%, transparent);
+  --pd-forecast-line: #0f766e;
+  --pd-forecast-band: color-mix(in srgb, #14b8a6 14%, transparent);
+  --pd-ok-text: #047857;
+  --pd-warn-text: #b45309;
+  --pd-crit-text: #be123c;
+  --pd-chart-primary: #374151;
+  --pd-chart-empty: color-mix(in srgb, #15181c 8%, transparent);
+  --pd-grid-line: color-mix(in srgb, #15181c 7%, transparent);
+  --pd-heat-0: color-mix(in srgb, #15181c 7%, transparent);
+  --pd-heat-1: color-mix(in srgb, #374151 25%, transparent);
+  --pd-heat-2: color-mix(in srgb, #374151 50%, transparent);
+  --pd-heat-3: color-mix(in srgb, #374151 82%, transparent);
+  --pd-shadow-overlay: 0 24px 48px -16px rgb(0 0 0 / 22%);
+  --anno: #6d28d9;
+  --anno-bg: #f3efff;
+}
+
+/* ===== Base ===== */
+* {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  font: 400 14px/20px var(--pd-font);
+  color: var(--mat-sys-on-surface);
+  background: var(--mat-sys-surface);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ===== Type scale ===== */
+.t-display {
+  font: 700 28px/36px var(--pd-font-heading);
+  letter-spacing: -0.02em;
+}
+.t-headline {
+  font: 700 22px/28px var(--pd-font-heading);
+  letter-spacing: -0.01em;
+}
+.t-title {
+  font: 600 16px/24px var(--pd-font);
+}
+.t-title-s {
+  font: 600 14px/20px var(--pd-font);
+}
+.t-body {
+  font: 400 14px/20px var(--pd-font);
+}
+.t-answer {
+  font: 500 18px/26px var(--pd-font);
+}
+.t-label {
+  font: 500 12px/16px var(--pd-font);
+  color: var(--mat-sys-on-surface-variant);
+}
+.eyebrow {
+  font: 500 11px/16px var(--pd-font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+}
+.mono,
+.num {
+  font-family: var(--pd-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.num-xl {
+  font: 600 32px/40px var(--pd-font-mono);
+  letter-spacing: -0.02em;
+}
+.num-l {
+  font: 600 24px/32px var(--pd-font-mono);
+  letter-spacing: -0.01em;
+}
+.num-m {
+  font: 600 16px/24px var(--pd-font-mono);
+}
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+.ok {
+  color: var(--pd-ok-text);
+}
+.warn {
+  color: var(--pd-warn-text);
+}
+.crit {
+  color: var(--pd-crit-text);
+}
+.answer {
+  color: var(--pd-oracle-text);
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* ===== Icons ===== */
+svg.ic {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: middle;
+}
+svg.ic.s {
+  width: 16px;
+  height: 16px;
+}
+
+/* ===== Status ===== */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-block;
+  background: var(--pd-ok-fill);
+}
+.dot.warn {
+  background: var(--pd-warn-fill);
+}
+.dot.crit {
+  background: var(--pd-crit-fill);
+}
+.dot.off {
+  background: var(--mat-sys-outline);
+}
+.dot.oracle {
+  background: var(--pd-oracle);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font: 600 12px/16px var(--pd-font);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+}
+.badge.ok {
+  background: var(--pd-ok-container);
+  color: var(--pd-ok-text);
+}
+.badge.warn {
+  background: var(--pd-warn-container);
+  color: var(--pd-warn-text);
+}
+.badge.crit {
+  background: var(--pd-crit-container);
+  color: var(--pd-crit-text);
+}
+.badge.oracle {
+  background: var(--pd-oracle-container);
+  color: var(--pd-oracle-text);
+}
+.delta {
+  font: 600 12px/16px var(--pd-font-mono);
+  white-space: nowrap;
+}
+.new {
+  display: inline-block;
+  font: 600 10px/14px var(--pd-font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0 5px;
+  border: 1px dashed var(--anno);
+  color: var(--anno);
+  border-radius: 4px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.illus {
+  font: 500 10px/14px var(--pd-font-mono);
+  color: var(--mat-sys-on-surface-variant);
+  border: 1px solid var(--pd-border);
+  border-radius: 4px;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pd-oracle);
+  flex: none;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--pd-oracle) 50%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+/* ===== Score ring (conic) ===== */
+.ring {
+  --v: 80;
+  --c: var(--pd-ok-fill);
+  --size: 40px;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(
+    var(--c) calc(var(--v) * 1%),
+    var(--pd-chart-empty) 0
+  );
+  position: relative;
+  font: 600 13px/1 var(--pd-font-mono);
+}
+.ring::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--pd-card);
+}
+.ring > span {
+  position: relative;
+}
+.ring.warn {
+  --c: var(--pd-warn-fill);
+}
+.ring.crit {
+  --c: var(--pd-crit-fill);
+}
+.ring.oracle {
+  --c: var(--pd-oracle);
+}
+
+/* ===== Meters, sparklines, heat strips ===== */
+.meter {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--pd-chart-empty);
+  overflow: hidden;
+}
+.meter > i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--pd-chart-primary);
+}
+.meter.ok > i {
+  background: var(--pd-ok-fill);
+}
+.meter.warn > i {
+  background: var(--pd-warn-fill);
+}
+.meter.crit > i {
+  background: var(--pd-crit-fill);
+}
+.meter.oracle > i {
+  background: var(--pd-oracle);
+}
+svg.spark {
+  display: block;
+  width: 100%;
+  height: 28px;
+  overflow: visible;
+}
+svg.spark .p {
+  fill: none;
+  stroke: var(--pd-chart-primary);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+svg.spark .f {
+  fill: none;
+  stroke: var(--pd-forecast-line);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+svg.spark .band {
+  fill: var(--pd-forecast-band);
+}
+svg.spark .w {
+  stroke: var(--pd-warn-fill);
+}
+svg.spark .c {
+  stroke: var(--pd-crit-fill);
+}
+.hs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 2px;
+  height: 12px;
+}
+.hs i {
+  border-radius: 2px;
+  background: var(--pd-heat-0);
+}
+.hs i.l1 {
+  background: var(--pd-heat-1);
+}
+.hs i.l2 {
+  background: var(--pd-heat-2);
+}
+.hs i.l3 {
+  background: var(--pd-heat-3);
+}
+.hs i.w {
+  background: var(--pd-warn-fill);
+}
+.hs i.c {
+  background: var(--pd-crit-fill);
+}
+.hs i.na {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--pd-heat-0) 0 2px,
+    transparent 2px 4px
+  );
+}
+.hs i.t {
+  outline: 1px solid var(--mat-sys-on-surface-variant);
+  outline-offset: 0;
+}
+
+/* ===== Buttons and chips (matButton: filled / tonal / text) ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 0;
+  font: 600 14px/20px var(--pd-font);
+  background: transparent;
+  color: var(--mat-sys-on-surface);
+  white-space: nowrap;
+}
+.btn.filled {
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+.btn.tonal {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+.btn.outlined {
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+.btn.s {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.btn.danger {
+  background: var(--pd-crit-container);
+  color: var(--pd-crit-text);
+}
+.btn:hover {
+  filter: brightness(1.08);
+}
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mat-sys-on-surface-variant);
+  flex: none;
+  position: relative;
+}
+.icon-btn:hover {
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+}
+.icon-btn .dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--pd-radius-xs);
+  border: 1px solid var(--pd-border);
+  background: transparent;
+  font: 500 13px/16px var(--pd-font);
+  color: var(--mat-sys-on-surface);
+  white-space: nowrap;
+}
+.chip[aria-pressed="true"],
+.chip.on {
+  background: var(--mat-sys-secondary-container);
+  border-color: transparent;
+}
+kbd {
+  font: 500 11px/16px var(--pd-font-mono);
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--pd-border);
+  color: var(--mat-sys-on-surface-variant);
+  background: var(--mat-sys-surface-container);
+}
+
+/* ===== Card, list, section header ===== */
+.card {
+  background: var(--pd-card);
+  border: 1px solid var(--pd-border);
+  border-radius: var(--pd-radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  position: relative;
+}
+a.card:hover,
+button.card:hover {
+  border-color: var(--mat-sys-outline);
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  color: var(--mat-sys-on-surface-variant);
+}
+.card-head .t-title-s {
+  color: var(--mat-sys-on-surface);
+}
+.card-head .end {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.oracle-card {
+  border-color: var(--pd-oracle-border);
+  box-shadow: var(--pd-oracle-glow);
+  border-radius: var(--pd-radius-l);
+  background:
+    linear-gradient(var(--pd-oracle-container), var(--pd-oracle-container)),
+    var(--pd-card);
+}
+.sec-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  min-height: 32px;
+}
+.sec-head .end {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 6px 0;
+  border-top: 1px solid var(--pd-border);
+  min-width: 0;
+}
+.list > .row:first-child {
+  border-top: 0;
+}
+.row .grow {
+  flex: 1;
+  min-width: 0;
+}
+.row .grow > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row .val {
+  font-family: var(--pd-font-mono);
+  white-space: nowrap;
+}
+.lead {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--pd-radius-small);
+  display: grid;
+  place-items: center;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  flex: none;
+}
+.kv {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+.check i {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.8px solid var(--mat-sys-outline);
+  flex: none;
+}
+
+/* ===== Shell: sidebar (groups folded, as in 02-shell), phone top bar and bottom bar ===== */
+.app {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100vh;
+}
+.side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border-right: 1px solid var(--pd-border);
+  background: var(--mat-sys-surface);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 8px;
+  font-weight: 700;
+}
+.logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+.logo svg.ic {
+  width: 16px;
+  height: 16px;
+}
+.search-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  margin: 4px 0 8px;
+  padding: 0 8px 0 12px;
+  border-radius: var(--pd-radius-small);
+  border: 1px solid var(--pd-border);
+  background: var(--mat-sys-surface-container-low);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: left;
+  width: 100%;
+}
+.search-btn span {
+  flex: 1;
+}
+.nav-item,
+.nav-group > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: var(--pd-radius-small);
+  color: var(--mat-sys-on-surface-variant);
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+.nav-group > summary::-webkit-details-marker {
+  display: none;
+}
+.nav-item:hover,
+.nav-group > summary:hover {
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
+}
+.nav-item[aria-current="page"] {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-surface);
+  box-shadow: inset 3px 0 0 var(--pd-oracle);
+}
+.nav-item.sub {
+  padding-left: 44px;
+  min-height: 36px;
+  font-weight: 400;
+}
+.nav-item .count,
+.nav-group .count {
+  margin-left: auto;
+  font: 500 12px/16px var(--pd-font-mono);
+  color: var(--mat-sys-on-surface-variant);
+}
+.nav-group > summary .dot {
+  margin-left: auto;
+}
+.nav-group > summary .dot + .count {
+  margin-left: 0;
+}
+.side .spacer {
+  flex: 1;
+  min-height: 16px;
+}
+.lvl {
+  --v: 1;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 600 10px/1 var(--pd-font-mono);
+  background: conic-gradient(
+    var(--pd-oracle) calc(var(--v) * 1%),
+    var(--pd-chart-empty) 0
+  );
+  position: relative;
+  color: var(--mat-sys-on-surface);
+}
+.lvl::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: var(--mat-sys-surface);
+}
+.lvl b {
+  position: relative;
+  font-weight: 600;
+}
+.content {
+  min-width: 0;
+  padding: 24px 32px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ptop {
+  display: none;
+}
+.bottombar {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .side {
+    display: none;
+  }
+  .content {
+    padding: 12px 16px 96px;
+    gap: 12px;
+  }
+  .ptop {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 56px;
+    padding: 0 4px 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--mat-sys-surface);
+    border-bottom: 1px solid var(--pd-border);
+  }
+  .ptop .t-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ptop .icon-btn {
+    width: 48px;
+    height: 48px;
+  }
+  .bottombar {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 6;
+    height: 72px;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--mat-sys-surface-container);
+    border-top: 1px solid var(--pd-border);
+  }
+  .bottombar a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font: 500 12px/16px var(--pd-font);
+    color: var(--mat-sys-on-surface-variant);
+    min-height: 48px;
+  }
+  .bottombar a span.pill {
+    width: 56px;
+    height: 32px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+  .bottombar a[aria-current="page"] {
+    color: var(--mat-sys-on-surface);
+  }
+  .bottombar a[aria-current="page"] span.pill {
+    background: var(--mat-sys-secondary-container);
+  }
+  .bottombar .pill .dot {
+    position: absolute;
+    top: 4px;
+    right: 12px;
+  }
+  .btn {
+    height: 48px;
+  }
+  .btn.s {
+    height: 40px;
+  }
+  .chip {
+    height: 40px;
+  }
+}
+
+/* ===== Overlays: palette, quick actions, blocks, drawer ===== */
+dialog {
+  border: 1px solid var(--pd-border);
+  border-radius: var(--pd-radius-l);
+  padding: 0;
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
+  box-shadow: var(--pd-shadow-overlay);
+  max-width: calc(100vw - 24px);
+}
+dialog::backdrop {
+  background: rgb(0 0 0 / 55%);
+}
+.dlg-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px 12px 20px;
+  border-bottom: 1px solid var(--pd-border);
+}
+.dlg-head .t-title {
+  flex: 1;
+}
+.dlg-body {
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.dlg-foot {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--pd-border);
+}
+#palette {
+  width: 640px;
+  margin-top: 12vh;
+}
+.pal-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 56px;
+  border-bottom: 1px solid var(--pd-border);
+}
+.pal-input input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 16px;
+  outline: none;
+}
+.pal-list {
+  padding: 8px;
+  max-height: 56vh;
+  overflow-y: auto;
+}
+.pal-list .eyebrow {
+  padding: 8px 12px 4px;
+}
+.pal-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--pd-radius-small);
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.pal-item:hover,
+.pal-item.sel {
+  background: var(--mat-sys-secondary-container);
+}
+.pal-item .grow {
+  flex: 1;
+  min-width: 0;
+}
+.pal-hint {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-top: 1px solid var(--pd-border);
+}
+#quick {
+  width: 520px;
+}
+.seg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  border: 1px solid var(--pd-border);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 3px;
+}
+.seg button {
+  border: 0;
+  background: transparent;
+  height: 36px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.seg button[aria-selected="true"] {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-surface);
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field input,
+.field textarea {
+  border: 1px solid var(--pd-border);
+  background: var(--mat-sys-surface-container-high);
+  border-radius: var(--pd-radius-small);
+  padding: 10px 12px;
+  min-height: 48px;
+  outline: none;
+  width: 100%;
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--mat-sys-outline);
+}
+.amount {
+  font: 600 32px/40px var(--pd-font-mono) !important;
+  text-align: right;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+[role="tabpanel"][hidden] {
+  display: none !important;
+}
+#blocks {
+  width: 480px;
+}
+.sw-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  border-top: 1px solid var(--pd-border);
+}
+.sw-row:first-child {
+  border-top: 0;
+}
+.sw-row .grip {
+  color: var(--mat-sys-outline);
+  cursor: grab;
+  font: 600 14px/1 var(--pd-font-mono);
+  letter-spacing: -2px;
+  width: 16px;
+}
+.sw-row .grow {
+  flex: 1;
+  min-width: 0;
+}
+.switch {
+  appearance: none;
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-highest);
+  border: 1px solid var(--mat-sys-outline);
+  position: relative;
+  flex: none;
+  cursor: pointer;
+  margin: 0;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--mat-sys-outline);
+  transition: transform 150ms ease;
+}
+.switch:checked {
+  background: var(--mat-sys-primary);
+  border-color: var(--mat-sys-primary);
+}
+.switch:checked::after {
+  transform: translateX(20px);
+  background: var(--mat-sys-on-primary);
+}
+.switch:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+#drawer {
+  margin: 0 0 0 auto;
+  height: 100vh;
+  max-height: 100vh;
+  width: 440px;
+  border-radius: var(--pd-radius-l) 0 0 var(--pd-radius-l);
+}
+#drawer .dlg-body {
+  overflow-y: auto;
+  max-height: calc(100vh - 66px);
+}
+@media (max-width: 1023px) {
+  #palette {
+    margin-top: 8px;
+    width: calc(100vw - 16px);
+  }
+  #quick,
+  #blocks {
+    width: calc(100vw - 16px);
+    margin-bottom: 8px;
+  }
+  #drawer {
+    margin: auto 0 0;
+    width: 100vw;
+    max-width: 100vw;
+    height: auto;
+    max-height: 85vh;
+    border-radius: var(--pd-radius-l) var(--pd-radius-l) 0 0;
+  }
+  #drawer .dlg-body {
+    max-height: calc(85vh - 66px);
+  }
+}
+[data-block][hidden] {
+  display: none !important;
+}
+
+/* ===== Mock bar and designer annotations (not part of the app) ===== */
+.mock-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 6px 16px;
+  font: 500 12px/20px var(--pd-font);
+  background: var(--anno-bg);
+  color: var(--mat-sys-on-surface);
+  border-bottom: 1px dashed var(--anno);
+}
+.mock-bar b {
+  color: var(--anno);
+}
+.mock-bar a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: var(--mat-sys-on-surface-variant);
+}
+.mock-bar a[aria-current="page"] {
+  color: var(--mat-sys-on-surface);
+  font-weight: 700;
+  text-decoration: none;
+}
+.mock-bar .sp {
+  flex: 1;
+}
+.mock-bar button {
+  border: 1px solid var(--anno);
+  background: transparent;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  min-height: 28px;
+}
+[data-tier] {
+  position: relative;
+}
+.anno-on [data-tier] {
+  outline: 1px dashed var(--anno);
+  outline-offset: 3px;
+}
+.anno-on [data-tier]::after {
+  content: attr(data-tier);
+  position: absolute;
+  top: -10px;
+  right: 12px;
+  z-index: 2;
+  font: 600 10px/16px var(--pd-font-mono);
+  letter-spacing: 0.04em;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--anno-bg);
+  color: var(--anno);
+  border: 1px solid var(--anno);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.dnote {
+  display: none;
+  font: 400 13px/20px var(--pd-font);
+  padding: 12px 16px;
+  border: 1px dashed var(--anno);
+  border-radius: var(--pd-radius-small);
+  background: var(--anno-bg);
+}
+.dnote b {
+  color: var(--anno);
+}
+.anno-on .dnote {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* level strip (shared): ring + XP + the closest achievement */
+.level { display: flex; align-items: center; gap: 12px; padding: 12px 16px; flex-direction: row; }
+.level .lv-txt { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+.level .lv-txt > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 1023px) {
+  .mock-bar a:not([aria-current="page"]):not([href="index.html"]) { display: none; }
+}
+
+/* ===== This page ===== */
+
+
+.mini { width: 60px; height: 16px; flex: none; display: block; }
+svg.spark.mini { height: 16px; }
+.hs.mini { height: 10px; align-self: center; }
+.mini.center { display: flex; align-items: center; justify-content: center; }
+.clk { position: relative; border-radius: 2px; background: var(--pd-heat-0); height: 8px; align-self: center; }
+.clk .rng { position: absolute; top: 0; bottom: 0; background: var(--pd-heat-2); border-radius: 2px; }
+.clk .pt { position: absolute; top: -3px; width: 3px; height: 14px; margin-left: -1px; border-radius: 1px; background: var(--mat-sys-on-surface); }
+.share { display: flex; gap: 1px; height: 8px; align-self: center; border-radius: 2px; overflow: hidden; }
+.share i { display: block; background: var(--pd-heat-3); }
+.share i:nth-child(2) { background: var(--pd-heat-2); }
+.share i:nth-child(3) { background: var(--pd-heat-1); }
+.share i:nth-child(4) { background: var(--pd-heat-0); }
+.mtx { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1px; height: 13px; align-self: center; }
+.mtx i { background: color-mix(in srgb, var(--pd-ok-fill) 60%, transparent); border-radius: 1px; }
+.mtx i.c { background: var(--pd-crit-fill); }
+.evt { position: relative; height: 12px; align-self: center; border-bottom: 1px solid var(--pd-border); }
+.evt i { position: absolute; bottom: 0; width: 2px; height: 10px; background: var(--pd-chart-primary); }
+.evt i.per { height: 5px; bottom: 2px; border-radius: 2px; }
+.sig { display: grid; grid-template-columns: minmax(0, 1fr) 60px 92px; gap: 8px; align-items: center; min-height: 28px; }
+.sig .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 13px/18px var(--pd-font); }
+.sig .v .muted { font-size: 11px; }
+.sig .v { text-align: right; font: 500 12px/16px var(--pd-font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sig.s-test .lbl, .sig.s-test .v, .sig.s-stale .lbl { color: var(--mat-sys-on-surface-variant); }
+
+.thead { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.thead h1 { margin-right: auto; }
+.t1 { display: grid; grid-template-columns: auto repeat(5, minmax(0, 1fr)) 2fr; gap: 0; align-items: stretch; padding: 4px; }
+.t1 > * { display: flex; align-items: center; gap: 8px; padding: 6px 12px; min-height: 48px; border: 0; background: transparent; text-align: left; border-radius: var(--pd-radius-small); min-width: 0; }
+.t1 > button:hover { background: var(--mat-sys-surface-container); }
+.t1 > * + * { border-left: 1px solid var(--pd-border); border-radius: 0; }
+.t1 .col { display: flex; flex-direction: column; min-width: 0; }
+.t1 .col > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cov { display: flex; flex-direction: column; gap: 6px; justify-content: center; align-items: stretch !important; }
+.covbar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 2px; }
+.covbar i { display: block; }
+.covleg { display: flex; gap: 12px; flex-wrap: wrap; }
+.covleg span { display: inline-flex; align-items: center; gap: 4px; }
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.gt { padding: 12px 12px 4px; gap: 6px; }
+.gt.g-crit { border-color: color-mix(in srgb, var(--pd-crit-fill) 55%, var(--pd-border)); }
+.gt.g-warn, .gt.g-part { border-color: color-mix(in srgb, var(--pd-warn-fill) 35%, var(--pd-border)); }
+.sigs { display: flex; flex-direction: column; }
+.gfoot { display: flex; align-items: center; gap: 8px; min-height: 40px; margin: 2px -4px 0; padding: 0 4px; border: 0; border-top: 1px solid var(--pd-border); background: transparent; border-radius: 0 0 8px 8px; text-align: left; }
+.gfoot .t-label:first-child { flex: 1; }
+.gfoot:hover { background: var(--mat-sys-surface-container); }
+.legend { padding: 12px; gap: 8px; }
+.legend .sig .lbl { color: var(--mat-sys-on-surface-variant); }
+.row.dr { align-items: flex-start; }
+.row.dr .hs { height: 8px; margin-top: 6px; }
+@media (max-width: 1279px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .t1 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .t1 > * + * { border-left: 0; } .cov { grid-column: 1 / -1; } }
+@media (max-width: 1023px) {
+  .grid { grid-template-columns: 1fr; gap: 8px; }
+  .t1 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .t1 > :first-child { grid-column: 1 / -1; }
+  .thead .t-display { display: none; }
+  .sig { grid-template-columns: minmax(0, 1fr) 60px 96px; }
+  .gt .sigs .sig:nth-child(n + 4) { display: none; }
+}
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol><symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-6v-6h-4v6H4z"/></symbol><symbol id="i-ai" viewBox="0 0 24 24"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></symbol><symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1"/></symbol><symbol id="i-life" viewBox="0 0 24 24"><path d="M3 12h4l2-5 4 10 2-5h6"/></symbol><symbol id="i-task" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></symbol><symbol id="i-code" viewBox="0 0 24 24"><path d="M9 8l-4 4 4 4M15 8l4 4-4 4"/></symbol><symbol id="i-game" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 11v3M5.5 12.5h3M16 11.5h.01M18 13.5h.01"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6z"/></symbol><symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8 12h8M8 16h5"/></symbol><symbol id="i-restart" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></symbol><symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol><symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></symbol><symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></symbol><symbol id="i-gift" viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="1"/><path d="M3 9h18M12 9v11M12 9c-2-4-6-4-6-1.5S10 9 12 9s6 0 6-1.5S14 5 12 9"/></symbol><symbol id="i-backup" viewBox="0 0 24 24"><path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z"/><path d="M9.5 13.5l2 2 3.5-4"/></symbol><symbol id="i-sync" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></symbol><symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/></symbol><symbol id="i-send" viewBox="0 0 24 24"><path d="M21 4L3 11l6 2 2 6 3-4 5 4z"/><path d="M9 13l12-9"/></symbol><symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></symbol><symbol id="i-disk" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol><symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></symbol><symbol id="i-laptop" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></symbol><symbol id="i-watch" viewBox="0 0 24 24"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3M12 10v2.5l1.5 1"/></symbol><symbol id="i-tune" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></symbol><symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/></symbol><symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-log" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol><symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol><symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol><symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol></svg>
+<nav class="mock-bar" aria-label="Макеты раунда 2"><b>Раунд 2</b><a href="index.html">Обзор</a><a href="a1-home.html">A1 Три этажа</a><a href="a1-finance.html">A1 · Финансы</a><a href="a2-home.html">A2 Кокпит</a><a href="a2-system.html">A2 · Система</a><a href="a3-home.html">A3 Одна лента</a><a href="a3-tasks.html">A3 · Дела</a><a href="b1-now-soon.html">B1 Сейчас/Скоро</a><a href="b2-statusbar.html">B2 Строка состояния</a><a href="c1-telemetry.html" aria-current="page">C1 Телеметрия</a><a href="c2-signals.html">C2 Все сигналы</a><span class="sp"></span><button type="button" id="mock-anno" aria-pressed="true">Пояснения: вкл</button><button type="button" id="mock-theme">Тема: как в системе</button></nav>
+
+<header class="ptop"><span class="t-title">Телеметрия</span>
+<button class="icon-btn" type="button" aria-label="Поиск и команды" data-open="palette"><svg class="ic " aria-hidden="true"><use href="#i-search"/></svg></button>
+<button class="icon-btn" type="button" aria-label="Быстро записать" data-open="quick"><svg class="ic " aria-hidden="true"><use href="#i-plus"/></svg></button></header>
+<div class="app">
+<aside class="side" aria-label="Меню">
+<div class="brand"><span class="logo"><svg class="ic " aria-hidden="true"><use href="#i-bolt"/></svg></span>Personal Dashboard</div>
+<button class="search-btn" type="button" data-open="palette"><svg class="ic " aria-hidden="true"><use href="#i-search"/></svg><span>Поиск</span><kbd>Ctrl K</kbd></button>
+<a class="nav-item" href="a1-home.html"><svg class="ic " aria-hidden="true"><use href="#i-home"/></svg>Главная</a>
+<a class="nav-item" href="#"><svg class="ic " aria-hidden="true"><use href="#i-ai"/></svg>AI</a>
+<a class="nav-item" href="a1-finance.html"><svg class="ic " aria-hidden="true"><use href="#i-wallet"/></svg>Финансы</a>
+<a class="nav-item" href="#"><svg class="ic " aria-hidden="true"><use href="#i-life"/></svg>Жизнь</a>
+<details class="nav-group"><summary><svg class="ic " aria-hidden="true"><use href="#i-task"/></svg>Дела<span class="count">3</span></summary>
+<a class="nav-item sub" href="a3-tasks.html">Задачи<span class="count">3</span></a><a class="nav-item sub" href="#">Скриншоты</a><a class="nav-item sub" href="#">Дни рождения</a></details>
+<details class="nav-group"><summary><svg class="ic " aria-hidden="true"><use href="#i-user"/></svg>Я<span class="dot warn" title="Дневник: сегодня ещё нет записи"></span><span class="count">4</span></summary>
+<a class="nav-item sub" href="#">Дневник</a><a class="nav-item sub" href="#">Психология</a><a class="nav-item sub" href="#">Здоровье</a><a class="nav-item sub" href="#">Привычки</a></details>
+<details class="nav-group"><summary><svg class="ic " aria-hidden="true"><use href="#i-code"/></svg>Работа<span class="count">5</span></summary>
+<a class="nav-item sub" href="#">Проекты</a><a class="nav-item sub" href="#">Текст</a><a class="nav-item sub" href="#">Разработка</a><a class="nav-item sub" href="#">Мониторинг</a><a class="nav-item sub" href="#">Активность</a></details>
+<details class="nav-group"><summary><svg class="ic " aria-hidden="true"><use href="#i-game"/></svg>Досуг<span class="count">3</span></summary>
+<a class="nav-item sub" href="#">Музыка</a><a class="nav-item sub" href="#">Кино</a><a class="nav-item sub" href="#">Игры</a></details>
+<details class="nav-group"><summary><svg class="ic " aria-hidden="true"><use href="#i-shield"/></svg>Безопасность<span class="count">2</span></summary>
+<a class="nav-item sub" href="#">Пароли</a><a class="nav-item sub" href="#">Безопасность</a></details>
+<div class="spacer"></div>
+<a class="nav-item" href="#"><span class="lvl" style="--v:1"><b>10</b></span>Ачивки<span class="count">175/504</span></a>
+<a class="nav-item" href="c1-telemetry.html" aria-current="page"><svg class="ic " aria-hidden="true"><use href="#i-server"/></svg>Система<span class="dot crit" style="margin-left:auto" title="2 сервиса не отвечают"></span></a>
+<a class="nav-item" href="#"><svg class="ic " aria-hidden="true"><use href="#i-settings"/></svg>Настройки</a>
+</aside>
+<main class="content">
+<div class="dnote"><b>C1 «Телеметрия одним экраном».</b> Все 158 сигналов из <code>docs/telemetry.md</code> разложены по 11 плиткам «по смыслу», а не по источнику. В каждой плитке — 3–5 самых говорящих сигналов, у каждого свой элемент: линия (часы, деньги), полоса дней (редкие события), кольцо (проценты и оценки), шкала суток (время «первый/последний раз»), доли (часть целого), точка (свежесть). Цвет рамки плитки — её худший сигнал. За 5 секунд видно: сбой в «Работе» (WakaTime) и «Подключениях», «Сон и тело» ждёт браслет. Клик по низу плитки открывает все её сигналы с полосой за 30 дней.</div>
+<div class="thead"><h1 class="t-display">Телеметрия</h1><span class="t-label">обновлено 12:22 · значения — <span class="illus">иллюстрация</span>, кроме взятых с сайта</span><button class="btn outlined s" type="button" data-open="blocks"><svg class="ic s" aria-hidden="true"><use href="#i-grid"/></svg>Плитки</button><a class="btn tonal s" href="c2-signals.html"><svg class="ic s" aria-hidden="true"><use href="#i-log"/></svg>Все 158 таблицей</a></div>
+
+<section class="card t1" data-tier="Уровень 1 · статус и охват" aria-label="Итог">
+<button type="button" data-open="drawer" data-tpl="t-health" data-title="Здоровье системы"><span class="ring warn" style="--v:86;--size:36px"><span>86</span></span><span class="col"><span class="t-label">Здоровье <span class="new">новое</span></span><span class="t-title-s">Внимание</span></span></button>
+<button type="button" data-open="drawer" data-tpl="t-alerts" data-title="Тревоги"><span class="dot crit"></span><span class="col"><span class="t-label">Тревоги</span><span class="t-title-s crit">2</span></span></button>
+<button type="button" data-open="drawer" data-tpl="t-mcp" data-title="AI-клиенты (MCP)"><span class="dot"></span><span class="col"><span class="t-label">MCP</span><span class="t-title-s mono">11:52</span></span></button>
+<button type="button" data-open="drawer" data-tpl="t-bot" data-title="Telegram-бот"><span class="dot"></span><span class="col"><span class="t-label">Бот</span><span class="t-title-s mono">140 мс</span></span></button>
+<button type="button" data-open="drawer" data-tpl="t-backup" data-title="Копии и где живут данные"><span class="dot"></span><span class="col"><span class="t-label">Копия</span><span class="t-title-s mono">03:00</span></span></button>
+<button type="button" data-open="drawer" data-tpl="t-sync" data-title="Устройства и синхронизация"><span class="dot"></span><span class="col"><span class="t-label">Устройства</span><span class="t-title-s">3 / 4</span></span></button>
+<a class="cov" href="c2-signals.html" aria-label="Охват сигналов"><span class="covbar"><i style="flex:101;background:var(--pd-ok-fill)"></i><i style="flex:18;background:var(--pd-warn-fill)"></i><i style="flex:5;background:var(--pd-crit-fill)"></i><i style="flex:34;background:repeating-linear-gradient(135deg,var(--pd-heat-2) 0 2px,transparent 2px 4px)"></i></span>
+<span class="covleg t-label"><span><span class="dot"></span>101 в норме</span><span><span class="dot warn"></span>18 с вопросом</span><span><span class="dot crit"></span>5 сбой</span><span><span class="dot off"></span>34 ждут данных</span></span></a>
+</section>
+
+<div class="grid" data-tier="Уровень 2 → 3 · плитки по смыслу, клик — глубже">
+<div data-block="dev" data-name="Устройства и сбор" style="display:contents"><section class="card gt g-warn" aria-labelledby="g-dev">
+<div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-phone"/></svg><span class="t-title-s" id="g-dev">Устройства и сбор</span><span class="end"><span class="badge warn"><span class="dot warn"></span>Внимание</span></span></div>
+<div class="sigs"><div class="sig s-ok" title="device.phone"><span class="lbl">Телефон REDMI 17 — отправил</span><span class="mini center"><span class="dot "></span></span><span class="v ">8 мин</span></div><div class="sig s-ok" title="device.desktop"><span class="lbl">Компьютер — отправил</span><span class="mini center"><span class="dot "></span></span><span class="v ">1 мин</span></div><div class="sig s-ok" title="device.extension"><span class="lbl">Расширение Chrome — отправило</span><span class="mini center"><span class="dot "></span></span><span class="v ">1 мин</span></div><div class="sig s-test" title="device.band"><span class="lbl">Браслет (Google Health / Health Connect)</span><span class="hs mini" data-h="--------------" title="ждёт первых данных"></span><span class="v ">—</span></div><div class="sig s-ok" title="desktop.health"><span class="lbl">Компьютер: ЦП, память, диски, аптайм</span><span class="mini center"><span class="meter " style="width:100%"><i style="width:40%"></i></span></span><span class="v ">RAM 78 %</span></div></div>
+<button class="gfoot" type="button" data-open="drawer" data-tpl="d-dev" data-title="Устройства и сбор"><span class="t-label">15 сигналов · <span class="warn">1 с вопросом</span> · 5 ждут</span><span class="t-label mono">1 мин</span><svg class="ic s" aria-hidden="true"><use href="#i-chev"/></svg></button>
+</section></div><div data-block="body" data-name="Сон и тело" style="display:contents"><section class="card gt g-test" aria-labelledby="g-body">
+<div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-heart"/></svg><span class="t-title-s" id="g-body">Сон и тело</span><span class="end"><span class="badge "><span class="dot off"></span>Ждёт данных</span></span></div>
+<div class="sigs"><div class="sig s-ok" title="activity.phone.rest"><span class="lbl">Сон по телефону (экран выключен)</span><svg class="spark mini" data-v="45,50,56,56,44,56,70,78,90,90,93,83,95,84"  aria-hidden="true"></svg><span class="v ">6,2 ч <span class="muted">−48 мин</span></span></div><div class="sig s-test" title="health.band.sleep"><span class="lbl">Сон по браслету</span><span class="hs mini" data-h="--------------" title="ждёт первых данных"></span><span class="v ">—</span></div><div class="sig s-test" title="health.band.sleepScore"><span class="lbl">Оценка сна</span><span class="hs mini" data-h="--------------" title="ждёт первых данных"></span><span class="v ">—</span></div><div class="sig s-test" title="health.band.restingHeartRate"><span class="lbl">Пульс в покое</span><span class="hs mini" data-h="--------------" title="ждёт первых данных"></span><span class="v ">—</span></div><div class="sig s-test" title="health.band.stress"><span class="lbl">Стресс за день</span><span class="hs mini" data-h="--------------" title="ждёт первых данных"></span><span class="v ">—</span></div></div>
+<button class="gfoot" type="button" data-open="drawer" data-tpl="d-body" data-title="Сон и тело"><span class="t-label">19 сигналов · 18 ждут</span><span class="t-label mono">ждёт браслет</span><svg class="ic s" aria-hidden="true"><use href="#i-chev"/></svg></button>
+</section></div><div data-block="attn" data-name="Экран и внимание" style="display:contents"><section class="card gt g-warn" aria-labelledby="g-attn">
+<div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-clock"/></svg><span class="t-title-s" id="g-attn">Экран и внимание</span><span class="end"><span class="badge warn"><span class="dot warn"></span>Внимание</span></span></div>
+<div class="sigs"><div class="sig s-warn" title="activity.hours"><span class="lbl">За экранами (все устройства)</span><svg class="spark mini" data-v="56,58,67,67,71,61,67,66,79,88,93,88,95,87" data-c="w" aria-hidden="true"></svg><span class="v warn">4:25 <span class="muted">+38 мин</span></span></div><div class="sig s-ok" title="activity.focus"><span class="lbl">Фокус-сессии</span><svg class="spark mini" data-v="50,42,40,31,43,32,19,16,9,10,10,11,25,37"  aria-hidden="true"></svg><span class="v ">0:50 <span class="muted">−10 мин</span></span></div><div class="sig s-ok" title="activity.phone.unlocks"><span class="lbl">Разблокировки</span><svg class="spark mini" data-v="58,57,70,60,50,55,62,70,84,82,90,75,68,58"  aria-hidden="true"></svg><span class="v ">61 <span class="muted">+9</span></span></div><div class="sig s-warn" title="activity.lastUse"><span class="lbl">Последнее касание дня</span><span class="clk mini" aria-hidden="true"><i class="rng" style="left:75.84722222222221%;width:20%"></i><i class="pt" style="left:87.84722222222221%"></i></span><span class="v warn">01:05</span></div><div class="sig s-ok" title="activity.site.<site>"><span class="lbl">Топ-6 сайтов (доля браузера)</span><span class="share mini" aria-hidden="true"><i style="width:34%"></i><i style="width:26%"></i><i style="width:21%"></i><i style="width:19%"></i></span><span class="v ">IG 2:53</span></div></div>
+<button class="gfoot" type="button" data-open="drawer" data-tpl="d-attn" data-title="Экран и внимание"><span class="t-label">16 сигналов · <span class="warn">3 с вопросом</span> · 2 ждут</span><span class="t-label mono">1 мин</span><svg class="ic s" aria-hidden="true"><use href="#i-chev"/></svg></button>
+</section></div><div data-block="work" data-name="Работа и код" style="display:contents"><section class="card gt g-crit" aria-labelledby="g-work">
+<div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-code"/></svg><span class="t-title-s" id="g-work">Работа и код</span><span class="end"><span class="badge crit"><span class="dot crit"></span>Сбой</span></span></div>
+<div class="sigs"><div class="sig s-crit" title="development.coding"><span class="lbl">Кодинг (WakaTime)</span><svg class="spark mini" data-v="49,62,52,50,54,43,51,45,48,57,44,53,50,43" data-c="c" aria-hidden="true"></svg><span class="v crit">0:31 <span class="muted">+12 %</span></span></div><div class="sig s-ok" title="development.commits"><span class="lbl">Коммиты (GitHub, GitLab, Bitbucket)</span><span class="hs mini" data-h="11110121133311" aria-hidden="true"></span><span class="v ">4</span></div><div class="sig s-ok" title="tasks.done"><span class="lbl">Задач сделано</span><span class="hs mini" data-h="21111213012303" aria-hidden="true"></span><span class="v ">2</span></div><div class="sig s-warn" title="activity.telemetry.desktop.contextSwitches"><span class="lbl">Переключения контекста</span><svg class="spark mini" data-v="63,76,90,95,82,74,68,58,58,52,45,44,33,20" data-c="w" aria-hidden="true"></svg><span class="v warn">148 <span class="muted">+22</span></span></div></div>
+<button class="gfoot" type="button" data-open="drawer" data-tpl="d-work" data-title="Работа и код"><span class="t-label">20 сигналов · <span class="warn">6 с вопросом</span></span><span class="t-label mono">WakaTime 4 ч</span><svg class="ic s" aria-hidden="true"><use href="#i-chev"/></svg></button>
+</section></div><div data-block="money" data-name="Деньги" style="display:contents"><section class="card gt g-ok" aria-labelledby="g-money">
+<div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-wallet"/></svg><span class="t-title-s" id="g-money">Деньги</span><span class="end"><span class="badge "><span class="dot "></span>Норма</span></span></div>
+<div class="sigs"><div class="sig s-ok" title="finance.spent"><span class="lbl">Расходы</span><svg class="spark mini" data-v="43,49,39,29,27,17,21,10,5,16,10,21,24,12"  aria-hidden="true"></svg><span class="v ">179,88 <span class="muted">−26 %</span></span></div><div class="sig s-ok" title="finance.spent.<category>"><span class="lbl">Расходы по категориям</span><span class="share mini" aria-hidden="true"><i style="width:34%"></i><i style="width:26%"></i><i style="width:21%"></i><i style="width:19%"></i></span><span class="v ">34 % трансп.</span></div><div class="sig s-ok" title="finance.balance"><span class="lbl">Остаток (банк); прогноз — новое</span><svg class="spark mini" data-v="49,51,60,53,41,46,61,63,50,54,66,73,64,55"  aria-hidden="true"></svg><span class="v ">3 644,66</span></div><div class="sig s-warn" title="finance.usage"><span class="lbl">Используются ли подписки</span><span class="mini"></span><span class="v warn">1 лишняя</span></div></div>
+<button class="gfoot" type="button" data-open="drawer" data-tpl="d-money" data-title="Деньги"><span class="t-label">8 сигналов · <span class="warn">1 с вопросом</span></span><span class="t-label mono">12:15</span><svg class="ic s" aria-hidden="true"><use href="#i-chev"/></svg></button>
+</section></div><div data-block="mind" data-name="Настроение и здоровье" style="display:contents"><section class="card gt g-warn" aria-labelledby="g-mind">
+<div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-user"/></svg><span class="t-title-s" id="g-mind">Настроение и здоровье</span><span class="end"><span class="badge warn"><span class="dot warn"></span>Внимание</span></span></div>
+<div class="sigs"><div class="sig s-ok" title="diary.mood"><span class="lbl">Настроение (дневник)</span><svg class="spark mini" data-v="42,30,33,38,47,44,38,45,41,26,12,17,15,5"  aria-hidden="true"></svg><span class="v ">4</span></div><div class="sig s-warn" title="diary.words"><span class="lbl">Слов в дневнике</span><span class="hs mini" data-h="0020211130332w" aria-hidden="true"></span><span class="v warn">0</span></div><div class="sig s-ok" title="habits.<habit id>"><span class="lbl">Привычки (каждая)</span><span class="hs mini" data-h="02313122223003" aria-hidden="true"></span><span class="v ">3 / 3</span></div><div class="sig s-ok" title="health.intakes"><span class="lbl">Приём лекарств</span><span class="mini center"><span class="ring " style="--v:100;--size:20px"></span></span><span class="v ">100 %</span></div></div>
+<button class="gfoot" type="button" data-open="drawer" data-tpl="d-mind" data-title="Настроение и здоровье"><span class="t-label">12 сигналов · <span class="warn">1 с вопросом</span></span><span class="t-label mono">вчера</span><svg class="ic s" aria-hidden="true"><use href="#i-chev"/></svg></button>
+</section></div><div data-block="move" data-name="Движение и места" style="display:contents"><section class="card gt g-part" aria-labelledby="g-move">
+<div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-pin"/></svg><span class="t-title-s" id="g-move">Движение и места</span><span class="end"><span class="badge warn"><span class="dot warn"></span>Частично</span></span></div>
+<div class="sigs"><div class="sig s-ok" title="activity.phone.steps"><span class="lbl">Шаги (телефон)</span><svg class="spark mini" data-v="40,25,22,13,5,5,5,5,5,5,5,14,15,6"  aria-hidden="true"></svg><span class="v ">4 812 <span class="muted">−22 %</span></span></div><div class="sig s-ok" title="activity.places.km"><span class="lbl">Путь за день, км</span><svg class="spark mini" data-v="41,28,43,33,36,50,44,40,51,64,70,74,76,86"  aria-hidden="true"></svg><span class="v ">3,4</span></div><div class="sig s-ok" title="activity.places.home"><span class="lbl">Дома</span><svg class="spark mini" data-v="65,65,76,68,82,68,53,58,64,55,40,28,24,38"  aria-hidden="true"></svg><span class="v ">14 ч</span></div></div>
+<button class="gfoot" type="button" data-open="drawer" data-tpl="d-move" data-title="Движение и места"><span class="t-label">9 сигналов · <span class="warn">1 с вопросом</span></span><span class="t-label mono">5 мин</span><svg class="ic s" aria-hidden="true"><use href="#i-chev"/></svg></button>
+</section></div><div data-block="env" data-name="Среда и телефон" style="display:contents"><section class="card gt g-ok" aria-labelledby="g-env">
+<div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-sun"/></svg><span class="t-title-s" id="g-env">Среда и телефон</span><span class="end"><span class="badge "><span class="dot "></span>Норма</span></span></div>
+<div class="sigs"><div class="sig s-ok" title="weather.temperature"><span class="lbl">Температура</span><svg class="spark mini" data-v="50,61,66,62,50,59,66,78,67,67,73,70,80,89"  aria-hidden="true"></svg><span class="v ">7°</span></div><div class="sig s-ok" title="activity.phone.daylight"><span class="lbl">Дневной свет > 1000 лк</span><svg class="spark mini" data-v="46,51,62,65,71,77,92,89,85,80,79,66,67,76"  aria-hidden="true"></svg><span class="v ">0:22</span></div><div class="sig s-ok" title="activity.phone.noise"><span class="lbl">Шум, дБ</span><svg class="spark mini" data-v="63,64,65,74,69,69,66,77,69,58,43,30,28,17"  aria-hidden="true"></svg><span class="v ">41</span></div><div class="sig s-part" title="activity.phone.calls"><span class="lbl">Звонки</span><span class="hs mini" data-h="00222212132330" aria-hidden="true"></span><span class="v ">2</span></div></div>
+<button class="gfoot" type="button" data-open="drawer" data-tpl="d-env" data-title="Среда и телефон"><span class="t-label">14 сигналов · <span class="warn">5 с вопросом</span> · 1 ждут</span><span class="t-label mono">15 мин</span><svg class="ic s" aria-hidden="true"><use href="#i-chev"/></svg></button>
+</section></div><div data-block="fun" data-name="Досуг" style="display:contents"><section class="card gt g-ok" aria-labelledby="g-fun">
+<div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-game"/></svg><span class="t-title-s" id="g-fun">Досуг</span><span class="end"><span class="badge "><span class="dot "></span>Норма</span></span></div>
+<div class="sigs"><div class="sig s-ok" title="music.plays"><span class="lbl">Прослушивания (Last.fm)</span><svg class="spark mini" data-v="44,58,69,57,54,69,77,69,82,84,86,81,86,90"  aria-hidden="true"></svg><span class="v ">38 <span class="muted">+5</span></span></div><div class="sig s-ok" title="activity.games"><span class="lbl">Игры (по окнам)</span><svg class="spark mini" data-v="43,45,46,59,69,59,46,44,49,57,62,56,42,35"  aria-hidden="true"></svg><span class="v ">0:00</span></div><div class="sig s-ok" title="games.dotaMatches"><span class="lbl">Матчи Dota</span><span class="hs mini" data-h="22033211121301" aria-hidden="true"></span><span class="v ">0</span></div><div class="sig s-test" title="movies.hours"><span class="lbl">Кино и видео</span><span class="hs mini" data-h="--------------" title="ждёт первых данных"></span><span class="v ">—</span></div></div>
+<button class="gfoot" type="button" data-open="drawer" data-tpl="d-fun" data-title="Досуг"><span class="t-label">16 сигналов · <span class="warn">1 с вопросом</span> · 4 ждут</span><span class="t-label mono">15 мин</span><svg class="ic s" aria-hidden="true"><use href="#i-chev"/></svg></button>
+</section></div><div data-block="svc" data-name="Подключения" style="display:contents"><section class="card gt g-crit" aria-labelledby="g-svc">
+<div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-plug"/></svg><span class="t-title-s" id="g-svc">Подключения</span><span class="end"><span class="badge crit"><span class="dot crit"></span>Сбой</span></span></div>
+<div class="sigs"><div class="sig s-crit" title="integrations.state"><span class="lbl">23 подключения: состояние</span><span class="mtx mini" aria-hidden="true"><i class="c"></i><i class="c"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span><span class="v crit">21 / 23</span></div><div class="sig s-warn" title="integrations.lastSyncedAt"><span class="lbl">Последняя синхронизация каждого</span><span class="mini center"><span class="dot warn"></span></span><span class="v warn">1–17 ч</span></div><div class="sig s-ok" title="monitoring.downMinutes"><span class="lbl">Минуты падения сайтов</span><span class="hs mini" data-h="03023201212212" aria-hidden="true"></span><span class="v ">0</span></div></div>
+<button class="gfoot" type="button" data-open="drawer" data-tpl="d-svc" data-title="Подключения"><span class="t-label">7 сигналов · <span class="warn">2 с вопросом</span></span><span class="t-label mono">2 нет</span><svg class="ic s" aria-hidden="true"><use href="#i-chev"/></svg></button>
+</section></div><div data-block="srv" data-name="Сервер и дашборд" style="display:contents"><section class="card gt g-warn" aria-labelledby="g-srv">
+<div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-server"/></svg><span class="t-title-s" id="g-srv">Сервер и дашборд</span><span class="end"><span class="badge warn"><span class="dot warn"></span>Внимание</span></span></div>
+<div class="sigs"><div class="sig s-warn" title="system.health"><span class="lbl">Здоровье системы (0–100) <span class="new">н</span></span><span class="mini center"><span class="ring warn" style="--v:86;--size:20px"></span></span><span class="v warn">86</span></div><div class="sig s-ok" title="system.memoryMb"><span class="lbl">Память процесса</span><span class="mini center"><span class="meter warn" style="width:100%"><i style="width:432%"></i></span></span><span class="v ">432 MB</span></div><div class="sig s-ok" title="system.requests"><span class="lbl">Запросы: всего, 5xx, p95</span><svg class="spark mini" data-v="43,38,42,35,50,64,79,70,57,63,69,73,88,95"  aria-hidden="true"></svg><span class="v ">192 мс</span></div><div class="sig s-warn" title="system.jobs"><span class="lbl">Фоновые задачи: запуски, сбои</span><span class="mtx mini" aria-hidden="true"><i class="c"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span><span class="v warn">44 / 45</span></div></div>
+<button class="gfoot" type="button" data-open="drawer" data-tpl="d-srv" data-title="Сервер и дашборд"><span class="t-label">22 сигналов · <span class="warn">5 с вопросом</span> · 1 ждут</span><span class="t-label mono">12:22</span><svg class="ic s" aria-hidden="true"><use href="#i-chev"/></svg></button>
+</section></div>
+<section class="card legend" aria-label="Как читать"><div class="card-head"><svg class="ic s" aria-hidden="true"><use href="#i-tune"/></svg><span class="t-title-s">Как читать</span></div>
+<div class="sig"><span class="lbl">часы, деньги, шаги</span><svg class="spark mini" data-v="3,5,4,6,5,7,6,8"></svg><span class="v">линия</span></div>
+<div class="sig"><span class="lbl">редкие события</span><span class="hs mini" data-h="01020031002010"></span><span class="v">полоса</span></div>
+<div class="sig"><span class="lbl">время суток</span><span class="clk mini"><i class="rng" style="left:10%;width:20%"></i><i class="pt" style="left:18%"></i></span><span class="v">шкала</span></div>
+<div class="sig"><span class="lbl">нет данных</span><span class="hs mini" data-h="--------------"></span><span class="v">штрих</span></div>
+</section>
+</div>
+</main>
+</div>
+<nav class="bottombar" aria-label="Главное меню">
+<a href="a1-home.html"><span class="pill"><svg class="ic " aria-hidden="true"><use href="#i-home"/></svg></span>Главная</a>
+<a href="#"><span class="pill"><svg class="ic " aria-hidden="true"><use href="#i-ai"/></svg></span>AI</a>
+<a href="#"><span class="pill"><svg class="ic " aria-hidden="true"><use href="#i-wallet"/></svg></span>Финансы</a>
+<a href="#"><span class="pill"><svg class="ic " aria-hidden="true"><use href="#i-life"/></svg></span>Жизнь</a>
+<a href="#" aria-current="page"><span class="pill"><svg class="ic " aria-hidden="true"><use href="#i-menu"/></svg><span class="dot crit"></span></span>Ещё</a>
+</nav>
+
+<template id="t-health">
+<div class="kv"><span class="ring warn" style="--v:86;--size:56px"><span>86</span></span><div><div class="t-title">Внимание</div><div class="t-label">90+ — норма, 70–89 — внимание, ниже — плохо</div></div></div>
+<p class="t-body">Оценка <span class="new">новое</span> складывается из того, что уже собирается. Каждая потеря баллов — ссылка на причину.</p>
+<div class="list">
+<div class="row"><span class="dot crit"></span><div class="grow"><div class="t-title-s">2 сервиса не отвечают</div><div class="t-label">LanguageTool с 31.10 18:53, WakaTime с 07:40</div></div><span class="val crit">−12</span></div>
+<div class="row"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Браслет ещё ни разу не синхронизировался</div><div class="t-label">Google Health подключён, данных нет</div></div><span class="val warn">−2</span></div>
+<div class="row"><span class="dot"></span><div class="grow"><div class="t-title-s">Фоновые задачи 45 / 45</div><div class="t-label">последняя ошибка — 3 дня назад</div></div><span class="val">0</span></div>
+<div class="row"><span class="dot"></span><div class="grow"><div class="t-title-s">Копия данных свежая</div><div class="t-label">сегодня 03:00, восстановление проверено 27.10</div></div><span class="val">0</span></div>
+<div class="row"><span class="dot"></span><div class="grow"><div class="t-title-s">Сайты, SSL, синхронизация</div><div class="t-label">всё в норме</div></div><span class="val">0</span></div>
+</div>
+<div class="row"><div class="grow"><div class="t-title-s">Оценка за 14 дней</div></div><svg class="spark" style="width:96px;height:24px" data-v="96,96,94,98,98,92,96,96,90,94,96,98,88,86" data-c="w"></svg><span class="val">86</span></div>
+<a class="btn tonal" href="a2-system.html">Открыть «Систему»</a>
+</template>
+
+<template id="t-alerts">
+<p class="t-body">Две тревоги — из 5 записей журнала. Повторы одной ошибки сложены в одну строку.</p>
+<div class="list">
+<div class="row"><span class="dot crit"></span><div class="grow"><div class="t-title-s">LanguageTool не отвечает</div><div class="t-label">17 ч · проверка текста не работает в «Тексте», расширении и приложении</div></div><span class="badge crit">×231</span></div>
+<div class="row"><span class="dot crit"></span><div class="grow"><div class="t-title-s">WakaTime не отвечает</div><div class="t-label">с 07:40 · время кодинга за сегодня неполное</div></div><span class="badge crit">×3</span></div>
+<div class="row"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Медленный ответ банка</div><div class="t-label">PKO, 12:15 · 4,1 с · прошло</div></div><span class="badge warn">×1</span></div>
+</div>
+<div class="chips"><button class="btn filled s" type="button" data-open="quick" data-tab="restart"><svg class="ic s" aria-hidden="true"><use href="#i-restart"/></svg>Перезапустить LanguageTool</button><button class="btn outlined s" type="button">Проверить WakaTime</button></div>
+</template>
+
+<template id="t-mcp">
+<div class="kv"><span class="badge ok"><span class="dot"></span>Отвечает</span><span class="t-label">2 токена · только чтение</span></div>
+<div class="list">
+<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-plug"/></svg><div class="grow"><div class="t-title-s">Claude Code</div><div class="t-label">последний вызов 11:52 · tasks.list · 140 мс</div></div><span class="val">36 сег.</span></div>
+<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-plug"/></svg><div class="grow"><div class="t-title-s">Телефон · ассистент</div><div class="t-label">последний вызов вчера 22:10</div></div><span class="val">4</span></div>
+</div>
+<div class="row"><div class="grow"><div class="t-title-s">Вызовы за 14 дней</div></div><svg class="spark" style="width:96px;height:24px" data-v="4,9,0,12,18,7,22,30,11,5,16,28,40,36" ></svg><span class="val">36</span></div>
+<p class="t-label">Время последнего вызова уже хранится (<code>lastUsedAt</code> токена). Число вызовов и задержка — <span class="new">новое</span>.</p>
+</template>
+
+<template id="t-bot">
+<div class="kv"><span class="badge ok"><span class="dot"></span>На связи</span><span class="t-label">пинг 140 мс <span class="new">новое</span></span></div>
+<div class="list">
+<div class="row"><div class="grow"><div class="t-title-s">Доставлено за сутки</div><div class="t-label">утренний дайджест 08:30, 3 напоминания о лекарствах, браслет</div></div><span class="val">11</span></div>
+<div class="row"><div class="grow"><div class="t-title-s">Не дошло</div></div><span class="val">0</span></div>
+<div class="row"><div class="grow"><div class="t-title-s">Ждут отправки</div></div><span class="val">0</span></div>
+<div class="row"><div class="grow"><div class="t-title-s">Последняя команда</div><div class="t-label">«/d» — запись в дневник</div></div><span class="val">08:31</span></div>
+</div>
+<div class="row"><div class="grow"><div class="t-title-s">Уведомлений в день</div></div><svg class="spark" style="width:96px;height:24px" data-v="9,12,10,14,11,8,13,12,10,11,9,12,10,11" ></svg><span class="val">11</span></div>
+</template>
+
+<template id="t-backup">
+<div class="kv"><span class="badge ok"><span class="dot"></span>Свежая</span><span class="t-label">сегодня 03:00 · 14 копий на сервере</span></div>
+<div class="list">
+<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-server"/></svg><div class="grow"><div class="t-title-s">Копия на сервере</div><div class="t-label">ежедневно; проверка восстановления — раз в неделю</div></div><span class="val">03:00</span></div>
+<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-laptop"/></svg><div class="grow"><div class="t-title-s">Копия на компьютере</div><div class="t-label">переживёт потерю сервера</div></div><span class="val">04:12</span></div>
+<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-restart"/></svg><div class="grow"><div class="t-title-s">Восстановление проверено</div><div class="t-label">копия открылась, таблицы на месте</div></div><span class="val">27.10</span></div>
+<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-lock"/></svg><div class="grow"><div class="t-title-s">Где живут данные</div><div class="t-label">свой сервер Hetzner + этот компьютер; пароли зашифрованы на устройстве</div></div><span class="badge">2 места</span></div>
+</div>
+<div class="hs" style="height:14px" data-h="3333333333333t" aria-label="14 дней копий: все на месте"></div>
+<div class="chips"><a class="btn tonal s" href="#">Выгрузить всё (ZIP)</a><span class="t-label">JSON, Markdown, CSV</span></div>
+</template>
+
+<template id="t-sync">
+<div class="kv"><span class="badge ok"><span class="dot"></span>Совпадает</span><span class="t-label">последняя 12:22 · ничего не ждёт</span></div>
+<div class="list">
+<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-phone"/></svg><div class="grow"><div class="t-title-s">REDMI 17</div><div class="t-label">отправил 12:15 · очередь пуста</div></div><span class="val">8 мин</span></div>
+<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-laptop"/></svg><div class="grow"><div class="t-title-s">Компьютер</div><div class="t-label">отправил 12:23</div></div><span class="val">1 мин</span></div>
+<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-globe"/></svg><div class="grow"><div class="t-title-s">Расширение Chrome</div><div class="t-label">отправило 12:23</div></div><span class="val">1 мин</span></div>
+<div class="row"><svg class="ic " aria-hidden="true"><use href="#i-watch"/></svg><div class="grow"><div class="t-title-s">Браслет</div><div class="t-label">ещё ни разу</div></div><span class="badge warn">нет данных</span></div>
+</div>
+</template>
+<template id="d-dev">
+<p class="t-body">15 сигналов. Полоса — 30 дней, сегодня справа; штриховка — день без данных (неизвестно, а не ноль).</p>
+<div class="list"><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Телефон REDMI 17 — отправил</div><div class="t-label mono">device.phone · точка + «когда»</div><span class="hs" data-h="201212212313222131333232231123"></span></div><span class="val">8 мин</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Компьютер — отправил</div><div class="t-label mono">device.desktop · точка + «когда»</div><span class="hs" data-h="223231022321202232111332331121"></span></div><span class="val">1 мин</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Расширение Chrome — отправило</div><div class="t-label mono">device.extension · точка + «когда»</div><span class="hs" data-h="311231333211121021331121331122"></span></div><span class="val">1 мин</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Браслет (Google Health / Health Connect)</div><div class="t-label mono">device.band · точка + «когда»</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Батарея телефона, макс. °C</div><div class="t-label mono">activity.phone.batteryMaxC · линия 14 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Батарея: уровень, здоровье, зарядка</div><div class="t-label mono">phone.battery · шкала заполнения</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Отчёт безопасности телефона</div><div class="t-label mono">phone.security · точка + «когда»</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Страна мобильной сети</div><div class="t-label mono">phone.country · счётчик</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Wi-Fi: сеть сейчас</div><div class="t-label mono">phone.wifi · счётчик</div><span class="hs" data-h="223211221322331012102212223311"></span></div><span class="val">дом</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Версии приложений (телефон, компьютер)</div><div class="t-label mono">app.versions · счётчик</div><span class="hs" data-h="102322213202331212332331021032"></span></div><span class="val">2 / 2 свежие</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Push-токены</div><div class="t-label mono">push.devices · точка + «когда»</div><span class="hs" data-h="332332322212233110110133233233"></span></div><span class="val">1</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Компьютер: ЦП, память, диски, аптайм</div><div class="t-label mono">desktop.health · шкала заполнения</div><span class="hs" data-h="322000031222130121232111023331"></span></div><span class="val">RAM 78 %</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Компьютер: температура, GPU, батарея, Defender, обновления</div><div class="t-label mono">desktop.system · точка + «когда»</div><span class="hs" data-h="11213201132103331322203110110w"></span></div><span class="val">ждёт перезагрузки</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Обрывы интернета и сервера (моменты)</div><div class="t-label mono">activity.outage · отметки на ленте</div><span class="hs" data-h="232222133311322130320112213321"></span></div><span class="val">0 сегодня</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Копии данных на компьютере</div><div class="t-label mono">desktop.copies · точка + «когда»</div><span class="hs" data-h="322223022312223311033333213021"></span></div><span class="val">04:12</span></div></div>
+<a class="btn tonal s" href="c2-signals.html">Все сигналы таблицей</a>
+</template><template id="d-body">
+<p class="t-body">19 сигналов. Полоса — 30 дней, сегодня справа; штриховка — день без данных (неизвестно, а не ноль).</p>
+<div class="list"><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Сон по телефону (экран выключен)</div><div class="t-label mono">activity.phone.rest · линия 14 дн.</div><span class="hs" data-h="133331213320332321211220123221"></span></div><span class="val">6,2 ч</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Сон по браслету</div><div class="t-label mono">health.band.sleep · линия 14 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Глубокий сон</div><div class="t-label mono">health.band.deepSleep · доли</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">REM-сон</div><div class="t-label mono">health.band.remSleep · доли</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Уснул</div><div class="t-label mono">health.band.bedtime · шкала суток</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Проснулся</div><div class="t-label mono">health.band.wake · шкала суток</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Оценка сна</div><div class="t-label mono">health.band.sleepScore · кольцо 0–100</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Пульс в покое</div><div class="t-label mono">health.band.restingHeartRate · линия 14 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">HRV</div><div class="t-label mono">health.band.hrv · линия 14 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">SpO2</div><div class="t-label mono">health.band.spo2 · кольцо 0–100</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Стресс за день</div><div class="t-label mono">health.band.stress · кольцо 0–100</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Восстановление</div><div class="t-label mono">health.band.resilience · кольцо 0–100</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Реакции тела</div><div class="t-label mono">health.band.reactions · полоса 30 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Минуты осознанности</div><div class="t-label mono">health.band.mindfulness · полоса 30 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Температура кожи ночью</div><div class="t-label mono">health.band.skinTemp · линия 14 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Шаги по браслету</div><div class="t-label mono">health.band.steps · линия 14 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Калории</div><div class="t-label mono">health.band.calories · линия 14 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Минуты в зонах пульса</div><div class="t-label mono">health.band.zoneMinutes · полоса 30 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Пульс и шаги поминутно; часы; стресс по часам</div><div class="t-label mono">band.minutes · полоса 30 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div></div>
+<a class="btn tonal s" href="c2-signals.html">Все сигналы таблицей</a>
+</template><template id="d-attn">
+<p class="t-body">16 сигналов. Полоса — 30 дней, сегодня справа; штриховка — день без данных (неизвестно, а не ноль).</p>
+<div class="list"><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">За экранами (все устройства)</div><div class="t-label mono">activity.hours · линия 14 дн.</div><span class="hs" data-h="32331311321211222322210323123w"></span></div><span class="val">4:25</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Фокус-сессии</div><div class="t-label mono">activity.focus · линия 14 дн.</div><span class="hs" data-h="213033123301020122112210313212"></span></div><span class="val">0:50</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Разблокировки</div><div class="t-label mono">activity.phone.unlocks · линия 14 дн.</div><span class="hs" data-h="212313120112202021231232331330"></span></div><span class="val">61</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Первое касание дня</div><div class="t-label mono">activity.firstUse · шкала суток</div><span class="hs" data-h="323023321013223233322132322132"></span></div><span class="val">08:12</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Последнее касание дня</div><div class="t-label mono">activity.lastUse · шкала суток</div><span class="hs" data-h="22121332311232332111233322320w"></span></div><span class="val">01:05</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Телефон: первое</div><div class="t-label mono">activity.phone.firstUse · шкала суток</div><span class="hs" data-h="231121131221231003133312102111"></span></div><span class="val">08:12</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Телефон: последнее</div><div class="t-label mono">activity.phone.lastUse · шкала суток</div><span class="hs" data-h="101103121230312101323330323322"></span></div><span class="val">00:48</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Телефон 23:00–04:00</div><div class="t-label mono">activity.phone.night · линия 14 дн.</div><span class="hs" data-h="22233132321122322202232312311w"></span></div><span class="val">0:42</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">В браузере</div><div class="t-label mono">activity.browser · линия 14 дн.</div><span class="hs" data-h="132133132233133232131232102111"></span></div><span class="val">1:58</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Топ-6 сайтов (доля браузера)</div><div class="t-label mono">activity.site.<site> · доли</div><span class="hs" data-h="030221112130112311022211332101"></span></div><span class="val">IG 2:53</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Открыто уведомлений</div><div class="t-label mono">activity.phone.notificationsOpened · кольцо 0–100</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Секунд до открытия уведомления</div><div class="t-label mono">activity.phone.secondsToOpen · линия 14 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Не беспокоить</div><div class="t-label mono">activity.phone.dnd · линия 14 дн.</div><span class="hs" data-h="133112223100113213131213131122"></span></div><span class="val">7:10</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Уведомления по приложениям и часам</div><div class="t-label mono">phone.notifications · топ-список</div><span class="hs" data-h="113332103131223312222113213213"></span></div><span class="val">84</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Дневные лимиты и когда достигнуты</div><div class="t-label mono">activity.limits · шкала заполнения</div><span class="hs" data-h="232133120131103323031033221131"></span></div><span class="val">игры 0 / 2 ч</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Окна и приложения (каждое переключение)</div><div class="t-label mono">activity.spans · топ-список</div><span class="hs" data-h="323123313302113122231111112122"></span></div><span class="val">WebStorm 0:47</span></div></div>
+<a class="btn tonal s" href="c2-signals.html">Все сигналы таблицей</a>
+</template><template id="d-work">
+<p class="t-body">20 сигналов. Полоса — 30 дней, сегодня справа; штриховка — день без данных (неизвестно, а не ноль).</p>
+<div class="list"><div class="row dr"><span class="dot crit"></span><div class="grow"><div class="t-title-s">Кодинг (WakaTime)</div><div class="t-label mono">development.coding · линия 14 дн.</div><span class="hs" data-h="3212123223321123303111322230cc"></span></div><span class="val">0:31</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Коммиты (GitHub, GitLab, Bitbucket)</div><div class="t-label mono">development.commits · полоса 30 дн.</div><span class="hs" data-h="112233320011111111110121133311"></span></div><span class="val">4</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Задач сделано</div><div class="t-label mono">tasks.done · полоса 30 дн.</div><span class="hs" data-h="312120323211223321111213012303"></span></div><span class="val">2</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Задач создано</div><div class="t-label mono">tasks.created · полоса 30 дн.</div><span class="hs" data-h="132330332321131331021232132303"></span></div><span class="val">3</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Нажатий в минуту (VS)</div><div class="t-label mono">activity.telemetry.desktop.inputPerMinute · линия 14 дн.</div><span class="hs" data-h="1121022231112033220-----------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Нажатий всего (VS)</div><div class="t-label mono">activity.telemetry.desktop.inputCount · линия 14 дн.</div><span class="hs" data-h="2012111111213232312-----------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Доля исправлений</div><div class="t-label mono">activity.telemetry.desktop.backspacePercent · кольцо 0–100</div><span class="hs" data-h="3031332021010231332-----------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Переключения контекста</div><div class="t-label mono">activity.telemetry.desktop.contextSwitches · линия 14 дн.</div><span class="hs" data-h="12321223311122112232221303033w"></span></div><span class="val">148</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Время в одной программе подряд</div><div class="t-label mono">activity.telemetry.desktop.focusHours · линия 14 дн.</div><span class="hs" data-h="311131322332332133233213112212"></span></div><span class="val">1:12</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Команд в терминале</div><div class="t-label mono">activity.telemetry.desktop.terminalCommands · линия 14 дн.</div><span class="hs" data-h="222022320213210230332311211112"></span></div><span class="val">37</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Неудачных команд</div><div class="t-label mono">activity.telemetry.desktop.terminalFailures · полоса 30 дн.</div><span class="hs" data-h="231101123302310211332221202130"></span></div><span class="val">5</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Доля неудачных команд</div><div class="t-label mono">activity.telemetry.desktop.terminalErrorPercent · кольцо 0–100</div><span class="hs" data-h="121122211332101111312232311233"></span></div><span class="val">14 %</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Ожидание сборки</div><div class="t-label mono">activity.telemetry.desktop.buildWaitHours · линия 14 дн.</div><span class="hs" data-h="113031331132032121022132021123"></span></div><span class="val">0:09</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Чтение в браузере</div><div class="t-label mono">activity.telemetry.browser.readingHours · линия 14 дн.</div><span class="hs" data-h="132123123111333131310133311231"></span></div><span class="val">0:34</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Паузы набора, энтропия фокуса, глубина прокрутки, копирования, типы страниц</div><div class="t-label mono">telemetry.raw · топ-список</div><span class="hs" data-h="221311121023133121232312131321"></span></div><span class="val">5 полей</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Рабочие контексты</div><div class="t-label mono">activity.workstates · счётчик</div><span class="hs" data-h="321311232121111313212221201103"></span></div><span class="val">2</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Скриншоты</div><div class="t-label mono">screenshots.taken · полоса 30 дн.</div><span class="hs" data-h="211211211112112332221232012331"></span></div><span class="val">3</span></div><div class="row dr"><span class="dot crit"></span><div class="grow"><div class="t-title-s">Принятые правки текста</div><div class="t-label mono">writing.fixes · счётчик</div><span class="hs" data-h="2133221230322320223132111123cc"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">GitHub: звёзды, подписчики, репозитории по дням</div><div class="t-label mono">github.profile · линия 14 дн.</div><span class="hs" data-h="112212202213102132132222112223"></span></div><span class="val">★ 212</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Open Source: звёзды, форки, issues, загрузки npm</div><div class="t-label mono">opensource.repos · линия 14 дн.</div><span class="hs" data-h="212100312112321021131332102030"></span></div><span class="val">1,2 тыс./нед</span></div></div>
+<a class="btn tonal s" href="c2-signals.html">Все сигналы таблицей</a>
+</template><template id="d-money">
+<p class="t-body">8 сигналов. Полоса — 30 дней, сегодня справа; штриховка — день без данных (неизвестно, а не ноль).</p>
+<div class="list"><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Расходы</div><div class="t-label mono">finance.spent · линия 14 дн.</div><span class="hs" data-h="110202302330332233123211223333"></span></div><span class="val">179,88</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Расходы по категориям</div><div class="t-label mono">finance.spent.<category> · доли</div><span class="hs" data-h="301320223111331212023110313331"></span></div><span class="val">34 % трансп.</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Остаток (банк); прогноз — новое</div><div class="t-label mono">finance.balance · линия 14 дн.</div><span class="hs" data-h="133212113331333221031122201132"></span></div><span class="val">3 644,66</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Капитал по дням</div><div class="t-label mono">finance.netWorth · линия 14 дн.</div><span class="hs" data-h="211121312001123311130231213313"></span></div><span class="val">3 645</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Расходы Hetzner и DeepSeek</div><div class="t-label mono">finance.costs · счётчик</div><span class="hs" data-h="222301133333212313233231213122"></span></div><span class="val">07:00</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Цены желаний</div><div class="t-label mono">finance.wishPrices · линия 14 дн.</div><span class="hs" data-h="121333132132311121331121133122"></span></div><span class="val">−8 %</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Используются ли подписки</div><div class="t-label mono">finance.usage · топ-список</div><span class="hs" data-h="22222301130312023332113101213w"></span></div><span class="val">1 лишняя</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Разбор месяца</div><div class="t-label mono">finance.reports · счётчик</div><span class="hs" data-h="123031123320101232332321121220"></span></div><span class="val">октябрь готов</span></div></div>
+<a class="btn tonal s" href="c2-signals.html">Все сигналы таблицей</a>
+</template><template id="d-mind">
+<p class="t-body">12 сигналов. Полоса — 30 дней, сегодня справа; штриховка — день без данных (неизвестно, а не ноль).</p>
+<div class="list"><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Настроение (дневник)</div><div class="t-label mono">diary.mood · линия 14 дн.</div><span class="hs" data-h="213032123011210213333211103223"></span></div><span class="val">4</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Слов в дневнике</div><div class="t-label mono">diary.words · полоса 30 дн.</div><span class="hs" data-h="13032221323132320020211130332w"></span></div><span class="val">0</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Привычки (каждая)</div><div class="t-label mono">habits.<habit id> · полоса 30 дн.</div><span class="hs" data-h="122002112221111302313122223003"></span></div><span class="val">3 / 3</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Приём лекарств</div><div class="t-label mono">health.intakes · кольцо 0–100</div><span class="hs" data-h="132312333313211023332313323123"></span></div><span class="val">100 %</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Визиты к врачу</div><div class="t-label mono">health.visits · отметки на ленте</div><span class="hs" data-h="223301211012311332332203110113"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Анализы (каждый показатель)</div><div class="t-label mono">health.lab.<analyte> · отметки на ленте</div><span class="hs" data-h="232202202210312333233213321303"></span></div><span class="val">27.09</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">WHO-5</div><div class="t-label mono">psychology.who5 · линия 14 дн.</div><span class="hs" data-h="312313121333221213323313303221"></span></div><span class="val">64</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">GAD-7</div><div class="t-label mono">psychology.gad7 · линия 14 дн.</div><span class="hs" data-h="233210221311101121100331113023"></span></div><span class="val">5</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">PHQ-9</div><div class="t-label mono">psychology.phq9 · линия 14 дн.</div><span class="hs" data-h="112023233022102321132313211311"></span></div><span class="val">6</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Лекарства и диагнозы (периоды)</div><div class="t-label mono">health.periods · отрезки на ленте</div><span class="hs" data-h="111223312111133312121221121032"></span></div><span class="val">1 активный</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Жизненные события (периоды)</div><div class="t-label mono">psychology.events · отрезки на ленте</div><span class="hs" data-h="211323321131332332220113113121"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Прогноз настроения</div><div class="t-label mono">life.mood.forecast · линия 14 дн.</div><span class="hs" data-h="333122333313231231321121201222"></span></div><span class="val">≈ 7/10</span></div></div>
+<a class="btn tonal s" href="c2-signals.html">Все сигналы таблицей</a>
+</template><template id="d-move">
+<p class="t-body">9 сигналов. Полоса — 30 дней, сегодня справа; штриховка — день без данных (неизвестно, а не ноль).</p>
+<div class="list"><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Шаги (телефон)</div><div class="t-label mono">activity.phone.steps · линия 14 дн.</div><span class="hs" data-h="313322202131211130232001320222"></span></div><span class="val">4 812</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Путь за день, км</div><div class="t-label mono">activity.places.km · линия 14 дн.</div><span class="hs" data-h="202121211312121323221032332330"></span></div><span class="val">3,4</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Дома</div><div class="t-label mono">activity.places.home · линия 14 дн.</div><span class="hs" data-h="131323111012111020133213212321"></span></div><span class="val">14 ч</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Остановок</div><div class="t-label mono">activity.places.count · полоса 30 дн.</div><span class="hs" data-h="121110123232221233022213322110"></span></div><span class="val">2</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Пешком</div><div class="t-label mono">activity.places.walk · линия 14 дн.</div><span class="hs" data-h="----------11211011222210111230"></span></div><span class="val">0:41</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">В пути</div><div class="t-label mono">activity.places.onTheWay · линия 14 дн.</div><span class="hs" data-h="333323022223333132113311333113"></span></div><span class="val">0:58</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Новых мест</div><div class="t-label mono">activity.places.newPlaces · полоса 30 дн.</div><span class="hs" data-h="222233123212311112202212313103"></span></div><span class="val">0</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Где сейчас (для автоматизаций)</div><div class="t-label mono">places.presence · точка + «когда»</div><span class="hs" data-h="223312333303122130202011322121"></span></div><span class="val">дома</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Названия мест</div><div class="t-label mono">places.names · счётчик</div><span class="hs" data-h="203111231133120212222010013110"></span></div><span class="val">86</span></div></div>
+<a class="btn tonal s" href="c2-signals.html">Все сигналы таблицей</a>
+</template><template id="d-env">
+<p class="t-body">14 сигналов. Полоса — 30 дней, сегодня справа; штриховка — день без данных (неизвестно, а не ноль).</p>
+<div class="list"><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Температура</div><div class="t-label mono">weather.temperature · линия 14 дн.</div><span class="hs" data-h="313121131131231200131032210332"></span></div><span class="val">7°</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Дождь, мм</div><div class="t-label mono">weather.rain · полоса 30 дн.</div><span class="hs" data-h="333223112113133101132212123220"></span></div><span class="val">2,1</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Солнце, ч</div><div class="t-label mono">weather.sun · линия 14 дн.</div><span class="hs" data-h="232202331311112130311133311010"></span></div><span class="val">1,8</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Дневной свет > 1000 лк</div><div class="t-label mono">activity.phone.daylight · линия 14 дн.</div><span class="hs" data-h="311202120003133323321232223322"></span></div><span class="val">0:22</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Шум, дБ</div><div class="t-label mono">activity.phone.noise · линия 14 дн.</div><span class="hs" data-h="221111212231131301022121100111"></span></div><span class="val">41</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">В наушниках</div><div class="t-label mono">activity.phone.headphones · линия 14 дн.</div><span class="hs" data-h="----------01113331213222132322"></span></div><span class="val">1:05</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">В машине</div><div class="t-label mono">activity.phone.car · полоса 30 дн.</div><span class="hs" data-h="----------22233112031112133321"></span></div><span class="val">0</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Что-то играло</div><div class="t-label mono">activity.phone.media · линия 14 дн.</div><span class="hs" data-h="121232123223232120023313133123"></span></div><span class="val">1:40</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Звонки</div><div class="t-label mono">activity.phone.calls · полоса 30 дн.</div><span class="hs" data-h="----------23310100222212132330"></span></div><span class="val">2</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Минуты звонков</div><div class="t-label mono">activity.phone.callMinutes · полоса 30 дн.</div><span class="hs" data-h="----------11322121212212333021"></span></div><span class="val">14</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Разных людей</div><div class="t-label mono">activity.phone.people · полоса 30 дн.</div><span class="hs" data-h="----------12231233212323122231"></span></div><span class="val">2</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Фото</div><div class="t-label mono">activity.phone.photos · полоса 30 дн.</div><span class="hs" data-h="323212112123322301122212331121"></span></div><span class="val">5</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Мобильный интернет, МБ</div><div class="t-label mono">activity.phone.mobileData · линия 14 дн.</div><span class="hs" data-h="211322211331121321021213013012"></span></div><span class="val">312</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Будильник на утро</div><div class="t-label mono">activity.phone.alarm · шкала суток</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div></div>
+<a class="btn tonal s" href="c2-signals.html">Все сигналы таблицей</a>
+</template><template id="d-fun">
+<p class="t-body">16 сигналов. Полоса — 30 дней, сегодня справа; штриховка — день без данных (неизвестно, а не ноль).</p>
+<div class="list"><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Прослушивания (Last.fm)</div><div class="t-label mono">music.plays · линия 14 дн.</div><span class="hs" data-h="333231322122113121122213232213"></span></div><span class="val">38</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">5 главных жанров (доля)</div><div class="t-label mono">music.genre.<genre> · доли</div><span class="hs" data-h="131201223230202231133221211222"></span></div><span class="val">рок 41 %</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Каждое прослушивание (моменты)</div><div class="t-label mono">music.play · отметки на ленте</div><span class="hs" data-h="312333232133113303122033120331"></span></div><span class="val">38</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">SoundCloud: свои треки, подписчики</div><div class="t-label mono">music.soundcloud · линия 14 дн.</div><span class="hs" data-h="333122113322233013320333112320"></span></div><span class="val">12</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Игры (по окнам)</div><div class="t-label mono">activity.games · линия 14 дн.</div><span class="hs" data-h="221101323133223311311120132221"></span></div><span class="val">0:00</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Игры после 23:00 (доля)</div><div class="t-label mono">activity.lateGames · доли</div><span class="hs" data-h="121203131312030232111321012221"></span></div><span class="val">0</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Steam, часы</div><div class="t-label mono">games.steam · линия 14 дн.</div><span class="hs" data-h="111031022233312032012112111212"></span></div><span class="val">0:00</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Матчи Dota</div><div class="t-label mono">games.dotaMatches · полоса 30 дн.</div><span class="hs" data-h="111303331223332322033211121301"></span></div><span class="val">0</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Матчи после 23:00</div><div class="t-label mono">games.dotaLateMatches · доли</div><span class="hs" data-h="322121323123200022222131123221"></span></div><span class="val">0</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Победы Dota</div><div class="t-label mono">games.dotaWins · кольцо 0–100</div><span class="hs" data-h="111131233011123221321131222033"></span></div><span class="val">52 %</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">WoW: уровень предметов, рейтинг М+, токен</div><div class="t-label mono">games.wow · линия 14 дн.</div><span class="hs" data-h="----------11222232132331112333"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Xbox: очки, ачивки</div><div class="t-label mono">games.xbox · счётчик</div><span class="hs" data-h="333131131332120311123222120301"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Кино и видео</div><div class="t-label mono">movies.hours · линия 14 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Кино после 23:00</div><div class="t-label mono">movies.lateHours · доли</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Видео (YouTube и др.)</div><div class="t-label mono">movies.videoHours · доли</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Серий</div><div class="t-label mono">movies.episodes · полоса 30 дн.</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div></div>
+<a class="btn tonal s" href="c2-signals.html">Все сигналы таблицей</a>
+</template><template id="d-svc">
+<p class="t-body">7 сигналов. Полоса — 30 дней, сегодня справа; штриховка — день без данных (неизвестно, а не ноль).</p>
+<div class="list"><div class="row dr"><span class="dot crit"></span><div class="grow"><div class="t-title-s">23 подключения: состояние</div><div class="t-label mono">integrations.state · матрица точек</div><span class="hs" data-h="1332212133221131213312122031cc"></span></div><span class="val">21 / 23</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Последняя синхронизация каждого</div><div class="t-label mono">integrations.lastSyncedAt · точка + «когда»</div><span class="hs" data-h="13203313113311332111021321112w"></span></div><span class="val">1–17 ч</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Сроки токенов</div><div class="t-label mono">integrations.expiresAt · счётчик</div><span class="hs" data-h="321223012132311111132323332223"></span></div><span class="val">ближайший 41 д.</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Ежедневная проверка 09:20</div><div class="t-label mono">integration_alerts · точка + «когда»</div><span class="hs" data-h="113012223031113121012211212113"></span></div><span class="val">09:20</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Минуты падения сайтов</div><div class="t-label mono">monitoring.downMinutes · полоса 30 дн.</div><span class="hs" data-h="313210232333221303023201212212"></span></div><span class="val">0</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Проверки сайтов: код, мс, SSL</div><div class="t-label mono">monitoring.checks · линия 14 дн.</div><span class="hs" data-h="331032132322132223231331211131"></span></div><span class="val">184 мс</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Токены AI по моделям</div><div class="t-label mono">ai.usage · линия 14 дн.</div><span class="hs" data-h="312100113331310313211031332223"></span></div><span class="val">119 тыс.</span></div></div>
+<a class="btn tonal s" href="c2-signals.html">Все сигналы таблицей</a>
+</template><template id="d-srv">
+<p class="t-body">22 сигналов. Полоса — 30 дней, сегодня справа; штриховка — день без данных (неизвестно, а не ноль).</p>
+<div class="list"><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Здоровье системы (0–100)</div><div class="t-label mono">system.health · кольцо 0–100</div><span class="hs" data-h="11321112311113111132231133312w"></span></div><span class="val">86</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Память процесса</div><div class="t-label mono">system.memoryMb · шкала заполнения</div><span class="hs" data-h="113331331121032112122223333111"></span></div><span class="val">432 MB</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Запросы: всего, 5xx, p95</div><div class="t-label mono">system.requests · линия 14 дн.</div><span class="hs" data-h="313232321022201111223022213301"></span></div><span class="val">192 мс</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Фоновые задачи: запуски, сбои</div><div class="t-label mono">system.jobs · матрица точек</div><span class="hs" data-h="11203223131311330231322131322w"></span></div><span class="val">44 / 45</span></div><div class="row dr"><span class="dot crit"></span><div class="grow"><div class="t-title-s">Журнал ошибок и предупреждений</div><div class="t-label mono">system.log · счётчик</div><span class="hs" data-h="1123310101322211111011213313cc"></span></div><span class="val">5</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Уведомления: доставлено, не дошло, ждут</div><div class="t-label mono">system.notifications · счётчик</div><span class="hs" data-h="023021212230213202112212032111"></span></div><span class="val">11 / 0 / 0</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Синхронизация: когда, очередь</div><div class="t-label mono">system.sync · точка + «когда»</div><span class="hs" data-h="322102231110312113103113133323"></span></div><span class="val">12:22</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Копии и проверка восстановления</div><div class="t-label mono">system.backup · точка + «когда»</div><span class="hs" data-h="332013223032222213102220302333"></span></div><span class="val">03:00</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">MCP: токены, последний вызов</div><div class="t-label mono">mcp.tokens · точка + «когда»</div><span class="hs" data-h="212323132212313111031332212312"></span></div><span class="val">11:52</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Telegram-бот: связь</div><div class="t-label mono">telegram.bot · точка + «когда»</div><span class="hs" data-h="210311222331103130313222113112"></span></div><span class="val">на связи</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">ЦП сервера</div><div class="t-label mono">server.cpu · шкала заполнения</div><span class="hs" data-h="231323331113031331231302302123"></span></div><span class="val">12 %</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Диск сервера и прогноз</div><div class="t-label mono">server.disk · шкала заполнения</div><span class="hs" data-h="311222122112313222131233232232"></span></div><span class="val">41 %</span></div><div class="row dr"><span class="dot crit"></span><div class="grow"><div class="t-title-s">Контейнеры</div><div class="t-label mono">server.containers · матрица точек</div><span class="hs" data-h="3111331222312122112302213323cc"></span></div><span class="val">5 / 6</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Сообщений ассистенту</div><div class="t-label mono">ai.messages · полоса 30 дн.</div><span class="hs" data-h="121200121133131202103230012321"></span></div><span class="val">19</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Дни, когда открыт дашборд</div><div class="t-label mono">dashboard.activeDays · полоса 30 дн.</div><span class="hs" data-h="103321033322113333323333113131"></span></div><span class="val">серия 41</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Входы: когда, откуда, итог</div><div class="t-label mono">sign_ins · топ-список</div><span class="hs" data-h="322123133020123211330311213233"></span></div><span class="val">1 сегодня</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Ачивки</div><div class="t-label mono">achievements.unlocked · счётчик</div><span class="hs" data-h="303312023131301333111303132121"></span></div><span class="val">175 / 504</span></div><div class="row dr"><span class="dot warn"></span><div class="grow"><div class="t-title-s">Находки безопасности</div><div class="t-label mono">security.findings · счётчик</div><span class="hs" data-h="23113311333301112331333131112w"></span></div><span class="val">2</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Автоматизации: срабатывания</div><div class="t-label mono">automations.fired · счётчик</div><span class="hs" data-h="003033210231212021332011012032"></span></div><span class="val">6</span></div><div class="row dr"><span class="dot off"></span><div class="grow"><div class="t-title-s">Уведомления: прочитано, ответ</div><div class="t-label mono">notification_outbox · топ-список</div><span class="hs" data-h="------------------------------"></span></div><span class="val">—</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Утренний дайджест</div><div class="t-label mono">digest.snapshot · точка + «когда»</div><span class="hs" data-h="323231113202322113121312202331"></span></div><span class="val">08:30</span></div><div class="row dr"><span class="dot "></span><div class="grow"><div class="t-title-s">Хроника дня и рассказ месяца</div><div class="t-label mono">life.narratives · точка + «когда»</div><span class="hs" data-h="320133322131130133011313033120"></span></div><span class="val">вчера</span></div></div>
+<a class="btn tonal s" href="c2-signals.html">Все сигналы таблицей</a>
+</template>
+
+
+<dialog id="palette" aria-label="Поиск и команды">
+<div class="pal-input"><svg class="ic " aria-hidden="true"><use href="#i-search"/></svg><input type="text" placeholder="Найти или сделать… «>» — команда, «/» — раздел, «?» — спросить" aria-label="Поиск и команды"/><kbd>Esc</kbd></div>
+<div class="pal-list">
+<div class="eyebrow">Сделать</div>
+<button class="pal-item sel" type="button" data-open="quick" data-tab="tx"><svg class="ic " aria-hidden="true"><use href="#i-wallet"/></svg><span class="grow">Записать операцию</span><kbd>&gt; расход</kbd></button>
+<button class="pal-item" type="button" data-open="quick" data-tab="note"><svg class="ic " aria-hidden="true"><use href="#i-note"/></svg><span class="grow">Заметка в черновик <span class="new">новое</span></span><kbd>&gt; заметка</kbd></button>
+<button class="pal-item" type="button" data-open="quick" data-tab="restart"><svg class="ic " aria-hidden="true"><use href="#i-restart"/></svg><span class="grow">Перезапустить LanguageTool <span class="new">новое</span></span><span class="badge crit">не отвечает</span></button>
+<button class="pal-item" type="button"><svg class="ic " aria-hidden="true"><use href="#i-target"/></svg><span class="grow">Фокус 25 минут</span><kbd>&gt; фокус</kbd></button>
+<div class="eyebrow">Недавнее</div>
+<button class="pal-item" type="button"><svg class="ic " aria-hidden="true"><use href="#i-wallet"/></svg><span class="grow">Финансы · Обзор</span><span class="t-label">2 мин назад</span></button>
+<button class="pal-item" type="button"><svg class="ic " aria-hidden="true"><use href="#i-server"/></svg><span class="grow">Система · Что требует внимания</span><span class="t-label">вчера</span></button>
+<button class="pal-item" type="button"><svg class="ic " aria-hidden="true"><use href="#i-book"/></svg><span class="grow">Дневник · 31.10</span><span class="t-label">вчера</span></button>
+<div class="eyebrow">Спросить</div>
+<button class="pal-item" type="button"><svg class="ic " aria-hidden="true"><use href="#i-ai"/></svg><span class="grow">? Хватит ли денег до 10-го</span><span class="t-label answer">≈ 150 PLN</span></button>
+</div>
+<div class="pal-hint t-label"><span><kbd>↑</kbd> <kbd>↓</kbd> выбрать</span><span><kbd>Enter</kbd> открыть</span><span><kbd>&gt;</kbd> команды</span><span><kbd>/</kbd> разделы</span><span><kbd>?</kbd> вопрос AI</span></div>
+</dialog>
+
+<dialog id="quick" aria-labelledby="quick-t">
+<div class="dlg-head"><span class="t-title" id="quick-t">Быстро</span><span class="t-label">Ctrl K → «&gt;»</span><button class="icon-btn" type="button" aria-label="Закрыть" data-close><svg class="ic " aria-hidden="true"><use href="#i-close"/></svg></button></div>
+<div class="dlg-body">
+<div class="seg" role="tablist" aria-label="Что сделать">
+<button type="button" role="tab" aria-selected="true" aria-controls="q-tx" data-q="tx"><svg class="ic s" aria-hidden="true"><use href="#i-wallet"/></svg>Операция</button>
+<button type="button" role="tab" aria-selected="false" aria-controls="q-note" data-q="note"><svg class="ic s" aria-hidden="true"><use href="#i-note"/></svg>Заметка</button>
+<button type="button" role="tab" aria-selected="false" aria-controls="q-restart" data-q="restart"><svg class="ic s" aria-hidden="true"><use href="#i-restart"/></svg>Перезапуск</button>
+</div>
+<div role="tabpanel" id="q-tx">
+<div class="field"><label class="t-label" for="q-amount">Сумма, PLN</label><input id="q-amount" class="amount" inputmode="decimal" value="36,98"/></div>
+<div class="chips" style="margin-top:12px" aria-label="Тип"><button class="chip on" type="button" aria-pressed="true">Расход</button><button class="chip" type="button" aria-pressed="false">Доход</button></div>
+<div class="t-label" style="margin:12px 0 8px">Категория — AI предлагает по названию</div>
+<div class="chips"><button class="chip on" type="button" aria-pressed="true">Продукты</button><button class="chip" type="button" aria-pressed="false">Транспорт</button><button class="chip" type="button" aria-pressed="false">Кафе и рестораны</button><button class="chip" type="button" aria-pressed="false">Связь</button></div>
+<div class="field" style="margin-top:12px"><label class="t-label" for="q-who">Где</label><input id="q-who" value="Żabka"/></div>
+<p class="t-label" style="margin-top:8px">PKO ••6677 · сегодня · остаток станет 3 607,68</p>
+</div>
+<div role="tabpanel" id="q-note" hidden>
+<div class="field"><label class="t-label" for="q-text">Черновик <span class="new">новое</span></label><textarea id="q-text" rows="4">Спросить у врача про пульс в покое — браслет пишет 58–61</textarea></div>
+<div class="t-label" style="margin:12px 0 8px">Куда положить</div>
+<div class="chips"><button class="chip on" type="button" aria-pressed="true">Входящие задач</button><button class="chip" type="button" aria-pressed="false">Дневник за сегодня</button><button class="chip" type="button" aria-pressed="false">Оставить в черновике</button></div>
+<p class="t-label" style="margin-top:8px">Черновик хранится, пока не разобран; «Входящие» задач уже есть.</p>
+</div>
+<div role="tabpanel" id="q-restart" hidden>
+<p class="t-body">Перезапуск контейнера на сервере. <span class="new">новое</span></p>
+<div class="list" style="margin-top:8px">
+<div class="row"><span class="dot crit"></span><div class="grow"><div class="t-title-s">languagetool</div><div class="t-label">не отвечает 17 ч · 231 ошибка</div></div><button class="btn s danger" type="button" data-fake="Перезапуск… ~30 с">Перезапустить</button></div>
+<div class="row"><span class="dot"></span><div class="grow"><div class="t-title-s">ollama</div><div class="t-label">работает 3 дн. · 1,9 GB</div></div><button class="btn s outlined" type="button" data-fake="Перезапуск… ~40 с">Перезапустить</button></div>
+<div class="row"><span class="dot"></span><div class="grow"><div class="t-title-s">app</div><div class="t-label">сам дашборд — страница пропадёт на ~20 с</div></div><button class="btn s outlined" type="button" data-fake="Перезапуск… ~20 с">Перезапустить</button></div>
+</div>
+<p class="t-label" style="margin-top:8px">db и backup здесь нет: их перезапуск — только с сервера.</p>
+</div>
+</div>
+<div class="dlg-foot"><button class="btn" type="button" data-close>Отмена</button><button class="btn filled" type="button" data-close>Записать</button></div>
+</dialog>
+
+<dialog id="blocks" aria-labelledby="blocks-t">
+<div class="dlg-head"><span class="t-title" id="blocks-t">Блоки этой страницы</span><button class="icon-btn" type="button" aria-label="Закрыть" data-close><svg class="ic " aria-hidden="true"><use href="#i-close"/></svg></button></div>
+<div class="dlg-body"><div class="t-label">Перетащите ⋮⋮, чтобы поменять порядок. Выключенный блок не пропадает — он в «Ещё» внизу страницы.</div><div class="list" id="blocks-list"></div></div>
+<div class="dlg-foot"><button class="btn" type="button" id="blocks-reset">Как было</button><button class="btn filled" type="button" data-close>Готово</button></div>
+</dialog>
+
+<dialog id="drawer" aria-labelledby="drawer-t">
+<div class="dlg-head"><span class="t-title" id="drawer-t">Подробнее</span><button class="icon-btn" type="button" aria-label="Закрыть" data-close><svg class="ic " aria-hidden="true"><use href="#i-close"/></svg></button></div>
+<div class="dlg-body" id="drawer-body"></div>
+</dialog>
+<script>
+(() => {
+  const root = document.documentElement, body = document.body;
+  // theme: system → light → dark
+  const tb = document.getElementById('mock-theme'), order = [null, 'light', 'dark'], names = {null: 'как в системе', light: 'светлая', dark: 'тёмная'};
+  let ti = 0;
+  tb.addEventListener('click', () => { ti = (ti + 1) % 3; const t = order[ti]; if (t) root.dataset.theme = t; else delete root.dataset.theme; tb.textContent = 'Тема: ' + names[t]; });
+  // designer notes and tier outlines
+  const ab = document.getElementById('mock-anno');
+  const setAnno = on => { body.classList.toggle('anno-on', on); ab.setAttribute('aria-pressed', on); ab.textContent = 'Пояснения: ' + (on ? 'вкл' : 'выкл'); try { localStorage.setItem('r2-anno', on ? '1' : '0'); } catch (e) {} };
+  let annoStored = null; try { annoStored = localStorage.getItem('r2-anno'); } catch (e) {}
+  setAnno(annoStored !== '0');
+  ab.addEventListener('click', () => setAnno(!body.classList.contains('anno-on')));
+  // dialogs
+  const open = (id, el) => {
+    const d = document.getElementById(id); if (!d) return;
+    document.querySelectorAll('dialog[open]').forEach(x => x !== d && x.close());
+    if (id === 'quick' && el && el.dataset.tab) selectQ(el.dataset.tab);
+    if (id === 'drawer' && el && el.dataset.tpl) {
+      const t = document.getElementById(el.dataset.tpl);
+      document.getElementById('drawer-t').textContent = el.dataset.title || 'Подробнее';
+      document.getElementById('drawer-body').innerHTML = t ? t.innerHTML : '';
+      if (window.r2paint) window.r2paint(document.getElementById('drawer-body'));
+    }
+    if (!d.open) d.showModal();
+  };
+  document.addEventListener('click', e => {
+    const o = e.target.closest('[data-open]'); if (o) { e.preventDefault(); open(o.dataset.open, o); return; }
+    const c = e.target.closest('[data-close]'); if (c) { c.closest('dialog').close(); return; }
+    const f = e.target.closest('[data-fake]'); if (f) { f.textContent = f.dataset.fake; f.disabled = true; return; }
+    const ch = e.target.closest('.chip[aria-pressed]'); if (ch) { ch.parentElement.querySelectorAll('.chip[aria-pressed]').forEach(x => { x.setAttribute('aria-pressed', x === ch); x.classList.toggle('on', x === ch); }); }
+  });
+  document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+  document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); open('palette'); } });
+  // quick-actions tabs
+  const selectQ = k => {
+    document.querySelectorAll('#quick [data-q]').forEach(b => b.setAttribute('aria-selected', b.dataset.q === k));
+    document.querySelectorAll('#quick [role=tabpanel]').forEach(p => p.hidden = p.id !== 'q-' + k);
+    const s = document.querySelector('#quick .dlg-foot .filled'); s.textContent = k === 'tx' ? 'Записать' : k === 'note' ? 'Сохранить' : 'Готово';
+  };
+  document.querySelectorAll('#quick [data-q]').forEach(b => b.addEventListener('click', () => selectQ(b.dataset.q)));
+  // toggleable blocks: every [data-block] with a data-name becomes a switch
+  const key = 'r2-blocks-' + location.pathname.split('/').pop();
+  let off = []; try { off = JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) {}
+  const list = document.getElementById('blocks-list');
+  const apply = () => document.querySelectorAll('[data-block]').forEach(b => { b.hidden = off.includes(b.dataset.block); });
+  document.querySelectorAll('[data-block][data-name]').forEach(b => {
+    const locked = b.hasAttribute('data-locked');
+    const row = document.createElement('label'); row.className = 'sw-row';
+    row.innerHTML = '<span class="grip" aria-hidden="true">⋮⋮</span><span class="grow"><span class="t-title-s">' + b.dataset.name + '</span>' + (locked ? '<br><span class="t-label">всегда сверху — ваш выбор</span>' : '') + '</span>';
+    const sw = document.createElement('input'); sw.type = 'checkbox'; sw.className = 'switch'; sw.checked = !off.includes(b.dataset.block); sw.disabled = locked;
+    sw.setAttribute('aria-label', b.dataset.name);
+    sw.addEventListener('change', () => { off = sw.checked ? off.filter(x => x !== b.dataset.block) : [...off, b.dataset.block]; try { localStorage.setItem(key, JSON.stringify(off)); } catch (e) {} apply(); });
+    row.appendChild(sw); list.appendChild(row);
+  });
+  document.getElementById('blocks-reset').addEventListener('click', () => { off = []; try { localStorage.removeItem(key); } catch (e) {} list.querySelectorAll('.switch').forEach(s => s.checked = true); apply(); });
+  apply();
+  // sparklines and heat strips from data attributes
+  window.r2paint = scope => {
+    scope.querySelectorAll('svg.spark[data-v]').forEach(s => {
+      const v = s.dataset.v.split(',').map(Number), f = (s.dataset.f || '').split(',').filter(Boolean).map(Number);
+      const all = v.concat(f), min = Math.min(...all), max = Math.max(...all), n = all.length - 1 || 1, h = 26;
+      const y = x => (h - ((x - min) / ((max - min) || 1)) * (h - 4) - 2).toFixed(1);
+      const pts = v.map((x, i) => (i * 100 / n).toFixed(1) + ',' + y(x)).join(' ');
+      s.setAttribute('viewBox', '0 0 100 ' + h); s.setAttribute('preserveAspectRatio', 'none');
+      let html = '<polyline class="p ' + (s.dataset.c || '') + '" points="' + pts + '"/>';
+      if (f.length) { const s0 = v.length - 1; html += '<polyline class="f" points="' + [v[s0]].concat(f).map((x, i) => ((s0 + i) * 100 / n).toFixed(1) + ',' + y(x)).join(' ') + '"/>'; }
+      s.innerHTML = html;
+    });
+    scope.querySelectorAll('.hs[data-h]').forEach(el => {
+      el.innerHTML = el.dataset.h.split('').map(c => '<i class="' + ({'0': '', '1': 'l1', '2': 'l2', '3': 'l3', w: 'w', c: 'c', '-': 'na', t: 'l3 t'}[c] ?? '') + '"></i>').join('');
+    });
+  };
+  window.r2paint(document);
+})();
+</script>
+</body>
+</html>
