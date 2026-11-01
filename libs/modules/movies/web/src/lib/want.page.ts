@@ -88,7 +88,7 @@ export class WantPage {
         action === 'want' ? 'movies.want.added' : 'movies.want.markedSeen';
       this.snackBar.open(
         this.transloco.translate(key, {title: title.title}),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 4000,
         },
@@ -97,7 +97,7 @@ export class WantPage {
     } catch {
       this.snackBar.open(
         this.transloco.translate('movies.errors.generic'),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 6000,
         },

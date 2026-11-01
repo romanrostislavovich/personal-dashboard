@@ -325,7 +325,7 @@ export class ThemeSettingsComponent {
       await this.layout.applyEverywhere();
       this.snackBar.open(
         this.transloco.translate('core.settings.theme.applied'),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 4000,
         },
@@ -333,7 +333,7 @@ export class ThemeSettingsComponent {
     } catch {
       this.snackBar.open(
         this.transloco.translate('core.settings.theme.notApplied'),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 6000,
         },

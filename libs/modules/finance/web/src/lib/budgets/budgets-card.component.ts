@@ -67,9 +67,9 @@ const WARN_SHARE = 0.8;
       </mat-card-header>
       <mat-card-content>
         @if (!editing()) {
-          <ul class="budgets">
-            <pd-resource-state [resource]="budgets">
-              <ng-template>
+          <pd-resource-state [resource]="budgets">
+            <ng-template>
+              <ul class="budgets">
                 @for (budget of budgets.value(); track budget.id) {
                   @let share = budget.spent / budget.limit;
                   <li
@@ -96,9 +96,9 @@ const WARN_SHARE = 0.8;
                     {{ 'finance.budgets.empty' | transloco }}
                   </li>
                 }
-              </ng-template>
-            </pd-resource-state>
-          </ul>
+              </ul>
+            </ng-template>
+          </pd-resource-state>
         } @else {
           <ul class="edit">
             @for (row of draft(); track $index) {

@@ -190,7 +190,11 @@ export class MonitoringPage {
         errorStatus(error) === 409
           ? 'monitoring.errors.duplicate'
           : 'monitoring.errors.generic';
-      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 5000});
+      this.snackBar.open(
+        this.transloco.translate(key),
+        this.transloco.translate('core.actions.ok'),
+        {duration: 5000},
+      );
     } finally {
       this.busy.set(false);
     }

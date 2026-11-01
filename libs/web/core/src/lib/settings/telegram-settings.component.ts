@@ -144,7 +144,7 @@ export class TelegramSettingsComponent {
     await this.notifications.sendTest();
     this.snackBar.open(
       this.transloco.translate('core.settings.telegram.testSent'),
-      'OK',
+      this.transloco.translate('core.actions.ok'),
       {
         duration: 3000,
       },

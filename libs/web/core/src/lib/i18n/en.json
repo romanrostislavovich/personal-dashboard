@@ -20,7 +20,8 @@
     "edit": "Edit",
     "delete": "Delete",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "ok": "OK"
   },
   "login": {
     "title": "Sign in",
@@ -377,6 +378,8 @@
         "jobs": "Background job runs",
         "failures": "failed: {{count}}",
         "memory": "Memory",
+        "memoryValue": "{{value}} MB",
+        "p95": "p95 {{value}} ms",
         "ai": "AI today",
         "aiValue": "{{requests}} requests · {{tokens}} tokens",
         "notifications": "Notifications in 24 h",

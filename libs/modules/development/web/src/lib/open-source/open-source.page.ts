@@ -241,7 +241,7 @@ export class OpenSourcePage {
       const key = errorKeys[errorStatus(error)];
       this.snackBar.open(
         this.transloco.translate(key ?? 'development.errors.generic'),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 6000,
         },

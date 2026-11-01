@@ -58,9 +58,9 @@ import {FinanceApi} from './finance.api';
           'finance.costSources.hint' | transloco
         }}</mat-card-subtitle>
       </mat-card-header>
-      <mat-list>
-        <pd-resource-state [resource]="sources">
-          <ng-template>
+      <pd-resource-state [resource]="sources">
+        <ng-template>
+          <mat-list>
             @for (source of sources.value(); track source.id) {
               <mat-list-item>
                 <mat-icon matListItemIcon>{{
@@ -126,9 +126,9 @@ import {FinanceApi} from './finance.api';
                 {{ 'finance.costSources.empty' | transloco }}
               </p>
             }
-          </ng-template>
-        </pd-resource-state>
-      </mat-list>
+          </mat-list>
+        </ng-template>
+      </pd-resource-state>
       <div class="guides">
         <pd-integration-guide
           guide="finance.costSources.guide.hetzner"
@@ -231,7 +231,11 @@ export class CostSourcesIntegration {
         errorStatus(error) === 400
           ? 'finance.costSources.invalidToken'
           : 'finance.costSources.error';
-      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 6000});
+      this.snackBar.open(
+        this.transloco.translate(key),
+        this.transloco.translate('core.actions.ok'),
+        {duration: 6000},
+      );
     } finally {
       this.busy.set(false);
     }

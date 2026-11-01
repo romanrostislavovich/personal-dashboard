@@ -131,7 +131,7 @@ export class SoundcloudPage {
       const message = (errorBody(error) as {message?: string} | null)?.message;
       this.snackBar.open(
         message ?? this.transloco.translate('music.connect.error'),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 8000,
         },

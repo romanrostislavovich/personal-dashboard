@@ -334,7 +334,11 @@ export class MusicConnectComponent {
         errorStatus(error) === 400
           ? 'music.connect.invalid'
           : 'music.connect.error';
-      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 6000});
+      this.snackBar.open(
+        this.transloco.translate(key),
+        this.transloco.translate('core.actions.ok'),
+        {duration: 6000},
+      );
     } finally {
       this.busy.set(false);
     }

@@ -111,7 +111,7 @@ export class GitlabTokenIntegration {
           : 'development.errors.generic';
       this.snackBar.open(
         this.transloco.translate(key, {service: 'GitLab'}),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 6000,
         },

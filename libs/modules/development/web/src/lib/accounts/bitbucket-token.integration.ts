@@ -128,7 +128,7 @@ export class BitbucketTokenIntegration {
           : 'development.errors.generic';
       this.snackBar.open(
         this.transloco.translate(key, {service: 'Bitbucket'}),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 6000,
         },

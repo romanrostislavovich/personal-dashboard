@@ -140,7 +140,9 @@ export class XboxIntegration {
                 ? 'games.xbox.keyInvalid'
                 : 'games.errors.generic',
             );
-      this.snackBar.open(text, 'OK', {duration: 10000});
+      this.snackBar.open(text, this.transloco.translate('core.actions.ok'), {
+        duration: 10000,
+      });
     } finally {
       this.busy.set(false);
     }

@@ -13,6 +13,7 @@ export * from './lib/ui/edited-at.component';
 export * from './lib/ui/resource-state.component';
 export * from './lib/ui/share-list.component';
 export * from './lib/ui/duration.pipe';
+export * from './lib/ui/number-params.pipe';
 export * from './lib/ui/integration-guide.component';
 export * from './lib/ui/server-key.component';
 export * from './lib/utils/month';

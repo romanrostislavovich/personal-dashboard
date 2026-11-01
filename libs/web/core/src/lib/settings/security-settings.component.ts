@@ -388,6 +388,10 @@ export class SecuritySettingsComponent {
   }
 
   private notify(key: string): void {
-    this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 4000});
+    this.snackBar.open(
+      this.transloco.translate(key),
+      this.transloco.translate('core.actions.ok'),
+      {duration: 4000},
+    );
   }
 }

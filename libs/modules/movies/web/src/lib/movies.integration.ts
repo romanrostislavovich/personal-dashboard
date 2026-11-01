@@ -172,7 +172,11 @@ export class MoviesIntegration {
         errorStatus(error) === 400
           ? 'movies.integration.invalid'
           : 'movies.errors.generic';
-      this.snackBar.open(this.transloco.translate(key), 'OK', {duration: 6000});
+      this.snackBar.open(
+        this.transloco.translate(key),
+        this.transloco.translate('core.actions.ok'),
+        {duration: 6000},
+      );
     } finally {
       this.busy.set(false);
     }

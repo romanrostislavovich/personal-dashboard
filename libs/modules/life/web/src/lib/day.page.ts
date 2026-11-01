@@ -15,7 +15,7 @@ import {ActivatedRoute, RouterLink} from '@angular/router';
 import {TranslocoPipe} from '@jsverse/transloco';
 import {CORE_READS} from '@pd/client-core';
 import {LifeDay} from '@pd/contracts';
-import {todayLocalDate} from '@pd/web-core';
+import {NumberParamsPipe, todayLocalDate} from '@pd/web-core';
 
 /** A day across every module: the diary, the money, what was done, played and listened to. */
 @Component({
@@ -28,6 +28,7 @@ import {todayLocalDate} from '@pd/web-core';
     MatIconModule,
     RouterLink,
     TranslocoPipe,
+    NumberParamsPipe,
   ],
   template: `
     @if (!selectedDay()) {
@@ -79,7 +80,7 @@ import {todayLocalDate} from '@pd/web-core';
               {{ event.module + '.title' | transloco }}
             </span>
             <span class="text">{{
-              event.key | transloco: event.params ?? {}
+              event.key | transloco: (event.params | pdNumberParams)
             }}</span>
           </a>
         }
@@ -99,7 +100,7 @@ import {todayLocalDate} from '@pd/web-core';
               <span class="module">{{
                 event.module + '.title' | transloco
               }}</span>
-              {{ event.key | transloco: event.params ?? {} }}
+              {{ event.key | transloco: (event.params | pdNumberParams) }}
             </span>
             @if (event.link) {
               <a

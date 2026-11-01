@@ -98,9 +98,9 @@ import {ResourceStateComponent} from '../ui/resource-state.component';
           </p>
         }
 
-        <ul class="rules">
-          <pd-resource-state [resource]="rules">
-            <ng-template>
+        <pd-resource-state [resource]="rules">
+          <ng-template>
+            <ul class="rules">
               @for (rule of rules.value(); track rule.id) {
                 <li [class.off]="!rule.isActive">
                   <mat-slide-toggle
@@ -160,9 +160,9 @@ import {ResourceStateComponent} from '../ui/resource-state.component';
                   </li>
                 }
               }
-            </ng-template>
-          </pd-resource-state>
-        </ul>
+            </ul>
+          </ng-template>
+        </pd-resource-state>
       </mat-card-content>
     </mat-card>
   `,

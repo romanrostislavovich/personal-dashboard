@@ -141,7 +141,7 @@ export class GooglePlacesIntegration {
     } catch {
       this.snackBar.open(
         this.transloco.translate('activity.google.invalid'),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 6000,
         },

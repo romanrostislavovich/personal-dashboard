@@ -42,9 +42,10 @@ export class MusicIntegration {
     const route = inject(ActivatedRoute);
     const result = route.snapshot.queryParamMap.get('spotify');
     if (result) {
+      const transloco = inject(TranslocoService);
       inject(MatSnackBar).open(
-        inject(TranslocoService).translate(`music.connect.spotify.${result}`),
-        'OK',
+        transloco.translate(`music.connect.spotify.${result}`),
+        transloco.translate('core.actions.ok'),
         {duration: 5000},
       );
       // Remove the parameter so the message does not repeat on reload; the tab stays.

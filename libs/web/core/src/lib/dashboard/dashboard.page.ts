@@ -210,7 +210,7 @@ export class DashboardPage {
       await this.layout.applyEverywhere();
       this.snackBar.open(
         this.transloco.translate('core.dashboard.edit.applied'),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 4000,
         },
@@ -218,7 +218,7 @@ export class DashboardPage {
     } catch {
       this.snackBar.open(
         this.transloco.translate('core.dashboard.edit.notApplied'),
-        'OK',
+        this.transloco.translate('core.actions.ok'),
         {
           duration: 6000,
         },
