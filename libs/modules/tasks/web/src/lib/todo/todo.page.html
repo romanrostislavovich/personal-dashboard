@@ -20,10 +20,29 @@
     }}</mat-button-toggle>
   </mat-button-toggle-group>
   <span class="spacer"></span>
+  @if (f.view !== 'done' && !selected()) {
+    <button matButton (click)="startSelecting()">
+      <mat-icon>library_add_check</mat-icon>
+      {{ 'tasks.steps.select' | transloco }}
+    </button>
+  }
   <button matButton="filled" (click)="open(null)">
     <mat-icon>add</mat-icon> {{ 'tasks.todo.newTitle' | transloco }}
   </button>
 </div>
+
+@if (selected(); as chosen) {
+  <div class="selection" role="status">
+    <span>{{ 'tasks.steps.selected' | transloco: {count: chosen.size} }}</span>
+    <span class="spacer"></span>
+    <button matButton (click)="stopSelecting()">
+      {{ 'core.actions.cancel' | transloco }}
+    </button>
+    <button matButton="filled" [disabled]="!chosen.size" (click)="group()">
+      <mat-icon>account_tree</mat-icon> {{ 'tasks.steps.group' | transloco }}
+    </button>
+  </div>
+}
 
 <div class="filters">
   <mat-form-field subscriptSizing="dynamic" class="list">
@@ -102,16 +121,71 @@
 }
 
 <ul class="tasks">
-  @for (task of shown(); track task.id) {
-    <li [class.done]="task.completedAt" [class]="'priority-' + task.priority">
-      <mat-checkbox
-        [checked]="task.completedAt !== null"
-        [attr.aria-label]="task.title"
-        (change)="toggle(task, $event.checked)"
-      />
+  @for (row of rows(); track row.task.id) {
+    @let task = row.task;
+    <li
+      [class]="'priority-' + task.priority"
+      [class.done]="task.completedAt"
+      [class.step]="row.step"
+      [class.drop]="dropTarget() === task.id"
+      [attr.draggable]="!selected() && !task.completedAt"
+      (dragstart)="dragStart($event, task)"
+      (dragend)="dragEnd()"
+      (dragover)="dragOver($event, task)"
+      (dragleave)="dropTarget.set(null)"
+      (drop)="drop($event, task)"
+    >
+      @if (task.steps && !row.step) {
+        <button
+          matIconButton
+          class="fold"
+          [attr.aria-expanded]="!collapsed().has(task.id)"
+          [attr.aria-label]="
+            (collapsed().has(task.id)
+              ? 'tasks.steps.expand'
+              : 'tasks.steps.collapse'
+            ) | transloco
+          "
+          (click)="toggleCollapsed(task.id)"
+        >
+          <mat-icon>{{
+            collapsed().has(task.id) ? 'chevron_right' : 'expand_more'
+          }}</mat-icon>
+        </button>
+      }
+      @if (selected(); as chosen) {
+        <mat-checkbox
+          [checked]="chosen.has(task.id)"
+          [disabled]="!!task.steps"
+          [attr.aria-label]="
+            'tasks.steps.choose' | transloco: {title: task.title}
+          "
+          (change)="toggleSelected(task.id)"
+        />
+      } @else {
+        <mat-checkbox
+          [checked]="task.completedAt !== null"
+          [attr.aria-label]="task.title"
+          (change)="toggle(task, $event.checked)"
+        />
+      }
       <button type="button" class="body" (click)="open(task)">
-        <span class="title">{{ task.title }}</span>
+        <span class="title">
+          @if (row.parentTitle) {
+            <span class="parent">{{ row.parentTitle }} ›</span>
+          }
+          {{ task.title }}
+        </span>
         <span class="meta">
+          @if (task.steps; as steps) {
+            <span
+              class="progress"
+              [matTooltip]="'tasks.steps.progress' | transloco"
+            >
+              <mat-icon inline>account_tree</mat-icon>
+              {{ steps.done }}/{{ steps.total }}
+            </span>
+          }
           @if (task.horizon !== 'normal') {
             <span class="horizon" [class]="'horizon-' + task.horizon">
               <mat-icon inline>{{
@@ -166,6 +240,16 @@
           }
         </span>
       </button>
+      @if (!task.completedAt && !task.parentId && !selected()) {
+        <button
+          matIconButton
+          [matTooltip]="'tasks.steps.add' | transloco"
+          [attr.aria-label]="'tasks.steps.add' | transloco"
+          (click)="addStep(task)"
+        >
+          <mat-icon>add_task</mat-icon>
+        </button>
+      }
       @if (!task.completedAt) {
         <button
           matIconButton

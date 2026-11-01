@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
 import {
@@ -18,6 +19,8 @@ import {
   reminderSnoozeSchema,
   reminderUpdateSchema,
   Task,
+  TASK_DELETE_STEPS,
+  taskGroupSchema,
   taskInputSchema,
   TaskList,
   TaskListInput,
@@ -29,6 +32,7 @@ import {RemindersService} from './reminders.service';
 import {TasksService} from './tasks.service';
 
 const id = () => Param('id', ParseUUIDPipe);
+const deleteSteps = z.enum(TASK_DELETE_STEPS).default('delete');
 
 /** The TODO list, its lists and the reminders: `/api/tasks`. */
 @Controller('tasks')
@@ -147,6 +151,16 @@ export class TasksController {
     return this.tasks.create(user.id, input);
   }
 
+  /** Makes the tasks steps of an existing task or of a new one; returns that task. */
+  @Post('group')
+  group(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(taskGroupSchema))
+    group: z.output<typeof taskGroupSchema>,
+  ): Promise<Task> {
+    return this.tasks.group(user.id, group);
+  }
+
   @Patch(':id')
   @HttpCode(204)
   update(
@@ -171,9 +185,15 @@ export class TasksController {
     return this.tasks.reopen(user.id, taskId);
   }
 
+  /** With its steps; `?steps=keep` — they stay as tasks of their own. */
   @Delete(':id')
   @HttpCode(204)
-  remove(@CurrentUser() user: AuthUser, @id() taskId: string): Promise<void> {
-    return this.tasks.remove(user.id, taskId);
+  remove(
+    @CurrentUser() user: AuthUser,
+    @id() taskId: string,
+    @Query('steps', new ZodValidationPipe(deleteSteps))
+    steps: z.output<typeof deleteSteps>,
+  ): Promise<void> {
+    return this.tasks.remove(user.id, taskId, steps);
   }
 }

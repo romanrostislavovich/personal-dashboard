@@ -117,6 +117,9 @@ export class TrashService implements OnModuleInit, OnApplicationBootstrap {
     const order = await this.tableOrder();
     try {
       await this.db.transaction(async tx => {
+        // Rows of one table pointing at each other (a task and its steps) may come back in any
+        // order: their deferrable keys are checked at the commit.
+        await tx.execute(sql`SET CONSTRAINTS ALL DEFERRED`);
         const {rows} = await tx.execute<{table_name: string; row: string}>(sql`
           SELECT table_name, row::text AS row FROM trash.rows WHERE tx = ${id}::xid8 ORDER BY id
         `);

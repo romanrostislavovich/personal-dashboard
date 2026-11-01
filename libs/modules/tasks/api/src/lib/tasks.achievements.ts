@@ -5,7 +5,7 @@ import {TasksService} from './tasks.service';
 
 /**
  * Achievements of the tasks section: tasks done (in total, in a day, in a row, on time, by their
- * horizon) and reminders dealt with.
+ * horizon), tasks with steps seen through, and reminders dealt with.
  */
 @Injectable()
 export class TasksAchievements implements OnModuleInit {
@@ -52,6 +52,54 @@ export class TasksAchievements implements OnModuleInit {
           {en: '1,000 tasks done', ru: '1 000 выполненных задач'},
         ],
       ),
+    });
+    this.achievements.register({
+      id: 'tasks.groups-done',
+      module: 'tasks',
+      measure: async userId => (await this.tasks.groupRecords(userId)).done,
+      tiers: achievementTiers(
+        [
+          1,
+          '🧩',
+          {en: 'Piece by piece', ru: 'По кусочку'},
+          {
+            en: 'A task with steps done to the last one',
+            ru: 'Задача с подзадачами закрыта целиком',
+          },
+        ],
+        [
+          10,
+          '🪜',
+          {en: 'Master of stages', ru: 'Мастер этапов'},
+          {
+            en: '10 tasks with steps done',
+            ru: '10 закрытых задач с подзадачами',
+          },
+        ],
+        [
+          50,
+          '🏛️',
+          {en: 'Architect of plans', ru: 'Архитектор дел'},
+          {
+            en: '50 tasks with steps done',
+            ru: '50 закрытых задач с подзадачами',
+          },
+        ],
+      ),
+    });
+    this.achievements.register({
+      id: 'tasks.big-group-done',
+      module: 'tasks',
+      measure: async userId => (await this.tasks.groupRecords(userId)).big,
+      tiers: achievementTiers([
+        1,
+        '🚚',
+        {en: 'A big project', ru: 'Большой проект'},
+        {
+          en: 'A task of 10 steps or more done',
+          ru: 'Закрыта задача из 10 и более подзадач',
+        },
+      ]),
     });
     this.achievements.register({
       id: 'tasks.long-done',

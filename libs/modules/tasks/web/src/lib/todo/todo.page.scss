@@ -32,6 +32,17 @@
   width: 100%;
 }
 
+.selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 16px;
+  border-radius: var(--pd-radius);
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
 .tasks {
   display: flex;
   flex-direction: column;
@@ -54,6 +65,17 @@ li {
 
   &:first-child {
     border-top: 0;
+  }
+
+  // A step sits under its task, moved in by the width of the fold button.
+  &.step {
+    padding-left: 44px;
+    border-top-style: dashed;
+  }
+
+  // Where a dragged task would go.
+  &.drop {
+    background: var(--mat-sys-secondary-container);
   }
 
   &.priority-1 {
@@ -129,4 +151,13 @@ li {
   padding: 24px;
   justify-content: center;
   color: var(--mat-sys-on-surface-variant);
+}
+
+.parent {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.progress {
+  color: var(--mat-sys-primary);
+  font-variant-numeric: tabular-nums;
 }

@@ -3,6 +3,8 @@ import {
   ReminderInput,
   ReminderUpdate,
   Task,
+  TaskDeleteSteps,
+  TaskGroup,
   TaskInput,
   TaskList,
   TaskUpdate,
@@ -30,7 +32,13 @@ export function tasksApi(api: ApiClient) {
     /** A repeating task comes back as a new one on its next day. */
     complete: (id: string) => api.post<void>(`${BASE}/${id}/complete`, {}),
     reopen: (id: string) => api.post<void>(`${BASE}/${id}/reopen`, {}),
-    remove: (id: string) => api.delete(`${BASE}/${id}`),
+    /** With its steps, unless `keep` — then they stay as tasks of their own. */
+    remove: (id: string, steps: TaskDeleteSteps = 'delete') =>
+      api.delete(
+        steps === 'keep' ? `${BASE}/${id}?steps=keep` : `${BASE}/${id}`,
+      ),
+    /** Makes the tasks steps of an existing task or of a new one; returns that task. */
+    group: (group: TaskGroup) => api.post<Task>(`${BASE}/group`, group),
 
     lists: () => api.read<TaskList[]>(TASKS_READS.lists()),
     createList: (name: string) => api.post<void>(`${BASE}/lists`, {name}),

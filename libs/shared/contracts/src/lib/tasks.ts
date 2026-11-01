@@ -65,6 +65,8 @@ const taskFields = {
   checklist: z.array(checklistItemSchema).max(50),
   /** A repeating task needs a due date: once done, it comes back on the next one. */
   repeat: repeatSchema.nullable(),
+  /** The task this one is a step of; one level only — a step has no steps of its own. */
+  parentId: z.uuid().nullable(),
 };
 
 /** Only the title is required. */
@@ -81,6 +83,31 @@ export type TaskInput = z.input<typeof taskInputSchema>;
 export const taskUpdateSchema = z.object(taskFields).partial();
 export type TaskUpdate = z.input<typeof taskUpdateSchema>;
 
+/**
+ * `POST /api/tasks/group`: makes the tasks steps of one task — an existing one (`parentId`) or a
+ * new one with this title.
+ */
+export const taskGroupSchema = z
+  .object({
+    taskIds: z.array(z.uuid()).min(1).max(100),
+    parentId: z.uuid().optional(),
+    title: z.string().trim().min(1).max(300).optional(),
+  })
+  .refine(group => Boolean(group.parentId) !== Boolean(group.title), {
+    message: 'Either an existing task or the title of a new one',
+  });
+export type TaskGroup = z.input<typeof taskGroupSchema>;
+
+/** `DELETE /api/tasks/:id?steps=keep`: the steps of a deleted task stay as tasks of their own. */
+export const TASK_DELETE_STEPS = ['delete', 'keep'] as const;
+export type TaskDeleteSteps = (typeof TASK_DELETE_STEPS)[number];
+
+/** How far a task with steps has got. */
+export interface TaskSteps {
+  done: number;
+  total: number;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -93,6 +120,13 @@ export interface Task {
   tags: string[];
   checklist: ChecklistItem[];
   repeat: Repeat | null;
+  /** The task this one is a step of; `null` — a task of its own. */
+  parentId: string | null;
+  /**
+   * Its steps, all of them (done long ago too); `null` — it has none. Done by itself when the
+   * last step is.
+   */
+  steps: TaskSteps | null;
   /** `null` — not done yet. */
   completedAt: string | null;
   createdAt: string;

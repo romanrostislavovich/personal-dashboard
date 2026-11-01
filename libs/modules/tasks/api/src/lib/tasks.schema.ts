@@ -7,6 +7,7 @@ import {
   TaskPriority,
 } from '@pd/contracts';
 import {
+  AnyPgColumn,
   date,
   index,
   jsonb,
@@ -43,6 +44,14 @@ export const tasks = pgTable(
     // A deleted list or project leaves its tasks: they go back to the inbox.
     listId: uuid().references(() => taskLists.id, {onDelete: 'set null'}),
     projectId: uuid().references(() => projects.id, {onDelete: 'set null'}),
+    /**
+     * The task this one is a step of ("Move" → "Pack the things"); one level only. Deleting the
+     * parent deletes its steps unless they were taken out first. The foreign key is deferrable
+     * (see the migration) so the trash can put a group back in any order.
+     */
+    parentId: uuid().references((): AnyPgColumn => tasks.id, {
+      onDelete: 'cascade',
+    }),
     title: text().notNull(),
     notes: text().notNull().default(''),
     /** The day it is due, in the user's own calendar (no time zone). */
@@ -63,6 +72,7 @@ export const tasks = pgTable(
     index().on(table.userId, table.completedAt),
     index().on(table.listId),
     index().on(table.projectId),
+    index().on(table.parentId),
   ],
 );
 

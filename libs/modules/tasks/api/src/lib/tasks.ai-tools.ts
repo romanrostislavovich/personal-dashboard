@@ -10,6 +10,8 @@ import {
 import {
   reminderInputSchema,
   repeatSchema,
+  TASK_DELETE_STEPS,
+  taskGroupSchema,
   taskInputSchema,
   taskUpdateSchema,
   zonedDateTime,
@@ -48,7 +50,14 @@ const TASK_FIELDS = {
   },
   tags: {type: 'array', items: {type: 'string'}, description: 'Tags without #'},
   repeat: REPEAT,
+  parentId: {
+    type: 'string',
+    description:
+      'The task this one is a step of (one level: a step has no steps); null — a task of its own',
+  },
 } as const;
+
+const stepTitles = z.array(z.string().trim().min(1).max(300)).max(50);
 
 /** The user's local time of a reminder, as the model writes it. */
 const localTime = z
@@ -82,7 +91,8 @@ export class TasksAiTools implements OnModuleInit {
       module: 'tasks',
       description:
         "The user's TODO list: open tasks and the ones done in the last month (id, title, notes, " +
-        'due date, priority 0–3, horizon short/normal/long, tags, checklist, repeat, when done, the time of its reminder), ' +
+        'due date, priority 0–3, horizon short/normal/long, tags, checklist, repeat, when done, the time of its reminder, ' +
+        '`parentId` — the task it is a step of, `steps` — done/total of a task with steps), ' +
         'and the lists they are sorted into (`listId` null — the inbox). Overdue = due before today.',
       parameters: NO_PARAMETERS,
       handler: async userId => ({
@@ -136,14 +146,65 @@ export class TasksAiTools implements OnModuleInit {
       undoTables: [tasks],
       description:
         'Adds a task to the TODO list. A repeating task needs a due date. To be told about it ' +
-        'at a time, add a reminder with its id (reminders_add).',
+        'at a time, add a reminder with its id (reminders_add). A bigger one ("Move") can come ' +
+        'with its `steps` at once: each a task of its own, in the same list; the task is done ' +
+        'by itself when its last step is. Suggest steps when the user asks to break a task down.',
       parameters: {
         type: 'object',
-        properties: TASK_FIELDS,
+        properties: {
+          ...TASK_FIELDS,
+          steps: {
+            type: 'array',
+            items: {type: 'string'},
+            description: 'Titles of its steps, in order',
+          },
+        },
         required: ['title'],
       },
-      handler: async (userId, args) =>
-        this.tasks.create(userId, taskInputSchema.parse(args)),
+      handler: async (userId, args) => {
+        const {steps, ...fields} = args;
+        const task = await this.tasks.create(
+          userId,
+          taskInputSchema.parse(fields),
+        );
+        for (const title of stepTitles.parse(steps ?? [])) {
+          await this.tasks.create(
+            userId,
+            taskInputSchema.parse({title, parentId: task.id}),
+          );
+        }
+        return task;
+      },
+    });
+
+    this.ai.registerTool({
+      name: 'tasks_group',
+      module: 'tasks',
+      writes: true,
+      undoTables: [tasks],
+      description:
+        'Makes existing tasks steps of one task: of an existing one (`parentId`) or of a new one ' +
+        'with `title`. One level only: a task with steps cannot become a step.',
+      parameters: {
+        type: 'object',
+        properties: {
+          taskIds: {
+            type: 'array',
+            items: {type: 'string'},
+            description: 'Task ids from tasks_list',
+          },
+          parentId: {type: 'string', description: 'An existing task'},
+          title: {type: 'string', description: 'The title of a new task'},
+        },
+        required: ['taskIds'],
+      },
+      handler: async (userId, args) => {
+        const parent = await this.tasks.group(
+          userId,
+          taskGroupSchema.parse(args),
+        );
+        return {id: parent.id, title: parent.title};
+      },
     });
 
     const find = async (userId: string, args: Record<string, unknown>) =>
@@ -156,7 +217,8 @@ export class TasksAiTools implements OnModuleInit {
       undoTables: [tasks],
       description:
         'Changes a task: only the fields given. `done: true` marks it done (a repeating one comes ' +
-        'back on its next day), `done: false` reopens it.',
+        'back on its next day; a task with steps — with all of them), `done: false` reopens it. ' +
+        '`parentId` moves it into another task, null takes it out.',
       parameters: {
         type: 'object',
         properties: {
@@ -191,14 +253,32 @@ export class TasksAiTools implements OnModuleInit {
       writes: true,
       undoTables: [tasks],
       confirm: async (userId, args) => {
-        const {title, dueDate} = await find(userId, args);
-        return {title, dueDate};
+        const {title, dueDate, steps} = await find(userId, args);
+        return {
+          title,
+          dueDate,
+          steps: args['keepSteps'] === true ? 0 : (steps?.total ?? 0),
+        };
       },
       description:
-        'Deletes a task (with its reminders). To finish a task, mark it done instead.',
-      parameters: idParameters('Task id from tasks_list'),
+        'Deletes a task (with its reminders) and its steps; `keepSteps: true` keeps the steps ' +
+        'as tasks of their own. To finish a task, mark it done instead.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: {type: 'string', description: 'Task id from tasks_list'},
+          keepSteps: {type: 'boolean'},
+        },
+        required: ['id'],
+      },
       handler: async (userId, args) => {
-        await this.tasks.remove(userId, (await find(userId, args)).id);
+        await this.tasks.remove(
+          userId,
+          (await find(userId, args)).id,
+          args['keepSteps'] === true
+            ? TASK_DELETE_STEPS[1]
+            : TASK_DELETE_STEPS[0],
+        );
       },
     });
   }

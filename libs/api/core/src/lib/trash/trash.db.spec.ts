@@ -55,6 +55,27 @@ describe.skipIf(!ADMIN_URL)('TrashService', {timeout: 60_000}, () => {
     await admin?.end();
   });
 
+  it('a task deleted with its steps comes back as one item, steps and all', async () => {
+    const parentId = randomUUID();
+    await db.execute(
+      sql`INSERT INTO tasks (id, user_id, title) VALUES (${parentId}, ${userId}, 'Move')`,
+    );
+    await db.execute(sql`INSERT INTO tasks (user_id, title, parent_id)
+      SELECT ${userId}, 'Step ' || n, ${parentId} FROM generate_series(1, 3) n`);
+
+    await db.execute(sql`DELETE FROM tasks WHERE id = ${parentId}`);
+    const [item] = await trash.list(userId);
+    expect(item).toMatchObject({table: 'tasks', rows: 4});
+
+    await trash.restore(userId, item.id);
+    expect(
+      await count(
+        sql`SELECT count(*)::int AS n FROM tasks WHERE parent_id = ${parentId}`,
+      ),
+    ).toBe(3);
+    expect(await trash.list(userId)).toEqual([]);
+  });
+
   it('an account deleted with its matches comes back as one item', async () => {
     const accountId = randomUUID();
     await db.execute(sql`INSERT INTO games_accounts (id, user_id, game, external_id, display_name)
