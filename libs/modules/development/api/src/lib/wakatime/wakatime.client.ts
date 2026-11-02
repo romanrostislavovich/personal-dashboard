@@ -88,14 +88,37 @@ export class WakatimeClient {
     if (response.status === 401) {
       throw new WakatimeAuthError('WakaTime API key is invalid');
     }
-    if (response.status === 402 || response.status === 403) {
-      throw new WakatimePlanError(`WakaTime ${response.status}: ${path}`);
-    }
     if (!response.ok) {
-      throw new Error(`WakaTime ${response.status}: ${path}`);
+      // The status alone does not say why: a 403 came every hour for a day with no clue.
+      const message = failureMessage(
+        response.status,
+        path,
+        await response.text().catch(() => ''),
+      );
+      throw response.status === 402 || response.status === 403
+        ? new WakatimePlanError(message)
+        : new Error(message);
     }
     return (await response.json()) as T;
   }
+}
+
+/** A failed answer as one line: the status, the path and WakaTime's own reason, if it gave one. */
+export function failureMessage(
+  status: number,
+  path: string,
+  body: string,
+): string {
+  let reason = body.trim();
+  try {
+    const json = JSON.parse(reason) as {error?: unknown; errors?: unknown};
+    const said = json.error ?? json.errors;
+    reason = typeof said === 'string' ? said : JSON.stringify(said ?? json);
+  } catch {
+    // Not JSON (an HTML page of a proxy): the text as it is.
+  }
+  reason = reason.replace(/\s+/g, ' ').slice(0, 200);
+  return `WakaTime ${status}: ${path}${reason ? ` — ${reason}` : ''}`;
 }
 
 /** One day of the summaries answer as the rows to save; seconds are rounded to whole ones. */
