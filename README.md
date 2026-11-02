@@ -5,12 +5,21 @@
 [![Release](https://img.shields.io/github/v/release/romanrostislavovich/personal-dashboard)](https://github.com/romanrostislavovich/personal-dashboard/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Your whole life in one self-hosted dashboard — with an AI that knows all of it.**
+**A self-hosted, data-dense personal command center and telemetry ecosystem.**
 
-Finance, a diary, tasks, music, games, coding stats, time at the computer, uptime of your sites —
-in one place on your own server, with notifications and an assistant in Telegram. Web and an
-installable PWA, desktop (Windows / macOS / Linux), Android, a Chrome extension. English and
-Russian.
+_Track your digital footprint, monitor infrastructure, analyze habits, and maintain absolute data sovereignty._
+
+---
+
+## 🌟 Overview
+
+**Personal Dashboard** is an opinionated, local-first ecosystem designed to consolidate fragmented
+aspects of daily life into a single, high-density interface. Moving away from cloud-dependent
+tracking apps, this project gives full ownership over personal telemetry, productivity metrics,
+financial flows, and system health.
+
+Built with a modular philosophy, it bridges desktop telemetry (Windows), mobile sensor data
+(Android), local automation, and AI-assisted insights.
 
 ![A 40-second tour: links between every daily number, achievements, the home page, search across every section, finance, activity, development, monitoring and music](docs/images/demo.gif)
 
@@ -193,8 +202,11 @@ how to help: [CONTRIBUTING.md](CONTRIBUTING.md) · security reports: [SECURITY.m
 [MIT](LICENSE)
 
 Personal Dashboard is an independent project. It is not affiliated with, endorsed or sponsored
-by GitHub, GitLab, Atlassian, WakaTime, Valve, Blizzard, Spotify, Last.fm, SoundCloud, OpenAI,
-DeepSeek, Telegram, Hetzner or any other service it connects to; their names, trademarks and
-APIs belong to their owners. You connect your own accounts with your own keys and are
+by GitHub, GitLab, Atlassian, WakaTime, Valve, Blizzard, Microsoft, Google, Spotify, Last.fm,
+SoundCloud, TMDB, OpenAI, DeepSeek, Telegram, Hetzner or any other service it connects to; their
+names, trademarks and APIs belong to their owners. You connect your own accounts with your own keys and are
 responsible for following the terms of each service — including the shops whose pages the
 wishlist reads once a day to learn a price.
+
+<a href="https://www.themoviedb.org"><img alt="TMDB" height="12" src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg"></a>
+This product uses the TMDB API but is not endorsed or certified by TMDB.
