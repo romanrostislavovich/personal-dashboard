@@ -31,9 +31,12 @@ const BREAKDOWN_FIELDS: [keyof RawSummary, WakatimeBreakdown][] = [
   ['machines', 'machine'],
 ];
 
-/** Minimal WakaTime API client — only what the module needs. */
+/**
+ * Minimal WakaTime API client — only what the module needs. It signs in with a personal OAuth
+ * token: since 2026-11-01 WakaTime takes the secret API key only from editor plugins (403).
+ */
 export class WakatimeClient {
-  constructor(private readonly apiKey: string) {}
+  constructor(private readonly token: string) {}
 
   /** Key check: returns the account's name. */
   async getUsername(): Promise<string> {
@@ -80,13 +83,12 @@ export class WakatimeClient {
   private async get<T>(path: string): Promise<T> {
     const response = await fetchWithTimeout(API + path, {
       headers: {
-        // The API key goes as the user name of HTTP Basic auth.
-        Authorization: `Basic ${Buffer.from(this.apiKey).toString('base64')}`,
+        Authorization: `Bearer ${this.token}`,
         'User-Agent': 'personal-dashboard',
       },
     });
     if (response.status === 401) {
-      throw new WakatimeAuthError('WakaTime API key is invalid');
+      throw new WakatimeAuthError('WakaTime token is invalid');
     }
     if (!response.ok) {
       // The status alone does not say why: a 403 came every hour for a day with no clue.
