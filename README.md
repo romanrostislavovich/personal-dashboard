@@ -21,6 +21,8 @@ financial flows, and system health.
 Built with a modular philosophy, it bridges desktop telemetry (Windows), mobile sensor data
 (Android), local automation, and AI-assisted insights.
 
+The interface is in English and Russian.
+
 ![A 40-second tour: links between every daily number, achievements, the home page, search across every section, finance, activity, development, monitoring and music](docs/images/demo.gif)
 
 <p align="center">
