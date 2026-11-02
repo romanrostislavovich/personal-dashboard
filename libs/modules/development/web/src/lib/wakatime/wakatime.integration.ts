@@ -21,7 +21,7 @@ import {IntegrationGuideComponent, errorStatus} from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
 import {WakatimeApi} from './wakatime.api';
 
-/** The WakaTime API key, in Settings → Integrations (see `integrations` in development.module.ts). */
+/** The WakaTime personal OAuth token, in Settings → Integrations (see `integrations` in development.module.ts). */
 @Component({
   selector: 'pd-wakatime-integration',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -96,7 +96,7 @@ import {WakatimeApi} from './wakatime.api';
         <pd-integration-guide
           guide="development.wakatime.key.guide"
           [steps]="3"
-          link="https://wakatime.com/settings/account"
+          link="https://wakatime.com/apps"
         />
       </mat-card-content>
     </mat-card>

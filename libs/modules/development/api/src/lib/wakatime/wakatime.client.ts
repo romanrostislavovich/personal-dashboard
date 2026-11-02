@@ -31,9 +31,12 @@ const BREAKDOWN_FIELDS: [keyof RawSummary, WakatimeBreakdown][] = [
   ['machines', 'machine'],
 ];
 
-/** Minimal WakaTime API client — only what the module needs. */
+/**
+ * Minimal WakaTime API client — only what the module needs. It signs in with a personal OAuth
+ * token: since 2026-11-01 WakaTime takes the secret API key only from editor plugins (403).
+ */
 export class WakatimeClient {
-  constructor(private readonly apiKey: string) {}
+  constructor(private readonly token: string) {}
 
   /** Key check: returns the account's name. */
   async getUsername(): Promise<string> {
@@ -80,22 +83,44 @@ export class WakatimeClient {
   private async get<T>(path: string): Promise<T> {
     const response = await fetchWithTimeout(API + path, {
       headers: {
-        // The API key goes as the user name of HTTP Basic auth.
-        Authorization: `Basic ${Buffer.from(this.apiKey).toString('base64')}`,
+        Authorization: `Bearer ${this.token}`,
         'User-Agent': 'personal-dashboard',
       },
     });
     if (response.status === 401) {
-      throw new WakatimeAuthError('WakaTime API key is invalid');
-    }
-    if (response.status === 402 || response.status === 403) {
-      throw new WakatimePlanError(`WakaTime ${response.status}: ${path}`);
+      throw new WakatimeAuthError('WakaTime token is invalid');
     }
     if (!response.ok) {
-      throw new Error(`WakaTime ${response.status}: ${path}`);
+      // The status alone does not say why: a 403 came every hour for a day with no clue.
+      const message = failureMessage(
+        response.status,
+        path,
+        await response.text().catch(() => ''),
+      );
+      throw response.status === 402 || response.status === 403
+        ? new WakatimePlanError(message)
+        : new Error(message);
     }
     return (await response.json()) as T;
   }
+}
+
+/** A failed answer as one line: the status, the path and WakaTime's own reason, if it gave one. */
+export function failureMessage(
+  status: number,
+  path: string,
+  body: string,
+): string {
+  let reason = body.trim();
+  try {
+    const json = JSON.parse(reason) as {error?: unknown; errors?: unknown};
+    const said = json.error ?? json.errors;
+    reason = typeof said === 'string' ? said : JSON.stringify(said ?? json);
+  } catch {
+    // Not JSON (an HTML page of a proxy): the text as it is.
+  }
+  reason = reason.replace(/\s+/g, ' ').slice(0, 200);
+  return `WakaTime ${status}: ${path}${reason ? ` — ${reason}` : ''}`;
 }
 
 /** One day of the summaries answer as the rows to save; seconds are rounded to whole ones. */

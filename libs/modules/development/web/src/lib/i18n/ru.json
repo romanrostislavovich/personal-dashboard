@@ -168,7 +168,7 @@
     "syncedAt": "Обновлено",
     "syncError": "Ошибка синхронизации",
     "notConnectedTitle": "Подключи WakaTime",
-    "notConnectedHint": "WakaTime считает время, которое ты проводишь в редакторе. Добавь его API-ключ в интеграциях — дашборд начнёт копировать твои дни.",
+    "notConnectedHint": "WakaTime считает время, которое ты проводишь в редакторе. Добавь personal OAuth token в интеграциях — дашборд начнёт копировать твои дни.",
     "today": "Сегодня",
     "total": "За период",
     "activeDays": "дней с кодингом: {{count}}",
@@ -186,15 +186,15 @@
     "empty": "Времени кодинга пока нет: WakaTime присылает его в течение часа после начала работы в редакторе.",
     "key": {
       "title": "Время кодинга",
-      "hint": "Secret API key из wakatime.com → Settings → Account. Хранится зашифрованным и используется только для чтения времени кодинга.",
-      "label": "Secret API key",
+      "hint": "Personal OAuth token из wakatime.com/apps (обычный Secret API key с ноября 2026 работает только в плагинах). Хранится зашифрованным и используется только для чтения времени кодинга.",
+      "label": "Personal OAuth token",
       "connected": "Подключено: {{username}}",
       "disconnect": "Отключить",
-      "invalid": "WakaTime не принял ключ",
+      "invalid": "WakaTime не принял токен",
       "guide": {
         "1": "Установи плагин WakaTime в свой редактор (wakatime.com/plugins) и войди: время начнёт считаться само.",
-        "2": "Открой wakatime.com → Settings → Account и скопируй Secret API Key.",
-        "3": "Вставь его сюда. Последняя неделя скопируется сразу, дальше история копится здесь."
+        "2": "Открой wakatime.com/apps, создай приложение (публиковать не нужно) и выпусти personal token с правами read_summaries, read_heartbeats и read_stats.",
+        "3": "Вставь токен сюда. Последняя неделя скопируется сразу, дальше история копится здесь."
       }
     }
   },

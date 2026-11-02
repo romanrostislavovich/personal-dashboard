@@ -168,7 +168,7 @@
     "syncedAt": "Updated",
     "syncError": "Sync error",
     "notConnectedTitle": "Connect WakaTime",
-    "notConnectedHint": "WakaTime counts the time you spend in the editor. Add its API key in the integrations and the dashboard starts copying your days.",
+    "notConnectedHint": "WakaTime counts the time you spend in the editor. Add a personal OAuth token in the integrations and the dashboard starts copying your days.",
     "today": "Today",
     "total": "In the period",
     "activeDays": "days with coding: {{count}}",
@@ -186,15 +186,15 @@
     "empty": "No coding time yet: WakaTime sends it within an hour after you start working in the editor.",
     "key": {
       "title": "Coding time",
-      "hint": "The secret API key from wakatime.com → Settings → Account. It is stored encrypted and used only to read your coding time.",
-      "label": "Secret API key",
+      "hint": "A personal OAuth token from wakatime.com/apps (since November 2026 the secret API key works only in editor plugins). It is stored encrypted and used only to read your coding time.",
+      "label": "Personal OAuth token",
       "connected": "Connected: {{username}}",
       "disconnect": "Disconnect",
-      "invalid": "WakaTime rejected the key",
+      "invalid": "WakaTime rejected the token",
       "guide": {
         "1": "Install the WakaTime plugin in your editor (wakatime.com/plugins) and sign in: it starts counting the time by itself.",
-        "2": "Open wakatime.com → Settings → Account and copy the Secret API Key.",
-        "3": "Paste it here. The last week is copied at once, and the history grows from then on."
+        "2": "Open wakatime.com/apps, create an app (no need to publish it) and make a personal token with the read_summaries, read_heartbeats and read_stats scopes.",
+        "3": "Paste the token here. The last week is copied at once, and the history grows from then on."
       }
     }
   },

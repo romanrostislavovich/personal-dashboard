@@ -12,7 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import type {WakatimeSlice} from './wakatime-durations';
 
-/** The connected WakaTime account. The API key is in SecretsService. */
+/** The connected WakaTime account. The personal OAuth token is in SecretsService. */
 export const wakatimeSettings = pgTable('wakatime_settings', {
   userId: uuid()
     .primaryKey()

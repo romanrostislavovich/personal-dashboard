@@ -76,7 +76,7 @@ export class WakatimeService {
       username = await new WakatimeClient(apiKey).getUsername();
     } catch (error) {
       if (error instanceof WakatimeAuthError) {
-        throw new BadRequestException('WakaTime API key is invalid');
+        throw new BadRequestException('WakaTime token is invalid');
       }
       throw error;
     }
