@@ -36,7 +36,8 @@ Russian.
   statement PDF becomes transactions, reminders with "Done / +1 hour / Tomorrow" buttons
 - 🔔 **One bell everywhere** — every notification in the web, desktop and phone app, read or not
   the same on each; a question ("How was the film?", "A day without alcohol?") is answered once —
-  in the bell, in Telegram or right in the phone's notification — and closed everywhere else
+  in the bell, in Telegram or right in the phone's notification — and closed everywhere else;
+  quiet hours hold them till morning
 - 📖 **Life** — one feed of any day across every section, a daily chronicle with an optional
   story of the day by the AI, a "Wrapped" of the month or the year, questions to your own history
 - 🔗 **Sections that know each other** — a project with its hours, commits, money and uptime on
@@ -70,36 +71,38 @@ Russian.
   home page you arrange yourself, an installable app that opens offline
 - 🔒 **Yours** — your server, tokens encrypted, two-factor sign-in, a 30-day trash, an offline
   local copy that syncs both ways with the server, and a daily open copy of everything as plain
-  files (JSON lines, the diary in Markdown, finance in CSV) that reads without the dashboard
+  files (JSON lines, the diary in Markdown, finance in CSV) that reads without the dashboard;
+  the server's own health (response times, memory, errors) in Settings → System
 
 ## Sections
 
-|                     |                                                                                                                                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 💰 **Finance**      | wallets, main currency, budgets, subscriptions, net worth, your bank directly, a wishlist (prices watched, an Excel list for gifts)                                                                           |
-| 📔 **Diary**        | Markdown per day, mood, tags, photos, year heatmap, "on this day"                                                                                                                                             |
-| 🧠 **Psychology**   | mood patterns, check-ups, life events, a gentle day for hard days, a brief for an appointment                                                                                                                 |
-| 🌱 **Habits**       | quitting alcohol, smoking or your own, building the gym or your own: runs, an evening question in Telegram                                                                                                    |
-| 🔑 **Passwords**    | a password vault like 1Password: encrypted on the device with a master password, the server keeps only ciphertext                                                                                             |
-| 🩺 **Health**       | one medical history across countries: visits, ICD diagnoses, medications, documents; a band through Health Connect and Google Health: the pulse by minutes, sleep stages, HRV, a stress index, body reactions |
-| 🎬 **Movies**       | films and shows watched (noticed by the browser extension), ratings and notes (Telegram asks "how was it?" an hour after a film), a list to watch with TMDB search                                            |
-| ✅ **Tasks**        | TODO list with short / normal / long-running tasks, steps ("Move" → "Pack", "End the lease"; done by itself with the last one), repeating tasks, reminders at your local time                                 |
-| 👨‍💻 **Development**  | repositories, stars, releases, npm downloads, contribution streaks, coding time                                                                                                                               |
-| 🎧 **Music**        | listening history and tops with genres (Last.fm tags), now playing, your own tracks' stats                                                                                                                    |
-| 🎮 **Games**        | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP), Xbox gamerscore and achievements                                                                                                   |
-| ⏱️ **Activity**     | time at the computer per program, project and day, Pomodoro, work contexts                                                                                                                                    |
-| 📡 **Monitoring**   | uptime every 5 minutes, response time, SSL expiry, down / up alerts                                                                                                                                           |
-| 🌤️ **Weather**      | today and the week ahead, what to wear — tuned to how you take the cold                                                                                                                                       |
-| 🎂 **Birthdays**    | countdowns and reminders                                                                                                                                                                                      |
-| 🚀 **Projects**     | your sites and services — finance, monitoring and AI refer to them                                                                                                                                            |
-| 📖 **Life**         | one feed of any day across every section, a daily chronicle, a "Wrapped" of the month or the year, Links between every daily number                                                                           |
-| 🤖 **AI**           | a chat over all your data that can act — add, change, remind — with DeepSeek, OpenAI, Ollama or any OpenAI-compatible model                                                                                   |
-| ✍️ **Writing**      | spelling and grammar by LanguageTool on your own server and rewrites by the AI — on its page, in the browser extension and the desktop app                                                                    |
-| 🛡️ **Security**     | what the security agent found on the dashboard, the server, your computers, the phone and the repositories — the worst first, with what to do                                                                 |
-| 🖼️ **Screenshots**  | the desktop app's screenshots, the same folder on every computer and on the server                                                                                                                            |
-| 🏆 **Achievements** | 500+ across every section, XP and a player level                                                                                                                                                              |
+|                     |                                                                                                                                                                                                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 💰 **Finance**      | wallets, main currency, budgets, subscriptions, net worth, your bank directly, a wishlist (prices watched, an Excel list for gifts)                                                                                                                                       |
+| 📔 **Diary**        | Markdown per day, mood, tags, photos, year heatmap, "on this day"                                                                                                                                                                                                         |
+| 🧠 **Psychology**   | mood patterns, check-ups, life events, a gentle day for hard days, a brief for an appointment                                                                                                                                                                             |
+| 🌱 **Habits**       | quitting alcohol, smoking or your own, building the gym or your own: runs, an evening question in Telegram                                                                                                                                                                |
+| 🔑 **Passwords**    | a password vault like 1Password: encrypted on the device with a master password, the server keeps only ciphertext                                                                                                                                                         |
+| 🩺 **Health**       | one medical history across countries: visits, ICD diagnoses, medications, documents, vaccinations, an emergency card and a summary for a doctor; a band through Health Connect and Google Health: the pulse by minutes, sleep stages, HRV, a stress index, body reactions |
+| 🎬 **Movies**       | films and shows watched (noticed by the browser extension), ratings and notes (Telegram asks "how was it?" an hour after a film), a list to watch with TMDB search                                                                                                        |
+| ✅ **Tasks**        | TODO list with short / normal / long-running tasks, steps ("Move" → "Pack", "End the lease"; done by itself with the last one), repeating tasks, reminders at your local time                                                                                             |
+| 👨‍💻 **Development**  | repositories, stars, releases, npm downloads, contribution streaks, coding time                                                                                                                                                                                           |
+| 🎧 **Music**        | listening history and tops with genres (Last.fm tags), now playing, your own tracks' stats                                                                                                                                                                                |
+| 🎮 **Games**        | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP), Xbox gamerscore and achievements                                                                                                                                                               |
+| ⏱️ **Activity**     | time at the computer per program, project and day, Pomodoro, work contexts                                                                                                                                                                                                |
+| 📡 **Monitoring**   | uptime every 5 minutes, response time, SSL expiry, down / up alerts                                                                                                                                                                                                       |
+| 🌤️ **Weather**      | today and the week ahead, what to wear — tuned to how you take the cold                                                                                                                                                                                                   |
+| 🎂 **Birthdays**    | countdowns and reminders                                                                                                                                                                                                                                                  |
+| 🚀 **Projects**     | your sites and services — finance, monitoring and AI refer to them                                                                                                                                                                                                        |
+| 📖 **Life**         | one feed of any day across every section, a daily chronicle, a "Wrapped" of the month or the year, Links between every daily number                                                                                                                                       |
+| 🤖 **AI**           | a chat over all your data that can act — add, change, remind — with DeepSeek, OpenAI, Ollama or any OpenAI-compatible model                                                                                                                                               |
+| ✍️ **Writing**      | spelling and grammar by LanguageTool on your own server and rewrites by the AI — on its page, in the browser extension and the desktop app                                                                                                                                |
+| 🛡️ **Security**     | what the security agent found on the dashboard, the server, your computers, the phone and the repositories — the worst first, with what to do                                                                                                                             |
+| 🖼️ **Screenshots**  | the desktop app's screenshots, the same folder on every computer and on the server                                                                                                                                                                                        |
+| 🏆 **Achievements** | 500+ across every section, XP and a player level                                                                                                                                                                                                                          |
 
-Every section is a module: hide what you do not use, or [write your own](docs/architecture.md).
+Every section is a module: hide what you do not use, or [write your own](docs/architecture.md) —
+`npx nx g @pd/tools:module` makes a working one in one command.
 
 ## Integrations
 
