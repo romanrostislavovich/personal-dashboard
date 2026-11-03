@@ -1,0 +1,1 @@
+ALTER TABLE "vpn_devices" ADD COLUMN "kill_switch" boolean DEFAULT true NOT NULL;

@@ -20,10 +20,15 @@ export const vpnDaysQuerySchema = z.coerce
   .max(366)
   .default(30);
 
-export const vpnDeviceRenameSchema = z.object({
-  name: z.string().trim().min(1).max(60),
-});
-export type VpnDeviceRename = z.infer<typeof vpnDeviceRenameSchema>;
+/** A device changed: its name, or whether the internet goes off when the VPN fails. */
+export const vpnDeviceUpdateSchema = z
+  .object({
+    name: z.string().trim().min(1).max(60),
+    killSwitch: z.boolean(),
+  })
+  .partial()
+  .refine(input => Object.keys(input).length > 0, 'Nothing to change');
+export type VpnDeviceUpdate = z.infer<typeof vpnDeviceUpdateSchema>;
 
 /** A device and what it did last; never its keys (those are in VpnDeviceConfig). */
 export interface VpnDevice {
@@ -32,6 +37,8 @@ export interface VpnDevice {
   kind: VpnDeviceKind;
   /** Inside the tunnel, `10.77.0.N`. */
   address: string;
+  /** The internet off when the VPN fails (see vpnDevices.killSwitch). */
+  killSwitch: boolean;
   createdAt: string;
   /** `null` — it has never connected (or this is a copy that does not see the VPN). */
   firstConnectedAt: string | null;

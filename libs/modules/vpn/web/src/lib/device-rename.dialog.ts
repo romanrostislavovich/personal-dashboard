@@ -96,7 +96,7 @@ export class VpnDeviceRenameDialog {
     this.saving.set(true);
     this.error.set(null);
     try {
-      await firstValueFrom(this.api.renameDevice(this.device.id, {name}));
+      await firstValueFrom(this.api.updateDevice(this.device.id, {name}));
       this.dialogRef.close(true);
     } catch (error) {
       this.error.set(vpnErrorKey(error));

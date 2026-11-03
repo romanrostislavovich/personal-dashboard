@@ -1,0 +1,92 @@
+@if (shown) {
+  <mat-card appearance="outlined" class="computer">
+    <mat-card-header>
+      <mat-icon matCardAvatar>computer</mat-icon>
+      <mat-card-title>{{ 'vpn.computer.title' | transloco }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (local(); as status) {
+        @if (!status.available) {
+          <p>{{ 'vpn.computer.noAmnezia' | transloco }}</p>
+          <a
+            matButton
+            href="https://github.com/amnezia-vpn/amneziawg-windows-client/releases"
+            target="_blank"
+            rel="noopener"
+          >
+            {{ 'vpn.computer.install' | transloco }}
+            <mat-icon>open_in_new</mat-icon>
+          </a>
+        } @else {
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>{{ 'vpn.computer.which' | transloco }}</mat-label>
+            <mat-select
+              [ngModel]="deviceId()"
+              (ngModelChange)="choose($event)"
+              [disabled]="busy()"
+            >
+              @for (option of devices(); track option.id) {
+                <mat-option [value]="option.id">{{ option.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          @if (device(); as chosen) {
+            @if (!status.installed) {
+              <p class="hint">{{ 'vpn.computer.setupHint' | transloco }}</p>
+              <button matButton="filled" [disabled]="busy()" (click)="setup()">
+                <mat-icon>admin_panel_settings</mat-icon>
+                {{ 'vpn.computer.setup' | transloco }}
+              </button>
+            } @else {
+              <mat-slide-toggle
+                [checked]="running()"
+                [disabled]="busy()"
+                (change)="toggle($event.checked)"
+              >
+                {{
+                  (running() ? 'vpn.computer.on' : 'vpn.computer.off')
+                    | transloco
+                }}
+              </mat-slide-toggle>
+              <mat-slide-toggle
+                [checked]="chosen.killSwitch"
+                [disabled]="busy()"
+                (change)="killSwitch($event.checked)"
+              >
+                {{ 'vpn.computer.killSwitch' | transloco }}
+              </mat-slide-toggle>
+              <p class="hint">
+                {{
+                  (chosen.killSwitch
+                    ? 'vpn.computer.killSwitchOn'
+                    : 'vpn.computer.killSwitchOff'
+                  ) | transloco
+                }}
+              </p>
+              @if (status.others.length) {
+                <p class="warning" role="alert">
+                  {{
+                    'vpn.computer.others'
+                      | transloco: {names: status.others.join(', ')}
+                  }}
+                </p>
+              }
+              <div class="actions">
+                <button matButton [disabled]="busy()" (click)="setup()">
+                  {{ 'vpn.computer.again' | transloco }}
+                </button>
+                <button matButton [disabled]="busy()" (click)="remove()">
+                  {{ 'vpn.computer.remove' | transloco }}
+                </button>
+              </div>
+            }
+          }
+          @if (error(); as key) {
+            <p class="warning" role="alert">{{ key | transloco }}</p>
+          }
+        }
+      }
+    </mat-card-content>
+  </mat-card>
+}

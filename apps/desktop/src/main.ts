@@ -37,6 +37,7 @@ import {ExtensionKeeper} from './update/extension-keeper';
 import {AppUpdater, secureOrigin} from './update/updater';
 import {DesktopWorkstates} from './workstates/desktop-workstates';
 import {workstateMessages} from './workstates/messages';
+import {VpnControl} from './vpn/vpn-control';
 
 /**
  * Desktop shell for the dashboard. The dashboard itself is the web app from the server;
@@ -113,6 +114,9 @@ const writing = new DesktopWriting({
   ignore: async what => void (await askPage('writing:ignore', what)),
   accepted: async count => void (await askPage('writing:accepted', count)),
 });
+
+/** The dashboard's VPN tunnels of AmneziaWG on this computer (vpn/vpn-control.ts). */
+const vpn = new VpnControl();
 
 const capture = new Capture(
   serverUrl,
@@ -384,6 +388,26 @@ function registerIpc(): void {
     });
     openDashboard();
   });
+
+  // The VPN of this computer: only the dashboard's own page may switch it.
+  const untrusted = {ok: false, error: 'Not the dashboard'};
+  ipcMain.handle('vpn:status', event =>
+    trustedDashboard(event) ? vpn.status() : null,
+  );
+  ipcMain.handle('vpn:setup', (event, config: unknown) =>
+    trustedDashboard(event) && typeof config === 'string'
+      ? vpn.setup(config)
+      : untrusted,
+  );
+  ipcMain.handle('vpn:start', (event, killSwitch: unknown) =>
+    trustedDashboard(event) ? vpn.start(killSwitch !== false) : untrusted,
+  );
+  ipcMain.handle('vpn:stop', event =>
+    trustedDashboard(event) ? vpn.stop() : untrusted,
+  );
+  ipcMain.handle('vpn:remove', event =>
+    trustedDashboard(event) ? vpn.remove() : untrusted,
+  );
 
   ipcMain.handle('telemetry:status', event =>
     trustedDashboard(event)

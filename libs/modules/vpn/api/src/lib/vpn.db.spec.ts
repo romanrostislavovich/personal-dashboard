@@ -150,7 +150,7 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
       status: 404,
     });
     await expect(
-      vpn.renameDevice(otherId, device.id, {name: 'Mine'}),
+      vpn.updateDevice(otherId, device.id, {name: 'Mine'}),
     ).rejects.toMatchObject({status: 404});
     await expect(vpn.removeDevice(otherId, device.id)).rejects.toMatchObject({
       status: 404,

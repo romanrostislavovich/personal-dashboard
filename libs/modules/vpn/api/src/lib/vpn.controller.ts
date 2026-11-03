@@ -20,8 +20,8 @@ import {
   VpnDevice,
   VpnDeviceInput,
   vpnDeviceInputSchema,
-  VpnDeviceRename,
-  vpnDeviceRenameSchema,
+  VpnDeviceUpdate,
+  vpnDeviceUpdateSchema,
   vpnDaysQuerySchema,
 } from '@pd/contracts';
 import {VPN_ACTIONS} from './vpn.server-actions';
@@ -66,12 +66,12 @@ export class VpnController {
 
   @Patch('devices/:id')
   @HttpCode(204)
-  async rename(
+  async update(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(vpnDeviceRenameSchema)) input: VpnDeviceRename,
+    @Body(new ZodValidationPipe(vpnDeviceUpdateSchema)) input: VpnDeviceUpdate,
   ) {
-    await this.actions.run(user.id, VPN_ACTIONS.rename, {...input, id});
+    await this.actions.run(user.id, VPN_ACTIONS.update, {...input, id});
   }
 
   @Delete('devices/:id')

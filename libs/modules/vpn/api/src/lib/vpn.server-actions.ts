@@ -1,6 +1,6 @@
 import {Injectable, OnModuleInit} from '@nestjs/common';
 import {ServerActions} from '@pd/api-core';
-import {vpnDeviceInputSchema, vpnDeviceRenameSchema} from '@pd/contracts';
+import {vpnDeviceInputSchema, vpnDeviceUpdateSchema} from '@pd/contracts';
 import {z} from 'zod';
 import {VpnService} from './vpn.service';
 
@@ -11,7 +11,7 @@ import {VpnService} from './vpn.service';
  */
 export const VPN_ACTIONS = {
   add: 'vpn.add-device',
-  rename: 'vpn.rename-device',
+  update: 'vpn.update-device',
   remove: 'vpn.remove-device',
 } as const;
 
@@ -28,11 +28,11 @@ export class VpnServerActions implements OnModuleInit {
     this.actions.register(VPN_ACTIONS.add, (userId, args) =>
       this.vpn.addDevice(userId, vpnDeviceInputSchema.parse(args)),
     );
-    this.actions.register(VPN_ACTIONS.rename, (userId, args) =>
-      this.vpn.renameDevice(
+    this.actions.register(VPN_ACTIONS.update, (userId, args) =>
+      this.vpn.updateDevice(
         userId,
         idSchema.parse(args).id,
-        vpnDeviceRenameSchema.parse(args),
+        vpnDeviceUpdateSchema.parse(args),
       ),
     );
     this.actions.register(VPN_ACTIONS.remove, (userId, args) =>

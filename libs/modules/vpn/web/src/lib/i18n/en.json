@@ -93,5 +93,23 @@
     "gone": "This device is gone already: the page is refreshed.",
     "offline": "No connection to the server: try again in a moment.",
     "generic": "It did not work: try again in a moment."
+  },
+  "computer": {
+    "title": "This computer",
+    "noAmnezia": "Install AmneziaWG for Windows: the dashboard switches the VPN through it.",
+    "install": "AmneziaWG for Windows",
+    "which": "Which device is this computer",
+    "setupHint": "Windows asks for the administrator once: the app sets up its two tunnels and may then switch them by itself, from here and later by a command.",
+    "setup": "Set up on this computer",
+    "on": "VPN is on",
+    "off": "VPN is off",
+    "killSwitch": "No internet when the VPN fails",
+    "killSwitchOn": "While the VPN is on, nothing goes around it: if the server or the connection to it fails, the internet is off until the VPN is back or switched off.",
+    "killSwitchOff": "If the VPN fails, the internet goes on without it.",
+    "others": "AmneziaWG's own window has a tunnel on ({{names}}): switch it off there — two at once fight over the traffic.",
+    "again": "Set up again",
+    "remove": "Remove from this computer",
+    "canceled": "Windows did not get the administrator's consent: nothing changed.",
+    "failed": "It did not work: try again, or set it up again."
   }
 }

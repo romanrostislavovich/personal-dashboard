@@ -27,6 +27,13 @@ or show a path in Explorer. The
 AI sees paths and sizes only, with your profile folder written as `%USERPROFILE%`; the system,
 programs and virtual disks are never deleted, whatever the advice.
 
+The VPN of the dashboard (the VPN section) is switched on and off right here, through AmneziaWG
+for Windows: once, Windows asks for the administrator, and the app sets up two tunnels of its own
+(`dashboard` — no internet while the VPN is down; `dashboard-open` — the internet stays) and lets
+the signed-in user start and stop them. From then on a toggle needs no administrator. The configs
+lie in `%ProgramData%\PersonalDashboard\vpn`, readable by the system and administrators only;
+a config with a command in it (PostUp and the like) is refused (`src/vpn/vpn-tunnels.ts`).
+
 The app updates itself. Its own code is a few small files that every server hands out together
 with the dashboard (`/desktop-updates`): the app compares them with what it runs, downloads a
 newer version, checks it against the hashes of its manifest and restarts into it while its window

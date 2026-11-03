@@ -54,6 +54,22 @@ packets unlike WireGuard's, so a DPI does not recognise the protocol either.
 - The build of AmneziaWG is pinned by commit, not by tag alone.
 - The tables are left out of the open export and the archive: the keys would lie in plain files.
 
+## Switching it from the dashboard
+
+The owner chose to keep AmneziaWG's apps and have the dashboard drive them:
+
+- **Windows (built):** the desktop app sets up, once with the administrator's consent, two
+  tunnels of its own and lets the user start and stop them: `dashboard` (everything through the
+  VPN — AmneziaWG then blocks the rest, so no internet while the VPN is down) and
+  `dashboard-open` (the same in two halves of the address space — nothing blocked). The toggle
+  "No internet when the VPN fails" is a device's `killSwitch` and picks the tunnel.
+- **Android (next):** AmneziaWG takes `org.amnezia.awg.action.SET_TUNNEL_UP` / `SET_TUNNEL_DOWN`
+  with the tunnel's name from an app holding `CONTROL_TUNNELS` (and "Allow remote control apps"
+  on in it); the tunnel is called `dashboard`. The kill switch there is Android's own "Block
+  connections without VPN": the app opens that screen, the dashboard remembers the choice and
+  warns when the phone goes around the VPN.
+- **Telegram / AI (after):** "turn the VPN on on the phone" as a command to the device.
+
 ## Not verified live
 
 The real server (the build there, the firewall, the DNS record), the phone and the Windows client
