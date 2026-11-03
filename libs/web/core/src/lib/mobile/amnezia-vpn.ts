@@ -22,6 +22,8 @@ export interface AmneziaVpnPlugin {
   setTunnel(options: {up: boolean; tunnel: string}): Promise<void>;
   openVpnSettings(): Promise<void>;
   openAmnezia(): Promise<void>;
+  /** Which VPN device this phone is: a silent push names it (absent in older apps). */
+  setDevice?(options: {id: string}): Promise<void>;
   /** AmneziaWG's page in Android's settings (Battery → No restrictions). */
   openAmneziaSettings?(): Promise<void>;
 }

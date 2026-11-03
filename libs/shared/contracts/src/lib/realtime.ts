@@ -18,5 +18,10 @@ export type RealtimeEvent =
     }
   /** The bell changed: a notification came, was read or answered (on any device). */
   | {type: 'inbox'}
+  /**
+   * Switch the VPN of one device (VPN section): the desktop app whose computer it is starts or
+   * stops its tunnel; `killSwitch` picks the tunnel that blocks around the VPN.
+   */
+  | {type: 'vpn'; deviceId: string; up: boolean; killSwitch: boolean}
   /** Keeps proxies from closing an idle connection; the client ignores it. */
   | {type: 'ping'};

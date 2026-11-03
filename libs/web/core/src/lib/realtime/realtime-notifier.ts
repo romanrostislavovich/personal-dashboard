@@ -3,7 +3,7 @@ import {Router} from '@angular/router';
 import {TranslocoService} from '@jsverse/transloco';
 import {RealtimeEvent} from '@pd/contracts';
 import {ToastService} from '../toast/toast.service';
-import {desktopBridge} from './desktop-bridge';
+import {desktopBridge, VPN_THIS_COMPUTER_KEY} from './desktop-bridge';
 import {RealtimeClient} from './realtime.client';
 
 import {desktopNotificationsOn} from './desktop-notifications';
@@ -34,7 +34,29 @@ export class RealtimeNotifier {
     this.desktop?.onNavigate?.(route => void this.router.navigateByUrl(route));
   }
 
+  /**
+   * "Turn the VPN on on the laptop" (the assistant, Telegram, another page): only the desktop
+   * app of that computer acts — the one whose VPN page named it as this device.
+   */
+  private switchVpn(event: Extract<RealtimeEvent, {type: 'vpn'}>): void {
+    const vpn = this.desktop?.vpn;
+    let mine: string | null = null;
+    try {
+      mine = localStorage.getItem(VPN_THIS_COMPUTER_KEY);
+    } catch {
+      return;
+    }
+    if (!vpn || mine !== event.deviceId) {
+      return;
+    }
+    void (event.up ? vpn.start(event.killSwitch) : vpn.stop());
+  }
+
   private show(event: RealtimeEvent): void {
+    if (event.type === 'vpn') {
+      this.switchVpn(event);
+      return;
+    }
     if (event.type === 'achievements') {
       const label = this.transloco.translate('core.toast.achievement');
       for (const achievement of event.achievements) {

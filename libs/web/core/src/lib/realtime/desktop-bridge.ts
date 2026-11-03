@@ -240,6 +240,12 @@ export function desktopBridge(): DesktopBridge | null {
   return (window as {desktop?: DesktopBridge}).desktop ?? null;
 }
 
+/**
+ * Which VPN device this computer is, chosen on the VPN page; a live `vpn` event for that device
+ * switches the computer's tunnel (RealtimeNotifier).
+ */
+export const VPN_THIS_COMPUTER_KEY = 'pd.vpn.thisComputer';
+
 /** The dashboard's own tunnels of AmneziaWG on this computer (apps/desktop/src/vpn). */
 export interface DesktopVpnStatus {
   /** Windows with AmneziaWG installed. */

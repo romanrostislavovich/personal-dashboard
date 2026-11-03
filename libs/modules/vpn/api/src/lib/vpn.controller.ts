@@ -23,6 +23,9 @@ import {
   VpnDeviceUpdate,
   vpnDeviceUpdateSchema,
   vpnDaysQuerySchema,
+  VpnSwitch,
+  VpnSwitchResult,
+  vpnSwitchSchema,
 } from '@pd/contracts';
 import {VPN_ACTIONS} from './vpn.server-actions';
 import {VpnService} from './vpn.service';
@@ -72,6 +75,20 @@ export class VpnController {
     @Body(new ZodValidationPipe(vpnDeviceUpdateSchema)) input: VpnDeviceUpdate,
   ) {
     await this.actions.run(user.id, VPN_ACTIONS.update, {...input, id});
+  }
+
+  /** The VPN of that device on or off, from any page (or the assistant). */
+  @Post('devices/:id/switch')
+  @HttpCode(200)
+  switch(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(vpnSwitchSchema)) input: VpnSwitch,
+  ) {
+    return this.actions.run<VpnSwitchResult>(user.id, VPN_ACTIONS.switch, {
+      ...input,
+      id,
+    });
   }
 
   @Delete('devices/:id')
