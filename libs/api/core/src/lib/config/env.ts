@@ -140,6 +140,11 @@ const envSchema = z
     VPN_HOST: z.string().optional(),
     /** The UDP port of the VPN, the same in deploy/compose.yml. */
     VPN_PORT: z.coerce.number().int().min(1).max(65535).default(37853),
+    /**
+     * The port devices connect to, when it is not VPN_PORT: 443 with DEPLOY_VPN_UDP443 (a
+     * provider's shaper leaves QUIC's port alone).
+     */
+    VPN_PUBLIC_PORT: z.coerce.number().int().min(1).max(65535).optional(),
     /** Client: where copies of the server's dumps are kept (docs/deploy.md, "Backups"). */
     BACKUP_COPY_DIR: z.string().default('backups'),
     /** Client: how many copies to keep. */

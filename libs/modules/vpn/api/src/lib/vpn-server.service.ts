@@ -167,7 +167,10 @@ export class VpnServerService {
     const host =
       this.config.get('VPN_HOST', {infer: true}) ??
       `vpn.${new URL(this.config.get('PUBLIC_URL', {infer: true})).hostname}`;
-    const port = this.config.get('VPN_PORT', {infer: true});
+    // Where devices knock; the container itself always listens on VPN_PORT.
+    const port =
+      this.config.get('VPN_PUBLIC_PORT', {infer: true}) ??
+      this.config.get('VPN_PORT', {infer: true});
     const existing = await this.vpn.server(userId);
     if (existing) {
       if (existing.host === host && existing.port === port) {
@@ -209,7 +212,7 @@ export class VpnServerService {
     const text = serverConfig(
       {
         privateKey: server.privateKey,
-        port: server.port,
+        port: this.config.get('VPN_PORT', {infer: true}),
         obfuscation: server.obfuscation,
       },
       devices.map(device => ({
