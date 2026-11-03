@@ -17,7 +17,12 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import {TranslocoPipe} from '@jsverse/transloco';
 import {VpnDevice} from '@pd/contracts';
-import {PHONE_TUNNEL, phoneVpn, PhoneVpnStatus} from '@pd/web-core';
+import {
+  AmneziaVpnPlugin,
+  PHONE_TUNNEL,
+  phoneVpn,
+  PhoneVpnStatus,
+} from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
 import {VpnApi} from './vpn.api';
 import {vpnErrorKey} from './vpn-errors';
@@ -54,7 +59,7 @@ export class VpnPhoneComponent {
   readonly changed = output<void>();
 
   private readonly api = inject(VpnApi);
-  private plugin: Awaited<ReturnType<typeof phoneVpn>> = null;
+  private plugin: AmneziaVpnPlugin | null = null;
   protected readonly shown = signal(false);
   protected readonly local = signal<PhoneVpnStatus | null>(null);
   protected readonly busy = signal(false);
@@ -68,7 +73,7 @@ export class VpnPhoneComponent {
   protected readonly tunnel = PHONE_TUNNEL;
 
   constructor() {
-    void phoneVpn().then(plugin => {
+    void phoneVpn().then(({plugin}) => {
       this.plugin = plugin;
       this.shown.set(plugin !== null);
       void this.refresh();
