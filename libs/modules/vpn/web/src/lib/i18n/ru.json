@@ -111,5 +111,17 @@
     "remove": "Убрать с этого компьютера",
     "canceled": "Windows не получила согласия администратора: ничего не изменилось.",
     "failed": "Не получилось: попробуй ещё раз или настрой заново."
+  },
+  "phone": {
+    "title": "Этот телефон",
+    "noAmnezia": "Установи AmneziaWG из Google Play: дашборд включает VPN через него.",
+    "install": "AmneziaWG в Google Play",
+    "allowHint": "Два шага, один раз: при импорте QR-кода в AmneziaWG назови туннель «{{tunnel}}» и разреши дашборду им управлять — Android спросит сейчас; потом в настройках AmneziaWG включи «Allow remote control apps».",
+    "allow": "Разрешить дашборду управлять AmneziaWG",
+    "which": "Какое устройство — этот телефон",
+    "noAnswer": "AmneziaWG не переключился: проверь, что туннель называется «{{tunnel}}» и в его настройках включено «Allow remote control apps».",
+    "openAmnezia": "Открыть AmneziaWG",
+    "killSwitchHint": "На Android это настройка самой системы: VPN → AmneziaWG → «Постоянный VPN» и «Блокировать подключения без VPN» (на Xiaomi: Подключение и общий доступ → VPN).",
+    "openSettings": "Открыть настройки VPN"
   }
 }

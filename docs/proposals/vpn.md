@@ -63,7 +63,7 @@ The owner chose to keep AmneziaWG's apps and have the dashboard drive them:
   VPN — AmneziaWG then blocks the rest, so no internet while the VPN is down) and
   `dashboard-open` (the same in two halves of the address space — nothing blocked). The toggle
   "No internet when the VPN fails" is a device's `killSwitch` and picks the tunnel.
-- **Android (next):** AmneziaWG takes `org.amnezia.awg.action.SET_TUNNEL_UP` / `SET_TUNNEL_DOWN`
+- **Android (built):** AmneziaWG takes `org.amnezia.awg.action.SET_TUNNEL_UP` / `SET_TUNNEL_DOWN`
   with the tunnel's name from an app holding `CONTROL_TUNNELS` (and "Allow remote control apps"
   on in it); the tunnel is called `dashboard`. The kill switch there is Android's own "Block
   connections without VPN": the app opens that screen, the dashboard remembers the choice and
