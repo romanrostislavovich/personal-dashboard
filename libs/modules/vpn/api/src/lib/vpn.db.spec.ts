@@ -32,6 +32,7 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
   const userId = randomUUID();
   const otherId = randomUUID();
   const sent: string[] = [];
+  let settings: Record<string, unknown>;
 
   /** What the container would write: a line per peer. */
   const status = async (
@@ -75,7 +76,7 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
       findById: async () => owner,
       timeZoneOf: () => 'UTC',
     };
-    const settings: Record<string, unknown> = {
+    settings = {
       VPN_DIR: dir,
       VPN_PORT: 37853,
       PUBLIC_URL: 'https://dash.example.com',
@@ -127,6 +128,20 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
     const peers = await readFile(join(dir, 'awg0.conf'), 'utf8');
     expect(peers).toContain('AllowedIPs = 10.77.0.2/32');
     expect(peers).not.toContain('Endpoint');
+  });
+
+  it('gives devices the public port while the container keeps listening on its own', async () => {
+    settings['VPN_PUBLIC_PORT'] = 443;
+    await server.tick(quiet);
+    const [device] = (await vpn.status(userId)).devices;
+    expect((await vpn.deviceConfig(userId, device.id)).config).toContain(
+      'Endpoint = vpn.dash.example.com:443',
+    );
+    expect(await readFile(join(dir, 'awg0.conf'), 'utf8')).toContain(
+      'ListenPort = 37853',
+    );
+    delete settings['VPN_PUBLIC_PORT'];
+    await server.tick(quiet);
   });
 
   it("keeps another user's devices out of reach", async () => {
