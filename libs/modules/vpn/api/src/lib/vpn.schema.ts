@@ -126,6 +126,8 @@ export const vpnDeviceState = vpnLive.table('device_state', {
   lastHandshakeAt: timestamp({withTimezone: true}),
   /** The address it came from last (no port). */
   lastAddress: text(),
+  /** Connected at the last look: going off is told about (a phone left on plain internet). */
+  online: boolean().notNull().default(false),
   /** The container's counters at the last look: the next look's bytes are the difference. */
   seenRx: bigint({mode: 'number'}).notNull().default(0),
   seenTx: bigint({mode: 'number'}).notNull().default(0),

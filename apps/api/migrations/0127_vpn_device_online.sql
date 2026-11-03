@@ -1,0 +1,1 @@
+ALTER TABLE "vpn"."device_state" ADD COLUMN "online" boolean DEFAULT false NOT NULL;

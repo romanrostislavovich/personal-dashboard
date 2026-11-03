@@ -212,7 +212,14 @@ interface GoogleMaps {
   Map: new (
     element: HTMLElement,
     options: object,
-  ) => {fitBounds(bounds: object): void};
+  ) => {
+    fitBounds(bounds: object): void;
+    getZoom(): number | undefined;
+    addListener(event: string, handler: () => void): void;
+  };
+  /** A dot of a fixed size on the screen, whatever the zoom. */
+  Marker: new (options: object) => {setMap(map: unknown): void};
+  SymbolPath: {CIRCLE: unknown};
   LatLngBounds: new () => {extend(point: object): void; isEmpty(): boolean};
   Polyline: new (options: object) => {setMap(map: unknown): void};
   Circle: new (options: object) => {setMap(map: unknown): void};
@@ -245,14 +252,17 @@ async function googleMap(element: HTMLElement, key: string): Promise<Renderer> {
     zoom: 11,
   });
   let drawn: {setMap(map: unknown): void}[] = [];
-  return {
-    draw({stays, trips, named, heat}) {
-      drawn.forEach(shape => shape.setMap(null));
-      drawn = [];
-      const bounds = new maps.LatLngBounds();
-      for (const cell of heat) {
-        drawn.push(
-          new maps.Rectangle({
+  let heatShapes: {setMap(map: unknown): void}[] = [];
+  let heatCells: MapLayers['heat'] = [];
+  // As on the other map: a cell is a square of its real size, or a dot of HEAT_MIN_PX when that
+  // is smaller — zoomed out to a city, ~150 m was too small to see.
+  const drawHeat = () => {
+    heatShapes.forEach(shape => shape.setMap(null));
+    // A cell's width in pixels: Web Mercator has 256 × 2^zoom pixels for 360° of longitude.
+    const cellPx = (HEAT_HALF * 2 * 256 * 2 ** (map.getZoom() ?? 11)) / 360;
+    heatShapes = heatCells.map(cell =>
+      cellPx >= HEAT_MIN_PX
+        ? new maps.Rectangle({
             map,
             bounds: {
               south: cell.latitude - HEAT_HALF,
@@ -263,8 +273,31 @@ async function googleMap(element: HTMLElement, key: string): Promise<Renderer> {
             strokeWeight: 0,
             fillColor: HEAT_COLOR,
             fillOpacity: heatOpacity(cell.share),
+            zIndex: 0,
+          })
+        : new maps.Marker({
+            map,
+            position: {lat: cell.latitude, lng: cell.longitude},
+            clickable: false,
+            zIndex: 0,
+            icon: {
+              path: maps.SymbolPath.CIRCLE,
+              scale: HEAT_MIN_PX / 2,
+              strokeWeight: 0,
+              fillColor: HEAT_COLOR,
+              fillOpacity: heatOpacity(cell.share),
+            },
           }),
-        );
+    );
+  };
+  map.addListener('zoom_changed', drawHeat);
+  return {
+    draw({stays, trips, named, heat}) {
+      drawn.forEach(shape => shape.setMap(null));
+      drawn = [];
+      heatCells = heat;
+      const bounds = new maps.LatLngBounds();
+      for (const cell of heat) {
         if (cell.share >= 0.02) {
           bounds.extend({lat: cell.latitude, lng: cell.longitude});
         }
@@ -314,8 +347,11 @@ async function googleMap(element: HTMLElement, key: string): Promise<Renderer> {
       if (!bounds.isEmpty()) {
         map.fitBounds(bounds);
       }
+      // Now, and again when fitBounds has changed the zoom (zoom_changed).
+      drawHeat();
     },
-    destroy: () => drawn.forEach(shape => shape.setMap(null)),
+    destroy: () =>
+      [...drawn, ...heatShapes].forEach(shape => shape.setMap(null)),
   };
 }
 

@@ -11,6 +11,11 @@ const messages = {
     firstTitle: (name: string) => `🔐 ${name} is in the VPN`,
     firstBody: (address: string) =>
       `The device connected for the first time, from ${address}. Its traffic now goes through your server.`,
+    offTitle: (name: string) => `📴 The VPN is off on ${name}`,
+    offBody: (killSwitch: boolean): string =>
+      killSwitch
+        ? 'Its traffic does not go through your server now. If "Block connections without VPN" is on, it has no internet until the VPN is back.'
+        : 'Its traffic goes through the plain internet now, not through your server.',
     networkTitle: (name: string) => `🌍 ${name}: the VPN from a new network`,
     networkBody: (network: string, address: string) =>
       `It connected from ${address} (${network}), a network it never came from in 90 days. ` +
@@ -40,6 +45,11 @@ const messages = {
     firstTitle: (name: string) => `🔐 ${name} в VPN`,
     firstBody: (address: string) =>
       `Устройство подключилось впервые, с ${address}. Его трафик теперь идёт через твой сервер.`,
+    offTitle: (name: string) => `📴 VPN на ${name} выключился`,
+    offBody: (killSwitch: boolean): string =>
+      killSwitch
+        ? 'Трафик сейчас не идёт через твой сервер. Если включено «Блокировать подключения без VPN», интернета не будет, пока VPN не вернётся.'
+        : 'Трафик сейчас идёт через обычный интернет, а не через твой сервер.',
     networkTitle: (name: string) => `🌍 ${name}: VPN из новой сети`,
     networkBody: (network: string, address: string) =>
       `Подключение с ${address} (${network}) — из этой сети устройство не заходило 90 дней. ` +

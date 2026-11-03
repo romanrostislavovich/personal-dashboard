@@ -56,13 +56,14 @@ services:
     <<: *logging
 
   # Spelling and grammar (ru, uk, en, pl and more), on this server: the texts never leave it.
-  # Java's memory is capped; without n-gram data it needs well under a gigabyte.
+  # Java's memory is capped. 768 MB ran out four times in three days (Java heap space, with the
+  # languages it keeps for auto-detection loaded): a gigabyte, still without n-gram data.
   languagetool:
     image: erikvl87/languagetool:6.8
     restart: unless-stopped
     environment:
       Java_Xms: 256m
-      Java_Xmx: 768m
+      Java_Xmx: 1g
     # No published port: only the app asks it.
     <<: *logging
 
