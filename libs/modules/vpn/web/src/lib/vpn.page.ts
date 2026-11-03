@@ -25,6 +25,7 @@ import {
 import {firstValueFrom} from 'rxjs';
 import {VpnDeviceAddDialog} from './device-add.dialog';
 import {VpnDeviceConfigDialog} from './device-config.dialog';
+import {VpnDeviceRenameDialog} from './device-rename.dialog';
 import {formatBytes} from './format-bytes';
 import {VpnApi} from './vpn.api';
 import {vpnErrorKey} from './vpn-errors';
@@ -33,8 +34,6 @@ import {KIND_ICONS} from './vpn-kinds';
 const CHART_DAYS = 30;
 /** Who is online changes by the minute: the page looks again as often. */
 const REFRESH_MS = 60_000;
-/** The server takes names up to this long. */
-const NAME_MAX = 60;
 
 /** The VPN: is it running, the devices with their QR codes, the traffic of a month, how to set up. */
 @Component({
@@ -136,18 +135,12 @@ export class VpnPage {
   }
 
   protected async rename(device: VpnDevice): Promise<void> {
-    const name = prompt(
-      this.transloco.translate('vpn.devices.renamePrompt', {max: NAME_MAX}),
-      device.name,
-    )
-      ?.trim()
-      .slice(0, NAME_MAX);
-    if (!name || name === device.name) {
-      return;
-    }
-    await this.change(device, () =>
-      firstValueFrom(this.api.renameDevice(device.id, {name})),
+    const renamed = await firstValueFrom(
+      this.dialog.open(VpnDeviceRenameDialog, {data: device}).afterClosed(),
     );
+    if (renamed) {
+      this.status.reload();
+    }
   }
 
   protected async remove(device: VpnDevice): Promise<void> {

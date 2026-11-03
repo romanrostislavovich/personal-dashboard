@@ -41,7 +41,6 @@
     "networks": "Networks in 90 days: {{count}}",
     "config": "QR code and file",
     "rename": "Rename",
-    "renamePrompt": "The device's name (up to {{max}} characters)",
     "deleteConfirm": "Delete {{name}}? Its key stops opening the VPN within a minute.",
     "emptyTitle": "No devices yet",
     "empty": "Add the phone first: you will get a QR code to scan in the AmneziaWG app."
