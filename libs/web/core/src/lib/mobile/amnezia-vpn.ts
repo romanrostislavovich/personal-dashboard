@@ -10,8 +10,8 @@ export interface PhoneVpnStatus {
   /** A VPN carries the phone's traffic now. */
   vpnActive: boolean;
   /**
-   * AmneziaWG is free of battery limits: otherwise Android does not let it start the VPN when
-   * the dashboard asks (absent in an app built before it).
+   * AmneziaWG is free of battery limits, as Android's API tells it — on HyperOS it says "no" for
+   * an app set to "No restrictions", so the page does not rely on it (absent in older apps).
    */
   unrestricted?: boolean;
 }
