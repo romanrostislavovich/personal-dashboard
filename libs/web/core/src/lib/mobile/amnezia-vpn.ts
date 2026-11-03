@@ -11,7 +11,7 @@ export interface PhoneVpnStatus {
   vpnActive: boolean;
 }
 
-interface AmneziaVpnPlugin {
+export interface AmneziaVpnPlugin {
   status(): Promise<PhoneVpnStatus>;
   requestControl(): Promise<void>;
   setTunnel(options: {up: boolean; tunnel: string}): Promise<void>;
@@ -25,18 +25,20 @@ export const PHONE_TUNNEL = 'dashboard';
 let plugin: AmneziaVpnPlugin | null = null;
 
 /**
- * The VPN switched through AmneziaWG on the phone; `null` outside the app or in an app built
- * before it (the call fails — then there is nothing to show).
+ * The VPN switched through AmneziaWG on the phone; `{plugin: null}` outside the app or in an app
+ * built before it (the call fails — then there is nothing to show). Wrapped in an object: a
+ * Capacitor plugin answers any property, `then` too, so an async function returning it bare
+ * makes a promise that waits for that "then" forever.
  */
-export async function phoneVpn(): Promise<AmneziaVpnPlugin | null> {
+export async function phoneVpn(): Promise<{plugin: AmneziaVpnPlugin | null}> {
   if (!isMobileApp()) {
-    return null;
+    return {plugin: null};
   }
   plugin ??= registerPlugin<AmneziaVpnPlugin>('AmneziaVpn');
   try {
     await plugin.status();
-    return plugin;
+    return {plugin};
   } catch {
-    return null;
+    return {plugin: null};
   }
 }

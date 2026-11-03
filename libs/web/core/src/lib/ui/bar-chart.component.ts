@@ -68,7 +68,12 @@ export interface Bar {
         </span>
       }
     </div>
-    <div class="labels" [class.with-scale]="!!format()" aria-hidden="true">
+    <div
+      class="labels"
+      [class.with-scale]="!!format()"
+      [class.wide]="wideLabels()"
+      aria-hidden="true"
+    >
       @for (bar of scaled(); track $index) {
         <span>{{ bar.label }}</span>
       }
@@ -158,6 +163,10 @@ export interface Bar {
       overflow: hidden;
       white-space: nowrap;
     }
+    /* Few labels on many narrow columns ("13" under a day of a month): wider than the column. */
+    .labels.wide span {
+      overflow: visible;
+    }
   `,
 })
 export class BarChartComponent {
@@ -166,6 +175,8 @@ export class BarChartComponent {
   readonly label = input('');
   /** The bars' `display` over them: for a few bars whose numbers matter (mood by weekday). */
   readonly values = input(false);
+  /** The labels may be wider than their column: for a few labels among many bars. */
+  readonly wideLabels = input(false);
   /**
    * How a value of the scale is written ("2 h", "500"): given, the chart draws gridlines and a
    * round scale on the left; without it, the bars alone.
