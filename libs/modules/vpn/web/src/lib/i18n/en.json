@@ -111,5 +111,17 @@
     "remove": "Remove from this computer",
     "canceled": "Windows did not get the administrator's consent: nothing changed.",
     "failed": "It did not work: try again, or set it up again."
+  },
+  "phone": {
+    "title": "This phone",
+    "noAmnezia": "Install AmneziaWG from Google Play: the dashboard switches the VPN through it.",
+    "install": "AmneziaWG on Google Play",
+    "allowHint": "Two things, once: name the tunnel \"{{tunnel}}\" when you import its QR code in AmneziaWG, and let the dashboard switch it — Android asks now; then in AmneziaWG's settings turn on \"Allow remote control apps\".",
+    "allow": "Let the dashboard switch AmneziaWG",
+    "which": "Which device is this phone",
+    "noAnswer": "AmneziaWG did not switch: check that its tunnel is called \"{{tunnel}}\" and that \"Allow remote control apps\" is on in its settings.",
+    "openAmnezia": "Open AmneziaWG",
+    "killSwitchHint": "On Android this is the system's own setting: VPN → AmneziaWG → \"Always-on VPN\" and \"Block connections without VPN\" (on Xiaomi: Connection & sharing → VPN).",
+    "openSettings": "Open the VPN settings"
   }
 }

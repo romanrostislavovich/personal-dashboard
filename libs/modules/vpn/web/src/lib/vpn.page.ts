@@ -29,6 +29,7 @@ import {VpnDeviceRenameDialog} from './device-rename.dialog';
 import {formatBytes} from './format-bytes';
 import {VpnApi} from './vpn.api';
 import {VpnComputerComponent} from './vpn-computer.component';
+import {VpnPhoneComponent} from './vpn-phone.component';
 import {vpnErrorKey} from './vpn-errors';
 import {KIND_ICONS} from './vpn-kinds';
 
@@ -52,6 +53,7 @@ const REFRESH_MS = 60_000;
     IntegrationGuideComponent,
     ResourceStateComponent,
     VpnComputerComponent,
+    VpnPhoneComponent,
   ],
   templateUrl: './vpn.page.html',
   styleUrl: './vpn.page.scss',

@@ -8,6 +8,7 @@ import com.personalworld.dashboard.sensors.PhoneSensorsPlugin;
 import com.personalworld.dashboard.sensors.PlacesService;
 import com.personalworld.dashboard.sensors.SensorsWorker;
 import com.personalworld.dashboard.voice.VoiceService;
+import com.personalworld.dashboard.vpn.AmneziaVpnPlugin;
 
 public class MainActivity extends BridgeActivity {
 
@@ -18,6 +19,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(PhoneSensorsPlugin.class);
         registerPlugin(ShareTargetPlugin.class);
         registerPlugin(NotificationShadePlugin.class);
+        registerPlugin(AmneziaVpnPlugin.class);
         super.onCreate(savedInstanceState);
         ShareTargetPlugin.receive(this, getIntent());
         SensorsWorker.ensureScheduled(this);

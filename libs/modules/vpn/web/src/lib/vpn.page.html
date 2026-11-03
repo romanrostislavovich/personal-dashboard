@@ -41,6 +41,7 @@
 
       @if (vpn.state !== 'off') {
         <pd-vpn-computer [devices]="vpn.devices" (changed)="status.reload()" />
+        <pd-vpn-phone [devices]="vpn.devices" (changed)="status.reload()" />
 
         <h2 class="section-title">{{ 'vpn.devices.title' | transloco }}</h2>
         @for (device of vpn.devices; track device.id) {

@@ -33,4 +33,6 @@ export * from './lib/client/dashboard-client';
 export * from './lib/client/core-requests';
 /** The Android app's home-screen widget of the gentle day (Psychology tells it the day). */
 export * from './lib/mobile/gentle-widget';
+export * from './lib/mobile/amnezia-vpn';
+export * from './lib/mobile/amnezia-vpn';
 export * from './lib/ui/linked-text.component';

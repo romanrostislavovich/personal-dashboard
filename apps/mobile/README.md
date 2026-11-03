@@ -61,3 +61,12 @@ With Android Studio instead: `npx nx run mobile:sync`, then open `apps/mobile/an
 **Keep `deploy/mobile-release.keystore` and its password.** Android installs an update only when
 it is signed with the same key: with a new key the app has to be removed (and its data with it)
 before the new one goes on.
+
+## The VPN through AmneziaWG
+
+The VPN section switches the dashboard's VPN on the phone (`vpn/AmneziaVpnPlugin.java`): AmneziaWG
+takes `org.amnezia.awg.action.SET_TUNNEL_UP` / `SET_TUNNEL_DOWN` with the tunnel's name from an app
+holding its runtime permission `CONTROL_TUNNELS`, and only while "Allow remote control apps" is on
+in its settings. The tunnel is named `dashboard` on the import of its QR code. AmneziaWG answers
+nothing: whether a VPN carries the traffic is Android's `TRANSPORT_VPN`. "No internet when the VPN
+fails" is Android's own "Block connections without VPN": the app opens the VPN settings for it.
