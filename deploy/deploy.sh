@@ -363,6 +363,14 @@ if [ "${DEPLOY_VPN:-}" = yes ]; then
     fi
     port=\$(grep -E '^VPN_PORT=' .env | cut -d= -f2-); port=\${port:-37853}
     { ! command -v ufw >/dev/null || ufw allow \$port/udp comment 'dashboard vpn' >/dev/null; } &&
+    { ! command -v ethtool >/dev/null || {
+      dev=\$(ip route show default | awk '{print \$5; exit}')
+      printf '%s\n' '[Unit]' 'Description=UDP GRO forwarding for the dashboard VPN' \
+        'After=network-online.target' 'Wants=network-online.target' '[Service]' 'Type=oneshot' \
+        \"ExecStart=/usr/sbin/ethtool -K \$dev rx-udp-gro-forwarding on rx-gro-list off\" \
+        '[Install]' 'WantedBy=multi-user.target' > /etc/systemd/system/dashboard-vpn-gro.service &&
+      systemctl daemon-reload && systemctl enable --now dashboard-vpn-gro.service >/dev/null 2>&1
+    }; } &&
     docker compose build -q vpn" || {
     echo "The VPN was not built (docker compose build vpn on the server)." >&2
     exit 1
