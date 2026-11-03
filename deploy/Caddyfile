@@ -1,3 +1,11 @@
+# HTTP/3 needs UDP 443; with the VPN on it (DEPLOY_VPN_UDP443, see deploy.sh) the site speaks
+# HTTP/1.1 and HTTP/2 only: CADDY_PROTOCOLS="h1 h2".
+{
+	servers {
+		protocols {$CADDY_PROTOCOLS:h1 h2 h3}
+	}
+}
+
 # HTTPS certificates from Let's Encrypt are issued and renewed automatically:
 # DOMAIN must point to this server (an A/AAAA record) and ports 80 and 443 must be open.
 {$DOMAIN} {

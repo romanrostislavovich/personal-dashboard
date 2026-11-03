@@ -256,6 +256,10 @@ AmneziaWG app (see [the proposal](proposals/vpn.md)).
    container there.
 3. A firewall of the hosting (Hetzner Cloud Firewall) needs the same UDP port opened by hand.
 
+A provider may slow down a big UDP flow to an unknown port (35 of 450 Mbit/s here). With
+`DEPLOY_VPN_UDP443=yes` the VPN also listens on UDP 443 — QUIC's port, rarely touched — and the
+site gives up HTTP/3 for it (HTTP/2 stays); a device then uses `:443` in its Endpoint.
+
 The container's log: `docker compose logs vpn`. To switch it off: remove `vpn` from
 `COMPOSE_PROFILES` and `VPN_DIR` from `.env`, then `docker compose up -d --remove-orphans`.
 

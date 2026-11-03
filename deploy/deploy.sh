@@ -357,6 +357,10 @@ if [ "${DEPLOY_VPN:-}" = yes ]; then
       sed -i '/^COMPOSE_PROFILES=/d' .env
       echo \"COMPOSE_PROFILES=\${profiles:+\$profiles,}vpn\" >> .env ;; esac
     grep -q '^VPN_DIR=' .env || echo 'VPN_DIR=/vpn' >> .env
+    sed -i '/^VPN_UDP443=/d; /^CADDY_UDP_PORT=/d; /^CADDY_PROTOCOLS=/d' .env
+    if [ '${DEPLOY_VPN_UDP443:-}' = yes ]; then
+      printf '%s\n' VPN_UDP443=443 CADDY_UDP_PORT=127.0.0.1:8443 'CADDY_PROTOCOLS=h1 h2' >> .env
+    fi
     port=\$(grep -E '^VPN_PORT=' .env | cut -d= -f2-); port=\${port:-37853}
     { ! command -v ufw >/dev/null || ufw allow \$port/udp comment 'dashboard vpn' >/dev/null; } &&
     docker compose build -q vpn" || {
