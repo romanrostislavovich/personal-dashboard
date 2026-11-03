@@ -46,6 +46,8 @@ export const SYNC_STATE = {
   reconcileDue: 'reconcile-due',
   /** Client: tables that differed once, waiting for a second check to confirm. */
   reconcileSuspect: 'reconcile-suspect',
+  /** Client: tables whose rows made here were sent again once to heal a difference. */
+  reconcileResent: 'reconcile-resent',
   /** Client: the latest comparison, a ReconcileResult. */
   reconcileResult: 'reconcile-result',
 } as const;

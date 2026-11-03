@@ -342,6 +342,28 @@ export class SyncClient
       return;
     }
     await this.sync.setState(SYNC_STATE.reconcileSuspect, null);
+    // A confirmed difference is first healed by sending the rows made here again — a row the
+    // server never got comes back that way; only a difference that stays is reported.
+    if (
+      mismatches.length &&
+      (await this.sync.getState(SYNC_STATE.reconcileResent)) !== tables
+    ) {
+      const count = await this.store.resendLocal(
+        mismatches.map(mismatch => mismatch.table),
+      );
+      this.logger.warn(
+        `The data differs from the server's: ${tables}; ${count} row(s) made here are sent again`,
+      );
+      await this.sync.setState(SYNC_STATE.reconcileResent, tables);
+      await this.sync.setState(
+        SYNC_STATE.reconcileDue,
+        later(RECONCILE_CONFIRM_MS),
+      );
+      return;
+    }
+    if (!mismatches.length) {
+      await this.sync.setState(SYNC_STATE.reconcileResent, null);
+    }
     await this.sync.setState(
       SYNC_STATE.reconcileDue,
       later(RECONCILE_EVERY_MS),

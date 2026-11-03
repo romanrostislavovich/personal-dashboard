@@ -115,8 +115,10 @@ Migrations that went apart (different ones at the same place) stop the sync as b
 A sync bug once lost rows without a word, so the client checks: every 6 hours, after a sync that
 moved nothing, it compares the row count and a hash of all rows of every table with the server's
 (`POST /api/sync/fingerprints`). A difference is reported only when a second check 10 minutes
-later sees it again — a change caught halfway does not count. Then Telegram gets a message and
-**Settings → Sync** lists the tables.
+later sees it again — a change caught halfway does not count. A confirmed difference is first
+healed: the client sends the rows made on it of those tables again (the server keeps what is newer
+there, a deletion included), and checks once more. Only a difference that stays after that gets a
+message in Telegram and is listed in **Settings → Sync**.
 
 Before comparing, both sides look for rows missing from the change log and log them — such rows
 would never reach the other side; now they arrive with the next sync and the difference heals by
