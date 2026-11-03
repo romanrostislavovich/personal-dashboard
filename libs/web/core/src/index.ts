@@ -7,6 +7,7 @@ export * from './lib/projects/projects.api';
 export * from './lib/projects/pickable-projects';
 export * from './lib/ui/sparkline.component';
 export * from './lib/ui/bar-chart.component';
+export * from './lib/ui/prompt.service';
 export * from './lib/ui/chart-scale';
 export * from './lib/ui/empty-state.component';
 export * from './lib/ui/edited-at.component';
