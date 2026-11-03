@@ -89,6 +89,7 @@ describe('configs', () => {
     expect(text).toContain('Endpoint = vpn.example.com:37853');
     expect(text).toContain('AllowedIPs = 0.0.0.0/0, ::/0');
     expect(text).toContain('H4 = 404');
+    expect(text).toContain('MTU = 1280');
   });
 });
 

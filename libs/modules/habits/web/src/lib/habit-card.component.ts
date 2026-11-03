@@ -12,6 +12,7 @@ import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
 import {MatMenuModule} from '@angular/material/menu';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {PromptService} from '@pd/web-core';
 import {
   addDays,
   Habit,
@@ -269,6 +270,7 @@ export type HabitCardAction =
 })
 export class HabitCardComponent {
   private readonly transloco = inject(TranslocoService);
+  private readonly prompts = inject(PromptService);
 
   readonly habit = input.required<Habit>();
   readonly action = output<HabitCardAction>();
@@ -343,15 +345,15 @@ export class HabitCardComponent {
     if (cell.state === 'used' || cell.state === 'done') {
       this.action.emit({type: 'unmark', day: cell.day});
     } else if (cell.state === 'clean' || cell.state === 'open') {
-      this.mark(cell.day);
+      void this.mark(cell.day);
     }
   }
 
   protected markToday(): void {
-    this.mark(this.today);
+    void this.mark(this.today);
   }
 
-  private mark(day: string): void {
+  private async mark(day: string): Promise<void> {
     if (this.building()) {
       this.action.emit({type: 'mark', day, status: 'done', amount: null});
       return;
@@ -359,9 +361,10 @@ export class HabitCardComponent {
     const unit = this.habit().unit;
     let amount: number | null = null;
     if (unit) {
-      const answer = prompt(
-        this.transloco.translate('habits.card.howMuch', {unit}),
-      );
+      const answer = await this.prompts.ask({
+        label: this.transloco.translate('habits.card.howMuch', {unit}),
+        inputMode: 'decimal',
+      });
       if (answer === null) {
         return;
       }

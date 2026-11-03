@@ -27,6 +27,8 @@ export interface KeyPair {
 /** The tunnel's addresses: the server is `.1`, the devices get `.2`–`.254`. */
 export const VPN_SUBNET = '10.77.0';
 export const SERVER_ADDRESS = `${VPN_SUBNET}.1`;
+/** Inside the tunnel; small enough that no network on the way cuts the packets. */
+export const VPN_MTU = 1280;
 /** Cloudflare's resolvers, as the owner chose. */
 export const VPN_DNS = '1.1.1.1, 1.0.0.1';
 /** The handshake is renewed every 2 minutes while traffic flows: older means not connected. */
@@ -156,6 +158,8 @@ export function deviceConfig(
     `PrivateKey = ${device.privateKey}`,
     `Address = ${device.address}/32`,
     `DNS = ${VPN_DNS}`,
+    // The same as the server's (deploy/vpn/entrypoint.sh): fits mobile networks too.
+    `MTU = ${VPN_MTU}`,
     ...obfuscationLines(server.obfuscation),
     '',
     '[Peer]',

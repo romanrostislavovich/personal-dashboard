@@ -11,6 +11,11 @@ STATUS="$DIR/status.tsv"
 IFACE=awg0
 SUBNET=10.77.0.0/24
 ADDRESS=10.77.0.1/24
+# Small enough for any path, mobile networks included: 1280 inside + ~80 of AmneziaWG and UDP.
+# With 1420 the packets were cut or lost on the way from Germany and the internet crawled.
+MTU=1280
+# TCP inside the tunnel: MTU minus 40 bytes of IP and TCP headers.
+MSS=1240
 
 until [ -s "$CONF" ]; do
   echo "Waiting for $CONF: the dashboard writes it within a minute of its start"
@@ -23,7 +28,7 @@ daemon=$!
 until ip link show "$IFACE" >/dev/null 2>&1; do sleep 0.2; done
 awg setconf "$IFACE" "$CONF"
 ip address add "$ADDRESS" dev "$IFACE"
-ip link set mtu 1420 up dev "$IFACE"
+ip link set mtu "$MTU" up dev "$IFACE"
 
 # Devices reach the internet through this container's address; never the private networks
 # around it — the dashboard's database, the host, the other containers.
@@ -31,6 +36,10 @@ iptables -t nat -A POSTROUTING -s "$SUBNET" -o eth0 -j MASQUERADE
 for private in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254.0.0/16 100.64.0.0/10; do
   iptables -A FORWARD -i "$IFACE" -d "$private" -j DROP
 done
+# Sites are told to send TCP in pieces that fit the tunnel, both ways: a lost "too big" message
+# on the way otherwise stalls a connection.
+iptables -t mangle -A FORWARD -i "$IFACE" -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss "$MSS"
+iptables -t mangle -A FORWARD -o "$IFACE" -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss "$MSS"
 iptables -A FORWARD -i "$IFACE" -o eth0 -j ACCEPT
 iptables -A FORWARD -i eth0 -o "$IFACE" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 iptables -P FORWARD DROP

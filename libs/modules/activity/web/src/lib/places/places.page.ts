@@ -23,7 +23,7 @@ import {
   toLocalDate,
   TripMode,
 } from '@pd/contracts';
-import {DurationPipe, todayLocalDate} from '@pd/web-core';
+import {DurationPipe, PromptService, todayLocalDate} from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
 import {ActivityApi} from '../activity.api';
 import {PlacesImportComponent} from './places-import.component';
@@ -366,6 +366,7 @@ function savedMap(): 'osm' | 'google' {
 export class PlacesPage {
   private readonly api = inject(ActivityApi);
   private readonly transloco = inject(TranslocoService);
+  private readonly prompts = inject(PromptService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -470,9 +471,11 @@ export class PlacesPage {
     longitude: number,
     found: FoundPlaceName | null,
   ): Promise<void> {
-    const name = prompt(
-      this.transloco.translate('activity.places.namePrompt'),
-      found?.name ?? '',
+    const name = (
+      await this.prompts.ask({
+        label: this.transloco.translate('activity.places.namePrompt'),
+        value: found?.name ?? '',
+      })
     )?.trim();
     if (name) {
       await firstValueFrom(
@@ -483,9 +486,11 @@ export class PlacesPage {
   }
 
   protected async rename(place: FrequentPlace): Promise<void> {
-    const name = prompt(
-      this.transloco.translate('activity.places.namePrompt'),
-      place.name ?? '',
+    const name = (
+      await this.prompts.ask({
+        label: this.transloco.translate('activity.places.namePrompt'),
+        value: place.name ?? '',
+      })
     )?.trim();
     if (name && place.placeId) {
       await firstValueFrom(this.api.renamePlace(place.placeId, name));

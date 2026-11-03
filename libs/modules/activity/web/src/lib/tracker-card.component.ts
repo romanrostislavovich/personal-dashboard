@@ -17,9 +17,10 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {ActivityDevice, ActivityPlatform} from '@pd/contracts';
 import {
-  desktopBridge,
   DesktopActivityStatus,
   DeviceOnlyComponent,
+  PromptService,
+  desktopBridge,
 } from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
 import {ActivityApi} from './activity.api';
@@ -237,6 +238,7 @@ const PLATFORMS: Record<string, ActivityPlatform> = {
 export class TrackerCardComponent {
   private readonly api = inject(ActivityApi);
   private readonly transloco = inject(TranslocoService);
+  private readonly prompts = inject(PromptService);
   private readonly locale = inject(LOCALE_ID);
 
   /** The tracker of the desktop shell; `null` — the dashboard is opened in a browser. */
@@ -312,9 +314,11 @@ export class TrackerCardComponent {
   }
 
   protected async rename(device: ActivityDevice): Promise<void> {
-    const name = prompt(
-      this.transloco.translate('activity.tracker.rename'),
-      device.name,
+    const name = (
+      await this.prompts.ask({
+        label: this.transloco.translate('activity.tracker.rename'),
+        value: device.name,
+      })
     )?.trim();
     if (name && name !== device.name) {
       await firstValueFrom(this.api.renameDevice(device.id, name));
