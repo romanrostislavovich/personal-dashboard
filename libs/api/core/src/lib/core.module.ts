@@ -268,6 +268,8 @@ import {UserActivityService} from './realtime/user-activity.service';
     NotificationsService,
     // For a silent message that wakes the app on the phone (Activity's watchdog).
     PushService,
+    // For a live event to the open pages (the VPN switched on a computer's desktop app).
+    RealtimeService,
     // For bot commands: modules register them via registerCommand().
     TelegramBotService,
     // For achievements: modules register their metrics via register().
