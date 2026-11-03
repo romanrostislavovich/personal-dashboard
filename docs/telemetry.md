@@ -339,6 +339,26 @@ API first and fills the gaps from the phone; the counted numbers come only from 
 
 The minute and hour tables are the hourly series Links v2 will read (docs/proposals/links-v2.md).
 
+## The VPN (AmneziaWG on the server)
+
+The owner's own VPN (`libs/modules/vpn`, `deploy/vpn`): AmneziaWG in a container next to the
+dashboard. The container writes its status every 10 seconds (`status.tsv`: per device the public
+key, the address it came from, the last handshake, bytes each way); the server reads it every
+minute. The live state is in the unsynced `vpn` schema; only the days are synced.
+
+| What                                                                                                     | Where                           | To Links                     |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------- |
+| The container answers (up / down, told once each way)                                                    | `vpn.server_state`              | —                            |
+| A device: first connection, last handshake, the address it came from, online now; bytes not yet in a day | `vpn.device_state`              | —                            |
+| A device's day: bytes from it and to it, minutes connected (added every 15 minutes)                      | `vpn_days`                      | `vpn.hours`, `vpn.megabytes` |
+| The networks a device came from (IPv4 /16, IPv6 /48), 90 days — a new one is a finding and a message     | `vpn.networks`                  | —                            |
+| The phone: AmneziaWG installed, the dashboard allowed to switch it, a VPN carrying the traffic now       | on the phone only (the card)    | —                            |
+| The computer: the dashboard's tunnels set up, which one runs, other AmneziaWG tunnels on                 | on the computer only (the card) | —                            |
+
+Told as notifications: the VPN down and back, a device's first connection, a new network, and a
+phone whose VPN went off (it is on plain internet then). A computer going off is not told: it
+does every time it sleeps.
+
 ## Outside services
 
 Settings → Integrations; the keys are the user's (`user_secrets`, encrypted) or the owner's server
@@ -394,15 +414,14 @@ story (`life_stories`), the morning digest (`morning_digest_snapshots`).
 
 ## The dashboard itself
 
-| What                                                                                                                                                                             | Where                                          | To Links                     |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ---------------------------- |
-| Days the dashboard was opened                                                                                                                                                    | `dashboard_active_days`                        | —                            |
-| Sign-ins: when, IP, browser, outcome                                                                                                                                             | `sign_ins`; sessions in `auth.sessions`        | —                            |
-| Achievements unlocked                                                                                                                                                            | `achievements_unlocked`                        | —                            |
-| 🧪 Notifications sent (Telegram, push), their actions; read or not, the answer (button and words) and where it was given — the bell, 90 days                                     | `notification_outbox`                          | —                            |
-| Security findings and reports                                                                                                                                                    | `security_findings`, `security_reports`        | project facts (findings)     |
-| The VPN: a device's last handshake, address and bytes (a minute's look at the container, unsynced); its day's bytes and minutes (every 15 min); its networks, 90 days (unsynced) | `vpn.device_state`, `vpn_days`, `vpn.networks` | `vpn.hours`, `vpn.megabytes` |
-| Background jobs: runs, failures                                                                                                                                                  | `system.job_runs`, `system.log`                | —                            |
+| What                                                                                                                                         | Where                                   | To Links                 |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------------------------ |
+| Days the dashboard was opened                                                                                                                | `dashboard_active_days`                 | —                        |
+| Sign-ins: when, IP, browser, outcome                                                                                                         | `sign_ins`; sessions in `auth.sessions` | —                        |
+| Achievements unlocked                                                                                                                        | `achievements_unlocked`                 | —                        |
+| 🧪 Notifications sent (Telegram, push), their actions; read or not, the answer (button and words) and where it was given — the bell, 90 days | `notification_outbox`                   | —                        |
+| Security findings and reports                                                                                                                | `security_findings`, `security_reports` | project facts (findings) |
+| Background jobs: runs, failures                                                                                                              | `system.job_runs`, `system.log`         | —                        |
 
 ## Moments, periods, projects, people
 

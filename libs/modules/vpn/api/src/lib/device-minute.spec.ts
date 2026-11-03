@@ -59,4 +59,14 @@ describe('deviceMinute', () => {
     expect(never).toMatchObject({first: false, online: false, address: null});
     expect(never.next.firstConnectedAt).toBeNull();
   });
+
+  it('tells when a connected device goes off, once', () => {
+    const on = deviceMinute(undefined, peer(1, 1), '2026-11-03', now);
+    expect(on.wentOff).toBe(false);
+    const off = deviceMinute(on.next, peer(1, 1, at(600)), '2026-11-03', now);
+    expect(off.wentOff).toBe(true);
+    expect(
+      deviceMinute(off.next, peer(1, 1, at(660)), '2026-11-03', now).wentOff,
+    ).toBe(false);
+  });
 });

@@ -10,6 +10,7 @@ export interface DeviceState {
   firstConnectedAt: Date | null;
   lastHandshakeAt: Date | null;
   lastAddress: string | null;
+  online: boolean;
   seenRx: number;
   seenTx: number;
   pendingDay: string | null;
@@ -26,12 +27,15 @@ export interface DeviceMinute {
   address: string | null;
   /** Its very first handshake is in this look. */
   first: boolean;
+  /** It was connected at the last look and is not now: the VPN went off on it. */
+  wentOff: boolean;
 }
 
 const EMPTY: DeviceState = {
   firstConnectedAt: null,
   lastHandshakeAt: null,
   lastAddress: null,
+  online: false,
   seenRx: 0,
   seenTx: 0,
   pendingDay: null,
@@ -64,7 +68,9 @@ export function deviceMinute(
     online,
     address,
     first: !state.firstConnectedAt && handshakeAt !== null,
+    wentOff: state.online && !online,
     next: {
+      online,
       firstConnectedAt: state.firstConnectedAt ?? handshakeAt,
       lastHandshakeAt: handshakeAt ?? state.lastHandshakeAt,
       lastAddress: address ?? state.lastAddress,

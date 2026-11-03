@@ -890,6 +890,13 @@
       "when": 1793736870386,
       "tag": "0126_vpn_kill_switch",
       "breakpoints": true
+    },
+    {
+      "idx": 127,
+      "version": "7",
+      "when": 1793746088395,
+      "tag": "0127_vpn_device_online",
+      "breakpoints": true
     }
   ]
 }

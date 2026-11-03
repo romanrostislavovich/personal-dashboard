@@ -307,7 +307,7 @@ export class VpnServerService {
       // A new day: yesterday's last minutes go to yesterday.
       await this.flush(owner.id, state);
     }
-    const {next, online, address, first} = deviceMinute(
+    const {next, online, address, first, wentOff} = deviceMinute(
       state,
       peer,
       today,
@@ -323,6 +323,15 @@ export class VpnServerService {
         owner,
         text.firstTitle(device.name),
         text.firstBody(address ?? '?'),
+      );
+    }
+    // A phone off the VPN keeps its plain internet (the push arrives by it) — say so at once.
+    // A computer is left out: it goes off every time it sleeps.
+    if (wentOff && device.kind === 'phone') {
+      await this.notify(
+        owner,
+        text.offTitle(device.name),
+        text.offBody(device.killSwitch),
       );
     }
     if (address && online) {
