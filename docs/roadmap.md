@@ -646,6 +646,14 @@ assistant as a tutor that knows the materials of the courses.
 
 ### Later
 
+#### The VPN, faster (postponed until it is tried in Belarus, December 2026)
+
+- **More CPU for the VPN** — at about 200 Mbit/s the userspace AmneziaWG fills the two shared
+  cores of the server (the line itself gives 450): a bigger server (4 cores, or dedicated ones),
+  or a small server for the VPN alone, apart from the dashboard and its database
+- **AmneziaWG's kernel module** instead of the userspace daemon — the same server does about
+  2–3 times more; built by DKMS for every new kernel, so it is tried on a scratch server first
+
 #### Modules
 
 - **Fitness** — workouts, activity and body metrics: steps, calories burned and eaten, weight and
