@@ -89,7 +89,8 @@ export function parseProfile(raw: unknown): XboxProfile {
       ? body['profileUsers'][0]
       : null;
   if (!isObject(user)) {
-    throw new Error('OpenXBL gave no profile');
+    // What came instead (keys only, no values): a one-off failure on 2026-11-03 left no clue.
+    throw new Error(`OpenXBL gave no profile: ${shapeOf(raw)}`);
   }
   const settings = new Map<string, unknown>();
   for (const setting of (user['settings'] as unknown[]) ?? []) {

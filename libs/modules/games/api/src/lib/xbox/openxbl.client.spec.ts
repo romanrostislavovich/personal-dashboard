@@ -104,6 +104,12 @@ describe('OpenXBL answers', () => {
     expect(() => parseProfile({})).toThrow();
   });
 
+  it('says what came instead of a profile, by its keys only', () => {
+    expect(() =>
+      parseProfile({content: {people: [], code: 503}, code: 200}),
+    ).toThrow('OpenXBL gave no profile: {content{people[0],code},code}');
+  });
+
   it('reads the title history, the last played first, achievements only where there are any', () => {
     const games = parseTitles({
       xuid: '2533274900000000',
