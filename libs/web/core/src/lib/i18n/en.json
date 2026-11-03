@@ -21,7 +21,8 @@
     "delete": "Delete",
     "previous": "Previous",
     "next": "Next",
-    "ok": "OK"
+    "ok": "OK",
+    "close": "Close"
   },
   "login": {
     "title": "Sign in",

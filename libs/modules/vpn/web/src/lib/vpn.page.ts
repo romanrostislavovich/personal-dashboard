@@ -78,8 +78,9 @@ export class VpnPage {
         day: 'numeric',
         month: 'short',
       });
+      // Under the bar only the day's number: a month's name does not fit a phone's column.
       return {
-        label: index % 7 === CHART_DAYS % 7 ? label : '',
+        label: index % 7 === CHART_DAYS % 7 ? String(date.getDate()) : '',
         value,
         title: `${label} — ${formatBytes(value, locale)}`,
       };

@@ -70,6 +70,8 @@
 
 .device {
   display: flex;
+  // A mat-card lays its content out in a column of its own.
+  flex-direction: row;
   align-items: center;
   gap: 12px;
   padding: 12px 8px 12px 16px;
