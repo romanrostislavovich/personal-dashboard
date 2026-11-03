@@ -7,6 +7,8 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.Uri;
+import android.os.PowerManager;
 import android.provider.Settings;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -36,6 +38,7 @@ public class AmneziaVpnPlugin extends Plugin {
         result.put("installed", installed(context));
         result.put("control", ContextCompat.checkSelfPermission(context, CONTROL) == PackageManager.PERMISSION_GRANTED);
         result.put("vpnActive", vpnActive(context));
+        result.put("unrestricted", unrestricted(context));
         call.resolve(result);
     }
 
@@ -69,6 +72,19 @@ public class AmneziaVpnPlugin extends Plugin {
         call.resolve();
     }
 
+    /**
+     * AmneziaWG's page in Android's settings, for "Battery → No restrictions": a restricted app may
+     * not start its VPN from the background, so the broadcast reaches it and nothing happens
+     * ("Background start not allowed" in the log).
+     */
+    @PluginMethod
+    public void openAmneziaSettings(PluginCall call) {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + PACKAGE))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        getContext().startActivity(intent);
+        call.resolve();
+    }
+
     /** AmneziaWG itself, for "Allow remote control apps" in its settings. */
     @PluginMethod
     public void openAmnezia(PluginCall call) {
@@ -86,6 +102,12 @@ public class AmneziaVpnPlugin extends Plugin {
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
+    }
+
+    /** AmneziaWG is exempt from battery optimization: it may start its VPN from the background. */
+    private static boolean unrestricted(Context context) {
+        PowerManager power = context.getSystemService(PowerManager.class);
+        return power != null && power.isIgnoringBatteryOptimizations(PACKAGE);
     }
 
     /** A VPN carries the phone's traffic now (any VPN: AmneziaWG is the one set up here). */

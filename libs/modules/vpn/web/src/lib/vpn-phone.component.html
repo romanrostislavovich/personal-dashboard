@@ -25,6 +25,13 @@
             {{ 'vpn.phone.allow' | transloco }}
           </button>
         } @else {
+          @if (status.unrestricted === false) {
+            <p class="warning">{{ 'vpn.phone.battery' | transloco }}</p>
+            <button matButton="filled" (click)="openAmneziaSettings()">
+              <mat-icon>battery_saver</mat-icon>
+              {{ 'vpn.phone.openBattery' | transloco }}
+            </button>
+          }
           <mat-form-field subscriptSizing="dynamic">
             <mat-label>{{ 'vpn.phone.which' | transloco }}</mat-label>
             <mat-select [ngModel]="deviceId()" (ngModelChange)="choose($event)">

@@ -9,6 +9,11 @@ export interface PhoneVpnStatus {
   control: boolean;
   /** A VPN carries the phone's traffic now. */
   vpnActive: boolean;
+  /**
+   * AmneziaWG is free of battery limits: otherwise Android does not let it start the VPN when
+   * the dashboard asks (absent in an app built before it).
+   */
+  unrestricted?: boolean;
 }
 
 export interface AmneziaVpnPlugin {
@@ -17,6 +22,8 @@ export interface AmneziaVpnPlugin {
   setTunnel(options: {up: boolean; tunnel: string}): Promise<void>;
   openVpnSettings(): Promise<void>;
   openAmnezia(): Promise<void>;
+  /** AmneziaWG's page in Android's settings (Battery → No restrictions). */
+  openAmneziaSettings?(): Promise<void>;
 }
 
 /** The tunnel's name in AmneziaWG: the setup guide asks to name it so on the import. */
