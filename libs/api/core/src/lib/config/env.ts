@@ -131,6 +131,15 @@ const envSchema = z
      * (`host.json`); the security agent reads it. Without it the server is not looked at.
      */
     SECURITY_DIR: z.string().optional(),
+    /**
+     * Server: the folder shared with the VPN container (deploy/vpn): the dashboard writes its
+     * peers there (`awg0.conf`), the container its status (`status.tsv`). Unset — no VPN.
+     */
+    VPN_DIR: z.string().optional(),
+    /** The name devices connect to; `vpn.<DOMAIN>` by default — moving IP changes only DNS. */
+    VPN_HOST: z.string().optional(),
+    /** The UDP port of the VPN, the same in deploy/compose.yml. */
+    VPN_PORT: z.coerce.number().int().min(1).max(65535).default(37853),
     /** Client: where copies of the server's dumps are kept (docs/deploy.md, "Backups"). */
     BACKUP_COPY_DIR: z.string().default('backups'),
     /** Client: how many copies to keep. */

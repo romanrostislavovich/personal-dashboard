@@ -68,6 +68,8 @@ Fixed keys plus families (`<category>`, `<site>`, `<habit id>`, `<analyte>`, `<n
 | `activity.site.<site>`                  | hours                               | the six sites seen on the most days (10+ days)                                                 |        | `activity.browser`  |
 | `activity.telemetry.desktop.<name>`     | see [telemetry](#desktop-telemetry) | desktop telemetry buckets                                                                      | yes    |                     |
 | `activity.telemetry.browser.<name>`     | same                                | browser telemetry buckets                                                                      | yes    |                     |
+| `vpn.hours`                             | hours                               | minutes a device was in the VPN (the longest-connected one of the day)                         |        |                     |
+| `vpn.megabytes`                         | count                               | bytes both ways through the VPN, all devices                                                   |        |                     |
 | `activity.phone.unlocks`                | count                               | unlocks                                                                                        | yes    |                     |
 | `activity.phone.night`                  | hours                               | phone apps 23:00–04:00                                                                         | yes    |                     |
 | `activity.phone.firstUse`, `…lastUse`   | clock                               | first unlock / screen-on after 04:00, last use before it                                       | yes    |                     |
@@ -392,14 +394,15 @@ story (`life_stories`), the morning digest (`morning_digest_snapshots`).
 
 ## The dashboard itself
 
-| What                                                                                                                                         | Where                                   | To Links                 |
-| -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------------------------ |
-| Days the dashboard was opened                                                                                                                | `dashboard_active_days`                 | —                        |
-| Sign-ins: when, IP, browser, outcome                                                                                                         | `sign_ins`; sessions in `auth.sessions` | —                        |
-| Achievements unlocked                                                                                                                        | `achievements_unlocked`                 | —                        |
-| 🧪 Notifications sent (Telegram, push), their actions; read or not, the answer (button and words) and where it was given — the bell, 90 days | `notification_outbox`                   | —                        |
-| Security findings and reports                                                                                                                | `security_findings`, `security_reports` | project facts (findings) |
-| Background jobs: runs, failures                                                                                                              | `system.job_runs`, `system.log`         | —                        |
+| What                                                                                                                                         | Where                                     | To Links                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------- |
+| Days the dashboard was opened                                                                                                                | `dashboard_active_days`                   | —                            |
+| Sign-ins: when, IP, browser, outcome                                                                                                         | `sign_ins`; sessions in `auth.sessions`   | —                            |
+| Achievements unlocked                                                                                                                        | `achievements_unlocked`                   | —                            |
+| 🧪 Notifications sent (Telegram, push), their actions; read or not, the answer (button and words) and where it was given — the bell, 90 days | `notification_outbox`                     | —                            |
+| Security findings and reports                                                                                                                | `security_findings`, `security_reports`   | project facts (findings)     |
+| The VPN: a device's last handshake, address and bytes (a minute's look at the container); its day's bytes and minutes; its networks, 90 days | `vpn_devices`, `vpn_days`, `vpn_networks` | `vpn.hours`, `vpn.megabytes` |
+| Background jobs: runs, failures                                                                                                              | `system.job_runs`, `system.log`           | —                            |
 
 ## Moments, periods, projects, people
 

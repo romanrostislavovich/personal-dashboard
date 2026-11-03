@@ -84,6 +84,10 @@ follows the code and its limits: a file that exists is not yet a feature that wo
   assistant; achievements from a day to a thousand days. Habits to build too (every day or a
   few days a week), and the runs in the morning digest
 - **Monitoring:** uptime every 5 minutes, response time, SSL expiry, down / up alerts
+- **VPN:** the owner's own AmneziaWG on the dashboard's server — devices with a QR code each, who
+  is online, traffic by day, down / up, a device's first connection and a new network told
+  about, the security agent, Links and achievements ([proposal](proposals/vpn.md); not yet run
+  on the real server and devices)
 - **Psychology:** a questionnaire on a schedule (a reminder in Telegram); watching oneself over time — the patterns of the mood (by the day of the week,
   week by week, low stretches, the mood during the events of a life), short standard
   questionnaires with their history (WHO-5, GAD-7, PHQ-9 — never a diagnosis), and events with

@@ -1,0 +1,117 @@
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.section-title {
+  font: var(--mat-sys-title-medium);
+  margin: 24px 0 8px;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mat-sys-outline);
+  flex: none;
+}
+
+.state {
+  &.up .dot {
+    background: var(--pd-success, #2e7d32);
+  }
+  &.down .dot {
+    background: var(--mat-sys-error);
+  }
+  &.starting .dot {
+    background: var(--pd-warning, #f9a825);
+  }
+}
+
+.state-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font: var(--mat-sys-title-medium);
+
+  code {
+    font: var(--mat-sys-body-medium);
+    color: var(--mat-sys-on-surface-variant);
+    overflow-wrap: anywhere;
+  }
+}
+
+.state-hint {
+  margin: 8px 0 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.numbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 12px;
+  font: var(--mat-sys-title-large);
+
+  span {
+    display: flex;
+    flex-direction: column;
+  }
+  small {
+    font: var(--mat-sys-label-medium);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.device {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px 12px 16px;
+  margin-bottom: 8px;
+
+  .kind {
+    color: var(--mat-sys-on-surface-variant);
+    flex: none;
+  }
+  .about {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 2px;
+  }
+  .name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: var(--mat-sys-title-small);
+    overflow-wrap: anywhere;
+  }
+  .dot.on {
+    background: var(--pd-success, #2e7d32);
+  }
+  small {
+    color: var(--mat-sys-on-surface-variant);
+  }
+  .actions {
+    display: flex;
+    flex: none;
+  }
+}
+
+// Phones: the buttons go under the text instead of squeezing it.
+@media (max-width: 480px) {
+  .device {
+    flex-wrap: wrap;
+    .actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}
