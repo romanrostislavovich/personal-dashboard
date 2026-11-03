@@ -119,9 +119,11 @@
     "allowHint": "Два шага, один раз: при импорте QR-кода в AmneziaWG назови туннель «{{tunnel}}» и разреши дашборду им управлять — Android спросит сейчас; потом в настройках AmneziaWG включи «Allow remote control apps».",
     "allow": "Разрешить дашборду управлять AmneziaWG",
     "which": "Какое устройство — этот телефон",
-    "noAnswer": "AmneziaWG не переключился: проверь, что туннель называется «{{tunnel}}» и в его настройках включено «Allow remote control apps».",
+    "noAnswer": "AmneziaWG не переключился: проверь, что туннель называется «{{tunnel}}», в его настройках включено «Allow remote control apps» и Android не ограничивает его по батарее.",
     "openAmnezia": "Открыть AmneziaWG",
     "killSwitchHint": "На Android это настройка самой системы: VPN → AmneziaWG → «Постоянный VPN» и «Блокировать подключения без VPN» (на Xiaomi: Подключение и общий доступ → VPN).",
-    "openSettings": "Открыть настройки VPN"
+    "openSettings": "Открыть настройки VPN",
+    "battery": "Android ограничивает AmneziaWG по батарее, и тот не может включить VPN по команде дашборда. В его настройках: Батарея → Без ограничений (на Xiaomi: Контроль активности → Нет ограничений; и включи Автозапуск).",
+    "openBattery": "Настройки батареи AmneziaWG"
   }
 }

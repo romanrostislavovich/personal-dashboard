@@ -134,6 +134,10 @@ export class VpnPhoneComponent {
     void this.plugin?.openVpnSettings();
   }
 
+  protected openAmneziaSettings(): void {
+    void this.plugin?.openAmneziaSettings?.();
+  }
+
   protected openAmnezia(): void {
     void this.plugin?.openAmnezia();
   }
