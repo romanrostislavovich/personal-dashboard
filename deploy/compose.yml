@@ -110,6 +110,9 @@ services:
       net.ipv4.ip_forward: 1
     ports:
       - '${VPN_PORT:-37853}:${VPN_PORT:-37853}/udp'
+      # A second door, UDP 443 — the port of QUIC, which a provider's shaper leaves alone, while
+      # an unknown UDP port got 35 of 450 Mbit/s (DEPLOY_VPN_UDP443; otherwise loopback only).
+      - '${VPN_UDP443:-127.0.0.1:37443}:${VPN_PORT:-37853}/udp'
     volumes:
       - ./vpn-data:/vpn
     networks:
@@ -122,9 +125,11 @@ services:
     ports:
       - '80:80'
       - '443:443'
-      - '443:443/udp'
+      # HTTP/3. Given to the VPN with DEPLOY_VPN_UDP443: then only on this server's own loopback.
+      - '${CADDY_UDP_PORT:-443}:443/udp'
     environment:
       DOMAIN: ${DOMAIN}
+      CADDY_PROTOCOLS: ${CADDY_PROTOCOLS:-h1 h2 h3}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       # Certificates: keep them, or Let's Encrypt rate limits may bite after a few restarts.
