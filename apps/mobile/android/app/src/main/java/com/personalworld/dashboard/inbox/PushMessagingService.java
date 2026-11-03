@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import com.capacitorjs.plugins.pushnotifications.MessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.personalworld.dashboard.sensors.SensorsWorker;
+import com.personalworld.dashboard.vpn.AmneziaVpnPlugin;
 import java.util.Map;
 
 /**
@@ -22,6 +23,9 @@ public class PushMessagingService extends MessagingService {
         }
         if ("close".equals(data.get("kind"))) {
             InboxNotifications.close(this, data.get("id"));
+        } else if ("vpn".equals(data.get("kind"))) {
+            // Silent: "turn the VPN on on the phone" (VpnService.switchDevice on the server).
+            AmneziaVpnPlugin.fromPush(this, data.get("device"), "1".equals(data.get("up")));
         } else if ("revive".equals(data.get("kind"))) {
             // Silent: the server's watchdog heard nothing for long (PhoneWatchdogService).
             SensorsWorker.revive(this);

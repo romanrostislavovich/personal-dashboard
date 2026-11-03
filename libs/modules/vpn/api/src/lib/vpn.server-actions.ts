@@ -1,6 +1,10 @@
 import {Injectable, OnModuleInit} from '@nestjs/common';
 import {ServerActions} from '@pd/api-core';
-import {vpnDeviceInputSchema, vpnDeviceUpdateSchema} from '@pd/contracts';
+import {
+  vpnDeviceInputSchema,
+  vpnDeviceUpdateSchema,
+  vpnSwitchSchema,
+} from '@pd/contracts';
 import {z} from 'zod';
 import {VpnService} from './vpn.service';
 
@@ -13,6 +17,7 @@ export const VPN_ACTIONS = {
   add: 'vpn.add-device',
   update: 'vpn.update-device',
   remove: 'vpn.remove-device',
+  switch: 'vpn.switch-device',
 } as const;
 
 const idSchema = z.object({id: z.uuid()});
@@ -33,6 +38,14 @@ export class VpnServerActions implements OnModuleInit {
         userId,
         idSchema.parse(args).id,
         vpnDeviceUpdateSchema.parse(args),
+      ),
+    );
+    // From the server: the live events and the pushes go out from where the devices listen.
+    this.actions.register(VPN_ACTIONS.switch, (userId, args) =>
+      this.vpn.switchDevice(
+        userId,
+        idSchema.parse(args).id,
+        vpnSwitchSchema.parse(args).up,
       ),
     );
     this.actions.register(VPN_ACTIONS.remove, (userId, args) =>

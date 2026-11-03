@@ -3,6 +3,7 @@ package com.personalworld.dashboard.vpn;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -29,6 +30,9 @@ public class AmneziaVpnPlugin extends Plugin {
 
     static final String PACKAGE = "org.amnezia.awg";
     static final String CONTROL = PACKAGE + ".permission.CONTROL_TUNNELS";
+    /** The tunnel's name in AmneziaWG: the setup asks to name it so on the import. */
+    static final String TUNNEL = "dashboard";
+    private static final String PREFS = "amnezia_vpn";
     private static final int CONTROL_REQUEST = 7311;
 
     @PluginMethod
@@ -55,13 +59,39 @@ public class AmneziaVpnPlugin extends Plugin {
     /** `{ up: boolean, tunnel: string }` — the tunnel's name in AmneziaWG. */
     @PluginMethod
     public void setTunnel(PluginCall call) {
-        String tunnel = call.getString("tunnel", "dashboard");
         boolean up = Boolean.TRUE.equals(call.getBoolean("up", true));
+        switchTunnel(getContext(), call.getString("tunnel", TUNNEL), up);
+        call.resolve();
+    }
+
+    /** `{ id }` — which VPN device this phone is, for the silent push that names one. */
+    @PluginMethod
+    public void setDevice(PluginCall call) {
+        getContext()
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString("device", call.getString("id", ""))
+            .apply();
+        call.resolve();
+    }
+
+    /**
+     * "Turn the VPN on on the phone" from the assistant or another page, as a silent push
+     * (PushMessagingService): acted on only when it names this phone's device.
+     */
+    public static void fromPush(Context context, String device, boolean up) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        String mine = prefs.getString("device", "");
+        if (device != null && !device.isEmpty() && device.equals(mine)) {
+            switchTunnel(context, TUNNEL, up);
+        }
+    }
+
+    private static void switchTunnel(Context context, String tunnel, boolean up) {
         Intent intent = new Intent(PACKAGE + (up ? ".action.SET_TUNNEL_UP" : ".action.SET_TUNNEL_DOWN"));
         intent.setPackage(PACKAGE);
         intent.putExtra("tunnel", tunnel);
-        getContext().sendBroadcast(intent, null);
-        call.resolve();
+        context.sendBroadcast(intent, null);
     }
 
     /** Android's VPN screen: "Always-on VPN" and "Block connections without VPN" are there. */

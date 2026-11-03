@@ -68,7 +68,9 @@ The owner chose to keep AmneziaWG's apps and have the dashboard drive them:
   on in it); the tunnel is called `dashboard`. The kill switch there is Android's own "Block
   connections without VPN": the app opens that screen, the dashboard remembers the choice and
   warns when the phone goes around the VPN.
-- **Telegram / AI (after):** "turn the VPN on on the phone" as a command to the device.
+- **Telegram / AI (built):** the assistant's `vpn_switch` ("turn the VPN on on the phone")
+  runs on the server: the desktop app of that computer gets a live `vpn` event, a phone a silent
+  push (`kind: vpn`) — each acts only when it names the device chosen on its own VPN page.
 
 ## Not verified live
 

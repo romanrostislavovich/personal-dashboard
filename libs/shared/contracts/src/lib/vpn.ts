@@ -30,6 +30,18 @@ export const vpnDeviceUpdateSchema = z
   .refine(input => Object.keys(input).length > 0, 'Nothing to change');
 export type VpnDeviceUpdate = z.infer<typeof vpnDeviceUpdateSchema>;
 
+/** `POST /api/vpn/devices/:id/switch` — the VPN on or off on that device, from anywhere. */
+export const vpnSwitchSchema = z.object({up: z.boolean()});
+export type VpnSwitch = z.infer<typeof vpnSwitchSchema>;
+
+/** What a switch reached: the desktop apps get it live, the phones by a silent push. */
+export interface VpnSwitchResult {
+  device: string;
+  up: boolean;
+  /** Phones the silent push was sent to (0 — no phone with push, or not a phone). */
+  phones: number;
+}
+
 /** A device and what it did last; never its keys (those are in VpnDeviceConfig). */
 export interface VpnDevice {
   id: string;

@@ -32,6 +32,8 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
   const userId = randomUUID();
   const otherId = randomUUID();
   const sent: string[] = [];
+  const emitted: unknown[] = [];
+  const woken: Record<string, string>[] = [];
   let settings: Record<string, unknown>;
 
   /** What the container would write: a line per peer. */
@@ -87,7 +89,20 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
         sent.push(notification.title);
       },
     };
-    vpn = new VpnService(db as never, config as never, users as never);
+    const realtime = {emit: (_: string, event: unknown) => emitted.push(event)};
+    const push = {
+      wake: async (_: string, kind: string, extra: Record<string, string>) => {
+        woken.push({kind, ...extra});
+        return 1;
+      },
+    };
+    vpn = new VpnService(
+      db as never,
+      config as never,
+      users as never,
+      realtime as never,
+      push as never,
+    );
     server = new VpnServerService(
       db as never,
       config as never,
@@ -142,6 +157,25 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
     );
     delete settings['VPN_PUBLIC_PORT'];
     await server.tick(quiet);
+  });
+
+  it('switches a device: the desktop apps live, a phone by a silent push', async () => {
+    const [phone] = (await vpn.status(userId)).devices;
+    expect(await vpn.switchDevice(userId, phone.id, true)).toEqual({
+      device: 'Phone',
+      up: true,
+      phones: 1,
+    });
+    expect(emitted.at(-1)).toEqual({
+      type: 'vpn',
+      deviceId: phone.id,
+      up: true,
+      killSwitch: true,
+    });
+    expect(woken.at(-1)).toEqual({kind: 'vpn', device: phone.id, up: '1'});
+    await expect(
+      vpn.switchDevice(otherId, phone.id, true),
+    ).rejects.toMatchObject({status: 404});
   });
 
   it("keeps another user's devices out of reach", async () => {

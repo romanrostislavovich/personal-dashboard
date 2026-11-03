@@ -5,6 +5,8 @@ import {
   VpnDeviceInput,
   VpnDeviceUpdate,
   VpnStatus,
+  VpnSwitch,
+  VpnSwitchResult,
 } from '@pd/contracts';
 import {ApiClient, apiRequest} from '../api-client';
 
@@ -29,5 +31,7 @@ export function vpnApi(api: ApiClient) {
     updateDevice: (id: string, input: VpnDeviceUpdate) =>
       api.patch<void>(`/api/vpn/devices/${id}`, input),
     removeDevice: (id: string) => api.delete(`/api/vpn/devices/${id}`),
+    switchDevice: (id: string, input: VpnSwitch) =>
+      api.post<VpnSwitchResult>(`/api/vpn/devices/${id}/switch`, input),
   };
 }

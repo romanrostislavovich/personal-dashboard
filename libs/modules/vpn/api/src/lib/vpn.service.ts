@@ -5,7 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {ConfigService} from '@nestjs/config';
-import {AppConfig, Database, DB, UsersService} from '@pd/api-core';
+import {
+  AppConfig,
+  Database,
+  DB,
+  PushService,
+  RealtimeService,
+  UsersService,
+} from '@pd/api-core';
 import {
   addDays,
   parseLocalDate,
@@ -17,6 +24,7 @@ import {
   VpnDeviceUpdate,
   VpnState,
   VpnStatus,
+  VpnSwitchResult,
   zonedDateTime,
 } from '@pd/contracts';
 import {and, asc, desc, eq, gte, sql, sum} from 'drizzle-orm';
@@ -56,6 +64,8 @@ export class VpnService {
     @Inject(DB) private readonly db: Database,
     @Inject(ConfigService) private readonly config: AppConfig,
     private readonly users: UsersService,
+    private readonly realtime: RealtimeService,
+    private readonly push: PushService,
   ) {}
 
   async status(userId: string): Promise<VpnStatus> {
@@ -221,6 +231,33 @@ export class VpnService {
     if (!deleted.length) {
       throw new NotFoundException();
     }
+  }
+
+  /**
+   * On the server only (VpnServerActions): the VPN of a device on or off. The desktop app of that
+   * computer hears it live; a phone gets a silent push and asks AmneziaWG. Nothing answers back:
+   * the device shows online (or not) within a minute, by its handshakes.
+   */
+  async switchDevice(
+    userId: string,
+    id: string,
+    up: boolean,
+  ): Promise<VpnSwitchResult> {
+    const device = await this.device(userId, id);
+    this.realtime.emit(userId, {
+      type: 'vpn',
+      deviceId: device.id,
+      up,
+      killSwitch: device.killSwitch,
+    });
+    const phones =
+      device.kind === 'phone'
+        ? await this.push.wake(userId, 'vpn', {
+            device: device.id,
+            up: up ? '1' : '0',
+          })
+        : 0;
+    return {device: device.name, up, phones};
   }
 
   server(userId: string): Promise<ServerRow | undefined> {

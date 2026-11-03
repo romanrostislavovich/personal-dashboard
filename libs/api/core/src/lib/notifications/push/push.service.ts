@@ -250,7 +250,12 @@ export class PushService implements OnApplicationBootstrap {
    * what it does there (`revive` — the collection is started again, see SensorsWorker). The
    * number of phones it went to; 0 — none takes it (no key, no phone that draws its own).
    */
-  async wake(userId: string, kind: string): Promise<number> {
+  async wake(
+    userId: string,
+    kind: string,
+    /** More for the app (strings only: FCM data); `pd` and `kind` are its own. */
+    extra: Record<string, string> = {},
+  ): Promise<number> {
     const fcm = this.canSendTo(userId)
       ? await this.fcm().catch(() => null)
       : null;
@@ -261,7 +266,7 @@ export class PushService implements OnApplicationBootstrap {
     for (const device of await this.devices(userId)) {
       if (device.rich) {
         await fcm.fcm
-          .sendData(device.token, {pd: '1', kind})
+          .sendData(device.token, {...extra, pd: '1', kind})
           .then(() => sent++)
           .catch(() => undefined);
       }

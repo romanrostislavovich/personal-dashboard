@@ -76,6 +76,11 @@ export class VpnPhoneComponent {
     void phoneVpn().then(({plugin}) => {
       this.plugin = plugin;
       this.shown.set(plugin !== null);
+      // The native side keeps it too: "turn the VPN on on the phone" arrives as a push.
+      const id = this.deviceId();
+      if (id) {
+        void plugin?.setDevice?.({id});
+      }
       void this.refresh();
     });
     const timer = setInterval(() => void this.refresh(), REFRESH_MS);
@@ -84,6 +89,7 @@ export class VpnPhoneComponent {
 
   protected choose(id: string): void {
     this.deviceId.set(id);
+    void this.plugin?.setDevice?.({id});
     try {
       localStorage.setItem(DEVICE_KEY, id);
     } catch {

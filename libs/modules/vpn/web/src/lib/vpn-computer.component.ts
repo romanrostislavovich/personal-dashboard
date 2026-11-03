@@ -17,13 +17,18 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import {TranslocoPipe} from '@jsverse/transloco';
 import {VpnDevice} from '@pd/contracts';
-import {desktopBridge, DesktopVpnResult, DesktopVpnStatus} from '@pd/web-core';
+import {
+  desktopBridge,
+  DesktopVpnResult,
+  DesktopVpnStatus,
+  VPN_THIS_COMPUTER_KEY,
+} from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
 import {VpnApi} from './vpn.api';
 import {vpnErrorKey} from './vpn-errors';
 
-/** Which VPN device this computer is: remembered here, in this app. */
-const DEVICE_KEY = 'pd.vpn.thisComputer';
+/** Which VPN device this computer is: remembered here, in this app (live commands read it too). */
+const DEVICE_KEY = VPN_THIS_COMPUTER_KEY;
 /** The tunnel's state as Windows sees it: looked at again this often. */
 const REFRESH_MS = 10_000;
 

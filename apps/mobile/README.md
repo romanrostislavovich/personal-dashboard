@@ -70,3 +70,7 @@ holding its runtime permission `CONTROL_TUNNELS`, and only while "Allow remote c
 in its settings. The tunnel is named `dashboard` on the import of its QR code. AmneziaWG answers
 nothing: whether a VPN carries the traffic is Android's `TRANSPORT_VPN`. "No internet when the VPN
 fails" is Android's own "Block connections without VPN": the app opens the VPN settings for it.
+"Turn the VPN on on the phone" from the assistant comes as a silent push (`kind: vpn`, the device's
+id): the app acts only when it names the device chosen on its VPN page (kept for the push by
+`setDevice`). AmneziaWG must be free of battery limits ("No restrictions"), or Android refuses to
+start its VPN from the background.
