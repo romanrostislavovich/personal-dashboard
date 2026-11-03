@@ -1,0 +1,98 @@
+{
+  "title": "VPN",
+  "onlineNow": "Online now",
+  "today": "Today",
+  "traffic": "Traffic, 30 days",
+  "state": {
+    "off": "No VPN on this dashboard",
+    "remote": "On the server",
+    "starting": "Starting",
+    "up": "Running",
+    "down": "Not answering"
+  },
+  "stateHint": {
+    "off": "The VPN runs on the server: deploy it with DEPLOY_VPN=yes (see the steps below).",
+    "starting": "The server made its keys; the VPN container answers within a minute or two.",
+    "up": "Devices connect to this address. All their traffic goes through your server.",
+    "down": "The VPN container has not answered for over 3 minutes: devices cannot connect.",
+    "remote": "The VPN runs on the server; this computer syncs with it. Devices added, renamed or deleted here change on the server. Who is online and the traffic are on the server's page."
+  },
+  "kind": {
+    "phone": "Phone",
+    "computer": "Computer",
+    "other": "Other"
+  },
+  "add": {
+    "title": "A new device",
+    "name": "Name",
+    "namePlaceholder": "Pixel, ThinkPad…",
+    "kind": "Kind of device",
+    "save": "Add and show the QR code"
+  },
+  "devices": {
+    "title": "Devices",
+    "add": "Add a device",
+    "online": "Connected",
+    "offline": "Not connected",
+    "onlineFrom": "In the VPN now, from {{address}}",
+    "lastSeen": "Last connected {{when}}",
+    "never": "Never connected — scan its QR code in the app",
+    "todaySuffix": "today",
+    "networks": "Networks in 90 days: {{count}}",
+    "config": "QR code and file",
+    "rename": "Rename",
+    "renamePrompt": "The device's name (up to {{max}} characters)",
+    "deleteConfirm": "Delete {{name}}? Its key stops opening the VPN within a minute.",
+    "emptyTitle": "No devices yet",
+    "empty": "Add the phone first: you will get a QR code to scan in the AmneziaWG app."
+  },
+  "config": {
+    "qrAlt": "The QR code of the VPN for {{name}}",
+    "failed": "The config could not be loaded.",
+    "phoneHint": "In AmneziaWG: + → Scan from QR code.",
+    "computerHint": "Download the file and in AmneziaWG: Import tunnel(s) from file. Or scan the QR code with a phone.",
+    "secret": "This holds the device's key: whoever sees it can use your VPN. Do not send it in chats.",
+    "download": "File .conf"
+  },
+  "setup": {
+    "title": "How to set up",
+    "phoneTitle": "Android phone",
+    "phone": {
+      "1": "Install AmneziaWG from Google Play (or AmneziaVPN — it reads the same QR code).",
+      "2": "Here: Add a device → Phone, then in the app: + → Scan from QR code.",
+      "3": "Turn it on: the device's dot here turns green within a minute.",
+      "4": "Without internet when the VPN is off: in the phone's VPN settings (on Xiaomi: Connection & sharing → VPN) → AmneziaWG → Always-on VPN and Block connections without VPN."
+    },
+    "computerTitle": "Windows computer",
+    "computer": {
+      "1": "Install the AmneziaWG client for Windows from its GitHub releases.",
+      "2": "Here: Add a device → Computer → File .conf; in the client: Import tunnel(s) from file → Activate.",
+      "3": "All traffic goes through the tunnel, so the client blocks the internet while the VPN is off (its \"Block untunneled traffic\" is on by itself)."
+    },
+    "serverTitle": "The server (once)",
+    "server": {
+      "1": "Add a DNS A record vpn.<your domain> → the server's IP at your domain's registrar. Moving the VPN to another IP later changes only this record.",
+      "2": "Put DEPLOY_VPN=yes into deploy/deploy.local.env and deploy: the server builds the VPN, opens UDP 37853 and starts it.",
+      "3": "The protocol is AmneziaWG: WireGuard whose packets a DPI does not recognise, with settings of its own made for your server."
+    }
+  },
+  "widget": {
+    "title": "VPN",
+    "nobody": "No device in the VPN now",
+    "open": "Open",
+    "failed": "The VPN's state could not be loaded.",
+    "remote": "The VPN runs on the server: who is online is seen there."
+  },
+  "links": {
+    "hours": "Hours in the VPN",
+    "megabytes": "Megabytes through the VPN"
+  },
+  "errors": {
+    "full": "All 253 addresses of the VPN are taken: delete a device you do not use.",
+    "no-server": "The VPN is not set up on the server yet.",
+    "refused": "The server refused it: no free address, or no VPN on it.",
+    "gone": "This device is gone already: the page is refreshed.",
+    "offline": "No connection to the server: try again in a moment.",
+    "generic": "It did not work: try again in a moment."
+  }
+}

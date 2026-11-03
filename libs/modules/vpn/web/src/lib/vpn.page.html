@@ -1,0 +1,173 @@
+<header class="page-header">
+  <h1 class="page-title">{{ 'vpn.title' | transloco }}</h1>
+  @if (status.value(); as vpn) {
+    @if (vpn.state !== 'off') {
+      <button matButton="filled" (click)="add()">
+        <mat-icon>add</mat-icon> {{ 'vpn.devices.add' | transloco }}
+      </button>
+    }
+  }
+</header>
+
+<pd-resource-state [resource]="status">
+  <ng-template>
+    @if (status.value(); as vpn) {
+      <mat-card appearance="outlined" class="state" [class]="vpn.state">
+        <mat-card-content>
+          <div class="state-line">
+            <span class="dot" aria-hidden="true"></span>
+            <strong>{{ 'vpn.state.' + vpn.state | transloco }}</strong>
+            @if (vpn.endpoint) {
+              <code>{{ vpn.endpoint }}</code>
+            }
+          </div>
+          <p class="state-hint">
+            {{ 'vpn.stateHint.' + vpn.state | transloco }}
+          </p>
+          @if (vpn.state !== 'off' && vpn.state !== 'remote') {
+            <div class="numbers">
+              <span>
+                <small>{{ 'vpn.onlineNow' | transloco }}</small>
+                {{ online() }} / {{ vpn.devices.length }}
+              </span>
+              <span>
+                <small>{{ 'vpn.today' | transloco }}</small>
+                {{ bytes(vpn.todayBytes) }}
+              </span>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      @if (vpn.state !== 'off') {
+        <h2 class="section-title">{{ 'vpn.devices.title' | transloco }}</h2>
+        @for (device of vpn.devices; track device.id) {
+          <mat-card appearance="outlined" class="device">
+            <mat-icon class="kind">{{ icons[device.kind] }}</mat-icon>
+            <div class="about">
+              <div class="name">
+                @if (vpn.state !== 'remote') {
+                  <span
+                    class="dot"
+                    role="img"
+                    [class.on]="device.online"
+                    [attr.aria-label]="
+                      (device.online
+                        ? 'vpn.devices.online'
+                        : 'vpn.devices.offline'
+                      ) | transloco
+                    "
+                  ></span>
+                }
+                {{ device.name }}
+              </div>
+              <small>
+                @if (vpn.state === 'remote') {
+                  {{ device.address }}
+                } @else if (device.online) {
+                  {{
+                    'vpn.devices.onlineFrom'
+                      | transloco: {address: device.lastAddress}
+                  }}
+                } @else if (device.lastHandshakeAt) {
+                  {{
+                    'vpn.devices.lastSeen'
+                      | transloco
+                        : {
+                            when:
+                              (device.lastHandshakeAt | date: 'd MMM, HH:mm'),
+                          }
+                  }}
+                } @else {
+                  {{ 'vpn.devices.never' | transloco }}
+                }
+                @if (vpn.state !== 'remote') {
+                  · {{ bytes(device.todayBytes) }}
+                  {{ 'vpn.devices.todaySuffix' | transloco }}
+                }
+              </small>
+              @if (device.networks.length > 1) {
+                <small class="networks">
+                  {{
+                    'vpn.devices.networks'
+                      | transloco: {count: device.networks.length}
+                  }}
+                </small>
+              }
+            </div>
+            <div class="actions">
+              <button
+                matIconButton
+                [matTooltip]="'vpn.devices.config' | transloco"
+                [attr.aria-label]="'vpn.devices.config' | transloco"
+                (click)="showConfig(device)"
+              >
+                <mat-icon>qr_code_2</mat-icon>
+              </button>
+              <button
+                matIconButton
+                [disabled]="busy() === device.id"
+                [matTooltip]="'vpn.devices.rename' | transloco"
+                [attr.aria-label]="'vpn.devices.rename' | transloco"
+                (click)="rename(device)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                matIconButton
+                [disabled]="busy() === device.id"
+                [matTooltip]="'core.actions.delete' | transloco"
+                [attr.aria-label]="'core.actions.delete' | transloco"
+                (click)="remove(device)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </mat-card>
+        } @empty {
+          <pd-empty-state
+            icon="vpn_lock"
+            [title]="'vpn.devices.emptyTitle' | transloco"
+            [text]="'vpn.devices.empty' | transloco"
+          />
+        }
+      }
+
+      <pd-resource-state [resource]="days">
+        <ng-template>
+          @if (hasTraffic()) {
+            <h2 class="section-title">{{ 'vpn.traffic' | transloco }}</h2>
+            <mat-card appearance="outlined" class="chart">
+              <mat-card-content>
+                <pd-bar-chart
+                  [bars]="bars()"
+                  [format]="formatAxis"
+                  [label]="'vpn.traffic' | transloco"
+                />
+              </mat-card-content>
+            </mat-card>
+          }
+        </ng-template>
+      </pd-resource-state>
+
+      <h2 class="section-title">{{ 'vpn.setup.title' | transloco }}</h2>
+      <pd-integration-guide
+        guide="vpn.setup.phone"
+        [steps]="4"
+        [title]="'vpn.setup.phoneTitle' | transloco"
+        link="https://play.google.com/store/apps/details?id=org.amnezia.awg"
+      />
+      <pd-integration-guide
+        guide="vpn.setup.computer"
+        [steps]="3"
+        [title]="'vpn.setup.computerTitle' | transloco"
+        link="https://github.com/amnezia-vpn/amneziawg-windows-client/releases"
+      />
+      <pd-integration-guide
+        guide="vpn.setup.server"
+        [steps]="3"
+        [title]="'vpn.setup.serverTitle' | transloco"
+      />
+    }
+  </ng-template>
+</pd-resource-state>

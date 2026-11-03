@@ -43,10 +43,13 @@ services:
       DESKTOP_INSTALLERS_PATH: /downloads/desktop
       # The Android app deploy.sh puts there (deploy/mobile-apk.Dockerfile).
       MOBILE_APK_PATH: /downloads/mobile
+      # The VPN's devices for its container, and its status back (DEPLOY_VPN=yes; empty — none).
+      VPN_DIR: ${VPN_DIR:-}
     volumes:
       - ./backups:/backups:ro
       - ./security:/security:ro
       - ./downloads:/downloads:ro
+      - ./vpn-data:/vpn
     depends_on:
       db:
         condition: service_healthy
@@ -90,6 +93,29 @@ services:
     mem_limit: ${OLLAMA_MEMORY:-1g}
     <<: *logging
 
+  # The owner's own VPN, optional: `COMPOSE_PROFILES=vpn` (deploy.sh with DEPLOY_VPN=yes) switches
+  # it on. AmneziaWG — WireGuard that a DPI does not recognise — in userspace; the dashboard
+  # writes its devices into ./vpn-data and reads its status back (libs/modules/vpn). On a network
+  # of its own: a device in the tunnel never reaches the database or the other containers.
+  vpn:
+    build: ./vpn
+    image: personal-dashboard-vpn:local
+    profiles: ['vpn']
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    sysctls:
+      net.ipv4.ip_forward: 1
+    ports:
+      - '${VPN_PORT:-37853}:${VPN_PORT:-37853}/udp'
+    volumes:
+      - ./vpn-data:/vpn
+    networks:
+      - vpn
+    <<: *logging
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -128,6 +154,10 @@ services:
       db:
         condition: service_healthy
     <<: *logging
+
+networks:
+  # The VPN's own: the services above without `networks` stay on the default one.
+  vpn:
 
 volumes:
   db-data:

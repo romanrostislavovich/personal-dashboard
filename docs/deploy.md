@@ -242,6 +242,23 @@ To stop it: `rm /etc/cron.d/dashboard-security`.
 A firewall of the hosting (Hetzner Cloud Firewall) is outside the server and not visible to the
 script: with one in place, mark the "no firewall" finding as known.
 
+## Your own VPN (optional)
+
+The dashboard can run a VPN of yours on the same server: AmneziaWG, a WireGuard whose packets a
+DPI does not recognise. Devices are added in the VPN section, each with a QR code for the
+AmneziaWG app (see [the proposal](proposals/vpn.md)).
+
+1. Add a DNS A record `vpn.<your domain>` → the server's IP. Devices connect to the name: moving
+   the VPN to another IP later changes only this record.
+2. Put `DEPLOY_VPN=yes` into `deploy/deploy.local.env` and deploy. `deploy.sh` uploads
+   `deploy/vpn`, adds `vpn` to `COMPOSE_PROFILES` and `VPN_DIR=/vpn` to the server's `.env`,
+   opens UDP 37853 in ufw (another port: `VPN_PORT` in the server's `.env`) and builds the
+   container there.
+3. A firewall of the hosting (Hetzner Cloud Firewall) needs the same UDP port opened by hand.
+
+The container's log: `docker compose logs vpn`. To switch it off: remove `vpn` from
+`COMPOSE_PROFILES` and `VPN_DIR` from `.env`, then `docker compose up -d --remove-orphans`.
+
 ## Hardening the server
 
 What the security agent asks for, as it was done on personal-world.com (2026-10-26). Check that

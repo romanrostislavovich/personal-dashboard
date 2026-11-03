@@ -345,6 +345,26 @@ if $WITH_DATA; then
       (SELECT count(*) FROM finance_transactions) || ' transactions' FROM users\"")"
 fi
 
+# The VPN (DEPLOY_VPN=yes in deploy.local.env, see libs/modules/vpn): its container is built
+# on the server from deploy/vpn, the dashboard and it share vpn-data, the firewall opens its port.
+remote "mkdir -p $REMOTE_DIR/vpn-data && chown 1000:1000 $REMOTE_DIR/vpn-data && chmod 700 $REMOTE_DIR/vpn-data"
+if [ "${DEPLOY_VPN:-}" = yes ]; then
+  step "The VPN"
+  scp -q -i "$DEPLOY_SSH_KEY" -r deploy/vpn "$DEPLOY_HOST:$REMOTE_DIR/"
+  remote "cd $REMOTE_DIR &&
+    profiles=\$(grep -E '^COMPOSE_PROFILES=' .env | cut -d= -f2-)
+    case \",\$profiles,\" in *,vpn,*) ;; *)
+      sed -i '/^COMPOSE_PROFILES=/d' .env
+      echo \"COMPOSE_PROFILES=\${profiles:+\$profiles,}vpn\" >> .env ;; esac
+    grep -q '^VPN_DIR=' .env || echo 'VPN_DIR=/vpn' >> .env
+    port=\$(grep -E '^VPN_PORT=' .env | cut -d= -f2-); port=\${port:-37853}
+    { ! command -v ufw >/dev/null || ufw allow \$port/udp comment 'dashboard vpn' >/dev/null; } &&
+    docker compose build -q vpn" || {
+    echo "The VPN was not built (docker compose build vpn on the server)." >&2
+    exit 1
+  }
+fi
+
 step "Starting"
 remote "cd $REMOTE_DIR && docker compose up -d --wait --remove-orphans --quiet-pull 2>&1" | tail -1 || {
   remote "cd $REMOTE_DIR && docker compose ps && docker compose logs --tail 30 app" >&2

@@ -20,6 +20,7 @@ import {weatherModule} from '@pd/weather-web';
 import {writingModule} from '@pd/writing-web';
 import {screenshotsModule} from '@pd/screenshots-web';
 import {WebDashboardModule} from '@pd/web-core';
+import {vpnModule} from '@pd/vpn-web';
 
 /**
  * Enabled dashboard modules (web part). Order = order in the menu and on the home page.
@@ -48,4 +49,5 @@ export const enabledModules: WebDashboardModule[] = [
   lifeModule,
   securityModule,
   achievementsModule,
+  vpnModule,
 ];

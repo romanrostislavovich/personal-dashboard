@@ -57,7 +57,9 @@
       "@pd/writing-api": ["./libs/modules/writing/api/src/index.ts"],
       "@pd/writing-web": ["./libs/modules/writing/web/src/index.ts"],
       "@pd/client-core": ["./libs/client/core/src/index.ts"],
-      "@pd/tools": ["./tools/nx-plugin/src/index.js"]
+      "@pd/tools": ["./tools/nx-plugin/src/index.js"],
+      "@pd/vpn-api": ["./libs/modules/vpn/api/src/index.ts"],
+      "@pd/vpn-web": ["./libs/modules/vpn/web/src/index.ts"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true

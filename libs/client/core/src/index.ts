@@ -32,3 +32,4 @@ export * from './lib/modules/movies';
 export * from './lib/modules/writing';
 export * from './lib/modules/screenshots';
 export * from './lib/device-link';
+export * from './lib/modules/vpn';

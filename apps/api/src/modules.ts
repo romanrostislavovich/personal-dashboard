@@ -15,6 +15,7 @@ import {VaultModule} from '@pd/vault-api';
 import {HabitsModule} from '@pd/habits-api';
 import {WeatherModule} from '@pd/weather-api';
 import {WritingModule} from '@pd/writing-api';
+import {VpnModule} from '@pd/vpn-api';
 
 /**
  * Enabled dashboard modules (backend part).
@@ -38,4 +39,5 @@ export const enabledModules = [
   WeatherModule,
   WritingModule,
   ScreenshotsModule,
+  VpnModule,
 ];

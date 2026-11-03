@@ -40,6 +40,11 @@ const NOT_EXPORTED = new Set([
   'notification_outbox',
   // The hashes of the tokens of outside AI clients: made again where the data goes.
   'access_tokens',
+  // The VPN's keys would lie in plain files; they open this server's VPN only, and its devices
+  // and their traffic go with them — new devices are a minute's work where the data goes.
+  'vpn_servers',
+  'vpn_devices',
+  'vpn_days',
 ]);
 
 export const USER_COLUMN = 'user_id';
