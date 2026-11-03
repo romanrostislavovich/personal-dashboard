@@ -1,7 +1,7 @@
 import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
 import {achievementTier, AchievementsService, DB, Database} from '@pd/api-core';
 import {count, eq, isNotNull, and, sql} from 'drizzle-orm';
-import {vpnDays, vpnDevices} from './vpn.schema';
+import {vpnDays, vpnDeviceState} from './vpn.schema';
 
 const GB = 1024 ** 3;
 
@@ -99,11 +99,11 @@ export class VpnAchievements implements OnModuleInit {
   private async connectedDevices(userId: string): Promise<number> {
     const [row] = await this.db
       .select({total: count()})
-      .from(vpnDevices)
+      .from(vpnDeviceState)
       .where(
         and(
-          eq(vpnDevices.userId, userId),
-          isNotNull(vpnDevices.firstConnectedAt),
+          eq(vpnDeviceState.userId, userId),
+          isNotNull(vpnDeviceState.firstConnectedAt),
         ),
       );
     return row?.total ?? 0;

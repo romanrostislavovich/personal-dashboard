@@ -24,7 +24,7 @@
           <p class="state-hint">
             {{ 'vpn.stateHint.' + vpn.state | transloco }}
           </p>
-          @if (vpn.state !== 'off') {
+          @if (vpn.state !== 'off' && vpn.state !== 'remote') {
             <div class="numbers">
               <span>
                 <small>{{ 'vpn.onlineNow' | transloco }}</small>
@@ -46,20 +46,25 @@
             <mat-icon class="kind">{{ icons[device.kind] }}</mat-icon>
             <div class="about">
               <div class="name">
-                <span
-                  class="dot"
-                  [class.on]="device.online"
-                  [attr.aria-label]="
-                    (device.online
-                      ? 'vpn.devices.online'
-                      : 'vpn.devices.offline'
-                    ) | transloco
-                  "
-                ></span>
+                @if (vpn.state !== 'remote') {
+                  <span
+                    class="dot"
+                    role="img"
+                    [class.on]="device.online"
+                    [attr.aria-label]="
+                      (device.online
+                        ? 'vpn.devices.online'
+                        : 'vpn.devices.offline'
+                      ) | transloco
+                    "
+                  ></span>
+                }
                 {{ device.name }}
               </div>
               <small>
-                @if (device.online) {
+                @if (vpn.state === 'remote') {
+                  {{ device.address }}
+                } @else if (device.online) {
                   {{
                     'vpn.devices.onlineFrom'
                       | transloco: {address: device.lastAddress}
@@ -76,8 +81,10 @@
                 } @else {
                   {{ 'vpn.devices.never' | transloco }}
                 }
-                · {{ bytes(device.todayBytes) }}
-                {{ 'vpn.devices.todaySuffix' | transloco }}
+                @if (vpn.state !== 'remote') {
+                  · {{ bytes(device.todayBytes) }}
+                  {{ 'vpn.devices.todaySuffix' | transloco }}
+                }
               </small>
               @if (device.networks.length > 1) {
                 <small class="networks">
@@ -99,6 +106,7 @@
               </button>
               <button
                 matIconButton
+                [disabled]="busy() === device.id"
                 [matTooltip]="'vpn.devices.rename' | transloco"
                 [attr.aria-label]="'vpn.devices.rename' | transloco"
                 (click)="rename(device)"
@@ -107,6 +115,7 @@
               </button>
               <button
                 matIconButton
+                [disabled]="busy() === device.id"
                 [matTooltip]="'core.actions.delete' | transloco"
                 [attr.aria-label]="'core.actions.delete' | transloco"
                 (click)="remove(device)"
@@ -122,20 +131,24 @@
             [text]="'vpn.devices.empty' | transloco"
           />
         }
-
-        @if (vpn.devices.length) {
-          <h2 class="section-title">{{ 'vpn.traffic' | transloco }}</h2>
-          <mat-card appearance="outlined" class="chart">
-            <mat-card-content>
-              <pd-bar-chart
-                [bars]="bars()"
-                [format]="formatAxis"
-                [label]="'vpn.traffic' | transloco"
-              />
-            </mat-card-content>
-          </mat-card>
-        }
       }
+
+      <pd-resource-state [resource]="days">
+        <ng-template>
+          @if (hasTraffic()) {
+            <h2 class="section-title">{{ 'vpn.traffic' | transloco }}</h2>
+            <mat-card appearance="outlined" class="chart">
+              <mat-card-content>
+                <pd-bar-chart
+                  [bars]="bars()"
+                  [format]="formatAxis"
+                  [label]="'vpn.traffic' | transloco"
+                />
+              </mat-card-content>
+            </mat-card>
+          }
+        </ng-template>
+      </pd-resource-state>
 
       <h2 class="section-title">{{ 'vpn.setup.title' | transloco }}</h2>
       <pd-integration-guide

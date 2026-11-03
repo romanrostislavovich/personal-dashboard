@@ -44,7 +44,6 @@ const NOT_EXPORTED = new Set([
   // and their traffic go with them — new devices are a minute's work where the data goes.
   'vpn_servers',
   'vpn_devices',
-  'vpn_networks',
   'vpn_days',
 ]);
 

@@ -394,15 +394,15 @@ story (`life_stories`), the morning digest (`morning_digest_snapshots`).
 
 ## The dashboard itself
 
-| What                                                                                                                                         | Where                                     | To Links                     |
-| -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------- |
-| Days the dashboard was opened                                                                                                                | `dashboard_active_days`                   | —                            |
-| Sign-ins: when, IP, browser, outcome                                                                                                         | `sign_ins`; sessions in `auth.sessions`   | —                            |
-| Achievements unlocked                                                                                                                        | `achievements_unlocked`                   | —                            |
-| 🧪 Notifications sent (Telegram, push), their actions; read or not, the answer (button and words) and where it was given — the bell, 90 days | `notification_outbox`                     | —                            |
-| Security findings and reports                                                                                                                | `security_findings`, `security_reports`   | project facts (findings)     |
-| The VPN: a device's last handshake, address and bytes (a minute's look at the container); its day's bytes and minutes; its networks, 90 days | `vpn_devices`, `vpn_days`, `vpn_networks` | `vpn.hours`, `vpn.megabytes` |
-| Background jobs: runs, failures                                                                                                              | `system.job_runs`, `system.log`           | —                            |
+| What                                                                                                                                                                             | Where                                          | To Links                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ---------------------------- |
+| Days the dashboard was opened                                                                                                                                                    | `dashboard_active_days`                        | —                            |
+| Sign-ins: when, IP, browser, outcome                                                                                                                                             | `sign_ins`; sessions in `auth.sessions`        | —                            |
+| Achievements unlocked                                                                                                                                                            | `achievements_unlocked`                        | —                            |
+| 🧪 Notifications sent (Telegram, push), their actions; read or not, the answer (button and words) and where it was given — the bell, 90 days                                     | `notification_outbox`                          | —                            |
+| Security findings and reports                                                                                                                                                    | `security_findings`, `security_reports`        | project facts (findings)     |
+| The VPN: a device's last handshake, address and bytes (a minute's look at the container, unsynced); its day's bytes and minutes (every 15 min); its networks, 90 days (unsynced) | `vpn.device_state`, `vpn_days`, `vpn.networks` | `vpn.hours`, `vpn.megabytes` |
+| Background jobs: runs, failures                                                                                                                                                  | `system.job_runs`, `system.log`                | —                            |
 
 ## Moments, periods, projects, people
 

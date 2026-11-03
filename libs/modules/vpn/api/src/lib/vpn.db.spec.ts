@@ -30,6 +30,7 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
   let vpn: VpnService;
   let server: VpnServerService;
   const userId = randomUUID();
+  const otherId = randomUUID();
   const sent: string[] = [];
 
   /** What the container would write: a line per peer. */
@@ -43,6 +44,15 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
     await utimes(path, at, at);
   };
   const seconds = () => Math.floor(Date.now() / 1000);
+  /** A minute that is not a quarter of an hour: the bytes stay pending. */
+  const quiet = new Date('2026-11-03T12:07:00Z');
+  /** The row's version: a synced row written again changes it, and the sync sends it. */
+  const versions = async (table: 'vpn_devices' | 'vpn_servers') =>
+    (
+      await db.execute<{xmin: string}>(
+        sql`SELECT xmin::text FROM ${sql.identifier(table)} ORDER BY id`,
+      )
+    ).rows.map(row => row.xmin);
 
   beforeAll(async () => {
     configureFieldEncryption('vpn-database-test-encryption-key-not-real');
@@ -56,7 +66,8 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
     db = drizzle({client: pool, casing: 'snake_case'});
     await migrate(db, {migrationsFolder: MIGRATIONS});
     await db.execute(sql`INSERT INTO users (id, email, password_hash, display_name)
-      VALUES (${userId}, 'vpn@test.local', 'x', 'Test')`);
+      VALUES (${userId}, 'vpn@test.local', 'x', 'Test'),
+             (${otherId}, 'other-vpn@test.local', 'x', 'Other')`);
     dir = await mkdtemp(join(tmpdir(), 'pd-vpn-'));
     const owner = {id: userId, locale: 'en', timeZone: 'UTC'};
     const users = {
@@ -75,7 +86,7 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
         sent.push(notification.title);
       },
     };
-    vpn = new VpnService(db as never, users as never);
+    vpn = new VpnService(db as never, config as never, users as never);
     server = new VpnServerService(
       db as never,
       config as never,
@@ -94,8 +105,14 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
     }
   });
 
+  it('refuses a device before the server made its keys', async () => {
+    await expect(
+      vpn.addDevice(userId, {name: 'Early', kind: 'phone'}),
+    ).rejects.toMatchObject({response: {reason: 'no-server'}});
+  });
+
   it('makes its keys once and gives a device a config to the name, not the address', async () => {
-    await server.tick();
+    await server.tick(quiet);
     expect((await vpn.status(userId)).state).toBe('starting');
     expect((await vpn.status(userId)).endpoint).toBe(
       'vpn.dash.example.com:37853',
@@ -106,57 +123,101 @@ describe.skipIf(!ADMIN_URL)('the VPN', {timeout: 60_000}, () => {
     const {config} = await vpn.deviceConfig(userId, phone.id);
     expect(config).toContain('Endpoint = vpn.dash.example.com:37853');
 
-    await server.tick();
+    await server.tick(quiet);
     const peers = await readFile(join(dir, 'awg0.conf'), 'utf8');
     expect(peers).toContain('AllowedIPs = 10.77.0.2/32');
     expect(peers).not.toContain('Endpoint');
   });
 
-  it('counts the traffic of the day, tells the first connection and a new network', async () => {
+  it("keeps another user's devices out of reach", async () => {
+    const [device] = (await vpn.status(userId)).devices;
+    await expect(vpn.deviceConfig(otherId, device.id)).rejects.toMatchObject({
+      status: 404,
+    });
+    await expect(
+      vpn.renameDevice(otherId, device.id, {name: 'Mine'}),
+    ).rejects.toMatchObject({status: 404});
+    await expect(vpn.removeDevice(otherId, device.id)).rejects.toMatchObject({
+      status: 404,
+    });
+    expect((await vpn.status(otherId)).devices).toEqual([]);
+  });
+
+  it('counts the traffic, adds it to the day on a quarter, tells the first connection and a new network', async () => {
     const [device] = (await vpn.status(userId)).devices;
     const [{public_key: key}] = (
       await db.execute<{public_key: string}>(
         sql`SELECT public_key FROM vpn_devices WHERE id = ${device.id}`,
       )
     ).rows;
+    const synced = [
+      await versions('vpn_devices'),
+      await versions('vpn_servers'),
+    ];
 
     await status([[key, '93.84.1.2:5000', seconds(), 1000, 5000]]);
-    await server.tick();
+    await server.tick(quiet);
     await status([[key, '93.84.7.9:5001', seconds(), 1500, 9000]]);
-    await server.tick();
+    await server.tick(quiet);
 
+    // The minutes' looks write only the unsynced state: the synced rows stay as they were.
+    expect([
+      await versions('vpn_devices'),
+      await versions('vpn_servers'),
+    ]).toEqual(synced);
     const now = await vpn.status(userId);
     expect(now.state).toBe('up');
     expect(now.devices[0].online).toBe(true);
     expect(now.todayBytes).toBe(9000 + 1500);
-    expect((await vpn.days(userId, 1))[0].onlineMinutes).toBe(2);
+    expect(await vpn.days(userId, 1)).toEqual([]);
     expect(sent).toEqual(['🔐 Phone is in the VPN']);
+
+    await server.tick(new Date('2026-11-03T12:15:00Z'));
+    expect((await vpn.days(userId, 1))[0]).toMatchObject({
+      rxBytes: 1500,
+      txBytes: 9000,
+      // The quarter's own look counts too: three minutes online.
+      onlineMinutes: 3,
+    });
+    expect((await vpn.status(userId)).todayBytes).toBe(9000 + 1500);
 
     // The same city's network is not new; another country's is.
     await status([[key, '185.1.2.3:6000', seconds(), 1600, 9100]]);
-    await server.tick();
+    await server.tick(quiet);
     expect(sent.at(-1)).toBe('🌍 Phone: the VPN from a new network');
-    expect(now.devices[0].networks).toHaveLength(1);
+    expect((await vpn.status(userId)).devices[0].networks).toHaveLength(2);
   });
 
   it('tells the VPN down once and back up once', async () => {
     sent.length = 0;
     await status([], 10 * 60_000);
-    await server.tick();
-    await server.tick();
+    await server.tick(quiet);
+    await server.tick(quiet);
     expect((await vpn.status(userId)).state).toBe('down');
     await status([]);
-    await server.tick();
+    await server.tick(quiet);
     expect(sent).toEqual(['🔴 The VPN is down', '🟢 The VPN is back']);
   });
 
   it('a deleted device leaves the peers, its days stay', async () => {
     const [device] = (await vpn.status(userId)).devices;
+    await server.flush(userId);
     await vpn.removeDevice(userId, device.id);
-    await server.tick();
+    await server.tick(quiet);
     expect(await readFile(join(dir, 'awg0.conf'), 'utf8')).not.toContain(
       '[Peer]',
     );
     expect((await vpn.days(userId, 1))[0].txBytes).toBe(9100);
+    expect((await vpn.status(userId)).todayBytes).toBe(9100 + 1600);
+  });
+
+  it('refuses a device when all 253 addresses are taken', async () => {
+    await db.execute(sql`INSERT INTO vpn_devices
+      (user_id, name, kind, private_key, public_key, preshared_key, address)
+      SELECT ${userId}, 'D' || n, 'other', 'x', 'k' || n, 'x', '10.77.0.' || n
+      FROM generate_series(2, 254) n`);
+    await expect(
+      vpn.addDevice(userId, {name: 'One more', kind: 'phone'}),
+    ).rejects.toMatchObject({response: {reason: 'full'}});
   });
 });

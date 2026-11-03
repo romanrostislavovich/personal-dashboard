@@ -22,13 +22,13 @@
 
 .state {
   &.up .dot {
-    background: var(--pd-success, #2e7d32);
+    background: var(--pd-success);
   }
   &.down .dot {
     background: var(--mat-sys-error);
   }
   &.starting .dot {
-    background: var(--pd-warning, #f9a825);
+    background: var(--mat-sys-tertiary);
   }
 }
 
@@ -96,7 +96,7 @@
     overflow-wrap: anywhere;
   }
   .dot.on {
-    background: var(--pd-success, #2e7d32);
+    background: var(--pd-success);
   }
   small {
     color: var(--mat-sys-on-surface-variant);

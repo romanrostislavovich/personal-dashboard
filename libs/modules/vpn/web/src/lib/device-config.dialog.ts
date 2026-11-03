@@ -14,6 +14,7 @@ import {VpnDevice} from '@pd/contracts';
 import QRCode from 'qrcode';
 import {firstValueFrom} from 'rxjs';
 import {VpnApi} from './vpn.api';
+import {configFileName} from './vpn-errors';
 
 /**
  * A device's config: a QR code for the phone's app, a file for a computer. It holds the
@@ -30,7 +31,7 @@ import {VpnApi} from './vpn.api';
     TranslocoPipe,
   ],
   template: `
-    <h2 mat-dialog-title>{{ device.name }}</h2>
+    <h2 mat-dialog-title class="title">{{ device.name }}</h2>
     <mat-dialog-content class="content">
       @if (qr(); as src) {
         <img
@@ -59,6 +60,9 @@ import {VpnApi} from './vpn.api';
     </mat-dialog-actions>
   `,
   styles: `
+    .title {
+      overflow-wrap: anywhere;
+    }
     .content {
       display: flex;
       flex-direction: column;
@@ -66,6 +70,7 @@ import {VpnApi} from './vpn.api';
       gap: 8px;
       max-width: 420px;
     }
+    /* Black on white whatever the theme: a camera reads it in the dark too. */
     .qr {
       width: min(320px, 70vw);
       aspect-ratio: 1;
@@ -97,7 +102,6 @@ export class VpnDeviceConfigDialog implements OnInit {
     try {
       const {config} = await firstValueFrom(this.api.config(this.device.id));
       this.text.set(config);
-      // Black on white whatever the theme: a camera reads it in the dark too.
       this.qr.set(
         await QRCode.toDataURL(config, {
           errorCorrectionLevel: 'M',
@@ -118,8 +122,7 @@ export class VpnDeviceConfigDialog implements OnInit {
     }
     const link = document.createElement('a');
     link.href = URL.createObjectURL(new Blob([text], {type: 'text/plain'}));
-    // The app names the tunnel after the file: Latin letters, digits, `-` and `_`.
-    link.download = `${this.device.name.replace(/[^\w-]+/g, '_').slice(0, 15) || 'vpn'}.conf`;
+    link.download = configFileName(this.device.name, this.device.kind);
     link.click();
     URL.revokeObjectURL(link.href);
   }

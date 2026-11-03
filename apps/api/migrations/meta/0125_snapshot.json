@@ -1,5 +1,5 @@
 {
-  "id": "439a79d5-edf2-4081-9e31-2244e67bb713",
+  "id": "449d4cab-f833-422f-a56b-d9edf75f66f9",
   "prevId": "88bdb985-dab6-4ded-8ed4-3ad01afb36a6",
   "version": "7",
   "dialect": "postgresql",
@@ -15461,27 +15461,6 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "vpn_days_device_id_day_index": {
-          "name": "vpn_days_device_id_day_index",
-          "columns": [
-            {
-              "expression": "device_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "day",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
@@ -15509,6 +15488,126 @@
             "id"
           ],
           "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "vpn_days_deviceId_day_unique": {
+          "name": "vpn_days_deviceId_day_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "device_id",
+            "day"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "vpn.device_state": {
+      "name": "device_state",
+      "schema": "vpn",
+      "columns": {
+        "device_id": {
+          "name": "device_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "first_connected_at": {
+          "name": "first_connected_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_handshake_at": {
+          "name": "last_handshake_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_address": {
+          "name": "last_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seen_rx": {
+          "name": "seen_rx",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "seen_tx": {
+          "name": "seen_tx",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "pending_day": {
+          "name": "pending_day",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pending_rx": {
+          "name": "pending_rx",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "pending_tx": {
+          "name": "pending_tx",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "pending_minutes": {
+          "name": "pending_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "device_state_device_id_vpn_devices_id_fk": {
+          "name": "device_state_device_id_vpn_devices_id_fk",
+          "tableFrom": "device_state",
+          "tableTo": "vpn_devices",
+          "columnsFrom": [
+            "device_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "device_state_user_id_users_id_fk": {
+          "name": "device_state_user_id_users_id_fk",
+          "tableFrom": "device_state",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -15571,38 +15670,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "first_connected_at": {
-          "name": "first_connected_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_handshake_at": {
-          "name": "last_handshake_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_address": {
-          "name": "last_address",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "seen_rx": {
-          "name": "seen_rx",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "seen_tx": {
-          "name": "seen_tx",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -15632,42 +15699,6 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "vpn_devices_user_id_address_index": {
-          "name": "vpn_devices_user_id_address_index",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "address",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "vpn_devices_public_key_index": {
-          "name": "vpn_devices_public_key_index",
-          "columns": [
-            {
-              "expression": "public_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
@@ -15686,14 +15717,30 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "vpn_devices_userId_address_unique": {
+          "name": "vpn_devices_userId_address_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id",
+            "address"
+          ]
+        },
+        "vpn_devices_publicKey_unique": {
+          "name": "vpn_devices_publicKey_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "public_key"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.vpn_networks": {
-      "name": "vpn_networks",
-      "schema": "",
+    "vpn.networks": {
+      "name": "networks",
+      "schema": "vpn",
       "columns": {
         "id": {
           "name": "id",
@@ -15742,8 +15789,8 @@
         }
       },
       "indexes": {
-        "vpn_networks_user_id_index": {
-          "name": "vpn_networks_user_id_index",
+        "networks_user_id_index": {
+          "name": "networks_user_id_index",
           "columns": [
             {
               "expression": "user_id",
@@ -15756,33 +15803,12 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "vpn_networks_device_id_network_index": {
-          "name": "vpn_networks_device_id_network_index",
-          "columns": [
-            {
-              "expression": "device_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "network",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
-        "vpn_networks_user_id_users_id_fk": {
-          "name": "vpn_networks_user_id_users_id_fk",
-          "tableFrom": "vpn_networks",
+        "networks_user_id_users_id_fk": {
+          "name": "networks_user_id_users_id_fk",
+          "tableFrom": "networks",
           "tableTo": "users",
           "columnsFrom": [
             "user_id"
@@ -15793,12 +15819,66 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "vpn_networks_device_id_vpn_devices_id_fk": {
-          "name": "vpn_networks_device_id_vpn_devices_id_fk",
-          "tableFrom": "vpn_networks",
+        "networks_device_id_vpn_devices_id_fk": {
+          "name": "networks_device_id_vpn_devices_id_fk",
+          "tableFrom": "networks",
           "tableTo": "vpn_devices",
           "columnsFrom": [
             "device_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "networks_deviceId_network_unique": {
+          "name": "networks_deviceId_network_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "device_id",
+            "network"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "vpn.server_state": {
+      "name": "server_state",
+      "schema": "vpn",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "status_at": {
+          "name": "status_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "server_state_user_id_users_id_fk": {
+          "name": "server_state_user_id_users_id_fk",
+          "tableFrom": "server_state",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -15860,18 +15940,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "status_at": {
-          "name": "status_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "state": {
-          "name": "state",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -15880,23 +15948,7 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "vpn_servers_user_id_index": {
-          "name": "vpn_servers_user_id_index",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "vpn_servers_user_id_users_id_fk": {
           "name": "vpn_servers_user_id_users_id_fk",
@@ -15913,7 +15965,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "vpn_servers_userId_unique": {
+          "name": "vpn_servers_userId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -16187,7 +16247,8 @@
     "search": "search",
     "sync": "sync",
     "system": "system",
-    "trash": "trash"
+    "trash": "trash",
+    "vpn": "vpn"
   },
   "sequences": {
     "sync.change_seq": {

@@ -5,7 +5,13 @@ import {
   generateObfuscation,
   generatePresharedKey,
 } from './awg-config';
-import {vpnDays, vpnDevices, vpnNetworks, vpnServers} from './vpn.schema';
+import {
+  vpnDays,
+  vpnDevices,
+  vpnDeviceState,
+  vpnNetworks,
+  vpnServers,
+} from './vpn.schema';
 
 const MB = 1024 * 1024;
 const DAYS = 21;
@@ -33,8 +39,6 @@ export class VpnDemo implements OnModuleInit {
           host: 'vpn.example.com',
           port: 37853,
           obfuscation: generateObfuscation(),
-          statusAt: new Date(),
-          state: 'up',
         });
         const now = Date.now();
         const devices = [
@@ -65,13 +69,15 @@ export class VpnDemo implements OnModuleInit {
               publicKey: keys.publicKey,
               presharedKey: generatePresharedKey(),
               address: device.address,
-              firstConnectedAt: new Date(now - DAYS * 24 * 60 * 60_000),
-              lastHandshakeAt: new Date(
-                now - (index ? 3 * 60 * 60_000 : 60_000),
-              ),
-              lastAddress: index ? '198.51.100.24' : '203.0.113.7',
             })
             .returning({id: vpnDevices.id});
+          await this.db.insert(vpnDeviceState).values({
+            deviceId: row.id,
+            userId,
+            firstConnectedAt: new Date(now - DAYS * 24 * 60 * 60_000),
+            lastHandshakeAt: new Date(now - (index ? 3 * 60 * 60_000 : 60_000)),
+            lastAddress: index ? '198.51.100.24' : '203.0.113.7',
+          });
           await this.db.insert(vpnNetworks).values({
             userId,
             deviceId: row.id,

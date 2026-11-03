@@ -38,12 +38,20 @@ packets unlike WireGuard's, so a DPI does not recognise the protocol either.
 
 - The server's job (every minute, only where `VPN_DIR` is set) makes the owner's keys once,
   writes the interface and its peers into `vpn-data/awg0.conf` when they change, and reads the
-  container's `status.tsv` (public key, endpoint, last handshake, bytes) back: bytes and online
-  minutes into the day, the first connection, a new network, down / up.
+  container's `status.tsv` (public key, endpoint, last handshake, bytes) back.
+- What the container tells each minute — who is online, the counters, the networks of 90 days,
+  "up / down" — lives in the `vpn` schema, which is never synced (like `system` and `auth`): a
+  synced row written every minute would keep the sync from ever being idle, and the comparison
+  with the server runs only after an idle sync. The bytes and minutes go into the synced
+  `vpn_days` every 15 minutes (and at midnight).
+- Devices are added, renamed and deleted on the server only: the computer (a sync client) asks
+  it through a server action. Two instances never hand out the same address, and a device
+  deleted on the computer is not brought back by the server's newer version. On the computer
+  the page shows the devices and their QR codes with the state "On the server"; who is online is
+  seen on the server's page.
 - The container applies a changed `awg0.conf` within 10 seconds (`awg syncconf`: connected
   devices stay connected) and writes its status every 10 seconds.
-- A device added on the computer (a sync client) arrives on the server with the sync and is let
-  in within a minute.
+- The build of AmneziaWG is pinned by commit, not by tag alone.
 - The tables are left out of the open export and the archive: the keys would lie in plain files.
 
 ## Not verified live

@@ -6,9 +6,15 @@ import {
   Inspection,
   SecurityService,
 } from '@pd/api-core';
-import {asc, eq} from 'drizzle-orm';
+import {and, asc, eq} from 'drizzle-orm';
 import {vpnMessages} from './vpn.messages';
-import {vpnDevices, vpnNetworks, vpnServers} from './vpn.schema';
+import {
+  vpnDevices,
+  vpnDeviceState,
+  vpnNetworks,
+  vpnServers,
+  vpnServerState,
+} from './vpn.schema';
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -24,6 +30,7 @@ export interface VpnFacts {
   port: number;
   statusAt: string | null;
   devices: {
+    id: string;
     name: string;
     kind: string;
     createdAt: string;
@@ -69,7 +76,7 @@ export function vpnProblems(
         now.getTime() - seen < NEW_NETWORK_HOURS * HOUR_MS
       ) {
         problems.push({
-          key: `vpn.${device.name}.network.${network.network}`,
+          key: `vpn.${device.id}.network.${network.network}`,
           severity: 'medium',
           title: text.newNetworkTitle(device.name),
           details: text.newNetworkDetails(network.network, network.address),
@@ -80,7 +87,7 @@ export function vpnProblems(
     const last = Date.parse(device.lastHandshakeAt ?? device.createdAt);
     if (now.getTime() - last > IDLE_DAYS * DAY_MS) {
       problems.push({
-        key: `vpn.${device.name}.idle`,
+        key: `vpn.${device.id}.idle`,
         severity: 'low',
         title: text.idleTitle(device.name),
         details: text.idleDetails,
@@ -125,24 +132,36 @@ export class VpnSecurity implements OnModuleInit {
       return null;
     }
     const devices = await this.db
-      .select()
+      .select({device: vpnDevices, live: vpnDeviceState})
       .from(vpnDevices)
+      .leftJoin(
+        vpnDeviceState,
+        and(
+          eq(vpnDeviceState.deviceId, vpnDevices.id),
+          eq(vpnDeviceState.userId, userId),
+        ),
+      )
       .where(eq(vpnDevices.userId, userId))
       .orderBy(asc(vpnDevices.createdAt));
     const networks = await this.db
       .select()
       .from(vpnNetworks)
       .where(eq(vpnNetworks.userId, userId));
+    const [live] = await this.db
+      .select()
+      .from(vpnServerState)
+      .where(eq(vpnServerState.userId, userId));
     const facts: VpnFacts = {
       host: server.host,
       port: server.port,
-      statusAt: server.statusAt?.toISOString() ?? null,
-      devices: devices.map(device => ({
+      statusAt: live?.statusAt?.toISOString() ?? null,
+      devices: devices.map(({device, live: state}) => ({
+        id: device.id,
         name: device.name,
         kind: device.kind,
         createdAt: device.createdAt.toISOString(),
-        firstConnectedAt: device.firstConnectedAt?.toISOString() ?? null,
-        lastHandshakeAt: device.lastHandshakeAt?.toISOString() ?? null,
+        firstConnectedAt: state?.firstConnectedAt?.toISOString() ?? null,
+        lastHandshakeAt: state?.lastHandshakeAt?.toISOString() ?? null,
         networks: networks
           .filter(network => network.deviceId === device.id)
           .map(network => ({

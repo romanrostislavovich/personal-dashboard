@@ -6,6 +6,7 @@ import {VpnDemo} from './vpn.demo';
 import {VpnJobs} from './vpn.jobs';
 import {VpnLinks} from './vpn.links';
 import {VpnSecurity} from './vpn.security';
+import {VpnServerActions} from './vpn.server-actions';
 import {VpnServerService} from './vpn-server.service';
 import {VpnService} from './vpn.service';
 
@@ -18,6 +19,7 @@ import {VpnService} from './vpn.service';
   providers: [
     VpnService,
     VpnServerService,
+    VpnServerActions,
     VpnJobs,
     VpnLinks,
     VpnAchievements,

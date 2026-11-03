@@ -7,6 +7,7 @@ const hoursAgo = (hours: number) =>
 const text = vpnMessages('en').finding;
 
 const phone = (networks: {network: string; firstSeenAt: string}[]) => ({
+  id: 'd1',
   name: 'Phone',
   kind: 'phone',
   createdAt: hoursAgo(24 * 10),
@@ -35,7 +36,7 @@ describe('vpnProblems', () => {
       text,
       now,
     ).map(problem => problem.key);
-    expect(keys).toEqual(['vpn.Phone.network.185.1.0.0/16']);
+    expect(keys).toEqual(['vpn.d1.network.185.1.0.0/16']);
   });
 
   it('a silent container with devices, and a device idle for 60 days', () => {
@@ -43,7 +44,7 @@ describe('vpnProblems', () => {
     const problems = vpnProblems(facts([idle], hoursAgo(1)), text, now);
     expect(problems.map(problem => [problem.key, problem.severity])).toEqual([
       ['vpn.down', 'medium'],
-      ['vpn.Phone.idle', 'low'],
+      ['vpn.d1.idle', 'low'],
     ]);
   });
 

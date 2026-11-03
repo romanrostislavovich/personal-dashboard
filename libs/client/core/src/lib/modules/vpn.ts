@@ -27,7 +27,7 @@ export function vpnApi(api: ApiClient) {
     addDevice: (input: VpnDeviceInput) =>
       api.post<VpnDevice>('/api/vpn/devices', input),
     renameDevice: (id: string, input: VpnDeviceRename) =>
-      api.patch<VpnDevice>(`/api/vpn/devices/${id}`, input),
+      api.patch<void>(`/api/vpn/devices/${id}`, input),
     removeDevice: (id: string) => api.delete(`/api/vpn/devices/${id}`),
   };
 }

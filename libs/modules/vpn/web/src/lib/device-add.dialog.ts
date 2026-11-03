@@ -15,6 +15,7 @@ import {TranslocoPipe} from '@jsverse/transloco';
 import {VPN_DEVICE_KINDS, VpnDevice, VpnDeviceKind} from '@pd/contracts';
 import {firstValueFrom} from 'rxjs';
 import {VpnApi} from './vpn.api';
+import {vpnErrorKey} from './vpn-errors';
 import {KIND_ICONS} from './vpn-kinds';
 
 /** A new device: its name and kind. Saves by itself and closes with the device. */
@@ -51,12 +52,20 @@ import {KIND_ICONS} from './vpn-kinds';
         [(ngModel)]="kind"
       >
         @for (option of kinds; track option) {
-          <mat-button-toggle [value]="option">
+          <mat-button-toggle
+            [value]="option"
+            [attr.aria-label]="'vpn.kind.' + option | transloco"
+          >
             <mat-icon>{{ icons[option] }}</mat-icon>
-            {{ 'vpn.kind.' + option | transloco }}
+            <span class="kind-label">{{
+              'vpn.kind.' + option | transloco
+            }}</span>
           </mat-button-toggle>
         }
       </mat-button-toggle-group>
+      @if (error(); as key) {
+        <p class="error" role="alert">{{ key | transloco }}</p>
+      }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button matButton mat-dialog-close>
@@ -80,7 +89,16 @@ import {KIND_ICONS} from './vpn-kinds';
     }
     mat-button-toggle-group {
       align-self: flex-start;
-      flex-wrap: wrap;
+    }
+    /* A phone's dialog has no room for three words: the icons stay, named for screen readers. */
+    @media (max-width: 420px) {
+      .kind-label {
+        display: none;
+      }
+    }
+    .error {
+      margin: 0;
+      color: var(--mat-sys-error);
     }
   `,
 })
@@ -94,6 +112,7 @@ export class VpnDeviceAddDialog {
   protected readonly name = signal('');
   protected readonly kind = signal<VpnDeviceKind>('phone');
   protected readonly saving = signal(false);
+  protected readonly error = signal<string | null>(null);
 
   protected async save(): Promise<void> {
     const name = this.name().trim();
@@ -101,10 +120,13 @@ export class VpnDeviceAddDialog {
       return;
     }
     this.saving.set(true);
+    this.error.set(null);
     try {
       this.dialogRef.close(
         await firstValueFrom(this.api.addDevice({name, kind: this.kind()})),
       );
+    } catch (error) {
+      this.error.set(vpnErrorKey(error));
     } finally {
       this.saving.set(false);
     }

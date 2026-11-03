@@ -5,15 +5,17 @@
   "traffic": "Traffic, 30 days",
   "state": {
     "off": "No VPN on this dashboard",
+    "remote": "On the server",
     "starting": "Starting",
     "up": "Running",
     "down": "Not answering"
   },
   "stateHint": {
-    "off": "The VPN runs on the server: deploy with DEPLOY_VPN=yes (see the steps below). On a computer that syncs with the server the devices are shown, the VPN itself is on the server.",
+    "off": "The VPN runs on the server: deploy it with DEPLOY_VPN=yes (see the steps below).",
     "starting": "The server made its keys; the VPN container answers within a minute or two.",
     "up": "Devices connect to this address. All their traffic goes through your server.",
-    "down": "The VPN container has not answered for over 3 minutes: devices cannot connect."
+    "down": "The VPN container has not answered for over 3 minutes: devices cannot connect.",
+    "remote": "The VPN runs on the server; this computer syncs with it. Devices added, renamed or deleted here change on the server. Who is online and the traffic are on the server's page."
   },
   "kind": {
     "phone": "Phone",
@@ -36,10 +38,10 @@
     "lastSeen": "Last connected {{when}}",
     "never": "Never connected — scan its QR code in the app",
     "todaySuffix": "today",
-    "networks": "Came from {{count}} networks in 90 days",
+    "networks": "Networks in 90 days: {{count}}",
     "config": "QR code and file",
     "rename": "Rename",
-    "renamePrompt": "The device's name",
+    "renamePrompt": "The device's name (up to {{max}} characters)",
     "deleteConfirm": "Delete {{name}}? Its key stops opening the VPN within a minute.",
     "emptyTitle": "No devices yet",
     "empty": "Add the phone first: you will get a QR code to scan in the AmneziaWG app."
@@ -77,10 +79,20 @@
   "widget": {
     "title": "VPN",
     "nobody": "No device in the VPN now",
-    "open": "Open"
+    "open": "Open",
+    "failed": "The VPN's state could not be loaded.",
+    "remote": "The VPN runs on the server: who is online is seen there."
   },
   "links": {
     "hours": "Hours in the VPN",
     "megabytes": "Megabytes through the VPN"
+  },
+  "errors": {
+    "full": "All 253 addresses of the VPN are taken: delete a device you do not use.",
+    "no-server": "The VPN is not set up on the server yet.",
+    "refused": "The server refused it: no free address, or no VPN on it.",
+    "gone": "This device is gone already: the page is refreshed.",
+    "offline": "No connection to the server: try again in a moment.",
+    "generic": "It did not work: try again in a moment."
   }
 }

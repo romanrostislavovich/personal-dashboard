@@ -1,18 +1,25 @@
 # AmneziaWG for the dashboard's VPN: the userspace daemon (no kernel module — the server's
 # kernel is newer than any ready one) and its `awg` tool. Built on the server by
-# `docker compose --profile vpn build vpn` (deploy.sh does it); the tags are pinned.
+# `docker compose --profile vpn build vpn` (deploy.sh does it). Pinned by commit, not only by
+# tag: a tag can be moved, and this code holds the VPN's keys.
 FROM golang:1.25.12-alpine3.23 AS daemon
-ARG AWG_GO=v3.1.20260828
+# v3.1.20260828
+ARG AWG_GO=b5928efb6ca19f0153958460c3d141f04abc5c2e
 RUN apk add --no-cache git build-base && \
-    git clone --depth 1 --branch "$AWG_GO" https://github.com/amnezia-vpn/amneziawg-go.git /src
+    git init -q /src && cd /src && \
+    git fetch -q --depth 1 https://github.com/amnezia-vpn/amneziawg-go.git "$AWG_GO" && \
+    git checkout -q FETCH_HEAD && test "$(git rev-parse HEAD)" = "$AWG_GO"
 WORKDIR /src
 RUN go mod download && go mod verify && \
     CGO_ENABLED=0 go build -trimpath -ldflags '-s -w' -o /amneziawg-go
 
 FROM alpine:3.23 AS tools
-ARG AWG_TOOLS=v3.1.20260812
+# v3.1.20260812
+ARG AWG_TOOLS=ee0f0a9aa34ff0a0da4b3433b9512781cfe02843
 RUN apk add --no-cache git build-base linux-headers && \
-    git clone --depth 1 --branch "$AWG_TOOLS" https://github.com/amnezia-vpn/amneziawg-tools.git /src && \
+    git init -q /src && cd /src && \
+    git fetch -q --depth 1 https://github.com/amnezia-vpn/amneziawg-tools.git "$AWG_TOOLS" && \
+    git checkout -q FETCH_HEAD && test "$(git rev-parse HEAD)" = "$AWG_TOOLS" && \
     make -C /src/src
 
 FROM alpine:3.23

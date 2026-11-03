@@ -5,7 +5,7 @@ const messages = {
   en: {
     downTitle: '🔴 The VPN is down',
     downBody:
-      'The VPN container has not answered for 3 minutes: devices cannot connect. On the server: docker compose ps vpn',
+      'The VPN container has not answered for 3 minutes: devices cannot connect. On the server: docker compose logs vpn',
     upTitle: '🟢 The VPN is back',
     upBody: 'Devices can connect again.',
     firstTitle: (name: string) => `🔐 ${name} is in the VPN`,
@@ -25,7 +25,7 @@ const messages = {
       downDetails: (minutes: number) =>
         `No status for ${minutes} minutes while devices are set up.`,
       downFix:
-        'On the server: docker compose --profile vpn up -d vpn; its log: docker compose logs vpn.',
+        'On the server: docker compose logs vpn; to start it again: docker compose up -d vpn.',
       idleTitle: (name: string) => `VPN: ${name} unused for 60 days`,
       idleDetails: 'Its key still opens the VPN.',
       idleFix: 'Delete the device if it is gone or not used.',
@@ -34,7 +34,7 @@ const messages = {
   ru: {
     downTitle: '🔴 VPN не работает',
     downBody:
-      'Контейнер VPN не отвечает 3 минуты: устройства не подключатся. На сервере: docker compose ps vpn',
+      'Контейнер VPN не отвечает 3 минуты: устройства не подключатся. На сервере: docker compose logs vpn',
     upTitle: '🟢 VPN снова работает',
     upBody: 'Устройства снова могут подключаться.',
     firstTitle: (name: string) => `🔐 ${name} в VPN`,
@@ -54,7 +54,7 @@ const messages = {
       downDetails: (minutes: number) =>
         `Нет статуса ${minutes} мин., хотя устройства настроены.`,
       downFix:
-        'На сервере: docker compose --profile vpn up -d vpn; его лог: docker compose logs vpn.',
+        'На сервере: docker compose logs vpn; запустить снова: docker compose up -d vpn.',
       idleTitle: (name: string) => `VPN: ${name} не использовался 60 дней`,
       idleDetails: 'Его ключ всё ещё открывает VPN.',
       idleFix: 'Удали устройство, если его больше нет или оно не нужно.',

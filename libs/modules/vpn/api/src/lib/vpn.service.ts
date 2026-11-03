@@ -4,7 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {Database, DB, UsersService} from '@pd/api-core';
+import {ConfigService} from '@nestjs/config';
+import {AppConfig, Database, DB, UsersService} from '@pd/api-core';
 import {
   addDays,
   parseLocalDate,
@@ -18,7 +19,7 @@ import {
   VpnStatus,
   zonedDateTime,
 } from '@pd/contracts';
-import {and, asc, desc, eq, gte, inArray, sql, sum} from 'drizzle-orm';
+import {and, asc, desc, eq, gte, sql, sum} from 'drizzle-orm';
 import {
   deviceConfig,
   freeAddress,
@@ -26,61 +27,74 @@ import {
   generatePresharedKey,
   ONLINE_HANDSHAKE_SECONDS,
 } from './awg-config';
-import {vpnDays, vpnDevices, vpnNetworks, vpnServers} from './vpn.schema';
+import {
+  vpnDays,
+  vpnDevices,
+  vpnDeviceState,
+  vpnNetworks,
+  vpnServers,
+  vpnServerState,
+} from './vpn.schema';
 
-/** The container writes its status every 30 seconds: older than this, it is not running. */
+/** The container writes its status every 10 seconds: older than this, it is not running. */
 export const STATUS_STALE_MS = 3 * 60_000;
+
+/** Why a device cannot be added, for the page to say in the user's language. */
+export type VpnRefusal = 'no-server' | 'full';
 
 type DeviceRow = typeof vpnDevices.$inferSelect;
 type ServerRow = typeof vpnServers.$inferSelect;
+type StateRow = typeof vpnDeviceState.$inferSelect;
 
-/** The devices of the VPN and what the server knows about them; every query filters by `userId`. */
+/**
+ * The devices of the VPN and what the server knows about them; every query filters by `userId`.
+ * The writes run on the server only (VpnServerActions): a sync client asks it.
+ */
 @Injectable()
 export class VpnService {
   constructor(
     @Inject(DB) private readonly db: Database,
+    @Inject(ConfigService) private readonly config: AppConfig,
     private readonly users: UsersService,
   ) {}
 
   async status(userId: string): Promise<VpnStatus> {
     const server = await this.server(userId);
+    const today = await this.today(userId);
     const rows = await this.db
-      .select()
+      .select({device: vpnDevices, live: vpnDeviceState})
       .from(vpnDevices)
+      .leftJoin(
+        vpnDeviceState,
+        and(
+          eq(vpnDeviceState.deviceId, vpnDevices.id),
+          eq(vpnDeviceState.userId, userId),
+        ),
+      )
       .where(eq(vpnDevices.userId, userId))
       .orderBy(asc(vpnDevices.createdAt));
-    const today = await this.today(userId);
-    const days = rows.length
-      ? await this.db
-          .select({
-            deviceId: vpnDays.deviceId,
-            bytes: sql<number>`(${vpnDays.rxBytes} + ${vpnDays.txBytes})::float8`,
-          })
-          .from(vpnDays)
-          .where(and(eq(vpnDays.userId, userId), eq(vpnDays.day, today)))
-      : [];
-    const networks = rows.length
-      ? await this.db
-          .select()
-          .from(vpnNetworks)
-          .where(
-            and(
-              eq(vpnNetworks.userId, userId),
-              inArray(
-                vpnNetworks.deviceId,
-                rows.map(row => row.id),
-              ),
-            ),
-          )
-          .orderBy(desc(vpnNetworks.lastSeenAt))
-      : [];
-    const devices = rows.map(row => ({
-      ...toDevice(row),
-      todayBytes: days
-        .filter(day => day.deviceId === row.id)
-        .reduce((total, day) => total + day.bytes, 0),
+    const days = await this.db
+      .select({
+        deviceId: vpnDays.deviceId,
+        bytes: sql<number>`(${vpnDays.rxBytes} + ${vpnDays.txBytes})::float8`,
+      })
+      .from(vpnDays)
+      .where(and(eq(vpnDays.userId, userId), eq(vpnDays.day, today)));
+    const networks = await this.db
+      .select()
+      .from(vpnNetworks)
+      .where(eq(vpnNetworks.userId, userId))
+      .orderBy(desc(vpnNetworks.lastSeenAt));
+    const devices = rows.map(({device, live}) => ({
+      ...toDevice(device, live),
+      // The day's bytes so far: added to the day every 15 minutes, the rest still pending.
+      todayBytes:
+        days
+          .filter(day => day.deviceId === device.id)
+          .reduce((total, day) => total + day.bytes, 0) +
+        (live?.pendingDay === today ? live.pendingRx + live.pendingTx : 0),
       networks: networks
-        .filter(network => network.deviceId === row.id)
+        .filter(network => network.deviceId === device.id)
         .map(network => ({
           network: network.network,
           address: network.address,
@@ -88,18 +102,22 @@ export class VpnService {
           lastSeenAt: network.lastSeenAt.toISOString(),
         })),
     }));
-    const [all] = await this.db
-      .select({
-        bytes: sql<number>`coalesce(sum(${vpnDays.rxBytes} + ${vpnDays.txBytes}), 0)::float8`,
-      })
-      .from(vpnDays)
-      .where(and(eq(vpnDays.userId, userId), eq(vpnDays.day, today)));
+    // Days of deleted devices count too.
+    const gone = days
+      .filter(day => !rows.some(row => row.device.id === day.deviceId))
+      .reduce((total, day) => total + day.bytes, 0);
+    const [live] = await this.db
+      .select()
+      .from(vpnServerState)
+      .where(eq(vpnServerState.userId, userId));
     return {
-      state: this.stateOf(server),
+      state: this.stateOf(server, live?.statusAt ?? null),
       endpoint: server ? `${server.host}:${server.port}` : null,
-      statusAt: server?.statusAt?.toISOString() ?? null,
+      statusAt: live?.statusAt?.toISOString() ?? null,
       devices,
-      todayBytes: all?.bytes ?? 0,
+      todayBytes:
+        devices.reduce((total, device) => total + device.todayBytes, 0) + gone,
+      today,
     };
   }
 
@@ -108,7 +126,7 @@ export class VpnService {
     const from = toLocalDate(
       addDays(parseLocalDate(await this.today(userId)), 1 - count),
     );
-    const rows = await this.db
+    return this.db
       .select({
         day: vpnDays.day,
         rxBytes: sum(vpnDays.rxBytes).mapWith(Number),
@@ -121,12 +139,14 @@ export class VpnService {
       .where(and(eq(vpnDays.userId, userId), gte(vpnDays.day, from)))
       .groupBy(vpnDays.day)
       .orderBy(asc(vpnDays.day));
-    return rows;
   }
 
   async deviceConfig(userId: string, id: string): Promise<VpnDeviceConfig> {
     const device = await this.device(userId, id);
-    const server = await this.requireServer(userId);
+    const server = await this.server(userId);
+    if (!server) {
+      throw refused('no-server');
+    }
     return {
       name: device.name,
       config: deviceConfig(device, {
@@ -138,8 +158,11 @@ export class VpnService {
     };
   }
 
+  /** On the server only (VpnServerActions). */
   async addDevice(userId: string, input: VpnDeviceInput): Promise<VpnDevice> {
-    await this.requireServer(userId);
+    if (!(await this.server(userId))) {
+      throw refused('no-server');
+    }
     const keys = generateKeyPair();
     return this.db.transaction(async tx => {
       // One address per device: two added at once must not get the same one.
@@ -152,7 +175,7 @@ export class VpnService {
         .where(eq(vpnDevices.userId, userId));
       const address = freeAddress(taken.map(row => row.address));
       if (!address) {
-        throw new BadRequestException('No free address left in the VPN');
+        throw refused('full');
       }
       const [row] = await tx
         .insert(vpnDevices)
@@ -166,27 +189,30 @@ export class VpnService {
           address,
         })
         .returning();
-      return {...toDevice(row), todayBytes: 0, networks: []};
+      return {...toDevice(row, null), todayBytes: 0, networks: []};
     });
   }
 
+  /** On the server only (VpnServerActions). */
   async renameDevice(
     userId: string,
     id: string,
     input: VpnDeviceRename,
-  ): Promise<VpnDevice> {
-    const [row] = await this.db
+  ): Promise<void> {
+    const renamed = await this.db
       .update(vpnDevices)
       .set({name: input.name, updatedAt: new Date()})
       .where(and(eq(vpnDevices.id, id), eq(vpnDevices.userId, userId)))
-      .returning();
-    if (!row) {
+      .returning({id: vpnDevices.id});
+    if (!renamed.length) {
       throw new NotFoundException();
     }
-    return {...toDevice(row), todayBytes: 0, networks: []};
   }
 
-  /** The device's key stops working within a minute, when the server writes its peers again. */
+  /**
+   * On the server only (VpnServerActions): the key stops working within a minute, when the
+   * server writes its peers again.
+   */
   async removeDevice(userId: string, id: string): Promise<void> {
     const deleted = await this.db
       .delete(vpnDevices)
@@ -211,25 +237,21 @@ export class VpnService {
     return zonedDateTime(new Date(), timeZone).date;
   }
 
-  private stateOf(server: ServerRow | undefined): VpnState {
+  private stateOf(
+    server: ServerRow | undefined,
+    statusAt: Date | null,
+  ): VpnState {
     if (!server) {
       return 'off';
     }
-    if (!server.statusAt) {
+    // The container is seen only where it runs: a sync client has the devices, not the VPN.
+    if (!this.config.get('VPN_DIR', {infer: true})) {
+      return 'remote';
+    }
+    if (!statusAt) {
       return 'starting';
     }
-    return Date.now() - server.statusAt.getTime() < STATUS_STALE_MS
-      ? 'up'
-      : 'down';
-  }
-
-  private async requireServer(userId: string): Promise<ServerRow> {
-    const server = await this.server(userId);
-    if (!server) {
-      // Only the server with deploy/vpn makes one, for its owner.
-      throw new BadRequestException('This dashboard has no VPN server');
-    }
-    return server;
+    return Date.now() - statusAt.getTime() < STATUS_STALE_MS ? 'up' : 'down';
   }
 
   private async device(userId: string, id: string): Promise<DeviceRow> {
@@ -244,17 +266,31 @@ export class VpnService {
   }
 }
 
-function toDevice(row: DeviceRow): Omit<VpnDevice, 'todayBytes' | 'networks'> {
-  const handshake = row.lastHandshakeAt?.getTime() ?? 0;
+/** A 400 whose `reason` the page turns into words (`vpn.errors.<reason>`). */
+function refused(reason: VpnRefusal): BadRequestException {
+  return new BadRequestException({
+    message:
+      reason === 'full'
+        ? 'No free address left in the VPN'
+        : 'This dashboard has no VPN server',
+    reason,
+  });
+}
+
+function toDevice(
+  row: DeviceRow,
+  live: StateRow | null,
+): Omit<VpnDevice, 'todayBytes' | 'networks'> {
+  const handshake = live?.lastHandshakeAt?.getTime() ?? 0;
   return {
     id: row.id,
     name: row.name,
     kind: row.kind,
     address: row.address,
     createdAt: row.createdAt.toISOString(),
-    firstConnectedAt: row.firstConnectedAt?.toISOString() ?? null,
-    lastHandshakeAt: row.lastHandshakeAt?.toISOString() ?? null,
+    firstConnectedAt: live?.firstConnectedAt?.toISOString() ?? null,
+    lastHandshakeAt: live?.lastHandshakeAt?.toISOString() ?? null,
     online: Date.now() - handshake < ONLINE_HANDSHAKE_SECONDS * 1000,
-    lastAddress: row.lastAddress,
+    lastAddress: live?.lastAddress ?? null,
   };
 }

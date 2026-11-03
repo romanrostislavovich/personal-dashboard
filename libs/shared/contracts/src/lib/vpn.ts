@@ -12,6 +12,14 @@ export const vpnDeviceInputSchema = z.object({
 });
 export type VpnDeviceInput = z.infer<typeof vpnDeviceInputSchema>;
 
+/** `GET /api/vpn/days?days=` — how many days back, today included. */
+export const vpnDaysQuerySchema = z.coerce
+  .number()
+  .int()
+  .min(1)
+  .max(366)
+  .default(30);
+
 export const vpnDeviceRenameSchema = z.object({
   name: z.string().trim().min(1).max(60),
 });
@@ -25,7 +33,7 @@ export interface VpnDevice {
   /** Inside the tunnel, `10.77.0.N`. */
   address: string;
   createdAt: string;
-  /** `null` — it has never connected: the config was not set up on it yet. */
+  /** `null` — it has never connected (or this is a copy that does not see the VPN). */
   firstConnectedAt: string | null;
   lastHandshakeAt: string | null;
   /** Connected now (a handshake within the last 3 minutes). */
@@ -47,10 +55,11 @@ export interface VpnNetwork {
 }
 
 /**
- * `off` — this instance has no VPN (a computer, or the server without deploy/vpn);
+ * `off` — no VPN (the server without deploy/vpn); `remote` — the VPN runs on the server and this
+ * is a copy of it (a computer that syncs): the devices are here, who is online is not;
  * `starting` — set up, but the container has not answered yet; `up` / `down` by its status file.
  */
-export const VPN_STATES = ['off', 'starting', 'up', 'down'] as const;
+export const VPN_STATES = ['off', 'remote', 'starting', 'up', 'down'] as const;
 export type VpnState = (typeof VPN_STATES)[number];
 
 export interface VpnStatus {
@@ -62,6 +71,8 @@ export interface VpnStatus {
   devices: VpnDevice[];
   /** Bytes both ways today, all devices. */
   todayBytes: number;
+  /** Today in the user's time zone (`YYYY-MM-DD`): the days of the chart count back from it. */
+  today: string;
 }
 
 /** A day of all devices: bytes each way, minutes any device was connected. */

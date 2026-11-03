@@ -10,21 +10,29 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import {AuthUser, CurrentUser, ZodValidationPipe} from '@pd/api-core';
 import {
+  AuthUser,
+  CurrentUser,
+  ServerActions,
+  ZodValidationPipe,
+} from '@pd/api-core';
+import {
+  VpnDevice,
   VpnDeviceInput,
   vpnDeviceInputSchema,
   VpnDeviceRename,
   vpnDeviceRenameSchema,
+  vpnDaysQuerySchema,
 } from '@pd/contracts';
-import {z} from 'zod';
+import {VPN_ACTIONS} from './vpn.server-actions';
 import {VpnService} from './vpn.service';
-
-const daysSchema = z.coerce.number().int().min(1).max(366).default(30);
 
 @Controller('vpn')
 export class VpnController {
-  constructor(private readonly vpn: VpnService) {}
+  constructor(
+    private readonly vpn: VpnService,
+    private readonly actions: ServerActions,
+  ) {}
 
   @Get()
   status(@CurrentUser() user: AuthUser) {
@@ -34,7 +42,7 @@ export class VpnController {
   @Get('days')
   days(
     @CurrentUser() user: AuthUser,
-    @Query('days', new ZodValidationPipe(daysSchema)) days: number,
+    @Query('days', new ZodValidationPipe(vpnDaysQuerySchema)) days: number,
   ) {
     return this.vpn.days(user.id, days);
   }
@@ -53,24 +61,25 @@ export class VpnController {
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(vpnDeviceInputSchema)) input: VpnDeviceInput,
   ) {
-    return this.vpn.addDevice(user.id, input);
+    return this.actions.run<VpnDevice>(user.id, VPN_ACTIONS.add, input);
   }
 
   @Patch('devices/:id')
-  rename(
+  @HttpCode(204)
+  async rename(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(vpnDeviceRenameSchema)) input: VpnDeviceRename,
   ) {
-    return this.vpn.renameDevice(user.id, id, input);
+    await this.actions.run(user.id, VPN_ACTIONS.rename, {...input, id});
   }
 
   @Delete('devices/:id')
   @HttpCode(204)
-  remove(
+  async remove(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.vpn.removeDevice(user.id, id);
+    await this.actions.run(user.id, VPN_ACTIONS.remove, {id});
   }
 }
