@@ -1,6 +1,7 @@
 import {encryptedText, users} from '@pd/api-core/schema';
 import {
   bigint,
+  boolean,
   date,
   index,
   integer,
@@ -56,6 +57,11 @@ export const vpnDevices = pgTable(
     presharedKey: encryptedText().notNull(),
     /** Its address inside the tunnel, `10.77.0.N`. */
     address: text().notNull(),
+    /**
+     * The internet off when the VPN fails: the desktop app starts the tunnel that blocks around
+     * the VPN; the phone's app points to Android's "Block connections without VPN".
+     */
+    killSwitch: boolean().notNull().default(true),
     createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
     updatedAt: timestamp({withTimezone: true}),
   },

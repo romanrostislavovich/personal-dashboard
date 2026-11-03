@@ -14,7 +14,7 @@ import {
   VpnDevice,
   VpnDeviceConfig,
   VpnDeviceInput,
-  VpnDeviceRename,
+  VpnDeviceUpdate,
   VpnState,
   VpnStatus,
   zonedDateTime,
@@ -194,14 +194,14 @@ export class VpnService {
   }
 
   /** On the server only (VpnServerActions). */
-  async renameDevice(
+  async updateDevice(
     userId: string,
     id: string,
-    input: VpnDeviceRename,
+    input: VpnDeviceUpdate,
   ): Promise<void> {
     const renamed = await this.db
       .update(vpnDevices)
-      .set({name: input.name, updatedAt: new Date()})
+      .set({...input, updatedAt: new Date()})
       .where(and(eq(vpnDevices.id, id), eq(vpnDevices.userId, userId)))
       .returning({id: vpnDevices.id});
     if (!renamed.length) {
@@ -292,5 +292,6 @@ function toDevice(
     lastHandshakeAt: live?.lastHandshakeAt?.toISOString() ?? null,
     online: Date.now() - handshake < ONLINE_HANDSHAKE_SECONDS * 1000,
     lastAddress: live?.lastAddress ?? null,
+    killSwitch: row.killSwitch,
   };
 }

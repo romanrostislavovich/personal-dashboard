@@ -38,6 +38,8 @@ export interface DesktopBridge {
   writing?: DesktopWriting;
   /** What the computer tells the assistant as a device (absent in an older shell). */
   device?: DesktopDevice;
+  /** The dashboard's VPN on this computer through AmneziaWG (absent in an older shell). */
+  vpn?: DesktopVpn;
   /** Explicit capture and native-confirmed restoration; absent in older desktop builds. */
   workstates?: {
     capture(): Promise<boolean>;
@@ -236,4 +238,33 @@ export interface DesktopActivityStatus {
 
 export function desktopBridge(): DesktopBridge | null {
   return (window as {desktop?: DesktopBridge}).desktop ?? null;
+}
+
+/** The dashboard's own tunnels of AmneziaWG on this computer (apps/desktop/src/vpn). */
+export interface DesktopVpnStatus {
+  /** Windows with AmneziaWG installed. */
+  available: boolean;
+  /** Set up once with the administrator's consent. */
+  installed: boolean;
+  /** `dashboard` — the internet goes off when the VPN fails; `dashboard-open` — it stays. */
+  running: 'dashboard' | 'dashboard-open' | null;
+  /** Tunnels started in AmneziaWG's own window: two at once would fight. */
+  others: string[];
+}
+
+export interface DesktopVpnResult {
+  ok: boolean;
+  error?: string;
+  /** The administrator's consent was not given. */
+  canceled?: boolean;
+}
+
+export interface DesktopVpn {
+  status(): Promise<DesktopVpnStatus | null>;
+  /** Once, as administrator: the device's config text becomes the tunnels of this computer. */
+  setup(config: string): Promise<DesktopVpnResult>;
+  /** No administrator needed after the setup. */
+  start(killSwitch: boolean): Promise<DesktopVpnResult>;
+  stop(): Promise<DesktopVpnResult>;
+  remove(): Promise<DesktopVpnResult>;
 }

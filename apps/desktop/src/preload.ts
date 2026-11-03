@@ -37,6 +37,16 @@ contextBridge.exposeInMainWorld('desktop', {
     platform: process.platform,
     hostname: process.env['COMPUTERNAME'] ?? process.env['HOSTNAME'] ?? '',
   },
+  /** The dashboard's VPN on this computer (AmneziaWG), see vpn/vpn-control.ts. */
+  vpn: {
+    status: (): Promise<unknown> => ipcRenderer.invoke('vpn:status'),
+    setup: (config: string): Promise<unknown> =>
+      ipcRenderer.invoke('vpn:setup', config),
+    start: (killSwitch: boolean): Promise<unknown> =>
+      ipcRenderer.invoke('vpn:start', killSwitch),
+    stop: (): Promise<unknown> => ipcRenderer.invoke('vpn:stop'),
+    remove: (): Promise<unknown> => ipcRenderer.invoke('vpn:remove'),
+  },
   telemetry: {
     status: (): Promise<{enabled: boolean; available: boolean}> =>
       ipcRenderer.invoke('telemetry:status'),

@@ -883,6 +883,13 @@
       "when": 1793727186270,
       "tag": "0125_vpn",
       "breakpoints": true
+    },
+    {
+      "idx": 126,
+      "version": "7",
+      "when": 1793736870386,
+      "tag": "0126_vpn_kill_switch",
+      "breakpoints": true
     }
   ]
 }

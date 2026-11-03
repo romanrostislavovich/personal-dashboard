@@ -3,7 +3,7 @@ import {
   VpnDevice,
   VpnDeviceConfig,
   VpnDeviceInput,
-  VpnDeviceRename,
+  VpnDeviceUpdate,
   VpnStatus,
 } from '@pd/contracts';
 import {ApiClient, apiRequest} from '../api-client';
@@ -26,7 +26,7 @@ export function vpnApi(api: ApiClient) {
     config: (id: string) => api.read<VpnDeviceConfig>(VPN_READS.config(id)),
     addDevice: (input: VpnDeviceInput) =>
       api.post<VpnDevice>('/api/vpn/devices', input),
-    renameDevice: (id: string, input: VpnDeviceRename) =>
+    updateDevice: (id: string, input: VpnDeviceUpdate) =>
       api.patch<void>(`/api/vpn/devices/${id}`, input),
     removeDevice: (id: string) => api.delete(`/api/vpn/devices/${id}`),
   };

@@ -79,7 +79,8 @@ The interface is in English and Russian.
   repositories every hour; an AI investigates every morning and tells what to fix
 - 🔐 **A VPN of your own** — AmneziaWG on the same server, a WireGuard whose packets a DPI does
   not recognise: add a device and scan its QR code; who is online, the traffic by day, a word
-  when the VPN goes down or a device comes from a new network
+  when the VPN goes down or a device comes from a new network; on Windows switched on and off
+  from the dashboard, with "no internet while the VPN is down"
 - 🏆 **500+ achievements** across all sections, with XP and a player level
 - 🎨 **Comfortable** — Ctrl+K opens any page and searches all your data, themes and accents, a
   home page you arrange yourself, an installable app that opens offline

@@ -4,7 +4,7 @@ import {VPN_READS, vpnApi} from '@pd/client-core';
 import {
   VpnDay,
   VpnDeviceInput,
-  VpnDeviceRename,
+  VpnDeviceUpdate,
   VpnStatus,
 } from '@pd/contracts';
 import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
@@ -33,8 +33,8 @@ export class VpnApi {
     return fromCore(() => this.vpn.addDevice(input));
   }
 
-  renameDevice(id: string, input: VpnDeviceRename) {
-    return fromCore(() => this.vpn.renameDevice(id, input));
+  updateDevice(id: string, input: VpnDeviceUpdate) {
+    return fromCore(() => this.vpn.updateDevice(id, input));
   }
 
   removeDevice(id: string) {
