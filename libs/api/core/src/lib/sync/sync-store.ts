@@ -459,6 +459,29 @@ export class SyncStore {
   }
 
   /**
+   * Puts the rows made here of the given tables at the end of the change log, so the next push
+   * sends them again: the comparison found the server without some of them (2026-10-16: two rows
+   * pushed before the server synced their table were lost for good). The server keeps what it
+   * has that is newer, a deletion included. Returns how many rows.
+   */
+  async resendLocal(tableNames: string[]): Promise<number> {
+    const known = new Set(this.tables.map(table => table.name));
+    const names = tableNames.filter(name => known.has(name));
+    if (!names.length) {
+      return 0;
+    }
+    const {rowCount} = await this.db.execute(sql`
+      UPDATE sync.row_versions
+      SET tx = pg_current_xact_id(), seq = nextval('sync.change_seq')
+      WHERE origin IS NULL AND table_name IN (${sql.join(
+        names.map(name => sql`${name}`),
+        sql`, `,
+      )})
+    `);
+    return rowCount ?? 0;
+  }
+
+  /**
    * The row count and a hash of the rows of every synced table, to compare with the other side.
    * One snapshot for all tables; times in UTC, so both sides print rows the same way.
    */

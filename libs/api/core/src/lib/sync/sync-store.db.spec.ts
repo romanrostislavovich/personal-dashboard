@@ -658,6 +658,56 @@ describe.skipIf(!ADMIN_URL)(
       expect(clientSide['projects'].hash).not.toBe(serverSide['projects'].hash);
     });
 
+    it('rows made here and lost on the way are sent again, a newer server version kept', async () => {
+      /** Sends the client's own changes after `from` to the server; returns where it ended. */
+      const push = async (from: string | null) => {
+        await settle(client);
+        let cursor = from;
+        for (;;) {
+          const batch = await client.store.changesSince(
+            cursor,
+            origin => origin === null,
+          );
+          await server.store.apply(batch.changes, {origin: 'client'});
+          cursor = batch.cursor;
+          if (!batch.hasMore) {
+            return cursor;
+          }
+        }
+      };
+      const lost = randomUUID();
+      const edited = randomUUID();
+      const start = await pushCursor();
+      await addBirthday(client, lost, 'Lost');
+      await addBirthday(client, edited, 'Mine');
+      const sent = await push(start);
+      // The server lost one without a trace (like a push before it synced the table) and
+      // changed the other later.
+      await server.db.execute(sql`DELETE FROM birthdays WHERE id = ${lost}`);
+      await server.db.execute(
+        sql`DELETE FROM sync.row_versions WHERE pk->>'id' = ${lost}`,
+      );
+      await tick();
+      await server.db.execute(
+        sql`UPDATE birthdays SET name = 'Theirs' WHERE id = ${edited}`,
+      );
+
+      expect(
+        await client.store.resendLocal(['birthdays', 'no_such_table']),
+      ).toBeGreaterThanOrEqual(2);
+      await push(sent);
+
+      expect(
+        await rows(
+          server,
+          sql`SELECT id, name FROM birthdays WHERE id IN (${lost}, ${edited}) ORDER BY name`,
+        ),
+      ).toEqual([
+        {id: lost, name: 'Lost'},
+        {id: edited, name: 'Theirs'},
+      ]);
+    });
+
     it('a version set aside can be brought back, pushing out a row of the same day', async () => {
       const conflicts = new SyncConflictsService(
         client.db as unknown as Database,
