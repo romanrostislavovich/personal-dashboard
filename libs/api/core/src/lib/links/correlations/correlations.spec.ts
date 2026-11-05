@@ -137,6 +137,70 @@ describe('correlations', () => {
     expect(few.regression).toBeNull();
   });
 
+  describe('main and extra numbers, outcomes', () => {
+    const numbers = [
+      metric('activity.games', games),
+      metric('diary.mood', mood, {unit: 'score', outcome: true}),
+      metric('development.coding', coding),
+      metric('activity.phone.batteryMaxC', coding, {
+        unit: 'score',
+        extra: true,
+      }),
+      metric('activity.gamesShare', games, {
+        unit: 'percent',
+        parts: ['activity.games'],
+      }),
+    ];
+    const keysOf = (found: ReturnType<typeof correlations>) =>
+      new Set(found.correlations.flatMap(pair => [pair.a, pair.b]));
+
+    it('leaves an extra number out of the search and lists it for the filter', () => {
+      const found = correlations(numbers, period);
+      expect(keysOf(found).has('activity.phone.batteryMaxC')).toBe(false);
+      expect(found.extras.map(item => item.key)).toEqual([
+        'activity.phone.batteryMaxC',
+      ]);
+      expect(found.extras[0].days).toBe(DAYS);
+    });
+
+    it('searches an extra number switched on by its key or its section', () => {
+      for (const extra of [['activity.phone.batteryMaxC'], ['activity']]) {
+        const found = correlations(numbers, period, {extra});
+        expect(keysOf(found).has('activity.phone.batteryMaxC')).toBe(true);
+        expect(found.extras).toEqual([]);
+        expect(
+          found.metrics.find(item => item.key === 'activity.phone.batteryMaxC')
+            ?.extra,
+        ).toBe(true);
+      }
+    });
+
+    it('compares with the outcomes only when asked', () => {
+      const found = correlations(numbers, period, {pairs: 'outcomes'});
+      expect(
+        found.correlations.every(
+          pair => pair.a === 'diary.mood' || pair.b === 'diary.mood',
+        ),
+      ).toBe(true);
+      expect(found.correlations.length).toBeGreaterThan(0);
+      const all = correlations(numbers, period, {pairs: 'all'});
+      expect(all.correlations.length).toBeGreaterThan(
+        found.correlations.length,
+      );
+    });
+
+    it('never compares a number with what it is counted from', () => {
+      const found = correlations(numbers, period);
+      expect(
+        found.correlations.some(
+          pair =>
+            [pair.a, pair.b].includes('activity.gamesShare') &&
+            [pair.a, pair.b].includes('activity.games'),
+        ),
+      ).toBe(false);
+    });
+  });
+
   describe('what is not a link', () => {
     const YEAR = 365;
     const year = {from: FROM, to: day(YEAR - 1)};

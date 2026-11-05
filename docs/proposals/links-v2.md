@@ -1,6 +1,7 @@
 # Proposal: Links v2 — from "what goes together" to "what it means for me"
 
-Status: proposal (2026-10-25), nothing built yet. The owner's ideas and the assistant's, in one
+Status: proposal (2026-10-25; the base layer, the owner's catalogue and forecasts for any number
+added 2026-11-05), nothing built yet. The owner's ideas and the assistant's, in one
 plan; the owner's decisions are at the end. Health diagnoses of the owner never go into this file.
 
 ## What there is now (v1)
@@ -160,15 +161,172 @@ user's held-out recent days** (as the mood forecast does now). Each says what dr
 - A minimum of days per finding (v1: 14; indices and hours: their own minimums), and "not enough
   days yet — about N more" instead of a verdict.
 
+## 7. Everything collected becomes a number (the base layer)
+
+The owner's rule (2026-11-05): **Links v2 counts every signal the dashboard has**, not a chosen
+few. v1 has ~100 daily numbers ([../telemetry.md](../telemetry.md#every-daily-number-links-has));
+"Kept but not in Links yet" there lists what is stored and not counted. Each of these becomes a
+daily number registered by its own section (no new collection needed):
+
+| Section          | New daily numbers                                                                                                                                                                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Phone            | notifications (all, and per category: messengers, social, work, other); the busiest 10 minutes of notifications; time per app category (social, short video, messengers, games, work, reading); app switches; sessions under 30 s; silent ringer |
+| Places           | hours per kind of place (home, work, café, gym, nature…); trips by mode (on foot, car, transport)                                                                                                                                                |
+| Band             | average and highest heart rate; minutes awake in the night; distance                                                                                                                                                                             |
+| Computer         | focus sessions broken / finished; limits reached; hours per work context; CPU over 90 % (hours)                                                                                                                                                  |
+| Telemetry        | unique apps; focus entropy; typing pauses; page types read (article, tech article, video, course)                                                                                                                                                |
+| Development      | coding hours per project and per language (the 5 most frequent of the period)                                                                                                                                                                    |
+| Games and music  | hours per game (Steam top 5, WoW); Dota K/D/A and party; SoundCloud plays                                                                                                                                                                        |
+| Finance          | income; spending after 22:00; net worth (weekly)                                                                                                                                                                                                 |
+| Diary            | **tags** (each of the 10 most used as a yes/no day — "sport", "friends"…); photos                                                                                                                                                                |
+| Tasks and habits | overdue tasks; open tasks without a date; high-priority tasks done; habit **amounts** where a habit has them                                                                                                                                     |
+| AI               | tokens                                                                                                                                                                                                                                           |
+
+## 8. Main and extra numbers (the filter)
+
+Every number is counted and stored from its first day (so its history is there when it is
+wanted), but not every number is shown:
+
+- **Main** — shown by default and searched by default: the ones a person reads about their day.
+- **Extra** — counted, hidden by default; the filter on the Links page switches them on one by one
+  or by group ("+ the computer's extra numbers"); the choice is remembered. Everything marked
+  _extra_ below, and the new numbers that are mostly technical (CPU, tokens, typing pauses, silent
+  ringer, net worth, SoundCloud).
+
+**Why extra numbers are also left out of the search, not only out of sight:** every pair tested
+makes the Benjamini–Hochberg correction stricter. ~100 numbers make ~10 000 tests (same and next
+day); ~230 would make ~50 000 and real links of the main numbers would stop passing. So the search
+runs on what is switched on, and v2 searches **actions × outcomes** by default (section 5's
+matrix: what you do against mood, tasks done, sleep, focus, deep work, coding), all × all only on
+request.
+
+**A number made of others is never paired with its own parts** ("deep work share" against "focus
+hours" is arithmetic, not a finding): each derived number names its parents and the engine skips
+those pairs.
+
+## 9. The owner's catalogue — what is taken
+
+[telemetry_metrics_catalogue.md](telemetry_metrics_catalogue.md) (140 ideas, 2026-11-05) is an
+addition, not the base. Each idea was checked against what there is. Numbers are the catalogue's.
+
+**Rules used:** no duplicates (an idea already in v1 or v2 goes to that number); no number with
+made-up weights (the catalogue's `0.4·Sleep − 0.05·Latency` — v2 learns the weights from the
+owner's days); a link between two numbers is not a number (the engine finds it); "biomarker"
+names are not used (no diagnoses).
+
+### Taken as main numbers (new)
+
+| #        | Idea                        | In v2                                                                                                    |
+| -------- | --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 10       | First action latency        | minutes from the first unlock to the first work span (IDE, terminal, coding)                             |
+| 11       | Task velocity               | tasks done of those due today, %                                                                         |
+| 21, 136  | Morning doomscrolling       | minutes in draining apps in the 2 h after the first unlock; the month view shows "mornings without them" |
+| 33       | Sleep window variance       | bedtime spread over 7 days — from the band, and from the phone's last use when there is no band          |
+| 80, 120  | Data completeness           | the day's coverage: sources that reported of those connected, % (section 6 as a number)                  |
+| 90, 127  | Offline time                | the longest daytime stretch with no screen on any device                                                 |
+| 104, 118 | Notification storm          | the busiest 10 minutes of notifications; messenger notifications per day                                 |
+| 121      | Desktop restlessness        | window switches after less than 60 s, per hour — the computer's twin of phone restlessness               |
+| 123      | Entertainment after bedtime | of the late-night load, the part in draining apps and video after the owner's usual bedtime              |
+| 135      | Mood volatility             | the spread of the diary's mood over 14 days                                                              |
+| 138, 63  | Open loops                  | open tasks without a date + overdue tasks                                                                |
+
+### Taken as extra numbers (hidden by default)
+
+| #   | Idea                        | In v2                                                         |
+| --- | --------------------------- | ------------------------------------------------------------- |
+| 8   | Media share                 | video and films of the day's screen time, %                   |
+| 12  | Bot prompt answers          | the dashboard's questions answered (doses, mood, check-ins) % |
+| 14  | Commit density by hour      | in the hourly series; lines changed when the sync has them    |
+| 18  | App switch fatigue          | the most unique apps in one hour                              |
+| 19  | Gaming limit kept           | games time against the Activity limit                         |
+| 20  | Terminal share              | terminal time of the computer's work time                     |
+| 35  | AI tokens                   | per day                                                       |
+| 58  | Time among people           | hours in cafés, offices, events (place kinds), calls, people  |
+| 76  | Computer at its limit       | hours with CPU or memory over 90 %                            |
+| 77  | Late food orders            | food and delivery spending after 21:00                        |
+| 86  | Awake after dark            | screen hours after sunset (weather gives sunset)              |
+| 93  | Binge depth                 | the most episodes in a row                                    |
+| 102 | All habits day              | a day with every habit done                                   |
+| 115 | Code–life balance           | coding hours against walking and offline time                 |
+| 124 | Screen alone vs with people | screen hours against call minutes and time among people       |
+| 128 | Diary tone                  | later: needs a local model (the server fits only embeddings)  |
+| 137 | Work–recovery balance       | deep work against sleep and offline time                      |
+
+### Duplicates (go to the existing number, nothing new)
+
+1 deep work (v2 adds the share) · 2, 117 late-night load · 3, 122 phone restlessness · 4 context
+switching · 5, 17, 109 `notificationsOpened`, `secondsToOpen` · 6 `places.km` · 16, 105 the
+baseline of every number ("unusual today") · 26, 85, 59 deep work blocks · 27, 51 the day's rhythm
+· 28 `music.plays`, `phone.media` · 31 `terminalCommands` · 36, 91 `places.count`, `newPlaces` ·
+39 `diary.words` · 41, 134, 69 the overload warning · 42 the mood forecast · 46, 60, 71 habit
+lapse risk (the diary as a habit) · 65, 116 weather is already in every search (116 repeats 65) ·
+78, 125 `backspacePercent` · 96 `phone.dnd` · 101 the inverse of `activity.hours` · 139 a link the
+engine finds (people × mood), not a number.
+
+### Not Links — another section
+
+| #                                              | Where                                                                                                                 |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 9, 29, 30, 37, 38, 40, 48, 55, 70, 79, 89, 106 | System: backups, disk, updates, jobs, security level, AI quota — the redesign's System page                           |
+| 13                                             | AI page: local vs outside requests                                                                                    |
+| 24, 68                                         | Security / the vault                                                                                                  |
+| 7, 57                                          | Finance: spending against the budget (budgets exist), the month's cash flow                                           |
+| 56                                             | Projects / Tasks: deadline drift                                                                                      |
+| 129–133                                        | Psychology: an optional evening check-in (energy, calm, control, meaning, body); its answers come to Links as numbers |
+| 45                                             | postponed by the owner (impulse spending)                                                                             |
+
+### Proposed to drop — the owner decides
+
+Nothing to measure them with, or no meaning for one person's days; any of them can come back as an
+extra number:
+
+- **No data and no honest way to get it:** 52 weight from food receipts, 64 simulation ETA, 84
+  genealogy, 126 unanswered messages (the dashboard cannot see replies), 62 backups × streaming,
+  72 network drops, 67 wanderlust trigger.
+- **Made-up composites** (v2 learns its own): 81 digital entropy, 98 physical energy footprint,
+  100 code-to-coffee, 111 serenity index, 140 resilience score (the band has its own), 82 XP (the
+  level exists).
+- **About the dashboard, not the owner:** 73 module usage, 87 sovereignty, 88 and 103 recall
+  counts, 94 Telegram share, 95 active domains, 97 vault entropy, 99 digest rating, 112 links
+  density, 113 dev containers uptime, 114 automation time saved, 119 file longevity.
+- **Needs new collection for little meaning:** 22 traffic while idle, 25 shortcuts vs clicks, 34
+  clipboard, 107 clean working tree, 108 prompt length, 110 knowledge base size.
+- **Development page, not life:** 66 tech debt, 74 CI failure risk, 75 repo size, 92 deletions
+  vs additions.
+- **Overlaps a taken one:** 23 quick captures (tasks created), 32 inbox processed, 43, 49
+  short-term distraction risks (come from section 2's "hour after an event"), 53 notification
+  fatigue (the gentle mode decides).
+
+The catalogue's forecasts 44 bedtime, 47 today's tasks, 50 morning deep work, 54 the weekend and
+61 morning recovery are **not dropped**: they become targets of section 10's forecaster.
+
+## 10. Forecasts for any number
+
+v1 forecasts only tomorrow's mood. v2 makes the same model (ridge on the owner's numbers,
+retrained nightly) for **any main number** the owner picks: tomorrow's deep work, coding hours,
+tasks done, bedtime, sleep, steps, spending, mood, the overload score. The catalogue's section 2
+becomes targets of this one forecaster, not formulas of their own.
+
+- Shown **only when it beats the plain guess** (the same weekday's average, and yesterday) on the
+  owner's held-out recent days, with how much better ("bedtime within ±25 min, 30 % closer than
+  the plain guess"); a target that does not beat it says so and is not shown on Home.
+- Each forecast says **what drove it** (section 5's "what made today").
+- Later, with the hourly series: **today's forecast by noon** (the rest of the day from its
+  morning) — "a light afternoon fits today".
+- Forecasts go to the morning digest and Home only for the targets the owner chose.
+
 ## Order
 
+0. **The base layer and the filter** (sections 7–8): every collected signal as a daily number,
+   main and extra, the actions × outcomes search, derived numbers kept away from their parts.
 1. **Indices of the phone and the desktop** (restlessness, app switching, deep work, nourishing vs
-   draining, interruptions in focus, late-night load) + coverage lines. Little new data, much new
-   meaning.
+   draining, interruptions in focus, late-night load) + coverage lines + the catalogue's main
+   numbers (section 9). Little new data, much new meaning.
 2. **Baselines and "unusual today"**, change points, dose–response, 2–3-day lags.
 3. **Hourly series**: the hour after an event, the day's rhythm, the productive window.
 4. **The owner's hypotheses as question cards**, insight cards worded by the AI.
-5. **Forecasts**: overload warning, habit lapse risk, tomorrow's window — after stage 3 (sleep and
+5. **Forecasts** for any main number (section 10), the overload warning, habit lapse risk — the
+   simple ones right after stage 2, the rest after stage 3 (sleep and
    the stress index make them much better).
 6. **Experiments** (personal-lab).
 
@@ -182,3 +340,15 @@ user's held-out recent days** (as the mood forecast does now). Each says what dr
   notifications are built right after Xbox, see the roadmap).
 - **The AI** may get the aggregates for the insight cards (numbers, names of apps and categories;
   still no texts and no places).
+
+## Decisions (2026-11-05, the owner's)
+
+- **The base:** Links v2 counts every signal the dashboard has (section 7); the catalogue is an
+  addition (section 9).
+- **Main and extra numbers:** yes, extra ones hidden by default and switched on in the filter
+  (section 8).
+- **The catalogue's drop list:** dropped as proposed.
+- **An evening check-in in Psychology:** yes — **energy** and **anxiety** to start with, more
+  questions later; the answers come to Links as numbers (outcomes).
+- **The first forecasts:** bedtime, tomorrow's deep work, tasks done, mood.
+- **Start with stage 0**, then stage 1.

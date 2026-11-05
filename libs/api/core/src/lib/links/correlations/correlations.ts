@@ -1,9 +1,11 @@
 import {
   Correlation,
   CorrelationMetric,
+  CorrelationPairs,
   CorrelationRegression,
   Correlations,
   DailyMetric,
+  ExtraMetric,
   LocalDate,
 } from '@pd/contracts';
 import {
@@ -65,9 +67,19 @@ interface Prepared {
   auto: number;
 }
 
+export interface CorrelationOptions {
+  /** The number the regression explains; the mood when not given. */
+  target?: string;
+  /** Which pairs are compared; `all` when not given. */
+  pairs?: CorrelationPairs;
+  /** The extra numbers switched on: their keys, or whole sections by id. */
+  extra?: string[];
+}
+
 /**
- * The links engine: every daily number of every section against every other, of the same day
- * and of the next one, with what predicts a chosen number when the others are held fixed.
+ * The links engine: every daily number of every section against every other (or against the
+ * outcomes only, see CorrelationPairs), of the same day and of the next one, with what predicts
+ * a chosen number when the others are held fixed.
  *
  * It finds what goes together and what comes before what; that is not proof that one causes
  * the other — the page says so. Several things keep chance out: the seasons are taken away
@@ -78,14 +90,22 @@ interface Prepared {
 export function correlations(
   metrics: DailyMetric[],
   period: {from: LocalDate; to: LocalDate},
-  target?: string,
+  {target, pairs: which = 'all', extra = []}: CorrelationOptions = {},
 ): Correlations {
   const days = daysOf(period);
-  const prepared = [...metrics, weekend(days)]
+  const switchedOn = (metric: DailyMetric) =>
+    !metric.extra ||
+    extra.includes(metric.key) ||
+    extra.includes(metric.module);
+  const [searched, left] = [
+    metrics.filter(switchedOn),
+    metrics.filter(metric => !switchedOn(metric)),
+  ];
+  const prepared = [...searched, weekend(days)]
     .map(metric => prepare(metric, days))
     .filter(item => item.series.size >= MIN_DAYS);
 
-  const found = pairs(prepared);
+  const found = pairs(prepared, which);
   const q = benjaminiHochberg(found.map(pair => pair.p));
   const all: Correlation[] = found.map((pair, index) => ({
     ...pair,
@@ -110,6 +130,22 @@ export function correlations(
     metrics: prepared.map(({metric, series}) => describe(metric, series)),
     correlations: all,
     regression: wanted ? regression(prepared, all, wanted) : null,
+    extras: left
+      .map(metric => extraOf(metric, days))
+      .filter(item => item.days > 0),
+  };
+}
+
+function extraOf(metric: DailyMetric, days: LocalDate[]): ExtraMetric {
+  const {key, module, labelKey, label, unit, currency} = metric;
+  return {
+    key,
+    module,
+    labelKey,
+    ...(label ? {label} : {}),
+    unit,
+    ...(currency ? {currency} : {}),
+    days: seriesOf(metric, days).size,
   };
 }
 
@@ -158,7 +194,7 @@ function autocorrelation(series: Series, days: LocalDate[]): number {
 
 type Pair = Omit<Correlation, 'q' | 'strong'>;
 
-function pairs(prepared: Prepared[]): Pair[] {
+function pairs(prepared: Prepared[], which: CorrelationPairs): Pair[] {
   const result: Pair[] = [];
   const sorted = [...prepared].sort((a, b) =>
     a.metric.key.localeCompare(b.metric.key),
@@ -168,7 +204,8 @@ function pairs(prepared: Prepared[]): Pair[] {
       if (
         a === b ||
         related(a.metric, b.metric) ||
-        surroundings(a.metric, b.metric)
+        surroundings(a.metric, b.metric) ||
+        (which === 'outcomes' && !a.metric.outcome && !b.metric.outcome)
       ) {
         continue;
       }
@@ -195,9 +232,14 @@ function surroundings(a: DailyMetric, b: DailyMetric): boolean {
   return SURROUNDINGS.has(a.module) && SURROUNDINGS.has(b.module);
 }
 
-/** A number and a part of it go together by themselves. */
+/** A number and a part of it, or a number and what it is counted from, go together by themselves. */
 function related(a: DailyMetric, b: DailyMetric): boolean {
-  return a.partOf === b.key || b.partOf === a.key;
+  return (
+    a.partOf === b.key ||
+    b.partOf === a.key ||
+    Boolean(a.parts?.includes(b.key)) ||
+    Boolean(b.parts?.includes(a.key))
+  );
 }
 
 function compare(a: Prepared, b: Prepared, lag: 0 | 1): Pair | null {
@@ -370,8 +412,10 @@ function standardize(values: number[]): number[] | null {
 }
 
 function describe(metric: DailyMetric, series: Series): CorrelationMetric {
-  const {key, module, labelKey, label, unit, currency} = metric;
+  const {key, module, labelKey, label, unit, currency, extra, outcome} = metric;
   return {
+    ...(extra ? {extra} : {}),
+    ...(outcome ? {outcome} : {}),
     key,
     module,
     labelKey,

@@ -7,6 +7,13 @@ import {hoursOf} from './signals-day';
 
 const HOUR = 3600;
 
+/** The phone's technical numbers: counted, shown when the Links filter asks (DailyMetric.extra). */
+const PHONE_EXTRA = new Set([
+  'activity.phone.mobileData',
+  'activity.phone.batteryMaxC',
+  'activity.phone.noise',
+]);
+
 /**
  * The phone's unlocks and its night to Links: next to mood and sleep they say the most of the
  * phone. Only the days the phone told something — no unlocks is not "did not pick it up".
@@ -99,6 +106,10 @@ export class PhoneUsageLinks implements OnModuleInit {
       metric('notificationsOpened', 'score', day => day.notificationsOpened),
       metric('secondsToOpen', 'count', day => day.secondsToOpen),
       metric('batteryMaxC', 'score', day => day.batteryMaxC),
-    ].filter(one => one.days.length);
+    ]
+      .filter(one => one.days.length)
+      .map(one =>
+        PHONE_EXTRA.has(one.key) ? {...one, extra: true as const} : one,
+      );
   }
 }

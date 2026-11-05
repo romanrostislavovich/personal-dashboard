@@ -210,6 +210,7 @@ export class ActivityLinks implements OnModuleInit {
             module: 'activity',
             labelKey: 'activity.links.focus',
             unit: 'hours' as const,
+            outcome: true as const,
             days: hours(focus.days),
           },
           {

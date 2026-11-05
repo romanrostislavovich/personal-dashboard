@@ -104,6 +104,7 @@ export class TasksLinks implements OnModuleInit {
             module: 'tasks',
             labelKey: 'tasks.links.done',
             unit: 'count',
+            outcome: true,
             days: days.map(({day: date, done}) => ({day: date, value: done})),
           },
           {

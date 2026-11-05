@@ -209,6 +209,19 @@ export class CoreAiTools implements OnModuleInit {
             description:
               'The key of the number to explain, e.g. diary.mood, development.coding',
           },
+          pairs: {
+            type: 'string',
+            enum: ['outcomes', 'all'],
+            description:
+              'outcomes (default): every number against the outcomes (mood, tasks done, ' +
+              'sleep, coding, focus); all: everything against everything',
+          },
+          extra: {
+            type: 'string',
+            description:
+              'Extra (technical, hidden by default) numbers to include, comma-separated keys ' +
+              'or section ids, e.g. activity.phone.mobileData,vpn',
+          },
         },
         required: PERIOD_PARAMETERS.required,
       },

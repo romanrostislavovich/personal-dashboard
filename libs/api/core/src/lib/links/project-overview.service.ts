@@ -138,7 +138,12 @@ export class ProjectOverviewService {
 
   /** What goes with the days of a good mood and of a bad one (see moodInsights). */
   async moodInsights(userId: string, period: Period): Promise<MoodInsights> {
-    return moodInsights(await this.links.dailyMetrics(userId, period), period);
+    // The extra numbers stay out until the Links filter has them (see DailyMetric.extra).
+    const metrics = await this.links.dailyMetrics(userId, period);
+    return moodInsights(
+      metrics.filter(metric => !metric.extra),
+      period,
+    );
   }
 
   /**
@@ -156,7 +161,7 @@ export class ProjectOverviewService {
       to: today,
     };
     const metrics = (await this.links.dailyMetrics(userId, period)).filter(
-      metric => !hidden.includes(metric.module),
+      metric => !metric.extra && !hidden.includes(metric.module),
     );
     return moodForecast(metrics, today);
   }
@@ -179,7 +184,11 @@ export class ProjectOverviewService {
     const metrics = (await this.links.dailyMetrics(userId, period)).filter(
       metric => !hidden.includes(metric.module),
     );
-    return correlations(metrics, period, query.target);
+    return correlations(metrics, period, {
+      target: query.target,
+      pairs: query.pairs ?? 'outcomes',
+      extra: query.extra?.split(',').filter(Boolean) ?? [],
+    });
   }
 
   /**
@@ -206,7 +215,7 @@ export class ProjectOverviewService {
       return {weeks: query.weeks, results: []};
     }
     const metrics = (await this.links.dailyMetrics(userId, range)).filter(
-      metric => !hidden.includes(metric.module),
+      metric => !metric.extra && !hidden.includes(metric.module),
     );
     const result = beforeAfter(metrics, periods, range, query.weeks);
     // A period that began before the two years can still have ended within them.

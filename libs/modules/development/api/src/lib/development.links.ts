@@ -72,6 +72,7 @@ export class DevelopmentLinks implements OnModuleInit {
             module: 'development',
             labelKey: 'development.links.coding',
             unit: 'hours',
+            outcome: true,
             days: days.map(({day, seconds}) => ({day, value: seconds / 3600})),
           },
           {

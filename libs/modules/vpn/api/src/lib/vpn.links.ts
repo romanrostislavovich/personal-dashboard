@@ -68,6 +68,8 @@ export class VpnLinks implements OnModuleInit {
         module: 'vpn',
         labelKey: 'vpn.links.megabytes',
         unit: 'count',
+        // Technical: shown when the Links filter asks for it.
+        extra: true,
         days: rows.map(row => ({
           day: row.day,
           value: Math.round(row.bytes / MB),

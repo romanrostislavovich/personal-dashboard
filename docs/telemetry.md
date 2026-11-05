@@ -28,16 +28,16 @@ Contents:
 A section never reads another one; it registers sources with the core `LinksService`
 (`libs/api/core/src/lib/links/links.service.ts`) in its `<module>.links.ts`:
 
-| Source kind                          | What it gives                                                                           | Used by                                                      |
-| ------------------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `registerDailyMetrics`               | a number per day (`DailyMetric`: `key`, `unit`, `days[]`, optional `partOf`, `missing`) | correlations, good/bad mood days, before/after, the forecast |
-| `registerMoments`                    | events with a start (and an end) between two moments                                    | before/after, "what happened then"                           |
-| `registerPeriods`                    | things that lasted: a medication, a condition, a life event                             | the timeline, before/after                                   |
-| `registerProject`                    | facts and changes of one project                                                        | Projects → overview                                          |
-| `registerUsage`                      | whether something paid for is used                                                      | Finance → subscriptions                                      |
-| `registerTimeSpent`                  | seconds spent on a name (`windows` by title, `focus` by the session note)               | tasks, projects                                              |
-| `registerPeople`                     | what a section keeps about a person by name                                             | birthdays, the assistant                                     |
-| `LifeService.register` (`*.life.ts`) | the day's events and the month's cards                                                  | Life, the daily chronicle, the month story                   |
+| Source kind                          | What it gives                                                                                                        | Used by                                                      |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `registerDailyMetrics`               | a number per day (`DailyMetric`: `key`, `unit`, `days[]`, optional `partOf`, `parts`, `missing`, `extra`, `outcome`) | correlations, good/bad mood days, before/after, the forecast |
+| `registerMoments`                    | events with a start (and an end) between two moments                                                                 | before/after, "what happened then"                           |
+| `registerPeriods`                    | things that lasted: a medication, a condition, a life event                                                          | the timeline, before/after                                   |
+| `registerProject`                    | facts and changes of one project                                                                                     | Projects → overview                                          |
+| `registerUsage`                      | whether something paid for is used                                                                                   | Finance → subscriptions                                      |
+| `registerTimeSpent`                  | seconds spent on a name (`windows` by title, `focus` by the session note)                                            | tasks, projects                                              |
+| `registerPeople`                     | what a section keeps about a person by name                                                                          | birthdays, the assistant                                     |
+| `LifeService.register` (`*.life.ts`) | the day's events and the month's cards                                                                               | Life, the daily chronicle, the month story                   |
 
 **Units** (`DailyMetric.unit`): `hours`, `count`, `money` (+ `currency`), `score` (a reading
 with no fixed scale), `degrees`, `percent` (0–100), `clock` (a time of day in hours; over 24 —
@@ -46,7 +46,19 @@ after midnight, e.g. 25.5 = 01:30).
 **Missing days.** `missing: 'absent'` — a day the collector did not report is _unknown_, never a
 zero (the phone, the band, telemetry). Without it a day with nothing is a zero where the section
 says so (no Dota matches = no matches). `partOf` — a part of another number (spending on food of
-all spending; late games of games): the two are never compared with each other.
+all spending; late games of games): the two are never compared with each other; `parts` — the
+numbers a derived one is counted from (a share, a ratio), never compared with it either.
+
+**Main, extra and outcomes** (Links v2, [proposals/links-v2.md](proposals/links-v2.md#8-main-and-extra-numbers-the-filter)).
+Every number is counted and kept. `extra: true` — hidden and left out of the search until the
+Links filter switches it on (by key or by section), and kept out of the good/bad mood days,
+before/after and the forecast; now: the phone's mobile data, noise and battery heat, the raw
+telemetry counts (`inputCount`, `terminalCommands`, `terminalFailures`), VPN megabytes, the sites'
+downtime, screenshots. `outcome: true` — what a day gives; by default Links compares every number
+with the outcomes only (`pairs=outcomes`), everything with everything on request (`pairs=all`);
+now: `diary.mood`, `tasks.done`, `development.coding`, `activity.focus`, the questionnaires,
+`health.band.sleep`, `sleepScore`, `stress`, `resilience`. A new number says which it is in the
+same change.
 
 **Day boundaries.** Days are the user's time zone (`users.time_zone`). A few numbers move the
 night to the evening before: Dota matches and phone night use count 00:00–04:00 to the day

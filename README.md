@@ -53,7 +53,9 @@ The interface is in English and Russian.
   story of the day by the AI, a "Wrapped" of the month or the year, questions to your own history
 - 🔗 **Sections that know each other** — a project with its hours, commits, money and uptime on
   one page; what goes with your good and bad days, and every daily number against every other
-  (Life → Links: correlations of the same and the next day, a graph, what predicts your mood);
+  (Life → Links: correlations of the same and the next day against what a day gives — mood, tasks,
+  sleep, coding — or everything with everything, extra numbers switched on in the filter, a graph,
+  what predicts your mood);
   the last commit before a site went down;
   subscriptions you pay for and do not use
 - ⚡ **Automations** — "if X, then Y" across sections: a site is down → a task, no diary entry by

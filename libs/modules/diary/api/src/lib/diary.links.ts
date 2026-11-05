@@ -39,6 +39,7 @@ export class DiaryLinks implements OnModuleInit {
             module: 'diary',
             labelKey: 'diary.links.mood',
             unit: 'score',
+            outcome: true,
             days: days.flatMap(({day, mood}) =>
               mood === null ? [] : [{day, value: mood}],
             ),

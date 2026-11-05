@@ -34,8 +34,49 @@
         }
       </mat-select>
     </mat-form-field>
+    <mat-button-toggle-group
+      hideSingleSelectionIndicator
+      [value]="pairs()"
+      [attr.aria-label]="'life.links.pairs.label' | transloco"
+      (change)="setPairs($event.value)"
+    >
+      <mat-button-toggle
+        value="outcomes"
+        [matTooltip]="'life.links.pairs.outcomesHint' | transloco"
+      >
+        {{ 'life.links.pairs.outcomes' | transloco }}
+      </mat-button-toggle>
+      <mat-button-toggle value="all">
+        {{ 'life.links.pairs.all' | transloco }}
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+    @if (extras().length) {
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>{{
+          'life.links.extra.label'
+            | transloco: {on: extra().length, all: extras().length}
+        }}</mat-label>
+        <mat-select
+          multiple
+          [value]="extra()"
+          (selectionChange)="setExtra($event.value)"
+        >
+          @for (item of extras(); track item.key) {
+            <mat-option [value]="item.key">
+              {{ name(item) }}
+              <span class="days">{{
+                'life.links.extra.days' | transloco: {days: item.days}
+              }}</span>
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
   </div>
   <p class="hint">{{ 'life.links.digital.hint' | transloco }}</p>
+  @if (extras().length) {
+    <p class="hint">{{ 'life.links.extra.hint' | transloco }}</p>
+  }
   <p class="caution">
     <mat-icon>info</mat-icon>
     <span>{{ 'life.links.caution' | transloco }}</span>

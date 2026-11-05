@@ -3,6 +3,14 @@ import {LinksService} from '@pd/api-core';
 import {DailyMetric, WearableDay} from '@pd/contracts';
 import {WearableService} from './wearable.service';
 
+/** What a night and a day give, for Links to compare the rest with (DailyMetric.outcome). */
+const BAND_OUTCOMES = new Set([
+  'health.band.sleep',
+  'health.band.sleepScore',
+  'health.band.stress',
+  'health.band.resilience',
+]);
+
 /** HH:MM as hours of the day (Links' `clock`); a bedtime after midnight goes over 24 (00:30 → 24.5). */
 function clock(time: string | null, night: boolean): number | null {
   if (!time) {
@@ -66,7 +74,11 @@ export class WearableLinks implements OnModuleInit {
           metric('reactions', 'count', day => day.reactions),
           metric('mindfulness', 'count', day => day.mindfulnessMinutes),
           metric('skinTemp', 'degrees', day => day.skinTempDelta),
-        ].filter(one => one.days.length);
+        ]
+          .filter(one => one.days.length)
+          .map(one =>
+            BAND_OUTCOMES.has(one.key) ? {...one, outcome: true as const} : one,
+          );
       },
     });
   }

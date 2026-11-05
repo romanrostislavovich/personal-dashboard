@@ -126,6 +126,22 @@ export interface DailyMetric {
    * two go together by themselves, so they are never compared.
    */
   partOf?: string;
+  /**
+   * The keys of the numbers this one is counted from (deep work's share of the screen time):
+   * arithmetic, not a finding, so it is never compared with them.
+   */
+  parts?: string[];
+  /**
+   * Counted and kept, but hidden by default (mostly technical: the battery's heat, tokens): the
+   * Links filter switches it on. Kept out of the search until then, so the many extra numbers do
+   * not make the correction for the number of pairs stricter for the main ones.
+   */
+  extra?: true;
+  /**
+   * What a day gives (the mood, tasks done, sleep, coding), not what is done in it: by default
+   * Links compares what is done with these, not everything with everything.
+   */
+  outcome?: true;
   days: {day: LocalDate; value: number}[];
 }
 
@@ -208,7 +224,15 @@ export interface CorrelationMetric {
   days: number;
   /** The value of every day it has one: for the scatter of a pair. */
   values: {day: LocalDate; value: number}[];
+  extra?: true;
+  outcome?: true;
 }
+
+/** An extra number left out of the search (see DailyMetric.extra): for the filter's list. */
+export type ExtraMetric = Omit<
+  CorrelationMetric,
+  'values' | 'extra' | 'outcome'
+>;
 
 /**
  * How two daily numbers go together. `lag` 1 — `a` of a day against `b` of the next one
@@ -268,13 +292,29 @@ export interface Correlations {
   correlations: Correlation[];
   /** For `target` of the query; `null` — too few days, or no such number. */
   regression: CorrelationRegression | null;
+  /** The extra numbers not switched on: what the filter can add. */
+  extras: ExtraMetric[];
 }
+
+/**
+ * Which pairs are compared: `outcomes` — every number with the outcomes (see
+ * DailyMetric.outcome); `all` — everything with everything.
+ */
+export const CORRELATION_PAIRS = ['outcomes', 'all'] as const;
+export type CorrelationPairs = (typeof CORRELATION_PAIRS)[number];
 
 export const correlationsQuerySchema = z.object({
   from: z.iso.date(),
   to: z.iso.date(),
   /** The number the regression explains; the mood when not given. */
   target: z.string().max(120).optional(),
+  /** `outcomes` when not given. */
+  pairs: z.enum(CORRELATION_PAIRS).optional(),
+  /**
+   * The extra numbers switched on, comma-separated: a key (`activity.phone.mobileData`) or a
+   * whole section (`activity`).
+   */
+  extra: z.string().max(4000).optional(),
 });
 export type CorrelationsQuery = z.infer<typeof correlationsQuerySchema>;
 
