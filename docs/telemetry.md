@@ -151,6 +151,31 @@ Fixed keys plus families (`<category>`, `<site>`, `<habit id>`, `<analyte>`, `<n
 | `screenshots.taken`                     | count                               | screenshots                                                                                    |        |                     |
 | `ai.messages`                           | count                               | messages to the assistant                                                                      |        |                     |
 
+**Added by Links v2's base layer** (2026-11-05, [proposals/links-v2.md](proposals/links-v2.md#7-everything-collected-becomes-a-number-the-base-layer)).
+_Extra_ — hidden until the Links filter switches it on; _outcome_ — what a day gives.
+
+| Key                                                                              | Unit        | From                                                                             | Marks                |
+| -------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------- | -------------------- |
+| `diary.tag.<tag>`                                                                | count (0/1) | the 10 most used tags (5+ days) as yes/no days of the entries; no entry — absent |                      |
+| `diary.moodSpread`                                                               | score       | the spread of the mood over 14 days (5+ moods); `parts`: the mood                |                      |
+| `tasks.openLoops`, `tasks.overdue`                                               | count       | open at the day's end and undated or past the date; overdue is a part            |                      |
+| `tasks.dueDone`                                                                  | percent     | of the tasks due that day, done by its end (days something was due)              | outcome              |
+| `tasks.importantDone`                                                            | count       | highest-priority tasks done (part of `tasks.done`)                               |                      |
+| `activity.phone.hours`                                                           | hours       | phone spans                                                                      |                      |
+| `activity.phone.category.<category>`                                             | hours       | phone spans by the app's category (part of the hours)                            | extra but four       |
+| `activity.phone.notifications`, `…messengerNotifications`                        | count       | notifications, of messengers (a part); a reported day without any is a zero      |                      |
+| `activity.phone.notificationPeak`                                                | count       | the most notifications in one ten-minute stretch of the clock                    |                      |
+| `activity.places.bike`, `…ride`                                                  | hours       | trips by speed: bike, car/bus/train                                              |                      |
+| `activity.places.at.<place id>`                                                  | hours       | at each named place (5 of the most days, 5+ days)                                |                      |
+| `activity.focusFinished`                                                         | percent     | focus sessions run to the end                                                    |                      |
+| `activity.focusDistracted`                                                       | count (min) | minutes of distractions in focus sessions                                        |                      |
+| `activity.telemetry.<source>.uniqueApps`, `…focusEntropy`, `…typingPauseSeconds` | score       | the average of the telemetry buckets                                             | extra                |
+| `health.band.heartRateAvg`, `…heartRateMax`, `…awake`, `…distance`               | count/hours | the band's day                                                                   | extra: max, distance |
+| `development.project.<name>`, `development.language.<name>`                      | hours       | WakaTime by project / language (5 of the most days, 10+ days; part of coding)    | extra: languages     |
+| `games.steam.<game>`                                                             | hours       | Steam by game (5 of the most days, 10+ days; part of Steam)                      |                      |
+| `finance.income`                                                                 | money       | income                                                                           | extra                |
+| `ai.tokens`                                                                      | count       | tokens of every model                                                            | extra                |
+
 ## The phone (the Android app)
 
 `apps/mobile` (Capacitor + Java collectors in `android/.../sensors`), switched on in Settings →

@@ -1,6 +1,6 @@
 import {Injectable, OnModuleInit} from '@nestjs/common';
 import {LinksService} from '@pd/api-core';
-import {ProjectFact} from '@pd/contracts';
+import {DailyMetric, ProjectFact} from '@pd/contracts';
 import {TransactionsService} from './transactions/transactions.service';
 import {WishlistService} from './wishlist/wishlist.service';
 
@@ -65,8 +65,27 @@ export class FinanceLinks implements OnModuleInit {
       metrics: async (userId, period) => {
         const {mainCurrency, byDay, byCategory} =
           await this.transactions.expensesByDayInMain(userId, period);
+        const income = await this.transactions.expensesByDayInMain(
+          userId,
+          period,
+          'income',
+        );
+        // Income comes on a few days of a month (a salary): it says little of a day by itself.
+        const earned: DailyMetric[] = income.byDay.size
+          ? [
+              {
+                key: 'finance.income',
+                module: 'finance',
+                labelKey: 'finance.links.income',
+                unit: 'money',
+                currency: income.mainCurrency,
+                extra: true,
+                days: [...income.byDay].map(([day, value]) => ({day, value})),
+              },
+            ]
+          : [];
         if (!byDay.size) {
-          return [];
+          return earned;
         }
         // The categories spent on most often: a rare one has too few days to compare.
         const categories = [...byCategory]
@@ -96,6 +115,7 @@ export class FinanceLinks implements OnModuleInit {
               value: days.get(day) ?? 0,
             })),
           })),
+          ...earned,
         ];
       },
     });

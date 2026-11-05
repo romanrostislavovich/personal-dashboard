@@ -381,7 +381,13 @@
       "terminalErrorPercent": "Desktop: failed commands (%)",
       "terminalErrorPercentDay": "Desktop: {{value}}% failed commands among paired measurements",
       "backspacePercent": "Desktop: backspaces / input events (%)",
-      "backspacePercentDay": "Desktop: {{value}}% backspaces among measured input events"
+      "backspacePercentDay": "Desktop: {{value}}% backspaces among measured input events",
+      "uniqueApps": "Desktop: different programs per five minutes",
+      "uniqueAppsDay": "Desktop: {{value}} different programs per five minutes on average",
+      "focusEntropy": "Desktop: how scattered the focus was (entropy)",
+      "focusEntropyDay": "Desktop: focus scattered by {{value}} (entropy) on average",
+      "typingPauseSeconds": "Desktop: average pause in typing, s",
+      "typingPauseSecondsDay": "Desktop: {{value}} s average pause in typing"
     },
     "browser": {
       "contextSwitches": "Browser: observed context switches",
@@ -403,7 +409,13 @@
       "terminalErrorPercent": "Browser: failed commands (%)",
       "terminalErrorPercentDay": "Browser: {{value}}% failed commands among paired measurements",
       "backspacePercent": "Browser: backspaces / input events (%)",
-      "backspacePercentDay": "Browser: {{value}}% backspaces among measured input events"
+      "backspacePercentDay": "Browser: {{value}}% backspaces among measured input events",
+      "uniqueApps": "Browser: different programs per five minutes",
+      "uniqueAppsDay": "Browser: {{value}} different programs per five minutes on average",
+      "focusEntropy": "Browser: how scattered the focus was (entropy)",
+      "focusEntropyDay": "Browser: focus scattered by {{value}} (entropy) on average",
+      "typingPauseSeconds": "Browser: average pause in typing, s",
+      "typingPauseSecondsDay": "Browser: {{value}} s average pause in typing"
     }
   },
   "life": {
@@ -475,7 +487,12 @@
         "system": "Phone: system",
         "other": "Phone: other apps"
       }
-    }
+    },
+    "bike": "By bike",
+    "ride": "Riding (car, bus, train)",
+    "atPlace": "At a named place",
+    "focusFinished": "Focus sessions run to the end, %",
+    "focusDistracted": "Minutes lost to distractions in focus"
   },
   "usage": {
     "seconds": "at a screen"

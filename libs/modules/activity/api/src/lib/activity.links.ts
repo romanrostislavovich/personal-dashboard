@@ -213,6 +213,10 @@ export class ActivityLinks implements OnModuleInit {
             outcome: true as const,
             days: hours(focus.days),
           },
+          ...focusSessionMetrics(
+            focus.sessions,
+            await this.activity.timeZone(userId),
+          ),
           {
             key: 'activity.firstUse',
             module: 'activity',
@@ -389,4 +393,58 @@ export class ActivityLinks implements OnModuleInit {
       })),
     ];
   }
+}
+
+/**
+ * How the focus sessions of a day went: the share run to the end, and the minutes lost to
+ * distractions in them. Only the days with a session.
+ */
+export function focusSessionMetrics(
+  sessions: {
+    startedAt: string;
+    completed: boolean;
+    distractions: {seconds: number}[];
+  }[],
+  timeZone: string,
+): DailyMetric[] {
+  const dayOf = (at: string) =>
+    new Intl.DateTimeFormat('en-CA', {timeZone}).format(new Date(at));
+  const days = new Map<string, {all: number; done: number; lost: number}>();
+  for (const session of sessions) {
+    const day = dayOf(session.startedAt);
+    const sum = days.get(day) ?? {all: 0, done: 0, lost: 0};
+    days.set(day, {
+      all: sum.all + 1,
+      done: sum.done + Number(session.completed),
+      lost:
+        sum.lost +
+        session.distractions.reduce((total, item) => total + item.seconds, 0),
+    });
+  }
+  const sorted = [...days].sort(([a], [b]) => a.localeCompare(b));
+  return sorted.length
+    ? [
+        {
+          key: 'activity.focusFinished',
+          module: 'activity',
+          labelKey: 'activity.links.focusFinished',
+          unit: 'percent',
+          days: sorted.map(([day, sum]) => ({
+            day,
+            value: Math.round((sum.done / sum.all) * 100),
+          })),
+        },
+        {
+          key: 'activity.focusDistracted',
+          module: 'activity',
+          labelKey: 'activity.links.focusDistracted',
+          unit: 'count',
+          missing: 'absent',
+          days: sorted.map(([day, sum]) => ({
+            day,
+            value: Math.round(sum.lost / 60),
+          })),
+        },
+      ]
+    : [];
 }

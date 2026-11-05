@@ -88,12 +88,13 @@ export class TransactionsService {
   }
 
   /**
-   * Personal expenses per day in the main currency (the money of the projects is not a day's),
-   * in all and by category.
+   * Personal expenses (or income) per day in the main currency (the money of the projects is not
+   * a day's), in all and by category.
    */
   async expensesByDayInMain(
     userId: string,
     period: {from: string; to: string},
+    kind: 'expense' | 'income' = 'expense',
   ): Promise<{
     mainCurrency: string;
     byDay: Map<string, number>;
@@ -110,7 +111,7 @@ export class TransactionsService {
       .where(
         and(
           this.filter(userId, {...period, scope: 'personal'}),
-          eq(transactions.kind, 'expense'),
+          eq(transactions.kind, kind),
         ),
       );
     const main = await this.settings.mainCurrency(userId);

@@ -182,6 +182,19 @@ daily number registered by its own section (no new collection needed):
 | Tasks and habits | overdue tasks; open tasks without a date; high-priority tasks done; habit **amounts** where a habit has them                                                                                                                                     |
 | AI               | tokens                                                                                                                                                                                                                                           |
 
+**Built 2026-11-05** (listed in [../telemetry.md](../telemetry.md#every-daily-number-links-has)):
+diary tags and the mood's spread; open loops, overdue, due-done share, important done; phone hours
+and per category, notifications, of messengers, the busiest ten minutes; bike and ride, hours at
+each named place; focus sessions finished and distracted minutes; telemetry's unique apps, focus
+entropy, typing pauses; the band's heart rate, awake time, distance; coding per project and
+language; Steam per game; income; AI tokens. Habits already counted their amounts.
+
+**Not yet:** hours per _kind_ of place (needs each stay matched to its looked-up name); phone app
+switches and short sessions (they are stage 1's restlessness and app switching); silent ringer;
+limits reached, work contexts, CPU over 90 %; page types read; Dota K/D/A and party, WoW;
+SoundCloud plays; net worth; diary photos. **Spending after 22:00 cannot be counted:** a
+transaction keeps only its date (bank imports have no time) — catalogue's 77 waits for that.
+
 ## 8. Main and extra numbers (the filter)
 
 Every number is counted and stored from its first day (so its history is there when it is

@@ -1,20 +1,22 @@
 import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
 import {
   addDays,
+  DailyMetric,
   LocalDate,
   parseLocalDate,
   toLocalDate,
   zonedToUtc,
 } from '@pd/contracts';
-import {and, eq, gte, lt, sql} from 'drizzle-orm';
+import {and, eq, gte, lt, lte, sql} from 'drizzle-orm';
 import {DB, Database} from '../database/database.module';
 import {LinksService} from '../links/links.service';
 import {UsersService} from '../users/users.service';
-import {aiMessages} from './ai.schema';
+import {aiMessages, aiUsage} from './ai.schema';
 
 /**
  * What the assistant tells the links of Life (see LinksService): how many messages the user
- * wrote to it on every day — the page, Telegram, the side panel of the browser alike.
+ * wrote to it on every day — the page, Telegram, the side panel of the browser alike — and the
+ * tokens the models used (an extra number).
  */
 @Injectable()
 export class AiLinks implements OnModuleInit {
@@ -55,17 +57,41 @@ export class AiLinks implements OnModuleInit {
           )
           // By position: the time zone is a parameter (see ActivityService.stats).
           .groupBy(sql`1`);
-        return days.length
-          ? [
-              {
-                key: 'ai.messages',
-                module: 'ai',
-                labelKey: 'ai.links.messages',
-                unit: 'count',
-                days: days.map(({day, count}) => ({day, value: count})),
-              },
-            ]
-          : [];
+        const tokens = await this.db
+          .select({
+            day: aiUsage.day,
+            tokens: sql<number>`sum(${aiUsage.promptTokens} + ${aiUsage.completionTokens})::int`,
+          })
+          .from(aiUsage)
+          .where(
+            and(
+              eq(aiUsage.userId, userId),
+              gte(aiUsage.day, period.from),
+              lte(aiUsage.day, period.to),
+            ),
+          )
+          .groupBy(aiUsage.day);
+        const metrics: DailyMetric[] = [
+          {
+            key: 'ai.messages',
+            module: 'ai',
+            labelKey: 'ai.links.messages',
+            unit: 'count',
+            days: days.map(({day, count}) => ({day, value: count})),
+          },
+          {
+            // Technical: the cost more than the day.
+            key: 'ai.tokens',
+            module: 'ai',
+            labelKey: 'ai.links.tokens',
+            unit: 'count',
+            extra: true,
+            days: tokens
+              .filter(row => row.tokens > 0)
+              .map(({day, tokens: value}) => ({day, value})),
+          },
+        ];
+        return metrics.filter(metric => metric.days.length);
       },
     });
   }

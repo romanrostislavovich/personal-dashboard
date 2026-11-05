@@ -381,7 +381,13 @@
       "terminalErrorPercent": "Компьютер: неуспешные команды (%)",
       "terminalErrorPercentDay": "Компьютер: {{value}}% неуспешных команд среди парных измерений",
       "backspacePercent": "Компьютер: Backspace / события ввода (%)",
-      "backspacePercentDay": "Компьютер: {{value}}% Backspace среди измеренных событий ввода"
+      "backspacePercentDay": "Компьютер: {{value}}% Backspace среди измеренных событий ввода",
+      "uniqueApps": "Компьютер: разных программ за пять минут",
+      "uniqueAppsDay": "Компьютер: в среднем {{value}} разных программ за пять минут",
+      "focusEntropy": "Компьютер: разбросанность внимания (энтропия)",
+      "focusEntropyDay": "Компьютер: разбросанность внимания {{value}} (энтропия) в среднем",
+      "typingPauseSeconds": "Компьютер: средняя пауза в печати, с",
+      "typingPauseSecondsDay": "Компьютер: средняя пауза в печати {{value}} с"
     },
     "browser": {
       "contextSwitches": "Браузер: наблюдаемые переключения контекста",
@@ -403,7 +409,13 @@
       "terminalErrorPercent": "Браузер: неуспешные команды (%)",
       "terminalErrorPercentDay": "Браузер: {{value}}% неуспешных команд среди парных измерений",
       "backspacePercent": "Браузер: Backspace / события ввода (%)",
-      "backspacePercentDay": "Браузер: {{value}}% Backspace среди измеренных событий ввода"
+      "backspacePercentDay": "Браузер: {{value}}% Backspace среди измеренных событий ввода",
+      "uniqueApps": "Браузер: разных программ за пять минут",
+      "uniqueAppsDay": "Браузер: в среднем {{value}} разных программ за пять минут",
+      "focusEntropy": "Браузер: разбросанность внимания (энтропия)",
+      "focusEntropyDay": "Браузер: разбросанность внимания {{value}} (энтропия) в среднем",
+      "typingPauseSeconds": "Браузер: средняя пауза в печати, с",
+      "typingPauseSecondsDay": "Браузер: средняя пауза в печати {{value}} с"
     }
   },
   "life": {
@@ -475,7 +487,12 @@
         "system": "Телефон: система",
         "other": "Телефон: прочие приложения"
       }
-    }
+    },
+    "bike": "На велосипеде",
+    "ride": "В транспорте (машина, автобус, поезд)",
+    "atPlace": "В своём месте",
+    "focusFinished": "Фокус-сессий доведено до конца, %",
+    "focusDistracted": "Минут отвлечений во время фокуса"
   },
   "usage": {
     "seconds": "у экрана"

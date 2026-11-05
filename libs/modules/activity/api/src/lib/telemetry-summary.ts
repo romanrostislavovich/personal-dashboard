@@ -44,6 +44,25 @@ export const TELEMETRY_RATES = {
     scale: 100,
     unit: 'percent',
   },
+  // `bucket` — the average of a bucket's own value (a bucket is up to five minutes).
+  uniqueApps: {
+    numerator: 'uniqueApps',
+    denominator: 'bucket',
+    scale: 1,
+    unit: 'score',
+  },
+  focusEntropy: {
+    numerator: 'focusEntropy',
+    denominator: 'bucket',
+    scale: 1,
+    unit: 'score',
+  },
+  typingPauseSeconds: {
+    numerator: 'pauseMeanMs',
+    denominator: 'bucket',
+    scale: 1 / 1000,
+    unit: 'score',
+  },
 } as const;
 
 export type TelemetryMetricName =
@@ -134,7 +153,9 @@ export class TelemetrySummary {
         const denominator =
           definition.denominator === null
             ? duration
-            : row.metrics[definition.denominator];
+            : definition.denominator === 'bucket'
+              ? 1
+              : row.metrics[definition.denominator];
         // Only paired observations contribute to a ratio. Missing failures are not successes.
         if (
           numerator !== undefined &&

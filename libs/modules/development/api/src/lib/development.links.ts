@@ -1,8 +1,14 @@
 import {Inject, Injectable, Logger, OnModuleInit} from '@nestjs/common';
 import {DB, Database, LinksService, ProjectRef} from '@pd/api-core';
-import {DailyMetric, ProjectChange, ProjectFact} from '@pd/contracts';
-import {and, eq, gte, lte, sum} from 'drizzle-orm';
+import {
+  DailyMetric,
+  LocalDate,
+  ProjectChange,
+  ProjectFact,
+} from '@pd/contracts';
+import {and, eq, gte, inArray, lte, sum} from 'drizzle-orm';
 import {codeAccountDays} from './accounts/accounts.schema';
+import {breakdownMetrics} from './development-metrics';
 import {AccountTokensService} from './accounts/account-tokens.service';
 import {GithubTokenService} from './github/github-token.service';
 import {GithubClient} from './github/github.client';
@@ -84,6 +90,11 @@ export class DevelopmentLinks implements OnModuleInit {
               .filter(row => row.commits > 0)
               .map(({day, commits: value}) => ({day, value})),
           },
+          ...(await this.breakdowns(
+            userId,
+            {from, to},
+            days.map(({day}) => day),
+          )),
         ];
         return metrics.filter(metric => metric.days.length);
       },
@@ -237,5 +248,37 @@ export class DevelopmentLinks implements OnModuleInit {
       .from(trackedRepos)
       .where(eq(trackedRepos.userId, userId));
     return repos.filter(repo => belongsTo(repo.fullName, names));
+  }
+
+  /** The coding time of the five projects and languages of the most days (breakdownMetrics). */
+  private async breakdowns(
+    userId: string,
+    {from, to}: {from: LocalDate; to: LocalDate},
+    codingDays: LocalDate[],
+  ): Promise<DailyMetric[]> {
+    const b = wakatimeDayBreakdown;
+    const rows = await this.db
+      .select({day: b.day, kind: b.kind, name: b.name, seconds: b.seconds})
+      .from(b)
+      .where(
+        and(
+          eq(b.userId, userId),
+          inArray(b.kind, ['project', 'language']),
+          gte(b.day, from),
+          lte(b.day, to),
+        ),
+      );
+    return [
+      ...breakdownMetrics(
+        rows.filter(row => row.kind === 'project'),
+        codingDays,
+        'project',
+      ),
+      ...breakdownMetrics(
+        rows.filter(row => row.kind === 'language'),
+        codingDays,
+        'language',
+      ),
+    ];
   }
 }

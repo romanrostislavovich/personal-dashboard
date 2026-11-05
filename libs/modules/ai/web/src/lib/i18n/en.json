@@ -152,7 +152,8 @@
     "cached": "{{percent}}% from cache"
   },
   "links": {
-    "messages": "Messages to the assistant"
+    "messages": "Messages to the assistant",
+    "tokens": "AI tokens"
   },
   "emptyTitle": "Ask about your own data",
   "examples": {

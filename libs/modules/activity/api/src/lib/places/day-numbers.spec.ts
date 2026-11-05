@@ -45,10 +45,36 @@ describe('the numbers of a day of places', () => {
         day: '2026-10-21',
         walkSeconds: 1800,
         tripSeconds: 1800,
+        bikeSeconds: 0,
+        rideSeconds: 0,
         homeSeconds: 8 * 3600,
         newPlaces: 1,
+        named: new Map(),
       },
     ]);
+  });
+
+  it('counts the rides apart and the time at each named place', () => {
+    const ride: Entry = {
+      kind: 'trip',
+      start: 9 * H,
+      end: 9.5 * H,
+      meters: 15_000,
+      mode: 'ride',
+      path: [],
+    };
+    const days = [
+      {
+        day: '2026-10-20',
+        start: 0,
+        entries: [stay(HOME, 0, 9 * H), ride, stay(CAFE, 10 * H, 12 * H)],
+      },
+    ];
+    const named = [{id: 'cafe-1', name: 'Café', ...CAFE, radiusM: 100}];
+    const [day] = placeDayNumbers(days, named, '2026-10-20');
+    expect(day.rideSeconds).toBe(1800);
+    expect(day.bikeSeconds).toBe(0);
+    expect(day.named.get('cafe-1')).toEqual({name: 'Café', seconds: 2 * 3600});
   });
 
   it('knows no home without a night', () => {

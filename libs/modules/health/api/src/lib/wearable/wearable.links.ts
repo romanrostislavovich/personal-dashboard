@@ -3,6 +3,14 @@ import {LinksService} from '@pd/api-core';
 import {DailyMetric, WearableDay} from '@pd/contracts';
 import {WearableService} from './wearable.service';
 
+/** Mostly technical: counted, shown when the Links filter asks (DailyMetric.extra). */
+const BAND_EXTRA = new Set([
+  'health.band.heartRateMax',
+  'health.band.distance',
+  'health.band.spo2',
+  'health.band.skinTemp',
+]);
+
 /** What a night and a day give, for Links to compare the rest with (DailyMetric.outcome). */
 const BAND_OUTCOMES = new Set([
   'health.band.sleep',
@@ -74,10 +82,18 @@ export class WearableLinks implements OnModuleInit {
           metric('reactions', 'count', day => day.reactions),
           metric('mindfulness', 'count', day => day.mindfulnessMinutes),
           metric('skinTemp', 'degrees', day => day.skinTempDelta),
+          metric('heartRateAvg', 'count', day => day.heartRateAvg),
+          metric('heartRateMax', 'count', day => day.heartRateMax),
+          metric('awake', 'hours', day => hours(day.awakeMinutes)),
+          metric('distance', 'count', day => day.distanceKm),
         ]
           .filter(one => one.days.length)
           .map(one =>
-            BAND_OUTCOMES.has(one.key) ? {...one, outcome: true as const} : one,
+            BAND_OUTCOMES.has(one.key)
+              ? {...one, outcome: true as const}
+              : BAND_EXTRA.has(one.key)
+                ? {...one, extra: true as const}
+                : one,
           );
       },
     });
