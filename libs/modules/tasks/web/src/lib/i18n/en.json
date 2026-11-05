@@ -123,7 +123,11 @@
   "links": {
     "open": "Open tasks",
     "done": "Tasks done",
-    "created": "Tasks that came up"
+    "created": "Tasks that came up",
+    "openLoops": "Open loops (undated or overdue tasks)",
+    "overdue": "Overdue tasks",
+    "dueDone": "Tasks due today done, %",
+    "importantDone": "High-priority tasks done"
   },
   "steps": {
     "select": "Select",

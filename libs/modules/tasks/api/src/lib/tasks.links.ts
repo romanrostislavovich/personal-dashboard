@@ -8,12 +8,13 @@ import {
   toLocalDate,
   zonedToUtc,
 } from '@pd/contracts';
-import {and, eq, gte, isNotNull, isNull, lt, sql} from 'drizzle-orm';
+import {and, eq, gte, isNotNull, isNull, lt, or, sql} from 'drizzle-orm';
+import {taskDayNumbers} from './tasks-metrics';
 import {tasks} from './tasks.schema';
 
 /**
  * What tasks tell the other sections (see LinksService): the tasks of a project for its
- * overview, and the tasks done and the tasks that came up on every day.
+ * overview, and the tasks done and the tasks that came up on every day, and the open loops.
  */
 @Injectable()
 export class TasksLinks implements OnModuleInit {
@@ -117,6 +118,7 @@ export class TasksLinks implements OnModuleInit {
               value: count,
             })),
           },
+          ...(await this.openLoops(userId, period, timeZone)),
         ];
         return metrics.filter(metric => metric.days.length);
       },
@@ -126,6 +128,65 @@ export class TasksLinks implements OnModuleInit {
       {module: 'tasks', path: '/tasks/todo', description: 'the TODO list'},
       {module: 'tasks', path: '/tasks/reminders', description: 'reminders'},
     ]);
+  }
+
+  /**
+   * The open loops (undated or overdue), the share of what was due that got done, the important
+   * ones done — counted back from the tasks of the period (see taskDayNumbers).
+   */
+  private async openLoops(
+    userId: string,
+    period: {from: LocalDate; to: LocalDate},
+    timeZone: string,
+  ): Promise<DailyMetric[]> {
+    const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
+    const localDay = (
+      column: typeof tasks.createdAt | typeof tasks.completedAt,
+    ) =>
+      sql<LocalDate>`to_char(${column} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`;
+    const rows = await this.db
+      .select({
+        created: localDay(tasks.createdAt),
+        done: sql<LocalDate | null>`case when ${tasks.completedAt} is null then null else ${localDay(tasks.completedAt)} end`,
+        due: tasks.dueDate,
+        priority: tasks.priority,
+      })
+      .from(tasks)
+      .where(
+        and(
+          eq(tasks.userId, userId),
+          lt(
+            tasks.createdAt,
+            zonedToUtc({date: after, time: '00:00'}, timeZone),
+          ),
+          or(
+            isNull(tasks.completedAt),
+            gte(
+              tasks.completedAt,
+              zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+            ),
+          ),
+        ),
+      );
+    const numbers = taskDayNumbers(rows, period);
+    const metric = (
+      key: keyof typeof numbers,
+      unit: DailyMetric['unit'],
+      more: Partial<DailyMetric> = {},
+    ): DailyMetric => ({
+      key: `tasks.${key}`,
+      module: 'tasks',
+      labelKey: `tasks.links.${key}`,
+      unit,
+      days: numbers[key],
+      ...more,
+    });
+    return [
+      metric('openLoops', 'count'),
+      metric('overdue', 'count', {partOf: 'tasks.openLoops'}),
+      metric('dueDone', 'percent', {outcome: true}),
+      metric('importantDone', 'count', {partOf: 'tasks.done'}),
+    ];
   }
 
   /** Done on the user's own days of a period. */

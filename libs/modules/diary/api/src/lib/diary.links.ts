@@ -1,13 +1,18 @@
 import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
 import {DB, Database, LinksService, MOOD_METRIC} from '@pd/api-core';
 import {DailyMetric} from '@pd/contracts';
+import {moodVolatility, shift, tagDays} from './diary-metrics';
 import {and, eq, gte, lte} from 'drizzle-orm';
 import {diaryEntries} from './diary.schema';
 
 /**
  * What the diary tells the other sections (see LinksService): the mood of every day — what the
- * numbers of the other sections are compared against ("what goes with a good day").
+ * numbers of the other sections are compared against ("what goes with a good day") — its spread,
+ * the words, and the most used tags as yes/no days ("#sport" against the mood).
  */
+/** The mood's spread is of the last two weeks. */
+const VOLATILITY_DAYS = 14;
+
 @Injectable()
 export class DiaryLinks implements OnModuleInit {
   constructor(
@@ -19,20 +24,23 @@ export class DiaryLinks implements OnModuleInit {
     this.links.registerDailyMetrics({
       module: 'diary',
       metrics: async (userId, {from, to}) => {
-        const days = await this.db
+        // The spread of the mood looks back two weeks: those days are read too.
+        const before = await this.db
           .select({
             day: diaryEntries.day,
             mood: diaryEntries.mood,
             words: diaryEntries.words,
+            tags: diaryEntries.tags,
           })
           .from(diaryEntries)
           .where(
             and(
               eq(diaryEntries.userId, userId),
-              gte(diaryEntries.day, from),
+              gte(diaryEntries.day, shift(from, -VOLATILITY_DAYS)),
               lte(diaryEntries.day, to),
             ),
           );
+        const days = before.filter(({day}) => day >= from);
         const metrics: DailyMetric[] = [
           {
             key: MOOD_METRIC,
@@ -53,6 +61,26 @@ export class DiaryLinks implements OnModuleInit {
               .filter(({words}) => words > 0)
               .map(({day, words}) => ({day, value: words})),
           },
+          {
+            key: 'diary.moodSpread',
+            module: 'diary',
+            labelKey: 'diary.links.moodSpread',
+            unit: 'score',
+            parts: [MOOD_METRIC],
+            days: moodVolatility(before, VOLATILITY_DAYS).filter(
+              ({day}) => day >= from,
+            ),
+          },
+          ...tagDays(days).map((tag): DailyMetric => ({
+            key: `diary.tag.${tag.tag}`,
+            module: 'diary',
+            labelKey: 'diary.links.tag',
+            label: `#${tag.tag}`,
+            unit: 'count',
+            // A day without an entry says nothing about the tag.
+            missing: 'absent',
+            days: tag.days,
+          })),
         ];
         return metrics.filter(metric => metric.days.length);
       },

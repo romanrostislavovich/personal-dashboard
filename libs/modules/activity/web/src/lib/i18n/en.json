@@ -458,7 +458,23 @@
       "alarm": "Alarm set for",
       "notificationsOpened": "Notifications opened, %",
       "secondsToOpen": "Seconds to open a notification",
-      "batteryMaxC": "Phone battery, max °C"
+      "batteryMaxC": "Phone battery, max °C",
+      "hours": "Time on the phone",
+      "notifications": "Notifications on the phone",
+      "messengerNotifications": "Notifications of messengers",
+      "notificationPeak": "Most notifications in ten minutes",
+      "category": {
+        "development": "Phone: development",
+        "browsing": "Phone: browser",
+        "communication": "Phone: messengers",
+        "office": "Phone: work apps",
+        "design": "Phone: design",
+        "games": "Phone: games",
+        "media": "Phone: video and music",
+        "meetings": "Phone: calls and meetings",
+        "system": "Phone: system",
+        "other": "Phone: other apps"
+      }
     }
   },
   "usage": {

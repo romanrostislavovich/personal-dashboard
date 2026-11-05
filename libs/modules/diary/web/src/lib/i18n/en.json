@@ -167,7 +167,9 @@
   },
   "links": {
     "mood": "Mood",
-    "words": "Words in the diary"
+    "words": "Words in the diary",
+    "moodSpread": "Mood swings (two weeks)",
+    "tag": "A diary tag"
   },
   "dayContext": {
     "title": "What the day was like"
