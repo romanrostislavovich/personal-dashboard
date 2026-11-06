@@ -177,6 +177,30 @@ _Extra_ — hidden until the Links filter switches it on; _outcome_ — what a d
 | `finance.income`                                                                 | money       | income                                                                           | extra                |
 | `ai.tokens`                                                                      | count       | tokens of every model                                                            | extra                |
 
+**Links v2's indices** (stage 1, 2026-11-06): counted every hour by the server job
+`activity.day-indices` from the day's spans, site visits, unlocks, notifications and focus
+sessions (`indices/day-indices.ts`), kept in `activity_day_indices` (synced, not exported), the
+history counted 60 days a run. All `activity.index.<key>`, absent on a day nothing was counted.
+
+| Key                           | Unit        | How                                                                                      |
+| ----------------------------- | ----------- | ---------------------------------------------------------------------------------------- |
+| `phone.restlessness`          | score       | unlocks per hour of phone use                                                            |
+| `phone.appSwitches`           | score       | app changes within a minute, per hour of phone use                                       |
+| `phone.shortSessions`         | percent     | unlocks followed by under 30 s of use                                                    |
+| `phone.bedtimeSpread`         | score (h)   | spread of the phone's last use over 7 days (4+ known)                                    |
+| `computer.restlessness`       | score       | windows left within a minute, per hour at the computer                                   |
+| `deepWork`, `deepWorkLongest` | hours, min  | runs of work apps (development, office, design) of 25+ min, cut by a phone notification  |
+| `draining`, `nourishing`      | hours       | the draining apps and sites (Instagram, TikTok, VK, Reddit, X, Facebook) / work apps     |
+| `focusInterruptions`          | score       | notifications per hour of focus sessions and coding                                      |
+| `lateNight`                   | hours       | any screen 23:00–04:00                                                                   |
+| `afterBedtime`                | count (min) | draining, video and games after the usual bedtime (band median of 28 days, else phone's) |
+| `firstWork`                   | count (min) | from the first unlock after 04:00 to the first work app                                  |
+| `morningDraining`             | count (min) | draining apps in the two hours after the first unlock                                    |
+| `offline`                     | hours       | the longest stretch 08:00–22:00 with no screen and no unlock                             |
+
+YouTube Shorts are not told apart: the extension keeps the site only (youtube.com), the phone the
+app only.
+
 ## The phone (the Android app)
 
 `apps/mobile` (Capacitor + Java collectors in `android/.../sensors`), switched on in Settings →

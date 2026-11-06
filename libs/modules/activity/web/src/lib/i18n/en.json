@@ -492,7 +492,28 @@
     "ride": "Riding (car, bus, train)",
     "atPlace": "At a named place",
     "focusFinished": "Focus sessions run to the end, %",
-    "focusDistracted": "Minutes lost to distractions in focus"
+    "focusDistracted": "Minutes lost to distractions in focus",
+    "index": {
+      "phone": {
+        "restlessness": "Phone restlessness (unlocks per hour of use)",
+        "appSwitches": "Phone app switches per hour of use",
+        "shortSessions": "Phone checks under 30 s, %",
+        "bedtimeSpread": "Bedtime spread over a week (phone), h"
+      },
+      "computer": {
+        "restlessness": "Computer restlessness (windows left within a minute, per hour)"
+      },
+      "deepWork": "Deep work (25+ min without a switch or notification)",
+      "deepWorkLongest": "The longest deep work block, min",
+      "draining": "Draining time (feeds, short videos)",
+      "nourishing": "Nourishing time (work, learning, creating)",
+      "focusInterruptions": "Notifications per hour of focus and coding",
+      "lateNight": "Screens after 23:00",
+      "afterBedtime": "Entertainment after the usual bedtime, min",
+      "firstWork": "From the first unlock to work, min",
+      "morningDraining": "Feeds in the two hours after waking, min",
+      "offline": "The longest daytime stretch without screens"
+    }
   },
   "usage": {
     "seconds": "at a screen"

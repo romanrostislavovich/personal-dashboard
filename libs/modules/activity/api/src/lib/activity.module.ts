@@ -17,6 +17,8 @@ import {PhoneNotificationsService} from './phone-notifications.service';
 import {PhoneUsageController} from './phone/phone-usage.controller';
 import {PhoneSecurityController} from './phone/phone-security.controller';
 import {PhoneVoiceController} from './phone/phone-voice.controller';
+import {IndicesLinks} from './indices/indices.links';
+import {IndicesService} from './indices/indices.service';
 import {PhoneUsageLinks} from './phone/phone-usage.links';
 import {PhoneSignalsService} from './phone/phone-signals.service';
 import {PhoneWatchdogService} from './phone/phone-watchdog.service';
@@ -78,6 +80,8 @@ import {TelemetrySummaryService} from './telemetry-summary.service';
     PlaceQuestionService,
     PlacesAchievements,
     PhoneUsageLinks,
+    IndicesService,
+    IndicesLinks,
     PhoneUsageService,
     PhoneSignalsService,
     PhoneWatchdogService,

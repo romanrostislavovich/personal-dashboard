@@ -369,3 +369,16 @@ becomes targets of this one forecaster, not formulas of their own.
   questions later; the answers come to Links as numbers (outcomes).
 - **The first forecasts:** bedtime, tomorrow's deep work, tasks done, mood.
 - **Start with stage 0**, then stage 1.
+
+## Decisions for stage 1 (2026-11-06, the owner's)
+
+- **Draining to start with:** Instagram, TikTok, YouTube Shorts and Reels, the feeds of VK,
+  Reddit, X and Facebook (on the phone and in the browser); the rest "it depends" until the
+  learned score knows better.
+- **Deep work:** 25 minutes without a switch or a notification; the day's longest block too.
+- **"After bedtime":** the owner's usual bedtime — the median of the last 28 days (the band's
+  sleep, else the phone's last use); the late-night load stays from 23:00.
+- **Shown:** in Links, a card in Activity (today and 7 days against the owner's norm), a widget
+  on Home, the evening summary and the assistant's tools.
+- **Steps of tasks and long tasks stay in the open loops** — a long task that does not move may be
+  the very thing to notice.

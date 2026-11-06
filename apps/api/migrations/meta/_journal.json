@@ -897,6 +897,13 @@
       "when": 1793746088395,
       "tag": "0127_vpn_device_online",
       "breakpoints": true
+    },
+    {
+      "idx": 128,
+      "version": "7",
+      "when": 1793926116090,
+      "tag": "0128_activity_day_indices",
+      "breakpoints": true
     }
   ]
 }
