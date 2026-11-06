@@ -7,6 +7,7 @@ import {
   workstatesApi,
 } from '@pd/client-core';
 import {
+  ActivityIndices,
   ActivityApp,
   ActivityAppUpdate,
   ActivityDayQuery,
@@ -61,6 +62,11 @@ export class ActivityApi {
 
   removeWorkstate(id: string) {
     return fromCore(() => this.workstates.remove(id));
+  }
+
+  /** Links v2's indices: today, the week and the owner's norm. */
+  indices() {
+    return httpResource<ActivityIndices>(() => ACTIVITY_READS.indices());
   }
 
   /** Reloads when the period changes. */

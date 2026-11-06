@@ -39,6 +39,8 @@ const BASE = '/api/activity';
 
 /** Read requests of the Activity section (see ApiRequest). */
 export const ACTIVITY_READS = {
+  /** Links v2's indices: today, the week and the owner's norm. */
+  indices: () => apiRequest(`${BASE}/indices`),
   /** Time per day, program, category, project and device for a period. */
   stats: (period: ActivityPeriod) => apiRequest(`${BASE}/stats`, period),
   /** Computers other services know (WakaTime), with whether their time is counted. */

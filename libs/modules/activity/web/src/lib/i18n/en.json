@@ -684,5 +684,15 @@
       "4": "Restrict the Maps key: Application restrictions → Websites → your dashboard's address and https://localhost/* (the Android app). Restrict the Places key to the Places API.",
       "5": "Paste each key here and save: the Places key is checked against Google."
     }
+  },
+  "indices": {
+    "title": "How the day goes",
+    "hint": "Counted every hour from the phone, the computer and the browser; against your own norm of the four weeks before this one.",
+    "week": "week {{value}}",
+    "more": "more than usual ({{value}})",
+    "less": "less than usual ({{value}})",
+    "usual": "as usual ({{value}})",
+    "empty": "Nothing counted yet: the first numbers come within an hour.",
+    "failed": "Could not read the indices."
   }
 }

@@ -16,6 +16,7 @@ import {
 } from './activity.schema';
 import {ActivityService} from './activity.service';
 import {isSummaryDue, summaryOf} from './evening-summary';
+import {IndicesService} from './indices/indices.service';
 import {WellbeingService} from './wellbeing.service';
 
 const DEFAULT_TIME = '21:00';
@@ -36,6 +37,7 @@ export class EveningSummaryJob implements OnModuleInit {
     private readonly users: UsersService,
     private readonly activity: ActivityService,
     private readonly wellbeing: WellbeingService,
+    private readonly dayIndices: IndicesService,
   ) {}
 
   onModuleInit(): void {
@@ -88,6 +90,15 @@ export class EveningSummaryJob implements OnModuleInit {
       .from(activityLimits)
       .where(eq(activityLimits.userId, userId));
     const text = activityMessages((await this.users.findById(userId))?.locale);
+    // Today counted afresh: the hourly job may be up to an hour behind.
+    await this.dayIndices.count(
+      userId,
+      now.date,
+      await this.activity.timeZone(userId),
+    );
+    const indices = (await this.dayIndices.summary(userId)).indices;
+    const todayOf = (key: string) =>
+      indices.find(index => index.key === key)?.today ?? null;
     const summary = summaryOf(
       stats,
       {completed: focus.completed, seconds: focus.focusSeconds},
@@ -97,6 +108,7 @@ export class EveningSummaryJob implements OnModuleInit {
           label: text.limitLabel(limit.kind, limit.app),
           minutes: limit.minutes,
         })),
+      {deepWork: todayOf('deepWork'), draining: todayOf('draining')},
     );
     if (!summary) {
       return;

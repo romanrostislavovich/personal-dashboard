@@ -1,6 +1,7 @@
 import {Inject, Injectable} from '@nestjs/common';
 import {DB, Database, LinksService, UsersService} from '@pd/api-core';
 import {
+  ActivityIndices,
   addDays,
   defaultActivityCategory,
   LocalDate,
@@ -27,6 +28,7 @@ import {
   usualBedtime,
 } from './day-indices';
 import {activityDayIndices} from './indices.schema';
+import {indexSummary, summaryPeriod} from './indices-summary';
 
 const HOUR = 3_600_000;
 const PHONES = ['android', 'ios'];
@@ -116,6 +118,14 @@ export class IndicesService {
           );
       }
     });
+  }
+
+  /** Today, the week and the owner's norm of each index (see indexSummary). */
+  async summary(userId: string): Promise<ActivityIndices> {
+    const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
+    const today = zonedDateTime(new Date(), timeZone).date;
+    const kept = await this.read(userId, summaryPeriod(today));
+    return {today, indices: indexSummary(kept, today)};
   }
 
   /** What is kept for a period, by key and day; `_lastUse` left out. */
