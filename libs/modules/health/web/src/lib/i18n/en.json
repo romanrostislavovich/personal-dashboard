@@ -475,7 +475,8 @@
       "heartRateAvg": "Average heart rate",
       "heartRateMax": "Highest heart rate",
       "awake": "Awake in the night",
-      "distance": "Distance (band), km"
+      "distance": "Distance (band), km",
+      "bedtimeSpread": "Bedtime spread over a week (band), h"
     }
   },
   "band": {

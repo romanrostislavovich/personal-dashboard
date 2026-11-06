@@ -128,6 +128,16 @@ export class IndicesService {
     return {today, indices: indexSummary(kept, today)};
   }
 
+  /** The sum of an index over every day kept (the hours of deep work, for the achievements). */
+  async total(userId: string, key: string): Promise<number> {
+    const d = activityDayIndices;
+    const [row] = await this.db
+      .select({sum: sql<number>`coalesce(sum(${d.value}), 0)::float`})
+      .from(d)
+      .where(and(eq(d.userId, userId), eq(d.key, key)));
+    return row?.sum ?? 0;
+  }
+
   /** What is kept for a period, by key and day; `_lastUse` left out. */
   async read(
     userId: string,

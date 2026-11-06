@@ -55,7 +55,9 @@ The interface is in English and Russian.
   one page; what goes with your good and bad days, and every daily number against every other
   (Life → Links: correlations of the same and the next day against what a day gives — mood, tasks,
   sleep, coding — or everything with everything, extra numbers switched on in the filter, a graph,
-  what predicts your mood);
+  what predicts your mood; every collected signal is a number of its own — diary tags, open
+  loops, phone notifications, coding per project — and indices of the day: deep work, draining
+  and nourishing time, the restless phone, screens after bedtime, against your own norm);
   the last commit before a site went down;
   subscriptions you pay for and do not use
 - ⚡ **Automations** — "if X, then Y" across sections: a site is down → a task, no diary entry by
@@ -108,7 +110,7 @@ The interface is in English and Russian.
 | 👨‍💻 **Development**  | repositories, stars, releases, npm downloads, contribution streaks, coding time                                                                                                                                                                                           |
 | 🎧 **Music**        | listening history and tops with genres (Last.fm tags), now playing, your own tracks' stats                                                                                                                                                                                |
 | 🎮 **Games**        | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP), Xbox gamerscore and achievements                                                                                                                                                               |
-| ⏱️ **Activity**     | time at the computer per program, project and day, Pomodoro, work contexts                                                                                                                                                                                                |
+| ⏱️ **Activity**     | time at the computer per program, project and day, Pomodoro, work contexts, how the day goes (deep work, draining time, the restless phone)                                                                                                                               |
 | 📡 **Monitoring**   | uptime every 5 minutes, response time, SSL expiry, down / up alerts                                                                                                                                                                                                       |
 | 🌤️ **Weather**      | today and the week ahead, what to wear — tuned to how you take the cold                                                                                                                                                                                                   |
 | 🎂 **Birthdays**    | countdowns and reminders                                                                                                                                                                                                                                                  |

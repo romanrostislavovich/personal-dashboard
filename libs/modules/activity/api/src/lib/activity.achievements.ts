@@ -6,6 +6,7 @@ import {
 } from '@pd/api-core';
 import {ActivityCategory} from '@pd/contracts';
 import {ActivityLinks, focusSessionMetrics} from './activity.links';
+import {IndicesService} from './indices/indices.service';
 import {PhoneUsageService} from './phone/phone-usage.service';
 import {ActivityAllTime, ActivityService} from './activity.service';
 import {ProjectTimeService} from './project-time.service';
@@ -42,6 +43,7 @@ export class ActivityAchievements implements OnModuleInit {
     private readonly links: ActivityLinks,
     private readonly projectTime: ProjectTimeService,
     private readonly phone: PhoneUsageService,
+    private readonly dayIndices: IndicesService,
   ) {}
 
   onModuleInit(): void {
@@ -616,6 +618,41 @@ export class ActivityAchievements implements OnModuleInit {
       ],
     );
 
+    this.achievements.register({
+      id: 'activity.deep-work-hours',
+      module: 'activity',
+      measure: async userId =>
+        Math.floor(await this.dayIndices.total(userId, 'deepWork')),
+      tiers: achievementTiers(
+        [
+          1,
+          '🌊',
+          {en: 'Deep water', ru: 'На глубине'},
+          {
+            en: 'An hour of deep work (25+ min with no switch or notification)',
+            ru: 'Час глубокой работы (25+ мин без переключений и уведомлений)',
+          },
+        ],
+        [
+          10,
+          '🐋',
+          {en: 'Diver', ru: 'Ныряльщик'},
+          {en: '10 hours of deep work', ru: '10 часов глубокой работы'},
+        ],
+        [
+          100,
+          '🔱',
+          {en: 'The depths are home', ru: 'Глубина — дом'},
+          {en: '100 hours of deep work', ru: '100 часов глубокой работы'},
+        ],
+        [
+          500,
+          '🌌',
+          {en: 'Abyss', ru: 'Бездна'},
+          {en: '500 hours of deep work', ru: '500 часов глубокой работы'},
+        ],
+      ),
+    });
     this.achievements.register({
       id: 'activity.quiet-phone-days',
       module: 'activity',

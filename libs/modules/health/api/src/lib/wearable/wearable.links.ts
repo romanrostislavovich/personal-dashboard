@@ -74,6 +74,12 @@ export class WearableLinks implements OnModuleInit {
             partOf: 'health.band.sleep',
           },
           metric('bedtime', 'clock', day => clock(day.sleepStart, true)),
+          {
+            ...metric('bedtimeSpread', 'score', day =>
+              bedtimeSpread(days, day.day),
+            ),
+            parts: ['health.band.bedtime'],
+          },
           metric('wake', 'clock', day => clock(day.sleepEnd, false)),
           metric('restingHeartRate', 'count', day => day.restingHeartRate),
           metric('hrv', 'score', day => day.hrvMs),
@@ -104,4 +110,22 @@ export class WearableLinks implements OnModuleInit {
       },
     });
   }
+}
+
+/** How much the bedtime moved over the week up to a day: the standard deviation, hours (4+ nights). */
+export function bedtimeSpread(days: WearableDay[], day: string): number | null {
+  const from = new Date(`${day}T00:00:00Z`);
+  from.setUTCDate(from.getUTCDate() - 6);
+  const start = from.toISOString().slice(0, 10);
+  const values = days
+    .filter(one => one.day >= start && one.day <= day)
+    .map(one => clock(one.sleepStart, true))
+    .filter((value): value is number => value !== null);
+  if (values.length < 4) {
+    return null;
+  }
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const variance =
+    values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length;
+  return Math.round(Math.sqrt(variance) * 100) / 100;
 }
