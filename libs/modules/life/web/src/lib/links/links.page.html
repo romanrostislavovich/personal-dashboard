@@ -67,7 +67,7 @@
             @for (pair of listed(); track pair.a + pair.b + pair.lag) {
               <li>
                 <button type="button" (click)="choose(pair)">
-                  <span class="dots">
+                  <span class="dots" aria-hidden="true">
                     <span class="dot" [style.background]="color(pair.a)"></span>
                     <span class="dot" [style.background]="color(pair.b)"></span>
                   </span>
@@ -116,55 +116,11 @@
       </mat-card>
     }
     @if (curves().length) {
-      <mat-card appearance="outlined">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>show_chart</mat-icon>
-          <mat-card-title>{{
-            'life.links.curves.title' | transloco
-          }}</mat-card-title>
-          <mat-card-subtitle>{{
-            'life.links.curves.hint' | transloco
-          }}</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <ul class="top">
-            @for (
-              curve of curves().slice(0, 10);
-              track curve.a + curve.b + curve.lag
-            ) {
-              <li>
-                <button
-                  type="button"
-                  (click)="choose({a: curve.a, b: curve.b, lag: curve.lag})"
-                >
-                  <span class="dots">
-                    <span
-                      class="dot"
-                      [style.background]="color(curve.a)"
-                    ></span>
-                    <span
-                      class="dot"
-                      [style.background]="color(curve.b)"
-                    ></span>
-                  </span>
-                  <span class="text">
-                    <span>{{ curveSentence(curve) }}</span>
-                    <span class="meta">
-                      {{ 'life.links.days' | transloco: {days: curve.n} }}
-                      @if (curve.lag) {
-                        ·
-                        {{
-                          'life.links.daysLater' | transloco: {days: curve.lag}
-                        }}
-                      }
-                    </span>
-                  </span>
-                </button>
-              </li>
-            }
-          </ul>
-        </mat-card-content>
-      </mat-card>
+      <pd-curves-card
+        [curves]="curves()"
+        [metrics]="byKey()"
+        (pick)="choose($event)"
+      />
     }
     @if (correlations().length) {
       <div class="grid">
@@ -196,7 +152,9 @@
               'life.links.pair.title' | transloco
             }}</mat-card-title>
             @if (pair(); as shown) {
-              <mat-card-subtitle>{{ sentence(shown.pair) }}</mat-card-subtitle>
+              <mat-card-subtitle>{{
+                shown.curve ? curveText(shown.curve) : sentence(shown.pair)
+              }}</mat-card-subtitle>
             }
           </mat-card-header>
           <mat-card-content>

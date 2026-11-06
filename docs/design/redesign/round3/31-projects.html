@@ -1,0 +1,5049 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Проекты — Personal Dashboard, раунд 3</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ===== Tokens: the 00–06 "Oracle" graphite set, names as in apps/web/src/styles.scss ===== */
+      :root {
+        color-scheme: dark;
+        --mat-sys-primary: #e6e9ee;
+        --mat-sys-on-primary: #111418;
+        --mat-sys-secondary-container: #262c34;
+        --mat-sys-on-secondary-container: #eef1f5;
+        --mat-sys-surface: #0b0d10;
+        --mat-sys-surface-container-lowest: #07080a;
+        --mat-sys-surface-container-low: #111418;
+        --mat-sys-surface-container: #161a1f;
+        --mat-sys-surface-container-high: #1d2228;
+        --mat-sys-surface-container-highest: #252b32;
+        --mat-sys-on-surface: #e8eaed;
+        --mat-sys-on-surface-variant: #a3abb6;
+        --mat-sys-outline: #6b7480;
+        --mat-sys-outline-variant: #262c33;
+        --mat-sys-inverse-surface: #e8eaed;
+        --mat-sys-inverse-on-surface: #111418;
+        --pd-oracle: #5eead4;
+        --pd-oracle-text: #5eead4;
+        --pd-oracle-container: color-mix(in srgb, #5eead4 9%, transparent);
+        --pd-oracle-border: color-mix(in srgb, #5eead4 32%, transparent);
+        --pd-oracle-glow:
+          0 0 0 1px color-mix(in srgb, #5eead4 22%, transparent),
+          0 0 48px -12px color-mix(in srgb, #5eead4 30%, transparent);
+        --pd-forecast-line: var(--pd-oracle);
+        --pd-forecast-band: color-mix(in srgb, #5eead4 14%, transparent);
+        --pd-ok-fill: #10b981;
+        --pd-ok-text: #34d399;
+        --pd-warn-fill: #f59e0b;
+        --pd-warn-text: #fbbf24;
+        --pd-crit-fill: #f43f5e;
+        --pd-crit-text: #fb7185;
+        --pd-ok-container: color-mix(in srgb, #10b981 14%, transparent);
+        --pd-warn-container: color-mix(in srgb, #f59e0b 14%, transparent);
+        --pd-crit-container: color-mix(in srgb, #f43f5e 14%, transparent);
+        --pd-chart-primary: #c9cfd8;
+        --pd-chart-empty: color-mix(in srgb, #e8eaed 9%, transparent);
+        --pd-grid-line: color-mix(in srgb, #e8eaed 6%, transparent);
+        --pd-heat-0: color-mix(in srgb, #e8eaed 7%, transparent);
+        --pd-heat-1: color-mix(in srgb, #c9cfd8 28%, transparent);
+        --pd-heat-2: color-mix(in srgb, #c9cfd8 52%, transparent);
+        --pd-heat-3: color-mix(in srgb, #c9cfd8 80%, transparent);
+        --pd-radius: 16px;
+        --pd-radius-l: 20px;
+        --pd-radius-small: 12px;
+        --pd-radius-xs: 8px;
+        --pd-border: var(--mat-sys-outline-variant);
+        --pd-card: var(--mat-sys-surface-container-low);
+        --pd-shadow-overlay: 0 24px 64px -16px rgb(0 0 0 / 80%);
+        --pd-space-1: 4px;
+        --pd-space-2: 8px;
+        --pd-space-3: 12px;
+        --pd-space-4: 16px;
+        --pd-space-6: 24px;
+        --pd-space-8: 32px;
+        --pd-space-12: 48px;
+        --pd-font: Inter, Roboto, 'Segoe UI', system-ui, sans-serif;
+        --pd-font-heading: Inter, 'Segoe UI', system-ui, sans-serif;
+        --pd-font-mono:
+          'JetBrains Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
+        /* designer annotations, not part of the app */
+        --anno: #c4b5fd;
+        --anno-bg: color-mix(in srgb, #c4b5fd 14%, #0b0d10);
+      }
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme='dark']) {
+          color-scheme: light;
+          --mat-sys-primary: #15181c;
+          --mat-sys-on-primary: #ffffff;
+          --mat-sys-secondary-container: #e3e6ea;
+          --mat-sys-on-secondary-container: #15181c;
+          --mat-sys-surface: #f4f5f7;
+          --mat-sys-surface-container-lowest: #ffffff;
+          --mat-sys-surface-container-low: #ffffff;
+          --mat-sys-surface-container: #eef0f3;
+          --mat-sys-surface-container-high: #e7eaee;
+          --mat-sys-surface-container-highest: #dfe3e8;
+          --mat-sys-on-surface: #15181c;
+          --mat-sys-on-surface-variant: #4b5563;
+          --mat-sys-outline: #6b7280;
+          --mat-sys-outline-variant: #d9dde3;
+          --mat-sys-inverse-surface: #15181c;
+          --mat-sys-inverse-on-surface: #f4f5f7;
+          --pd-oracle: #14b8a6;
+          --pd-oracle-text: #0f766e;
+          --pd-oracle-container: color-mix(in srgb, #14b8a6 8%, transparent);
+          --pd-oracle-border: color-mix(in srgb, #0f766e 30%, transparent);
+          --pd-oracle-glow: 0 0 0 1px
+            color-mix(in srgb, #0f766e 18%, transparent);
+          --pd-forecast-line: #0f766e;
+          --pd-forecast-band: color-mix(in srgb, #14b8a6 14%, transparent);
+          --pd-ok-text: #047857;
+          --pd-warn-text: #b45309;
+          --pd-crit-text: #be123c;
+          --pd-chart-primary: #374151;
+          --pd-chart-empty: color-mix(in srgb, #15181c 8%, transparent);
+          --pd-grid-line: color-mix(in srgb, #15181c 7%, transparent);
+          --pd-heat-0: color-mix(in srgb, #15181c 7%, transparent);
+          --pd-heat-1: color-mix(in srgb, #374151 25%, transparent);
+          --pd-heat-2: color-mix(in srgb, #374151 50%, transparent);
+          --pd-heat-3: color-mix(in srgb, #374151 82%, transparent);
+          --pd-shadow-overlay: 0 24px 48px -16px rgb(0 0 0 / 22%);
+          --anno: #6d28d9;
+          --anno-bg: #f3efff;
+        }
+      }
+      :root[data-theme='light'] {
+        color-scheme: light;
+        --mat-sys-primary: #15181c;
+        --mat-sys-on-primary: #ffffff;
+        --mat-sys-secondary-container: #e3e6ea;
+        --mat-sys-on-secondary-container: #15181c;
+        --mat-sys-surface: #f4f5f7;
+        --mat-sys-surface-container-lowest: #ffffff;
+        --mat-sys-surface-container-low: #ffffff;
+        --mat-sys-surface-container: #eef0f3;
+        --mat-sys-surface-container-high: #e7eaee;
+        --mat-sys-surface-container-highest: #dfe3e8;
+        --mat-sys-on-surface: #15181c;
+        --mat-sys-on-surface-variant: #4b5563;
+        --mat-sys-outline: #6b7280;
+        --mat-sys-outline-variant: #d9dde3;
+        --mat-sys-inverse-surface: #15181c;
+        --mat-sys-inverse-on-surface: #f4f5f7;
+        --pd-oracle: #14b8a6;
+        --pd-oracle-text: #0f766e;
+        --pd-oracle-container: color-mix(in srgb, #14b8a6 8%, transparent);
+        --pd-oracle-border: color-mix(in srgb, #0f766e 30%, transparent);
+        --pd-oracle-glow: 0 0 0 1px color-mix(in srgb, #0f766e 18%, transparent);
+        --pd-forecast-line: #0f766e;
+        --pd-forecast-band: color-mix(in srgb, #14b8a6 14%, transparent);
+        --pd-ok-text: #047857;
+        --pd-warn-text: #b45309;
+        --pd-crit-text: #be123c;
+        --pd-chart-primary: #374151;
+        --pd-chart-empty: color-mix(in srgb, #15181c 8%, transparent);
+        --pd-grid-line: color-mix(in srgb, #15181c 7%, transparent);
+        --pd-heat-0: color-mix(in srgb, #15181c 7%, transparent);
+        --pd-heat-1: color-mix(in srgb, #374151 25%, transparent);
+        --pd-heat-2: color-mix(in srgb, #374151 50%, transparent);
+        --pd-heat-3: color-mix(in srgb, #374151 82%, transparent);
+        --pd-shadow-overlay: 0 24px 48px -16px rgb(0 0 0 / 22%);
+        --anno: #6d28d9;
+        --anno-bg: #f3efff;
+      }
+
+      /* ===== Base ===== */
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        margin: 0;
+        font: 400 14px/20px var(--pd-font);
+        color: var(--mat-sys-on-surface);
+        background: var(--mat-sys-surface);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+        color: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      :focus-visible {
+        outline: 2px solid var(--mat-sys-primary);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+
+      /* ===== Type scale ===== */
+      .t-display {
+        font: 700 28px/36px var(--pd-font-heading);
+        letter-spacing: -0.02em;
+      }
+      .t-headline {
+        font: 700 22px/28px var(--pd-font-heading);
+        letter-spacing: -0.01em;
+      }
+      .t-title {
+        font: 600 16px/24px var(--pd-font);
+      }
+      .t-title-s {
+        font: 600 14px/20px var(--pd-font);
+      }
+      .t-body {
+        font: 400 14px/20px var(--pd-font);
+      }
+      .t-answer {
+        font: 500 18px/26px var(--pd-font);
+      }
+      .t-label {
+        font: 500 12px/16px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .eyebrow {
+        font: 500 11px/16px var(--pd-font-mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .mono,
+      .num {
+        font-family: var(--pd-font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+      .num-xl {
+        font: 600 32px/40px var(--pd-font-mono);
+        letter-spacing: -0.02em;
+      }
+      .num-l {
+        font: 600 24px/32px var(--pd-font-mono);
+        letter-spacing: -0.01em;
+      }
+      .num-m {
+        font: 600 16px/24px var(--pd-font-mono);
+      }
+      .muted {
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .ok {
+        color: var(--pd-ok-text);
+      }
+      .warn {
+        color: var(--pd-warn-text);
+      }
+      .crit {
+        color: var(--pd-crit-text);
+      }
+      .answer {
+        color: var(--pd-oracle-text);
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
+
+      /* ===== Icons ===== */
+      svg.ic {
+        width: 20px;
+        height: 20px;
+        flex: none;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vertical-align: middle;
+      }
+      svg.ic.s {
+        width: 16px;
+        height: 16px;
+      }
+
+      /* ===== Status ===== */
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: none;
+        display: inline-block;
+        background: var(--pd-ok-fill);
+      }
+      .dot.warn {
+        background: var(--pd-warn-fill);
+      }
+      .dot.crit {
+        background: var(--pd-crit-fill);
+      }
+      .dot.off {
+        background: var(--mat-sys-outline);
+      }
+      .dot.oracle {
+        background: var(--pd-oracle);
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 24px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font: 600 12px/16px var(--pd-font);
+        background: var(--mat-sys-surface-container-high);
+        color: var(--mat-sys-on-surface-variant);
+        white-space: nowrap;
+      }
+      .badge.ok {
+        background: var(--pd-ok-container);
+        color: var(--pd-ok-text);
+      }
+      .badge.warn {
+        background: var(--pd-warn-container);
+        color: var(--pd-warn-text);
+      }
+      .badge.crit {
+        background: var(--pd-crit-container);
+        color: var(--pd-crit-text);
+      }
+      .badge.oracle {
+        background: var(--pd-oracle-container);
+        color: var(--pd-oracle-text);
+      }
+      .delta {
+        font: 600 12px/16px var(--pd-font-mono);
+        white-space: nowrap;
+      }
+      .new {
+        display: inline-block;
+        font: 600 10px/14px var(--pd-font-mono);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 0 5px;
+        border: 1px dashed var(--anno);
+        color: var(--anno);
+        border-radius: 4px;
+        vertical-align: middle;
+        white-space: nowrap;
+      }
+      .illus {
+        font: 500 10px/14px var(--pd-font-mono);
+        color: var(--mat-sys-on-surface-variant);
+        border: 1px solid var(--pd-border);
+        border-radius: 4px;
+        padding: 0 4px;
+        white-space: nowrap;
+      }
+      .pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--pd-oracle);
+        flex: none;
+        animation: pulse 2.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0
+            color-mix(in srgb, var(--pd-oracle) 50%, transparent);
+        }
+        50% {
+          box-shadow: 0 0 0 6px transparent;
+        }
+      }
+
+      /* ===== Score ring (conic) ===== */
+      .ring {
+        --v: 80;
+        --c: var(--pd-ok-fill);
+        --size: 40px;
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        flex: none;
+        display: grid;
+        place-items: center;
+        background: conic-gradient(
+          var(--c) calc(var(--v) * 1%),
+          var(--pd-chart-empty) 0
+        );
+        position: relative;
+        font: 600 13px/1 var(--pd-font-mono);
+      }
+      .ring::before {
+        content: '';
+        position: absolute;
+        inset: 4px;
+        border-radius: 50%;
+        background: var(--pd-card);
+      }
+      .ring > span {
+        position: relative;
+      }
+      .ring.warn {
+        --c: var(--pd-warn-fill);
+      }
+      .ring.crit {
+        --c: var(--pd-crit-fill);
+      }
+      .ring.oracle {
+        --c: var(--pd-oracle);
+      }
+
+      /* ===== Meters, sparklines, heat strips ===== */
+      .meter {
+        height: 6px;
+        border-radius: 3px;
+        background: var(--pd-chart-empty);
+        overflow: hidden;
+      }
+      .meter > i {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+        background: var(--pd-chart-primary);
+      }
+      .meter.ok > i {
+        background: var(--pd-ok-fill);
+      }
+      .meter.warn > i {
+        background: var(--pd-warn-fill);
+      }
+      .meter.crit > i {
+        background: var(--pd-crit-fill);
+      }
+      .meter.oracle > i {
+        background: var(--pd-oracle);
+      }
+      svg.spark {
+        display: block;
+        width: 100%;
+        height: 28px;
+        overflow: visible;
+      }
+      svg.spark .p {
+        fill: none;
+        stroke: var(--pd-chart-primary);
+        stroke-width: 1.6;
+        vector-effect: non-scaling-stroke;
+      }
+      svg.spark .f {
+        fill: none;
+        stroke: var(--pd-forecast-line);
+        stroke-width: 1.6;
+        stroke-dasharray: 3 3;
+        vector-effect: non-scaling-stroke;
+      }
+      svg.spark .band {
+        fill: var(--pd-forecast-band);
+      }
+      svg.spark .w {
+        stroke: var(--pd-warn-fill);
+      }
+      svg.spark .c {
+        stroke: var(--pd-crit-fill);
+      }
+      .hs {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        gap: 2px;
+        height: 12px;
+      }
+      .hs i {
+        border-radius: 2px;
+        background: var(--pd-heat-0);
+      }
+      .hs i.l1 {
+        background: var(--pd-heat-1);
+      }
+      .hs i.l2 {
+        background: var(--pd-heat-2);
+      }
+      .hs i.l3 {
+        background: var(--pd-heat-3);
+      }
+      .hs i.w {
+        background: var(--pd-warn-fill);
+      }
+      .hs i.c {
+        background: var(--pd-crit-fill);
+      }
+      .hs i.na {
+        background: repeating-linear-gradient(
+          135deg,
+          var(--pd-heat-0) 0 2px,
+          transparent 2px 4px
+        );
+      }
+      .hs i.t {
+        outline: 1px solid var(--mat-sys-on-surface-variant);
+        outline-offset: 0;
+      }
+
+      /* ===== Buttons and chips (matButton: filled / tonal / text) ===== */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 0;
+        font: 600 14px/20px var(--pd-font);
+        background: transparent;
+        color: var(--mat-sys-on-surface);
+        white-space: nowrap;
+      }
+      .btn.filled {
+        background: var(--mat-sys-primary);
+        color: var(--mat-sys-on-primary);
+      }
+      .btn.tonal {
+        background: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-secondary-container);
+      }
+      .btn.outlined {
+        border: 1px solid var(--mat-sys-outline-variant);
+      }
+      .btn.s {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 13px;
+      }
+      .btn.danger {
+        background: var(--pd-crit-container);
+        color: var(--pd-crit-text);
+      }
+      .btn:hover {
+        filter: brightness(1.08);
+      }
+      .icon-btn {
+        width: 40px;
+        height: 40px;
+        display: inline-grid;
+        place-items: center;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--mat-sys-on-surface-variant);
+        flex: none;
+        position: relative;
+      }
+      .icon-btn:hover {
+        background: var(--mat-sys-surface-container-high);
+        color: var(--mat-sys-on-surface);
+      }
+      .icon-btn .dot {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: var(--pd-radius-xs);
+        border: 1px solid var(--pd-border);
+        background: transparent;
+        font: 500 13px/16px var(--pd-font);
+        color: var(--mat-sys-on-surface);
+        white-space: nowrap;
+      }
+      .chip[aria-pressed='true'],
+      .chip.on {
+        background: var(--mat-sys-secondary-container);
+        border-color: transparent;
+      }
+      kbd {
+        font: 500 11px/16px var(--pd-font-mono);
+        padding: 0 6px;
+        border-radius: 6px;
+        border: 1px solid var(--pd-border);
+        color: var(--mat-sys-on-surface-variant);
+        background: var(--mat-sys-surface-container);
+      }
+
+      /* ===== Card, list, section header ===== */
+      .card {
+        background: var(--pd-card);
+        border: 1px solid var(--pd-border);
+        border-radius: var(--pd-radius);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
+        position: relative;
+      }
+      a.card:hover,
+      button.card:hover {
+        border-color: var(--mat-sys-outline);
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 24px;
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .card-head .t-title-s {
+        color: var(--mat-sys-on-surface);
+      }
+      .card-head .end {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .oracle-card {
+        border-color: var(--pd-oracle-border);
+        box-shadow: var(--pd-oracle-glow);
+        border-radius: var(--pd-radius-l);
+        background:
+          linear-gradient(
+            var(--pd-oracle-container),
+            var(--pd-oracle-container)
+          ),
+          var(--pd-card);
+      }
+      .sec-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 8px 0 0;
+        min-height: 32px;
+      }
+      .sec-head .end {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .list {
+        display: flex;
+        flex-direction: column;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 48px;
+        padding: 6px 0;
+        border-top: 1px solid var(--pd-border);
+        min-width: 0;
+      }
+      .list > .row:first-child {
+        border-top: 0;
+      }
+      .row .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .row .grow > * {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .row .val {
+        font-family: var(--pd-font-mono);
+        white-space: nowrap;
+      }
+      .lead {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--pd-radius-small);
+        display: grid;
+        place-items: center;
+        background: var(--mat-sys-surface-container-high);
+        color: var(--mat-sys-on-surface-variant);
+        flex: none;
+      }
+      .kv {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 32px;
+      }
+      .check i {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        border: 1.8px solid var(--mat-sys-outline);
+        flex: none;
+      }
+
+      /* ===== Shell: sidebar (groups folded, as in 02-shell), phone top bar and bottom bar ===== */
+      .app {
+        display: grid;
+        grid-template-columns: 248px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+      .side {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 12px;
+        border-right: 1px solid var(--pd-border);
+        background: var(--mat-sys-surface);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 48px;
+        padding: 0 8px;
+        font-weight: 700;
+      }
+      .logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        background: var(--mat-sys-primary);
+        color: var(--mat-sys-on-primary);
+      }
+      .logo svg.ic {
+        width: 16px;
+        height: 16px;
+      }
+      .search-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 40px;
+        margin: 4px 0 8px;
+        padding: 0 8px 0 12px;
+        border-radius: var(--pd-radius-small);
+        border: 1px solid var(--pd-border);
+        background: var(--mat-sys-surface-container-low);
+        color: var(--mat-sys-on-surface-variant);
+        text-align: left;
+        width: 100%;
+      }
+      .search-btn span {
+        flex: 1;
+      }
+      .nav-item,
+      .nav-group > summary {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 40px;
+        padding: 0 12px;
+        border-radius: var(--pd-radius-small);
+        color: var(--mat-sys-on-surface-variant);
+        font-weight: 500;
+        cursor: pointer;
+        list-style: none;
+      }
+      .nav-group > summary::-webkit-details-marker {
+        display: none;
+      }
+      .nav-item:hover,
+      .nav-group > summary:hover {
+        background: var(--mat-sys-surface-container);
+        color: var(--mat-sys-on-surface);
+      }
+      .nav-item[aria-current='page'] {
+        background: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-surface);
+        box-shadow: inset 3px 0 0 var(--pd-oracle);
+      }
+      .nav-item.sub {
+        padding-left: 44px;
+        min-height: 36px;
+        font-weight: 400;
+      }
+      .nav-item .count,
+      .nav-group .count {
+        margin-left: auto;
+        font: 500 12px/16px var(--pd-font-mono);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .nav-group > summary .dot {
+        margin-left: auto;
+      }
+      .nav-group > summary .dot + .count {
+        margin-left: 0;
+      }
+      .side .spacer {
+        flex: 1;
+        min-height: 16px;
+      }
+      .lvl {
+        --v: 1;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font: 600 10px/1 var(--pd-font-mono);
+        background: conic-gradient(
+          var(--pd-oracle) calc(var(--v) * 1%),
+          var(--pd-chart-empty) 0
+        );
+        position: relative;
+        color: var(--mat-sys-on-surface);
+      }
+      .lvl::before {
+        content: '';
+        position: absolute;
+        inset: 2px;
+        border-radius: 50%;
+        background: var(--mat-sys-surface);
+      }
+      .lvl b {
+        position: relative;
+        font-weight: 600;
+      }
+      .content {
+        min-width: 0;
+        padding: 24px 32px 48px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .ptop {
+        display: none;
+      }
+      .bottombar {
+        display: none;
+      }
+
+      @media (max-width: 1023px) {
+        .app {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .side {
+          display: none;
+        }
+        .content {
+          padding: 12px 16px 96px;
+          gap: 12px;
+        }
+        .ptop {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          height: 56px;
+          padding: 0 4px 0 16px;
+          position: sticky;
+          top: 0;
+          z-index: 5;
+          background: var(--mat-sys-surface);
+          border-bottom: 1px solid var(--pd-border);
+        }
+        .ptop .t-title {
+          flex: 1;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .ptop .icon-btn {
+          width: 48px;
+          height: 48px;
+        }
+        .bottombar {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 6;
+          height: 72px;
+          padding-bottom: env(safe-area-inset-bottom);
+          background: var(--mat-sys-surface-container);
+          border-top: 1px solid var(--pd-border);
+        }
+        .bottombar a {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          font: 500 12px/16px var(--pd-font);
+          color: var(--mat-sys-on-surface-variant);
+          min-height: 48px;
+        }
+        .bottombar a span.pill {
+          width: 56px;
+          height: 32px;
+          border-radius: 16px;
+          display: grid;
+          place-items: center;
+          position: relative;
+        }
+        .bottombar a[aria-current='page'] {
+          color: var(--mat-sys-on-surface);
+        }
+        .bottombar a[aria-current='page'] span.pill {
+          background: var(--mat-sys-secondary-container);
+        }
+        .bottombar .pill .dot {
+          position: absolute;
+          top: 4px;
+          right: 12px;
+        }
+        .btn {
+          height: 48px;
+        }
+        .btn.s {
+          height: 40px;
+        }
+        .chip {
+          height: 40px;
+        }
+      }
+
+      /* ===== Overlays: palette, quick actions, blocks, drawer ===== */
+      dialog {
+        border: 1px solid var(--pd-border);
+        border-radius: var(--pd-radius-l);
+        padding: 0;
+        background: var(--mat-sys-surface-container);
+        color: var(--mat-sys-on-surface);
+        box-shadow: var(--pd-shadow-overlay);
+        max-width: calc(100vw - 24px);
+      }
+      dialog::backdrop {
+        background: rgb(0 0 0 / 55%);
+      }
+      .dlg-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 12px 12px 20px;
+        border-bottom: 1px solid var(--pd-border);
+      }
+      .dlg-head .t-title {
+        flex: 1;
+      }
+      .dlg-body {
+        padding: 16px 20px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .dlg-foot {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        padding: 12px 20px 16px;
+        border-top: 1px solid var(--pd-border);
+      }
+      #palette {
+        width: 640px;
+        margin-top: 12vh;
+      }
+      .pal-input {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 16px;
+        height: 56px;
+        border-bottom: 1px solid var(--pd-border);
+      }
+      .pal-input input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        background: transparent;
+        font-size: 16px;
+        outline: none;
+      }
+      .pal-list {
+        padding: 8px;
+        max-height: 56vh;
+        overflow-y: auto;
+      }
+      .pal-list .eyebrow {
+        padding: 8px 12px 4px;
+      }
+      .pal-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 44px;
+        padding: 0 12px;
+        border-radius: var(--pd-radius-small);
+        width: 100%;
+        border: 0;
+        background: transparent;
+        text-align: left;
+      }
+      .pal-item:hover,
+      .pal-item.sel {
+        background: var(--mat-sys-secondary-container);
+      }
+      .pal-item .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .pal-hint {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding: 10px 16px;
+        border-top: 1px solid var(--pd-border);
+      }
+      #quick {
+        width: 520px;
+      }
+      .seg {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        border: 1px solid var(--pd-border);
+        border-radius: 999px;
+        padding: 3px;
+        gap: 3px;
+      }
+      .seg button {
+        border: 0;
+        background: transparent;
+        height: 36px;
+        border-radius: 999px;
+        font-weight: 600;
+        color: var(--mat-sys-on-surface-variant);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .seg button[aria-selected='true'] {
+        background: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-surface);
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field input,
+      .field textarea {
+        border: 1px solid var(--pd-border);
+        background: var(--mat-sys-surface-container-high);
+        border-radius: var(--pd-radius-small);
+        padding: 10px 12px;
+        min-height: 48px;
+        outline: none;
+        width: 100%;
+      }
+      .field input:focus,
+      .field textarea:focus {
+        border-color: var(--mat-sys-outline);
+      }
+      .amount {
+        font: 600 32px/40px var(--pd-font-mono) !important;
+        text-align: right;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      [role='tabpanel'][hidden] {
+        display: none !important;
+      }
+      #blocks {
+        width: 480px;
+      }
+      .sw-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 48px;
+        border-top: 1px solid var(--pd-border);
+      }
+      .sw-row:first-child {
+        border-top: 0;
+      }
+      .sw-row .grip {
+        color: var(--mat-sys-outline);
+        cursor: grab;
+        font: 600 14px/1 var(--pd-font-mono);
+        letter-spacing: -2px;
+        width: 16px;
+      }
+      .sw-row .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .switch {
+        appearance: none;
+        width: 44px;
+        height: 24px;
+        border-radius: 12px;
+        background: var(--mat-sys-surface-container-highest);
+        border: 1px solid var(--mat-sys-outline);
+        position: relative;
+        flex: none;
+        cursor: pointer;
+        margin: 0;
+      }
+      .switch::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--mat-sys-outline);
+        transition: transform 150ms ease;
+      }
+      .switch:checked {
+        background: var(--mat-sys-primary);
+        border-color: var(--mat-sys-primary);
+      }
+      .switch:checked::after {
+        transform: translateX(20px);
+        background: var(--mat-sys-on-primary);
+      }
+      .switch:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      #drawer {
+        margin: 0 0 0 auto;
+        height: 100vh;
+        max-height: 100vh;
+        width: 440px;
+        border-radius: var(--pd-radius-l) 0 0 var(--pd-radius-l);
+      }
+      #drawer .dlg-body {
+        overflow-y: auto;
+        max-height: calc(100vh - 66px);
+      }
+      @media (max-width: 1023px) {
+        #palette {
+          margin-top: 8px;
+          width: calc(100vw - 16px);
+        }
+        #quick,
+        #blocks {
+          width: calc(100vw - 16px);
+          margin-bottom: 8px;
+        }
+        #drawer {
+          margin: auto 0 0;
+          width: 100vw;
+          max-width: 100vw;
+          height: auto;
+          max-height: 85vh;
+          border-radius: var(--pd-radius-l) var(--pd-radius-l) 0 0;
+        }
+        #drawer .dlg-body {
+          max-height: calc(85vh - 66px);
+        }
+      }
+      [data-block][hidden] {
+        display: none !important;
+      }
+
+      /* ===== Mock bar and designer annotations (not part of the app) ===== */
+      .mock-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 12px;
+        padding: 6px 16px;
+        font: 500 12px/20px var(--pd-font);
+        background: var(--anno-bg);
+        color: var(--mat-sys-on-surface);
+        border-bottom: 1px dashed var(--anno);
+      }
+      .mock-bar b {
+        color: var(--anno);
+      }
+      .mock-bar a {
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .mock-bar a[aria-current='page'] {
+        color: var(--mat-sys-on-surface);
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .mock-bar .sp {
+        flex: 1;
+      }
+      .mock-bar button {
+        border: 1px solid var(--anno);
+        background: transparent;
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 12px;
+        min-height: 28px;
+      }
+      [data-tier] {
+        position: relative;
+      }
+      .anno-on [data-tier] {
+        outline: 1px dashed var(--anno);
+        outline-offset: 3px;
+      }
+      .anno-on [data-tier]::after {
+        content: attr(data-tier);
+        position: absolute;
+        top: -10px;
+        right: 12px;
+        z-index: 2;
+        font: 600 10px/16px var(--pd-font-mono);
+        letter-spacing: 0.04em;
+        padding: 0 6px;
+        border-radius: 4px;
+        background: var(--anno-bg);
+        color: var(--anno);
+        border: 1px solid var(--anno);
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      .dnote {
+        display: none;
+        font: 400 13px/20px var(--pd-font);
+        padding: 12px 16px;
+        border: 1px dashed var(--anno);
+        border-radius: var(--pd-radius-small);
+        background: var(--anno-bg);
+      }
+      .dnote b {
+        color: var(--anno);
+      }
+      .anno-on .dnote {
+        display: block;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      /* level strip (shared): ring + XP + the closest achievement */
+      .level {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        flex-direction: row;
+      }
+      .level .lv-txt {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-width: 0;
+      }
+      .level .lv-txt > span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      @media (max-width: 1023px) {
+        .mock-bar a:not([aria-current='page']):not([href='index.html']) {
+          display: none;
+        }
+      }
+
+      /* ===== Round 3: one portal in the A1 style ===== */
+      :root {
+        --pd-space-5: 20px;
+        --pd-appbar-h: 56px;
+        --pd-side-w: 256px;
+        --pd-wrap: 1200px;
+      }
+
+      /* ----- Shell ----- */
+      .app {
+        grid-template-columns: var(--pd-side-w) minmax(0, 1fr);
+      }
+      .main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .content {
+        padding: 24px 32px 64px;
+      }
+      .wrap {
+        max-width: var(--pd-wrap);
+        width: 100%;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .side .brand {
+        color: var(--mat-sys-on-surface);
+      }
+      .nav-main,
+      .nav-bottom {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .nav-group > summary .gchev {
+        margin-left: 4px;
+        color: var(--mat-sys-outline);
+        transition: transform 200ms ease;
+      }
+      .nav-group[open] > summary .gchev {
+        transform: rotate(180deg);
+      }
+      .nav-group[open] > summary .count {
+        visibility: hidden;
+      }
+      .nav-group > summary .dot + .count {
+        margin-left: 8px;
+      }
+      .nav-item.sub .dot {
+        margin-left: auto;
+      }
+      .nav-item.sub .dot + .count {
+        margin-left: 8px;
+      }
+      .user-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 4px 2px 8px;
+        margin-top: 8px;
+        border-top: 1px solid var(--pd-border);
+      }
+      .user-row .grow {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1;
+      }
+      .user-row .grow > * {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--mat-sys-surface-container-high);
+        font-weight: 700;
+        flex: none;
+      }
+      .divider {
+        height: 1px;
+        background: var(--pd-border);
+        margin: 8px 0;
+      }
+
+      /* The top toolbar: where you are · the A1 status line · quick add · the bell */
+      .appbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: var(--pd-appbar-h);
+        padding: 0 16px 0 32px;
+        background: color-mix(in srgb, var(--mat-sys-surface) 94%, transparent);
+        border-bottom: 1px solid var(--pd-border);
+      }
+      .appbar .sp {
+        flex: 1;
+      }
+      .crumbs {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+        font: 500 13px/20px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+        white-space: nowrap;
+      }
+      .crumbs b {
+        color: var(--mat-sys-on-surface);
+        font-weight: 600;
+      }
+      .crumbs svg.ic {
+        color: var(--mat-sys-outline);
+        width: 14px;
+        height: 14px;
+      }
+      .stbar {
+        display: flex;
+        align-items: center;
+        margin-left: auto;
+        padding: 2px;
+        gap: 2px;
+        border: 1px solid var(--pd-border);
+        border-radius: 999px;
+        background: var(--pd-card);
+        min-width: 0;
+      }
+      .stbar button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        font: 500 12px/16px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+        white-space: nowrap;
+      }
+      .stbar button:hover {
+        background: var(--mat-sys-surface-container-high);
+      }
+      .stbar button b {
+        font: 600 12px/16px var(--pd-font-mono);
+        color: var(--mat-sys-on-surface);
+      }
+      .stbar button b.crit {
+        color: var(--pd-crit-text);
+      }
+      .stbar .ring::before {
+        inset: 3px;
+      }
+      .icon-btn.bell .bdg {
+        position: absolute;
+        top: 4px;
+        right: 2px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 9px;
+        background: var(--mat-sys-on-surface);
+        color: var(--mat-sys-surface);
+        font: 700 11px/18px var(--pd-font-mono);
+      }
+      @media (max-width: 1365px) {
+        .stbar .lb {
+          display: none;
+        }
+      }
+      .pstat {
+        display: none;
+      }
+
+      /* ----- Page header and tabs ----- */
+      .phead {
+        display: flex;
+        align-items: flex-end;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .phead .grow {
+        flex: 1;
+        min-width: 260px;
+      }
+      .phead .lede {
+        margin-top: 4px;
+        max-width: 72ch;
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .phead .acts {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        border-bottom: 1px solid var(--pd-border);
+        margin-top: -8px;
+      }
+      .tabs [role='tab'],
+      .tab-more > summary {
+        height: 44px;
+        padding: 0 14px;
+        border: 0;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font: 600 14px/20px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        white-space: nowrap;
+        cursor: pointer;
+        list-style: none;
+      }
+      .tab-more > summary::-webkit-details-marker {
+        display: none;
+      }
+      .tabs [role='tab']:hover,
+      .tab-more > summary:hover {
+        color: var(--mat-sys-on-surface);
+      }
+      .tabs > [role='tab'][aria-selected='true'],
+      .tab-more.has-sel > summary {
+        color: var(--mat-sys-on-surface);
+        border-bottom-color: var(--mat-sys-on-surface);
+      }
+      .tabs .count {
+        font: 500 12px/16px var(--pd-font-mono);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .tab-more {
+        position: relative;
+      }
+      .tab-more .menu {
+        position: absolute;
+        top: 46px;
+        left: 0;
+        z-index: 6;
+        min-width: 220px;
+        display: flex;
+        flex-direction: column;
+        padding: 6px;
+        border-radius: var(--pd-radius-small);
+        border: 1px solid var(--pd-border);
+        background: var(--mat-sys-surface-container);
+        box-shadow: var(--pd-shadow-overlay);
+      }
+      .tab-more .menu [role='tab'] {
+        border: 0;
+        border-radius: var(--pd-radius-xs);
+        justify-content: flex-start;
+        margin: 0;
+      }
+      .tab-more .menu [role='tab'][aria-selected='true'] {
+        background: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-surface);
+      }
+      .tabpanel {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-width: 0;
+      }
+      .tabpanel[hidden] {
+        display: none;
+      }
+
+      /* ----- Layout grids ----- */
+      .g2,
+      .g3,
+      .g4,
+      .split,
+      .split-r {
+        display: grid;
+        gap: 16px;
+        align-items: start;
+        min-width: 0;
+      }
+      .g2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .g3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .g4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .split {
+        grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+      }
+      .split-r {
+        grid-template-columns: minmax(300px, 1fr) minmax(0, 2fr);
+      }
+      .stretch {
+        align-items: stretch;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-width: 0;
+      }
+      .hstack {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .hstack .sp {
+        flex: 1;
+      }
+      .card .foot {
+        margin-top: auto;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+      .card.flat {
+        background: var(--mat-sys-surface-container);
+        border-color: transparent;
+      }
+      .card.tight {
+        padding: 12px;
+        gap: 8px;
+      }
+      .card.p0 {
+        padding: 0;
+        gap: 0;
+      }
+      .card.p0 > .card-head {
+        padding: 14px 16px 6px;
+      }
+      .card.p0 > .list > .row {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      .row.sel {
+        background: var(--mat-sys-secondary-container);
+        border-radius: var(--pd-radius-small);
+        border-top-color: transparent;
+      }
+      .row.sel + .row {
+        border-top-color: transparent;
+      }
+      a.row:hover,
+      button.row:hover {
+        background: var(--mat-sys-surface-container);
+      }
+      button.row {
+        width: 100%;
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0;
+        background: transparent;
+        text-align: left;
+      }
+      .row .end {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex: none;
+      }
+      .lead.ok {
+        background: var(--pd-ok-container);
+        color: var(--pd-ok-text);
+      }
+      .lead.warn {
+        background: var(--pd-warn-container);
+        color: var(--pd-warn-text);
+      }
+      .lead.crit {
+        background: var(--pd-crit-container);
+        color: var(--pd-crit-text);
+      }
+      .lead.oracle {
+        background: var(--pd-oracle-container);
+        color: var(--pd-oracle-text);
+      }
+      .lead.img {
+        background: linear-gradient(
+          135deg,
+          var(--mat-sys-surface-container-highest),
+          var(--mat-sys-surface-container)
+        );
+        font: 600 13px/1 var(--pd-font-mono);
+      }
+
+      /* ----- KPI strip (same look as the status line) ----- */
+      .kpis {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+        padding: 4px;
+        gap: 0;
+      }
+      .kpi {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 10px 14px;
+        min-width: 0;
+      }
+      .kpi + .kpi {
+        border-left: 1px solid var(--pd-border);
+      }
+      .kpi > * {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* The A1 status line (full size, home) */
+      .sb {
+        display: grid;
+        grid-template-columns: 1.3fr repeat(5, 1fr);
+        gap: 0;
+        padding: 4px;
+      }
+      .sb-i {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 48px;
+        padding: 6px 12px;
+        border: 0;
+        background: transparent;
+        border-radius: var(--pd-radius-small);
+        text-align: left;
+        min-width: 0;
+      }
+      .sb-i:hover {
+        background: var(--mat-sys-surface-container);
+      }
+      .sb-i + .sb-i {
+        border-left: 1px solid var(--pd-border);
+        border-radius: 0;
+      }
+      .sb-t {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .sb-t > * {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* ----- The answer (briefing) ----- */
+      .brief-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .answers {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+      }
+      .ans {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+      .ans .q {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font: 500 13px/20px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .ans .meta {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 2px;
+      }
+      .ans .meta a,
+      a.ul {
+        font: 600 12px/16px var(--pd-font);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .ask {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 48px;
+        padding: 0 4px 0 14px;
+        border-radius: 999px;
+        border: 1px solid var(--pd-oracle-border);
+        background: var(--pd-card);
+      }
+      .ask input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        background: transparent;
+        outline: none;
+        height: 44px;
+      }
+      .answer-line {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: var(--pd-radius);
+        border: 1px solid var(--pd-oracle-border);
+        background:
+          linear-gradient(
+            var(--pd-oracle-container),
+            var(--pd-oracle-container)
+          ),
+          var(--pd-card);
+      }
+      .answer-line .ic {
+        color: var(--pd-oracle-text);
+        margin-top: 1px;
+      }
+      .answer-line .grow {
+        flex: 1;
+        min-width: 0;
+      }
+
+      /* ----- "Скоро" (from B1) ----- */
+      .timeline {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .timeline li {
+        display: grid;
+        grid-template-columns: 96px 16px minmax(0, 1fr);
+        gap: 12px;
+        padding-bottom: 18px;
+        position: relative;
+      }
+      .timeline li::before {
+        content: '';
+        position: absolute;
+        left: 115px;
+        top: 14px;
+        bottom: 0;
+        width: 2px;
+        background: var(--pd-border);
+      }
+      .timeline li:last-child {
+        padding-bottom: 0;
+      }
+      .timeline li:last-child::before {
+        display: none;
+      }
+      .timeline .when {
+        padding-top: 2px;
+        text-align: right;
+      }
+      .node {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid var(--mat-sys-outline);
+        background: var(--mat-sys-surface);
+        margin-top: 4px;
+        position: relative;
+        z-index: 1;
+      }
+      .node.oracle {
+        border-color: var(--pd-oracle);
+        background: var(--pd-oracle-container);
+      }
+      .node.warn {
+        border-color: var(--pd-warn-fill);
+      }
+      .node.crit {
+        border-color: var(--pd-crit-fill);
+      }
+      .node.ok {
+        border-color: var(--pd-ok-fill);
+      }
+      .conf {
+        display: grid;
+        grid-template-columns: 96px auto;
+        gap: 8px;
+        align-items: center;
+        margin-top: 6px;
+      }
+
+      /* ----- Signals (from C2) ----- */
+      .sigtools {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 40px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid var(--pd-border);
+        background: var(--pd-card);
+        min-width: 240px;
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .search input {
+        border: 0;
+        background: transparent;
+        outline: none;
+        flex: 1;
+        min-width: 0;
+        color: var(--mat-sys-on-surface);
+      }
+      .cov {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        justify-content: center;
+        min-width: 0;
+      }
+      .covbar {
+        display: flex;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        gap: 2px;
+      }
+      .covbar i {
+        display: block;
+      }
+      .covleg {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .covleg span {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .srow {
+        display: grid;
+        grid-template-columns:
+          12px minmax(0, 2.4fr) 80px minmax(120px, 1.4fr)
+          110px 76px;
+        gap: 12px;
+        align-items: center;
+        min-height: 48px;
+        padding: 0 16px;
+        border-top: 1px solid var(--pd-border);
+      }
+      .srow.head {
+        min-height: 36px;
+        border-top: 0;
+        font: 500 12px/16px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+        border-bottom: 1px solid var(--pd-border);
+      }
+      .srow.head + .srow {
+        border-top: 0;
+      }
+      .srow:not(.head):hover {
+        background: var(--mat-sys-surface-container);
+      }
+      .srow .nm {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .srow .nm > * {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .srow .val {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: right;
+        font: 500 13px/16px var(--pd-font-mono);
+        white-space: nowrap;
+      }
+      .srow .h30 {
+        height: 10px;
+      }
+      .srow[hidden] {
+        display: none;
+      }
+
+      /* ----- Smart search over telemetry ----- */
+      .ss {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .ss-field {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 56px;
+        padding: 0 6px 0 18px;
+        border-radius: 28px;
+        border: 1px solid var(--pd-oracle-border);
+        background: var(--pd-card);
+        box-shadow: var(--pd-oracle-glow);
+      }
+      .ss-field input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        background: transparent;
+        outline: none;
+        font-size: 16px;
+        height: 52px;
+      }
+      .ss-field .ic {
+        color: var(--pd-oracle-text);
+      }
+      .parsed {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .pchip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 8px 0 10px;
+        border-radius: var(--pd-radius-xs);
+        border: 1px solid var(--pd-border);
+        background: var(--mat-sys-surface-container);
+        font: 500 13px/16px var(--pd-font);
+        white-space: nowrap;
+      }
+      .pchip .k {
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .pchip .ic {
+        width: 14px;
+        height: 14px;
+        color: var(--mat-sys-outline);
+      }
+      .res-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .dayrow {
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr) 92px;
+        gap: 12px;
+        align-items: center;
+        min-height: 44px;
+        padding: 0 4px;
+        border-top: 1px solid var(--pd-border);
+      }
+      .dayrow:first-child {
+        border-top: 0;
+      }
+      .dayline {
+        position: relative;
+        height: 14px;
+        border-radius: 3px;
+        background: var(--pd-heat-0);
+      }
+      .dayline i {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        border-radius: 3px;
+        background: var(--pd-heat-2);
+      }
+      .dayline b {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 3px;
+        margin-left: -1px;
+        border-radius: 2px;
+        background: var(--pd-oracle);
+      }
+      .dayline .mark {
+        position: absolute;
+        top: -4px;
+        bottom: -4px;
+        width: 1px;
+        background: var(--pd-crit-fill);
+      }
+      .hours {
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr) 92px;
+        gap: 12px;
+        font: 500 10px/14px var(--pd-font-mono);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .hours span {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      /* ----- Charts ----- */
+      .bars {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+        gap: 6px;
+        align-items: end;
+        height: calc(var(--h) + 20px);
+        padding-bottom: 20px;
+        position: relative;
+        background:
+          linear-gradient(var(--pd-grid-line), var(--pd-grid-line)) 0
+            calc(100% - 20px) / 100% 1px no-repeat,
+          linear-gradient(var(--pd-grid-line), var(--pd-grid-line)) 0
+            calc(50% - 10px) / 100% 1px no-repeat;
+      }
+      .bars .b {
+        position: relative;
+        height: var(--h);
+        display: flex;
+        align-items: flex-end;
+      }
+      .bars .b i {
+        display: block;
+        width: 100%;
+        border-radius: 4px 4px 1px 1px;
+        background: var(--pd-chart-primary);
+        min-height: 2px;
+      }
+      .bars .b.f i {
+        background: var(--pd-forecast-band);
+        outline: 1.5px dashed var(--pd-forecast-line);
+        outline-offset: -1.5px;
+      }
+      .bars .b em {
+        position: absolute;
+        bottom: -20px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font: 500 10px/16px var(--pd-font-mono);
+        font-style: normal;
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .bars.thin {
+        gap: 2px;
+      }
+      .bars.ok .b i {
+        background: var(--pd-ok-fill);
+      }
+      .bars.muted .b i {
+        background: var(--pd-heat-2);
+      }
+      .bars .b.w i {
+        background: var(--pd-warn-fill);
+      }
+      .bars .b.c i {
+        background: var(--pd-crit-fill);
+      }
+      svg.spark.tall {
+        height: 120px;
+      }
+      svg.spark.mid {
+        height: 64px;
+      }
+      svg.spark .a {
+        fill: color-mix(in srgb, var(--pd-chart-primary) 12%, transparent);
+        stroke: none;
+      }
+      svg.spark .p.o {
+        stroke: var(--pd-oracle);
+      }
+      .legend {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font: 500 12px/16px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .legend i {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        margin-right: 6px;
+        vertical-align: -1px;
+        background: var(--pd-chart-primary);
+      }
+      .legend i.f {
+        background: var(--pd-forecast-band);
+        outline: 1.5px dashed var(--pd-forecast-line);
+        outline-offset: -1.5px;
+      }
+      .legend i.l2 {
+        background: var(--pd-heat-2);
+      }
+      .yh {
+        display: grid;
+        grid-template-rows: repeat(7, 1fr);
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+        gap: 2px;
+        aspect-ratio: calc(var(--w) / 7.4);
+        max-height: 120px;
+      }
+      .yh i {
+        border-radius: 2px;
+        background: var(--pd-heat-0);
+      }
+      .yh i.l1 {
+        background: var(--pd-heat-1);
+      }
+      .yh i.l2 {
+        background: var(--pd-heat-2);
+      }
+      .yh i.l3 {
+        background: var(--pd-heat-3);
+      }
+      .hs i.o {
+        background: var(--pd-oracle);
+      }
+      .donut {
+        --s: 120px;
+        width: var(--s);
+        height: var(--s);
+        border-radius: 50%;
+        flex: none;
+        position: relative;
+        display: grid;
+        place-items: center;
+      }
+      .donut::before {
+        content: '';
+        position: absolute;
+        inset: 16px;
+        border-radius: 50%;
+        background: var(--pd-card);
+      }
+      .donut > * {
+        position: relative;
+        text-align: center;
+      }
+      .hbar {
+        display: grid;
+        grid-template-columns: minmax(0, 150px) minmax(0, 1fr) 84px;
+        gap: 12px;
+        align-items: center;
+        min-height: 32px;
+      }
+      .hbar > span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .hbar .val {
+        text-align: right;
+        font: 500 13px/16px var(--pd-font-mono);
+      }
+      .mrow {
+        display: grid;
+        grid-template-columns: 64px 1fr 64px;
+        gap: 8px;
+        align-items: center;
+      }
+      .mrow .mono {
+        text-align: right;
+      }
+
+      /* ----- Map, QR, media placeholders (no third-party assets) ----- */
+      .map {
+        position: relative;
+        border-radius: var(--pd-radius);
+        overflow: hidden;
+        min-height: 320px;
+        background:
+          linear-gradient(var(--pd-grid-line) 1px, transparent 1px) 0 0 / 48px
+            48px,
+          linear-gradient(90deg, var(--pd-grid-line) 1px, transparent 1px) 0 0 /
+            48px 48px,
+          var(--mat-sys-surface-container);
+        border: 1px solid var(--pd-border);
+      }
+      .map svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .map .road {
+        fill: none;
+        stroke: var(--mat-sys-surface-container-highest);
+        stroke-width: 10;
+        stroke-linecap: round;
+      }
+      .map .river {
+        fill: none;
+        stroke: color-mix(in srgb, #38bdf8 25%, transparent);
+        stroke-width: 18;
+        stroke-linecap: round;
+      }
+      .map .route {
+        fill: none;
+        stroke: var(--mat-sys-on-surface);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .map .route.walk {
+        stroke-dasharray: 2 6;
+      }
+      .map .heat {
+        fill: var(--pd-oracle);
+        opacity: 0.18;
+      }
+      .map .pinl {
+        position: absolute;
+        transform: translate(-50%, -100%);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: var(--mat-sys-surface-container-low);
+        border: 1px solid var(--pd-border);
+        font: 600 12px/16px var(--pd-font);
+        white-space: nowrap;
+        box-shadow: 0 4px 12px -6px rgb(0 0 0 / 40%);
+      }
+      .map .pinl.q {
+        border-color: var(--pd-warn-fill);
+      }
+      .map .tools {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
+        gap: 6px;
+      }
+      .map .attr {
+        position: absolute;
+        right: 8px;
+        bottom: 6px;
+        font: 500 10px/14px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .qr {
+        display: grid;
+        grid-template-columns: repeat(var(--n), 1fr);
+        width: 200px;
+        aspect-ratio: 1;
+        padding: 12px;
+        background: #fff;
+        border-radius: var(--pd-radius-small);
+        gap: 0;
+      }
+      .qr i {
+        background: #fff;
+      }
+      .qr i.on {
+        background: #111418;
+      }
+      .thumb {
+        border-radius: var(--pd-radius-small);
+        aspect-ratio: 2 / 3;
+        background: linear-gradient(
+          160deg,
+          var(--mat-sys-surface-container-highest),
+          var(--mat-sys-surface-container) 70%
+        );
+        border: 1px solid var(--pd-border);
+        display: flex;
+        align-items: flex-end;
+        padding: 8px;
+        font: 600 12px/16px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .thumb.wide {
+        aspect-ratio: 16 / 10;
+      }
+      .thumb.sq {
+        aspect-ratio: 1;
+      }
+
+      /* ----- Settings rows (06-settings) ----- */
+      .set {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 24px;
+        align-items: start;
+      }
+      .set-nav {
+        position: sticky;
+        top: calc(var(--pd-appbar-h) + 16px);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .set-nav a,
+      .set-nav button {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 56px;
+        padding: 8px 12px;
+        border-radius: var(--pd-radius-small);
+        border: 0;
+        background: transparent;
+        text-align: left;
+        color: var(--mat-sys-on-surface);
+        width: 100%;
+      }
+      .set-nav a:hover,
+      .set-nav button:hover {
+        background: var(--mat-sys-surface-container);
+      }
+      .set-nav [aria-selected='true'] {
+        background: var(--mat-sys-secondary-container);
+        box-shadow: inset 3px 0 0 var(--pd-oracle);
+      }
+      .set-nav .grow {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1;
+      }
+      .set-nav .ic {
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .opt {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-height: 64px;
+        padding: 10px 0;
+        border-top: 1px solid var(--pd-border);
+      }
+      .card > .opt:first-of-type,
+      .opt.first {
+        border-top: 0;
+      }
+      .opt .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .opt .sub {
+        font: 400 13px/18px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .seg2 {
+        display: inline-flex;
+        border: 1px solid var(--pd-border);
+        border-radius: 999px;
+        padding: 3px;
+        gap: 3px;
+        flex: none;
+      }
+      .seg2 button {
+        border: 0;
+        background: transparent;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font: 600 13px/16px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .seg2 button[aria-pressed='true'] {
+        background: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-surface);
+      }
+      .sel-f {
+        height: 40px;
+        border-radius: var(--pd-radius-small);
+        border: 1px solid var(--pd-border);
+        background: var(--mat-sys-surface-container-high);
+        padding: 0 12px;
+        min-width: 160px;
+      }
+      details.fold > summary {
+        list-style: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 48px;
+        font: 600 14px/20px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+      }
+      details.fold > summary::-webkit-details-marker {
+        display: none;
+      }
+      details.fold > summary .ic {
+        transition: transform 200ms ease;
+      }
+      details.fold[open] > summary .ic {
+        transform: rotate(90deg);
+      }
+      .errbox,
+      .warnbox,
+      .okbox,
+      .infobox {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 12px 14px;
+        border-radius: var(--pd-radius-small);
+        background: var(--pd-crit-container);
+      }
+      .warnbox {
+        background: var(--pd-warn-container);
+      }
+      .okbox {
+        background: var(--pd-ok-container);
+      }
+      .infobox {
+        background: var(--mat-sys-surface-container);
+      }
+      .errbox > .ic {
+        color: var(--pd-crit-text);
+      }
+      .warnbox > .ic {
+        color: var(--pd-warn-text);
+      }
+      .okbox > .ic {
+        color: var(--pd-ok-text);
+      }
+      .errbox .grow,
+      .warnbox .grow,
+      .okbox .grow,
+      .infobox .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .steps {
+        margin: 0;
+        padding-left: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: var(--mat-sys-on-surface-variant);
+      }
+
+      /* ----- List and detail ----- */
+      .ld {
+        display: grid;
+        grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+      .ld-back {
+        display: none;
+      }
+      .ld .detail {
+        position: sticky;
+        top: calc(var(--pd-appbar-h) + 16px);
+      }
+
+      /* ----- States ----- */
+      .skel {
+        display: block;
+        border-radius: 6px;
+        background:
+          linear-gradient(
+              90deg,
+              transparent,
+              color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent),
+              transparent
+            )
+            0 0 / 200% 100%,
+          var(--pd-heat-0);
+        animation: shimmer 1.6s linear infinite;
+      }
+      @keyframes shimmer {
+        to {
+          background-position:
+            -200% 0,
+            0 0;
+        }
+      }
+      .empty {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 24px;
+        border: 1px dashed var(--pd-border);
+        border-radius: var(--pd-radius);
+      }
+      .empty .ic {
+        width: 28px;
+        height: 28px;
+        color: var(--mat-sys-outline);
+      }
+      .early {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font: 500 12px/16px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+        border: 1px dashed var(--mat-sys-outline);
+        border-radius: 999px;
+        padding: 2px 10px;
+      }
+
+      /* ----- Misc ----- */
+      .qcard {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
+        border-radius: var(--pd-radius-small);
+        border: 1px solid var(--pd-oracle-border);
+        background: var(--pd-oracle-container);
+      }
+      .mv {
+        display: inline-block;
+        font: 600 10px/14px var(--pd-font-mono);
+        letter-spacing: 0.04em;
+        padding: 1px 6px;
+        border: 1px solid var(--anno);
+        color: var(--anno);
+        border-radius: 4px;
+        vertical-align: middle;
+        white-space: nowrap;
+        text-transform: uppercase;
+      }
+      body:not(.anno-on) .mv,
+      body:not(.anno-on) .new {
+        display: none;
+      }
+      .tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font: 400 13px/18px var(--pd-font);
+      }
+      .tbl th {
+        text-align: left;
+        font: 500 12px/16px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--pd-border);
+      }
+      .tbl td {
+        padding: 10px;
+        border-top: 1px solid var(--pd-border);
+        vertical-align: top;
+      }
+      .tbl td.num,
+      .tbl th.num {
+        text-align: right;
+        font-family: var(--pd-font-mono);
+        white-space: nowrap;
+      }
+      .tbl-wrap {
+        overflow-x: auto;
+      }
+      .check i.on {
+        background: var(--mat-sys-on-surface);
+        border-color: var(--mat-sys-on-surface);
+        position: relative;
+      }
+      .check i.on::after {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 1px;
+        width: 4px;
+        height: 9px;
+        border: solid var(--mat-sys-surface);
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+      .check.done span:first-of-type {
+        text-decoration: line-through;
+        color: var(--mat-sys-on-surface-variant);
+      }
+      .ring.big {
+        --size: 96px;
+        font-size: 22px;
+      }
+      .ring.big::before {
+        inset: 8px;
+      }
+      .minor {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .minor .card {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+      }
+      .minor .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .sec-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 32px;
+      }
+      .sec-title .end {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+      }
+      .chat {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .msg {
+        max-width: 76%;
+        padding: 10px 14px;
+        border-radius: 16px;
+        background: var(--mat-sys-surface-container-high);
+        align-self: flex-end;
+      }
+      .msg.bot {
+        align-self: flex-start;
+        background: var(--pd-card);
+        border: 1px solid var(--pd-border);
+      }
+      .msg .src {
+        margin-top: 8px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .textarea-look {
+        border: 1px solid var(--pd-border);
+        background: var(--mat-sys-surface-container-high);
+        border-radius: var(--pd-radius-small);
+        padding: 14px 16px;
+        min-height: 160px;
+        font: 400 15px/24px var(--pd-font);
+      }
+      .mark-err {
+        text-decoration: underline wavy var(--pd-crit-fill);
+        text-underline-offset: 4px;
+      }
+      .mark-gr {
+        text-decoration: underline wavy var(--pd-warn-fill);
+        text-underline-offset: 4px;
+      }
+      .mark-hl {
+        background: color-mix(in srgb, var(--pd-warn-fill) 22%, transparent);
+        border-radius: 3px;
+      }
+
+      /* ----- Phone (390): bottom bar, one status line, stacked grids ----- */
+      @media (max-width: 1023px) {
+        .app {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .appbar {
+          display: none;
+        }
+        .content {
+          padding: 12px 16px 104px;
+        }
+        .wrap {
+          gap: 16px;
+        }
+        .pstat {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: 100%;
+          min-height: 44px;
+          padding: 0 12px 0 16px;
+          border: 0;
+          border-bottom: 1px solid var(--pd-border);
+          background: var(--pd-crit-container);
+          color: var(--mat-sys-on-surface);
+          text-align: left;
+          font: 500 13px/18px var(--pd-font);
+        }
+        .pstat .grow {
+          flex: 1;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .ptop .icon-btn {
+          width: 44px;
+          height: 44px;
+        }
+        .ptop .t-title {
+          padding-left: 4px;
+        }
+        .phead {
+          gap: 12px;
+        }
+        .phead .t-display {
+          font-size: 22px;
+          line-height: 28px;
+        }
+        .phead .grow {
+          min-width: 0;
+          flex-basis: 100%;
+        }
+        .phead .acts {
+          width: 100%;
+        }
+        .phead .acts .btn.filled {
+          flex: 1;
+        }
+        .tabs {
+          overflow-x: auto;
+          scrollbar-width: none;
+          margin-left: -16px;
+          margin-right: -16px;
+          padding: 0 8px;
+        }
+        .tabs::-webkit-scrollbar {
+          display: none;
+        }
+        .tab-more .menu {
+          position: fixed;
+          top: auto;
+          bottom: 80px;
+          left: 8px;
+          right: 8px;
+        }
+        .g2,
+        .g3,
+        .g4,
+        .split,
+        .split-r,
+        .answers,
+        .minor {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 12px;
+        }
+        .g4.keep2,
+        .g3.keep2 {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .ans + .ans {
+          border-top: 1px solid var(--pd-oracle-border);
+          padding-top: 16px;
+        }
+        .kpis {
+          grid-auto-flow: row;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .kpi + .kpi {
+          border-left: 0;
+        }
+        .kpi:nth-child(even) {
+          border-left: 1px solid var(--pd-border);
+        }
+        .kpi:nth-child(n + 3) {
+          border-top: 1px solid var(--pd-border);
+        }
+        .sb {
+          grid-template-columns: 1fr 1fr;
+        }
+        .sb-i + .sb-i {
+          border-left: 0;
+        }
+        .sb-i:first-child {
+          grid-column: 1 / -1;
+          border-bottom: 1px solid var(--pd-border);
+          border-radius: 0;
+        }
+        .set {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .set-nav {
+          position: static;
+        }
+        .ld {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .ld .detail {
+          display: none;
+          position: static;
+        }
+        .ld.show-detail .detail {
+          display: flex;
+        }
+        .ld.show-detail .master {
+          display: none;
+        }
+        .ld-back {
+          display: inline-flex;
+        }
+        .search {
+          min-width: 0;
+          flex: 1 1 100%;
+        }
+        .srow,
+        .srow.head {
+          grid-template-columns: 12px minmax(0, 1fr) 96px;
+          grid-template-areas: 'd n v' 'd s s';
+          row-gap: 4px;
+          padding: 8px 16px;
+        }
+        .srow.head {
+          display: none;
+        }
+        .srow > .dot {
+          grid-area: d;
+          align-self: start;
+          margin-top: 6px;
+        }
+        .srow > .nm {
+          grid-area: n;
+        }
+        .srow > .val {
+          grid-area: v;
+        }
+        .srow > .h30 {
+          grid-area: s;
+        }
+        .srow > .vz,
+        .srow > .dl {
+          display: none;
+        }
+        .timeline li {
+          grid-template-columns: 76px 16px minmax(0, 1fr);
+        }
+        .timeline li::before {
+          left: 95px;
+        }
+        .dayrow,
+        .hours {
+          grid-template-columns: 84px minmax(0, 1fr) 64px;
+          gap: 8px;
+        }
+        .hbar {
+          grid-template-columns: minmax(0, 110px) minmax(0, 1fr) 72px;
+        }
+        .msg {
+          max-width: 90%;
+        }
+        .map {
+          min-height: 260px;
+        }
+        .ss-field input {
+          font-size: 15px;
+        }
+        .hide-phone {
+          display: none !important;
+        }
+      }
+      @media (min-width: 1024px) {
+        .only-phone {
+          display: none !important;
+        }
+      }
+
+      /* ----- Mock-only: the width switch and the phone stage ----- */
+      .mock-bar .cur {
+        font-weight: 700;
+      }
+      .seg-m {
+        display: inline-flex;
+        border: 1px solid var(--anno);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .mock-bar .seg-m button {
+        border: 0;
+        border-radius: 0;
+        min-height: 26px;
+        padding: 2px 10px;
+      }
+      .mock-bar .seg-m button[aria-pressed='true'] {
+        background: var(--anno);
+        color: var(--anno-bg);
+        font-weight: 700;
+      }
+      .phone-stage {
+        display: none;
+      }
+      .phone-mode > .app,
+      .phone-mode > .ptop,
+      .phone-mode > .pstat,
+      .phone-mode > .bottombar,
+      .phone-mode > .doc,
+      .phone-mode > .doc-like {
+        display: none !important;
+      }
+      .phone-mode .phone-stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 24px 16px 48px;
+      }
+      .phone-dev {
+        width: 414px;
+        height: 868px;
+        padding: 12px;
+        border-radius: 44px;
+        background: #050607;
+        box-shadow:
+          0 0 0 1px var(--pd-border),
+          var(--pd-shadow-overlay);
+      }
+      .phone-dev iframe {
+        width: 390px;
+        height: 844px;
+        border: 0;
+        border-radius: 32px;
+        background: var(--mat-sys-surface);
+        display: block;
+      }
+      .in-frame .mock-bar {
+        display: none;
+      }
+      .in-frame body {
+        overflow-x: hidden;
+      }
+
+      /* ----- Docs pages (design system, index): no app shell ----- */
+      .doc {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 32px 80px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .doc h2.t-headline {
+        margin-top: 16px;
+      }
+      .swatch {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+      .swatch .chip-c {
+        height: 56px;
+        border-radius: var(--pd-radius-small);
+        border: 1px solid var(--pd-border);
+      }
+      .swatch code,
+      .doc code {
+        font: 500 12px/16px var(--pd-font-mono);
+      }
+      @media (max-width: 1023px) {
+        .doc {
+          padding: 16px 16px 64px;
+        }
+      }
+
+      /* Section tabs that are links to other files */
+      .tabs a[role='tab'] {
+        height: 44px;
+        padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font: 600 14px/20px var(--pd-font);
+        color: var(--mat-sys-on-surface-variant);
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        white-space: nowrap;
+      }
+      .tabs a[role='tab'][aria-selected='true'] {
+        color: var(--mat-sys-on-surface);
+        border-bottom-color: var(--mat-sys-on-surface);
+      }
+
+      .hours i {
+        font-style: normal;
+      }
+
+      /* ===== This page ===== */
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-4-4" />
+      </symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24">
+        <path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z" />
+        <path d="M10 20a2 2 0 0 0 4 0" />
+      </symbol>
+      <symbol id="i-home" viewBox="0 0 24 24">
+        <path d="M4 11l8-7 8 7v9h-6v-6h-4v6H4z" />
+      </symbol>
+      <symbol id="i-ai" viewBox="0 0 24 24">
+        <path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" />
+        <path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" />
+      </symbol>
+      <symbol id="i-wallet" viewBox="0 0 24 24">
+        <rect x="3" y="6" width="18" height="13" rx="2" />
+        <path d="M3 10h18" />
+        <circle cx="16.5" cy="14.5" r="1" />
+      </symbol>
+      <symbol id="i-life" viewBox="0 0 24 24">
+        <path d="M3 12h4l2-5 4 10 2-5h6" />
+      </symbol>
+      <symbol id="i-task" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="16" height="16" rx="3" />
+        <path d="M8 12l3 3 5-6" />
+      </symbol>
+      <symbol id="i-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" />
+      </symbol>
+      <symbol id="i-code" viewBox="0 0 24 24">
+        <path d="M9 8l-4 4 4 4M15 8l4 4-4 4" />
+      </symbol>
+      <symbol id="i-game" viewBox="0 0 24 24">
+        <rect x="2" y="7" width="20" height="11" rx="5" />
+        <path d="M7 11v3M5.5 12.5h3M16 11.5h.01M18 13.5h.01" />
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24">
+        <path d="M12 3l8 3v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6z" />
+      </symbol>
+      <symbol id="i-server" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="7" rx="2" />
+        <rect x="3" y="13" width="18" height="7" rx="2" />
+        <path d="M7 7.5h.01M7 16.5h.01" />
+      </symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"
+        />
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14" />
+      </symbol>
+      <symbol id="i-note" viewBox="0 0 24 24">
+        <path d="M5 4h10l4 4v12H5z" />
+        <path d="M15 4v4h4M8 12h8M8 16h5" />
+      </symbol>
+      <symbol id="i-restart" viewBox="0 0 24 24">
+        <path d="M20 12a8 8 0 1 1-2.3-5.6" />
+        <path d="M20 4v5h-5" />
+      </symbol>
+      <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></symbol>
+      <symbol id="i-chevl" viewBox="0 0 24 24">
+        <path d="M15 6l-6 6 6 6" />
+      </symbol>
+      <symbol id="i-chevd" viewBox="0 0 24 24">
+        <path d="M6 9l6 6 6-6" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </symbol>
+      <symbol id="i-heart" viewBox="0 0 24 24">
+        <path
+          d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"
+        />
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8v4l3 2" />
+      </symbol>
+      <symbol id="i-book" viewBox="0 0 24 24">
+        <path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z" />
+        <path d="M5 17a3 3 0 0 1 3-3h11" />
+      </symbol>
+      <symbol id="i-music" viewBox="0 0 24 24">
+        <path d="M9 18V6l10-2v12" />
+        <circle cx="6.5" cy="18" r="2.5" />
+        <circle cx="16.5" cy="16" r="2.5" />
+      </symbol>
+      <symbol id="i-gift" viewBox="0 0 24 24">
+        <rect x="4" y="9" width="16" height="11" rx="1" />
+        <path
+          d="M3 9h18M12 9v11M12 9c-2-4-6-4-6-1.5S10 9 12 9s6 0 6-1.5S14 5 12 9"
+        />
+      </symbol>
+      <symbol id="i-backup" viewBox="0 0 24 24">
+        <path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z" />
+        <path d="M9.5 13.5l2 2 3.5-4" />
+      </symbol>
+      <symbol id="i-sync" viewBox="0 0 24 24">
+        <path
+          d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"
+        />
+      </symbol>
+      <symbol id="i-plug" viewBox="0 0 24 24">
+        <path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4" />
+      </symbol>
+      <symbol id="i-send" viewBox="0 0 24 24">
+        <path d="M21 4L3 11l6 2 2 6 3-4 5 4z" />
+        <path d="M9 13l12-9" />
+      </symbol>
+      <symbol id="i-cpu" viewBox="0 0 24 24">
+        <rect x="6" y="6" width="12" height="12" rx="2" />
+        <rect x="9.5" y="9.5" width="5" height="5" />
+        <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" />
+      </symbol>
+      <symbol id="i-disk" viewBox="0 0 24 24">
+        <ellipse cx="12" cy="6" rx="8" ry="3" />
+        <path
+          d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"
+        />
+      </symbol>
+      <symbol id="i-box" viewBox="0 0 24 24">
+        <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" />
+        <path d="M4 7.5l8 4.5 8-4.5M12 12v9" />
+      </symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24">
+        <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+        <path d="M11 18.5h2" />
+      </symbol>
+      <symbol id="i-laptop" viewBox="0 0 24 24">
+        <rect x="4" y="5" width="16" height="11" rx="1.5" />
+        <path d="M2 19h20" />
+      </symbol>
+      <symbol id="i-globe" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18" />
+      </symbol>
+      <symbol id="i-watch" viewBox="0 0 24 24">
+        <rect x="7" y="6" width="10" height="12" rx="3" />
+        <path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3M12 10v2.5l1.5 1" />
+      </symbol>
+      <symbol id="i-tune" viewBox="0 0 24 24">
+        <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+        <circle cx="16" cy="7" r="2" />
+        <circle cx="10" cy="17" r="2" />
+      </symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24">
+        <path d="M13 3L5 13h6l-1 8 8-10h-6z" />
+      </symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <path d="M12 4l9 16H3z" />
+        <path d="M12 10v4M12 17h.01" />
+      </symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24">
+        <path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z" />
+        <circle cx="12" cy="10" r="2" />
+      </symbol>
+      <symbol id="i-film" viewBox="0 0 24 24">
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M7 5v14M17 5v14M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4" />
+      </symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path
+          d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"
+        />
+      </symbol>
+      <symbol id="i-cloud" viewBox="0 0 24 24">
+        <path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z" />
+      </symbol>
+      <symbol id="i-target" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8" />
+        <circle cx="12" cy="12" r="3" />
+      </symbol>
+      <symbol id="i-log" viewBox="0 0 24 24">
+        <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />
+      </symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="7" height="7" rx="1.5" />
+        <rect x="13" y="4" width="7" height="7" rx="1.5" />
+        <rect x="4" y="13" width="7" height="7" rx="1.5" />
+        <rect x="13" y="13" width="7" height="7" rx="1.5" />
+      </symbol>
+      <symbol id="i-more" viewBox="0 0 24 24">
+        <circle cx="5" cy="12" r="1.2" />
+        <circle cx="12" cy="12" r="1.2" />
+        <circle cx="19" cy="12" r="1.2" />
+      </symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24">
+        <rect x="5" y="11" width="14" height="9" rx="2" />
+        <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+      </symbol>
+      <symbol id="i-key" viewBox="0 0 24 24">
+        <circle cx="8" cy="15" r="4" />
+        <path d="M11 12l9-9M17 6l3 3M15 8l2 2" />
+      </symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24">
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </symbol>
+      <symbol id="i-up" viewBox="0 0 24 24">
+        <path d="M12 19V5M6 11l6-6 6 6" />
+      </symbol>
+      <symbol id="i-down" viewBox="0 0 24 24">
+        <path d="M12 5v14M6 13l6 6 6-6" />
+      </symbol>
+      <symbol id="i-vpn" viewBox="0 0 24 24">
+        <path d="M12 3l8 3v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6z" />
+        <rect x="9" y="11" width="6" height="5" rx="1" />
+        <path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11" />
+      </symbol>
+      <symbol id="i-qr" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="6" height="6" rx="1" />
+        <rect x="14" y="4" width="6" height="6" rx="1" />
+        <rect x="4" y="14" width="6" height="6" rx="1" />
+        <path d="M14 14h2v2h-2zM18 14h2M14 18h2v2M18 18h2v2h-2" />
+      </symbol>
+      <symbol id="i-map" viewBox="0 0 24 24">
+        <path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" />
+        <path d="M9 4v14M15 6v14" />
+      </symbol>
+      <symbol id="i-star" viewBox="0 0 24 24">
+        <path
+          d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"
+        />
+      </symbol>
+      <symbol id="i-trophy" viewBox="0 0 24 24">
+        <path
+          d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8M9.5 17h5"
+        />
+      </symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24">
+        <path d="M4 5h16v11H9l-5 4z" />
+      </symbol>
+      <symbol id="i-pen" viewBox="0 0 24 24">
+        <path d="M4 20l4-1 11-11-3-3L5 16z" />
+        <path d="M14 6l3 3" />
+      </symbol>
+      <symbol id="i-camera" viewBox="0 0 24 24">
+        <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+        <circle cx="12" cy="13" r="3.5" />
+      </symbol>
+      <symbol id="i-image" viewBox="0 0 24 24">
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <circle cx="9" cy="10" r="1.6" />
+        <path d="M21 16l-5-5-8 8" />
+      </symbol>
+      <symbol id="i-cal" viewBox="0 0 24 24">
+        <rect x="4" y="5" width="16" height="15" rx="2" />
+        <path d="M4 10h16M9 3v4M15 3v4" />
+      </symbol>
+      <symbol id="i-filter" viewBox="0 0 24 24">
+        <path d="M4 5h16l-6 8v6l-4-2v-4z" />
+      </symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24">
+        <path d="M20 12a8 8 0 1 1-2.3-5.6" />
+        <path d="M20 4v5h-5" />
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
+      </symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24">
+        <path d="M12 20V9M7 14l5-5 5 5M5 4h14" />
+      </symbol>
+      <symbol id="i-link" viewBox="0 0 24 24">
+        <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" />
+        <path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
+      </symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+        <circle cx="12" cy="12" r="3" />
+      </symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24">
+        <rect x="8" y="8" width="12" height="12" rx="2" />
+        <path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" />
+      </symbol>
+      <symbol id="i-mic" viewBox="0 0 24 24">
+        <rect x="9" y="3" width="6" height="11" rx="3" />
+        <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="M5 12l5 5 9-10" />
+      </symbol>
+      <symbol id="i-edit" viewBox="0 0 24 24">
+        <path d="M4 20l4-1 11-11-3-3L5 16z" />
+      </symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24">
+        <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+      </symbol>
+      <symbol id="i-pill" viewBox="0 0 24 24">
+        <rect
+          x="3"
+          y="9"
+          width="18"
+          height="6"
+          rx="3"
+          transform="rotate(-45 12 12)"
+        />
+        <path d="M9 9l6 6" />
+      </symbol>
+      <symbol id="i-steth" viewBox="0 0 24 24">
+        <path d="M6 3v6a4 4 0 0 0 8 0V3M10 13v3a4 4 0 0 0 8 0v-2" />
+        <circle cx="18" cy="12" r="2" />
+      </symbol>
+      <symbol id="i-doc" viewBox="0 0 24 24">
+        <path d="M6 3h8l4 4v14H6z" />
+        <path d="M14 3v4h4M9 12h6M9 16h6" />
+      </symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24">
+        <path d="M4 20V4M4 20h16" />
+        <path d="M8 16v-4M12 16V8M16 16v-6" />
+      </symbol>
+      <symbol id="i-hub" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="2.5" />
+        <circle cx="5" cy="6" r="2" />
+        <circle cx="19" cy="6" r="2" />
+        <circle cx="5" cy="18" r="2" />
+        <circle cx="19" cy="18" r="2" />
+        <path d="M7 7l3 3.5M17 7l-3 3.5M7 17l3-3.5M17 17l-3-3.5" />
+      </symbol>
+      <symbol id="i-cake" viewBox="0 0 24 24">
+        <path
+          d="M4 20h16v-7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2zM4 15c2 1.5 4 1.5 5.3 0 1.4 1.5 4 1.5 5.4 0 1.3 1.5 3.3 1.5 5.3 0M12 11V7M12 4.5v.01"
+        />
+      </symbol>
+      <symbol id="i-umbrella" viewBox="0 0 24 24">
+        <path d="M3 12a9 9 0 0 1 18 0zM12 12v6a2 2 0 0 0 4 0" />
+      </symbol>
+      <symbol id="i-drop" viewBox="0 0 24 24">
+        <path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z" />
+      </symbol>
+      <symbol id="i-wind" viewBox="0 0 24 24">
+        <path d="M3 9h11a3 3 0 1 0-3-3M3 15h15a3 3 0 1 1-3 3" />
+      </symbol>
+      <symbol id="i-list" viewBox="0 0 24 24">
+        <path d="M9 6h11M9 12h11M9 18h11" />
+        <path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" />
+      </symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24">
+        <path d="M3 6h6l2 2h10v11H3z" />
+      </symbol>
+      <symbol id="i-play" viewBox="0 0 24 24">
+        <path d="M7 4l13 8-13 8z" />
+      </symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24">
+        <path d="M7 4h3v16H7zM14 4h3v16h-3z" />
+      </symbol>
+      <symbol id="i-timer" viewBox="0 0 24 24">
+        <circle cx="12" cy="13" r="8" />
+        <path d="M12 9v4l2 2M9 2h6" />
+      </symbol>
+      <symbol id="i-inbox" viewBox="0 0 24 24">
+        <path d="M3 13l3-8h12l3 8v6H3z" />
+        <path d="M3 13h5l1 3h6l1-3h5" />
+      </symbol>
+      <symbol id="i-wifi" viewBox="0 0 24 24">
+        <path
+          d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01"
+        />
+      </symbol>
+      <symbol id="i-battery" viewBox="0 0 24 24">
+        <rect x="2" y="7" width="18" height="10" rx="2" />
+        <path d="M22 11v2M5 10h8v4H5z" />
+      </symbol>
+      <symbol id="i-history" viewBox="0 0 24 24">
+        <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+        <path d="M3 3v5h5M12 8v4l3 2" />
+      </symbol>
+      <symbol id="i-story" viewBox="0 0 24 24">
+        <path
+          d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-3a3 3 0 0 0-3 3"
+        />
+        <path d="M20 4v14h-6" />
+      </symbol>
+      <symbol id="i-spell" viewBox="0 0 24 24">
+        <path d="M4 17l4-11 4 11M5.5 13h5M14 15l2.5 3L21 11" />
+      </symbol>
+      <symbol id="i-flag" viewBox="0 0 24 24">
+        <path d="M5 21V4M5 4h11l-2 4 2 4H5" />
+      </symbol>
+      <symbol id="i-medal" viewBox="0 0 24 24">
+        <circle cx="12" cy="15" r="5" />
+        <path d="M8 3l2.5 7.5M16 3l-2.5 7.5M12 13v4" />
+      </symbol>
+      <symbol id="i-sparkle" viewBox="0 0 24 24">
+        <path
+          d="M12 4v4M12 16v4M4 12h4M16 12h4M6.5 6.5l2.5 2.5M15 15l2.5 2.5M6.5 17.5L9 15M15 9l2.5-2.5"
+        />
+      </symbol>
+      <symbol id="i-spa" viewBox="0 0 24 24">
+        <path
+          d="M12 20c-5 0-8-3-8-8 3 0 6 1.5 8 4 2-2.5 5-4 8-4 0 5-3 8-8 8zM12 16c-2-3-2-7 0-11 2 4 2 8 0 11z"
+        />
+      </symbol>
+      <symbol id="i-brain" viewBox="0 0 24 24">
+        <path
+          d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3h0a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3h0a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"
+        />
+      </symbol>
+      <symbol id="i-rocket" viewBox="0 0 24 24">
+        <path
+          d="M12 15l-3-3c1-5 4-8 10-9-1 6-4 9-9 10zM9 12l-4 1-2 4 4-1M12 15l-1 4-4 2 1-4"
+        />
+        <circle cx="15" cy="9" r="1.3" />
+      </symbol>
+      <symbol id="i-monitor" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="12" rx="2" />
+        <path d="M8 20h8M12 16v4M6 11h3l2-3 2 5 2-2h3" />
+      </symbol>
+      <symbol id="i-screenshot" viewBox="0 0 24 24">
+        <path
+          d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"
+        />
+        <rect x="8" y="8" width="8" height="8" rx="1" />
+      </symbol>
+      <symbol id="i-rule" viewBox="0 0 24 24">
+        <path d="M4 6h6M4 12h4M4 18h6M14 6l6 6-6 6" />
+      </symbol>
+      <symbol id="i-thermo" viewBox="0 0 24 24">
+        <path d="M10 4a2 2 0 0 1 4 0v10a4 4 0 1 1-4 0z" />
+        <path d="M12 9v7" />
+      </symbol>
+      <symbol id="i-logout" viewBox="0 0 24 24">
+        <path d="M10 5H5v14h5M15 8l4 4-4 4M19 12H9" />
+      </symbol>
+      <symbol id="i-hand" viewBox="0 0 24 24">
+        <path
+          d="M7 11V6a1.5 1.5 0 0 1 3 0v4M10 10V4.5a1.5 1.5 0 0 1 3 0V10M13 10V5.5a1.5 1.5 0 0 1 3 0V12M16 9.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-1a6 6 0 0 1-5-3l-2.5-4a1.5 1.5 0 0 1 2.5-1.6L7 14"
+        />
+      </symbol>
+    </svg>
+    <nav class="mock-bar" aria-label="Макеты раунда 3">
+      <b>Раунд 3</b><a href="index.html">Все экраны</a
+      ><a href="30-activity.html" title="Активность">‹ назад</a
+      ><a href="32-monitoring.html" title="Сайты (мониторинг)">дальше ›</a
+      ><span class="cur">Проекты</span><span class="sp"></span
+      ><span class="seg-m" role="group" aria-label="Ширина"
+        ><button type="button" data-w="desk" aria-pressed="true">1440</button
+        ><button type="button" data-w="phone" aria-pressed="false">
+          390
+        </button></span
+      ><button type="button" id="mock-anno" aria-pressed="true">
+        Пояснения: вкл</button
+      ><button type="button" id="mock-theme">Тема: как в системе</button>
+    </nav>
+
+    <header class="ptop">
+      <span class="t-title">Проекты и сайты</span>
+      <button
+        class="icon-btn"
+        type="button"
+        aria-label="Поиск и команды"
+        data-open="palette"
+      >
+        <svg class="ic" aria-hidden="true"><use href="#i-search" /></svg>
+      </button>
+      <button
+        class="icon-btn"
+        type="button"
+        aria-label="Быстро записать"
+        data-open="quick"
+      >
+        <svg class="ic" aria-hidden="true"><use href="#i-plus" /></svg>
+      </button>
+      <button
+        class="icon-btn bell"
+        type="button"
+        aria-label="Уведомления: 3 новых"
+        data-open="bell"
+      >
+        <svg class="ic" aria-hidden="true"><use href="#i-bell" /></svg
+        ><span class="bdg">3</span>
+      </button>
+    </header>
+    <button
+      class="pstat"
+      type="button"
+      data-open="drawer"
+      data-tpl="t-alerts"
+      data-title="Тревоги"
+    >
+      <span class="dot crit"></span
+      ><span class="grow">2 сервиса молчат — LanguageTool, WakaTime</span
+      ><span class="t-label">Что с ними</span
+      ><svg class="ic s" aria-hidden="true"><use href="#i-chev" /></svg>
+    </button>
+    <div class="app">
+      <aside class="side" aria-label="Меню">
+        <a class="brand" href="10-home.html"
+          ><span class="logo"
+            ><svg class="ic" aria-hidden="true">
+              <use href="#i-bolt" /></svg></span
+          >Personal Dashboard</a
+        >
+        <button class="search-btn" type="button" data-open="palette">
+          <svg class="ic" aria-hidden="true"><use href="#i-search" /></svg
+          ><span>Поиск и команды</span><kbd>Ctrl K</kbd>
+        </button>
+        <nav class="nav-main" aria-label="Разделы">
+          <a class="nav-item" href="10-home.html"
+            ><svg class="ic" aria-hidden="true"><use href="#i-home" /></svg
+            >Главная</a
+          ><a class="nav-item" href="20-ai.html"
+            ><svg class="ic" aria-hidden="true"><use href="#i-ai" /></svg>AI</a
+          ><a class="nav-item" href="14-finance.html"
+            ><svg class="ic" aria-hidden="true"><use href="#i-wallet" /></svg
+            >Финансы</a
+          ><a class="nav-item" href="21-life.html"
+            ><svg class="ic" aria-hidden="true"><use href="#i-life" /></svg
+            >Жизнь</a
+          >
+          <details class="nav-group">
+            <summary>
+              <svg class="ic" aria-hidden="true"><use href="#i-task" /></svg
+              >Дела<span
+                class="dot warn"
+                title="Внутри есть что-то, что ждёт внимания"
+              ></span
+              ><span class="count">4</span
+              ><svg class="ic s gchev" aria-hidden="true">
+                <use href="#i-chevd" />
+              </svg>
+            </summary>
+            <a class="nav-item sub" href="13-tasks.html"
+              >Задачи<span class="count">3</span></a
+            ><a class="nav-item sub" href="40-automations.html"
+              >Автоматизации<span class="count">6</span></a
+            ><a class="nav-item sub" href="36-birthdays.html"
+              >Дни рождения<span class="dot warn"></span></a
+            ><a class="nav-item sub" href="35-screenshots.html">Скриншоты</a>
+          </details>
+          <details class="nav-group">
+            <summary>
+              <svg class="ic" aria-hidden="true"><use href="#i-user" /></svg
+              >Я<span
+                class="dot warn"
+                title="Внутри есть что-то, что ждёт внимания"
+              ></span
+              ><span class="count">4</span
+              ><svg class="ic s gchev" aria-hidden="true">
+                <use href="#i-chevd" />
+              </svg>
+            </summary>
+            <a class="nav-item sub" href="22-diary.html"
+              >Дневник<span class="dot warn"></span></a
+            ><a class="nav-item sub" href="23-psychology.html">Психология</a
+            ><a class="nav-item sub" href="15-health.html">Здоровье</a
+            ><a class="nav-item sub" href="24-habits.html">Привычки</a>
+          </details>
+          <details class="nav-group" open>
+            <summary>
+              <svg class="ic" aria-hidden="true"><use href="#i-code" /></svg
+              >Работа<span
+                class="dot crit"
+                title="Внутри есть что-то, что ждёт внимания"
+              ></span
+              ><span class="count">4</span
+              ><svg class="ic s gchev" aria-hidden="true">
+                <use href="#i-chevd" />
+              </svg>
+            </summary>
+            <a class="nav-item sub" href="31-projects.html" aria-current="page"
+              >Проекты и сайты</a
+            ><a class="nav-item sub" href="29-development.html">Разработка</a
+            ><a class="nav-item sub" href="30-activity.html">Активность</a
+            ><a class="nav-item sub" href="33-writing.html"
+              >Текст<span class="dot crit"></span
+            ></a>
+          </details>
+          <details class="nav-group">
+            <summary>
+              <svg class="ic" aria-hidden="true"><use href="#i-game" /></svg
+              >Досуг<span class="count">3</span
+              ><svg class="ic s gchev" aria-hidden="true">
+                <use href="#i-chevd" />
+              </svg>
+            </summary>
+            <a class="nav-item sub" href="27-music.html">Музыка</a
+            ><a class="nav-item sub" href="26-movies.html"
+              >Кино<span class="count">2</span></a
+            ><a class="nav-item sub" href="28-games.html">Игры</a>
+          </details>
+          <details class="nav-group">
+            <summary>
+              <svg class="ic" aria-hidden="true"><use href="#i-shield" /></svg
+              >Безопасность<span
+                class="dot warn"
+                title="Внутри есть что-то, что ждёт внимания"
+              ></span
+              ><span class="count">3</span
+              ><svg class="ic s gchev" aria-hidden="true">
+                <use href="#i-chevd" />
+              </svg>
+            </summary>
+            <a class="nav-item sub" href="25-vault.html">Пароли</a
+            ><a class="nav-item sub" href="34-security.html"
+              >Проверка<span class="dot warn"></span
+              ><span class="count">3</span></a
+            ><a class="nav-item sub" href="17-vpn.html">VPN</a>
+          </details>
+        </nav>
+        <div class="spacer"></div>
+        <nav class="nav-bottom" aria-label="Служебное">
+          <a class="nav-item" href="38-achievements.html"
+            ><span class="lvl" style="--v: 34"><b>12</b></span
+            >Ачивки<span class="count">182/512</span></a
+          >
+          <a class="nav-item" href="39-system.html"
+            ><svg class="ic" aria-hidden="true"><use href="#i-server" /></svg
+            >Система<span
+              class="dot crit"
+              style="margin-left: auto"
+              title="2 сервиса не отвечают"
+            ></span
+          ></a>
+          <a class="nav-item" href="16-settings.html"
+            ><svg class="ic" aria-hidden="true"><use href="#i-settings" /></svg
+            >Настройки</a
+          >
+        </nav>
+        <div class="user-row">
+          <span class="avatar" aria-hidden="true">Р</span
+          ><span class="grow"
+            ><span class="t-title-s">Роман</span
+            ><span class="t-label">roman@example.com</span></span
+          ><button
+            class="icon-btn"
+            type="button"
+            aria-label="Выйти"
+            title="Выйти"
+          >
+            <svg class="ic" aria-hidden="true"><use href="#i-logout" /></svg>
+          </button>
+        </div>
+      </aside>
+      <div class="main">
+        <header class="appbar">
+          <nav class="crumbs" aria-label="Где вы">
+            <span>Работа</span
+            ><svg class="ic s" aria-hidden="true"><use href="#i-chev" /></svg
+            ><b>Проекты и сайты</b>
+          </nav>
+          <div class="stbar" role="toolbar" aria-label="Состояние системы">
+            <button
+              type="button"
+              data-open="drawer"
+              data-tpl="t-health"
+              data-title="Здоровье системы"
+              title="Здоровье системы"
+            >
+              <span class="ring warn" style="--v: 86; --size: 20px"></span
+              ><span class="lb">Здоровье</span><b class="">86</b></button
+            ><button
+              type="button"
+              data-open="drawer"
+              data-tpl="t-alerts"
+              data-title="Тревоги"
+              title="Тревоги"
+            >
+              <span class="dot crit"></span><span class="lb">Тревоги</span
+              ><b class="crit">2 сервиса</b></button
+            ><button
+              type="button"
+              data-open="drawer"
+              data-tpl="t-mcp"
+              data-title="AI-клиенты (MCP)"
+              title="AI-клиенты (MCP)"
+            >
+              <span class="dot"></span><span class="lb">MCP</span
+              ><b class="">11:52</b></button
+            ><button
+              type="button"
+              data-open="drawer"
+              data-tpl="t-bot"
+              data-title="Telegram-бот"
+              title="Telegram-бот"
+            >
+              <span class="dot"></span><span class="lb">Бот</span
+              ><b class="">140 мс</b></button
+            ><button
+              type="button"
+              data-open="drawer"
+              data-tpl="t-backup"
+              data-title="Копии и где живут данные"
+              title="Копии и где живут данные"
+            >
+              <span class="dot"></span><span class="lb">Копия</span
+              ><b class="">03:00</b></button
+            ><button
+              type="button"
+              data-open="drawer"
+              data-tpl="t-sync"
+              data-title="Устройства и синхронизация"
+              title="Устройства и синхронизация"
+            >
+              <span class="dot"></span><span class="lb">Синхр.</span
+              ><b class="">12:22</b>
+            </button>
+          </div>
+          <button
+            class="icon-btn"
+            type="button"
+            aria-label="Быстро записать"
+            title="Быстро записать (Ctrl K → «>»)"
+            data-open="quick"
+          >
+            <svg class="ic" aria-hidden="true"><use href="#i-plus" /></svg>
+          </button>
+          <button
+            class="icon-btn bell"
+            type="button"
+            aria-label="Уведомления: 3 новых, 1 вопрос"
+            data-open="bell"
+          >
+            <svg class="ic" aria-hidden="true"><use href="#i-bell" /></svg
+            ><span class="bdg">3</span>
+          </button>
+        </header>
+        <main class="content">
+          <div class="wrap">
+            <div class="dnote">
+              <b>Что было не так.</b> «Проекты» и «Мониторинг» — два раздела,
+              хотя сайт почти всегда чей-то проект, а страница проекта и так
+              показывает его аптайм.
+              <b>Принцип: одно понятие — одно место.</b> Раздел «Проекты и
+              сайты» с двумя вкладками
+              <span class="mv" title="Переехало">Мониторинг стал вкладкой</span
+              >; сайт без проекта по-прежнему можно мониторить. Список проектов
+              и сводка выбранного рядом: часы, код, деньги, аптайм, задачи,
+              находки безопасности — всё, что разделы сообщают о проекте.
+            </div>
+            <div class="phead">
+              <div class="grow">
+                <div class="eyebrow">Работа</div>
+                <h1 class="t-display">Проекты и сайты</h1>
+                <p class="lede">
+                  Ваши сайты и сервисы — финансы, мониторинг, задачи и ИИ
+                  ссылаются на них.
+                </p>
+              </div>
+              <div class="acts">
+                <button class="btn filled" type="button">
+                  <svg class="ic s" aria-hidden="true">
+                    <use href="#i-plus" /></svg
+                  >Проект
+                </button>
+              </div>
+            </div>
+            <nav class="tabs" aria-label="Проекты и сайты">
+              <a role="tab" href="31-projects.html" aria-selected="true"
+                >Проекты <span class="count">5</span></a
+              ><a role="tab" href="32-monitoring.html" aria-selected="false"
+                >Сайты <span class="count">4</span></a
+              >
+            </nav>
+            <div class="chips">
+              <button class="chip on" type="button" aria-pressed="true">
+                Текущие 4</button
+              ><button class="chip" type="button" aria-pressed="false">
+                Завершённые 3</button
+              ><button class="chip" type="button" aria-pressed="false">
+                Все 7
+              </button>
+            </div>
+            <div class="ld">
+              <section class="card master p0">
+                <div class="list">
+                  <button type="button" class="row sel" data-detail>
+                    <span class="lead"
+                      ><svg class="ic" aria-hidden="true">
+                        <use href="#i-rocket" /></svg></span
+                    ><span class="grow"
+                      ><span class="t-title-s">personal-world.com</span
+                      ><br /><span class="t-label"
+                        >дашборд · 4 ч сегодня</span
+                      ></span
+                    ><span class="badge ok"
+                      ><span class="dot ok"></span>работает</span
+                    >
+                  </button>
+                  <button type="button" class="row" data-detail>
+                    <span class="lead"
+                      ><svg class="ic" aria-hidden="true">
+                        <use href="#i-rocket" /></svg></span
+                    ><span class="grow"
+                      ><span class="t-title-s">night-butler</span><br /><span
+                        class="t-label"
+                        >Hacktoberfest · закроется 25.10</span
+                      ></span
+                    ><span class="badge">закрыт</span>
+                  </button>
+                  <button type="button" class="row" data-detail>
+                    <span class="lead"
+                      ><svg class="ic" aria-hidden="true">
+                        <use href="#i-rocket" /></svg></span
+                    ><span class="grow"
+                      ><span class="t-title-s">Фриланс · Acme</span><br /><span
+                        class="t-label"
+                        >договор до 12.2026</span
+                      ></span
+                    ><span class="badge ok"
+                      ><span class="dot ok"></span>работает</span
+                    >
+                  </button>
+                  <button type="button" class="row" data-detail>
+                    <span class="lead"
+                      ><svg class="ic" aria-hidden="true">
+                        <use href="#i-rocket" /></svg></span
+                    ><span class="grow"
+                      ><span class="t-title-s">blog.roman.dev</span><br /><span
+                        class="t-label"
+                        >SSL через 9 дн.</span
+                      ></span
+                    ><span class="badge warn"
+                      ><span class="dot warn"></span>SSL</span
+                    >
+                  </button>
+                </div>
+              </section>
+              <aside class="card detail">
+                <button class="btn s ld-back" type="button" data-ld-back>
+                  <svg class="ic s" aria-hidden="true">
+                    <use href="#i-chevl" /></svg
+                  >К проектам
+                </button>
+                <div class="hstack">
+                  <div class="grow">
+                    <div class="t-title">personal-world.com</div>
+                    <div class="t-label">
+                      также: personal-dashboard, pd · https://personal-world.com
+                    </div>
+                  </div>
+                  <button class="icon-btn" type="button" aria-label="Изменить">
+                    <svg class="ic" aria-hidden="true">
+                      <use href="#i-edit" />
+                    </svg>
+                  </button>
+                </div>
+                <span class="seg2"
+                  ><button type="button" aria-pressed="false">30 дн.</button
+                  ><button type="button" aria-pressed="true">90 дн.</button
+                  ><button type="button" aria-pressed="false">Год</button></span
+                >
+                <div class="kpis" style="padding: 0">
+                  <div class="kpi">
+                    <span class="t-label">За компьютером</span
+                    ><span class="kv"
+                      ><span class="num-l">142</span
+                      ><span class="t-label">ч</span></span
+                    >
+                  </div>
+                  <div class="kpi">
+                    <span class="t-label">В коде</span
+                    ><span class="kv"
+                      ><span class="num-l">96</span
+                      ><span class="t-label">ч</span></span
+                    >
+                  </div>
+                  <div class="kpi">
+                    <span class="t-label">Доход</span
+                    ><span class="kv"><span class="num-l">0</span></span>
+                  </div>
+                  <div class="kpi">
+                    <span class="t-label">Расходы</span
+                    ><span class="kv"
+                      ><span class="num-l">312</span
+                      ><span class="t-label">PLN</span></span
+                    >
+                  </div>
+                </div>
+                <span class="t-label"
+                  >За час работы: дохода 0 · расходов 2,2 PLN (Hetzner, домен,
+                  DeepSeek)</span
+                >
+                <div class="list">
+                  <div class="row">
+                    <div class="grow">
+                      <div class="t-title-s">Аптайм 30 дн.</div>
+                      <div class="t-label">1 падение · 6 мин</div>
+                    </div>
+                    <span class="val">99,98 %</span>
+                  </div>
+                  <div class="row">
+                    <div class="grow">
+                      <div class="t-title-s">Задачи</div>
+                      <div class="t-label">открыто 9 · выполнено 31</div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="grow">
+                      <div class="t-title-s">Безопасность</div>
+                      <div class="t-label">2 находки · средне</div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="grow">
+                      <div class="t-title-s">Звёзды</div>
+                      <div class="t-label">+41 за 90 дней</div>
+                    </div>
+                  </div>
+                </div>
+                <details class="fold">
+                  <summary>
+                    <svg class="ic s" aria-hidden="true">
+                      <use href="#i-chev" /></svg
+                    >Последние изменения и по месяцам
+                  </summary>
+                  <div class="row">
+                    <div class="grow">
+                      <div class="t-title-s">
+                        Последний коммит перед падением 28.09
+                      </div>
+                      <div class="t-label">
+                        fix(core): export RealtimeService…
+                      </div>
+                    </div>
+                  </div>
+                  <div class="bars" style="--h: 60px" aria-hidden="true">
+                    <span class="b"
+                      ><i style="height: 40%"></i><em>авг</em></span
+                    ><span class="b"
+                      ><i style="height: 60%"></i><em>сен</em></span
+                    ><span class="b"
+                      ><i style="height: 72%"></i><em>окт</em></span
+                    ><span class="b"
+                      ><i style="height: 80%"></i><em>ноя</em></span
+                    >
+                  </div>
+                </details>
+              </aside>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <nav class="bottombar" aria-label="Главное меню">
+      <a href="10-home.html"
+        ><span class="pill"
+          ><svg class="ic" aria-hidden="true"><use href="#i-home" /></svg></span
+        >Главная</a
+      ><a href="20-ai.html"
+        ><span class="pill"
+          ><svg class="ic" aria-hidden="true"><use href="#i-ai" /></svg></span
+        >AI</a
+      ><a href="14-finance.html"
+        ><span class="pill"
+          ><svg class="ic" aria-hidden="true">
+            <use href="#i-wallet" /></svg></span
+        >Финансы</a
+      ><a href="21-life.html"
+        ><span class="pill"
+          ><svg class="ic" aria-hidden="true"><use href="#i-life" /></svg></span
+        >Жизнь</a
+      >
+      <a href="#" data-open="more" aria-current="page"
+        ><span class="pill"
+          ><svg class="ic" aria-hidden="true"><use href="#i-menu" /></svg
+          ><span class="dot crit"></span></span
+        >Ещё</a
+      >
+    </nav>
+
+    <dialog id="palette" aria-label="Поиск и команды">
+      <div class="pal-input">
+        <svg class="ic" aria-hidden="true"><use href="#i-search" /></svg
+        ><input
+          type="text"
+          value=""
+          placeholder="Найти или сделать… «>» команда · «/» раздел · «?» спросить · «~» телеметрия"
+          aria-label="Поиск и команды"
+        /><kbd>Esc</kbd>
+      </div>
+      <div class="pal-list">
+        <div class="eyebrow">Сделать</div>
+        <button
+          class="pal-item sel"
+          type="button"
+          data-open="quick"
+          data-tab="tx"
+        >
+          <svg class="ic" aria-hidden="true"><use href="#i-wallet" /></svg
+          ><span class="grow">Записать операцию</span><kbd>&gt; расход</kbd>
+        </button>
+        <button
+          class="pal-item"
+          type="button"
+          data-open="quick"
+          data-tab="task"
+        >
+          <svg class="ic" aria-hidden="true"><use href="#i-task" /></svg
+          ><span class="grow">Добавить задачу</span><kbd>&gt; задача</kbd>
+        </button>
+        <button
+          class="pal-item"
+          type="button"
+          data-open="quick"
+          data-tab="note"
+        >
+          <svg class="ic" aria-hidden="true"><use href="#i-book" /></svg
+          ><span class="grow">В дневник</span><kbd>&gt; дневник</kbd>
+        </button>
+        <button class="pal-item" type="button">
+          <svg class="ic" aria-hidden="true"><use href="#i-clock" /></svg
+          ><span class="grow">Напомнить через час</span><kbd>&gt; напомни</kbd>
+        </button>
+        <button class="pal-item" type="button">
+          <svg class="ic" aria-hidden="true"><use href="#i-target" /></svg
+          ><span class="grow">Фокус 25 минут</span><kbd>&gt; фокус</kbd>
+        </button>
+        <button class="pal-item" type="button">
+          <svg class="ic" aria-hidden="true"><use href="#i-film" /></svg
+          ><span class="grow">Найти фильм в «Хочу посмотреть»</span
+          ><kbd>&gt; фильм</kbd>
+        </button>
+        <div class="eyebrow">Недавнее</div>
+        <a class="pal-item" href="14-finance.html"
+          ><svg class="ic" aria-hidden="true"><use href="#i-wallet" /></svg
+          ><span class="grow">Финансы · Обзор</span
+          ><span class="t-label">2 мин назад</span></a
+        >
+        <a class="pal-item" href="12-telemetry.html"
+          ><svg class="ic" aria-hidden="true"><use href="#i-search" /></svg
+          ><span class="grow">Телеметрия · «когда я ложился позже часа»</span
+          ><span class="t-label">вчера</span></a
+        >
+        <a class="pal-item" href="22-diary.html"
+          ><svg class="ic" aria-hidden="true"><use href="#i-book" /></svg
+          ><span class="grow">Дневник · 03.11</span
+          ><span class="t-label">вчера</span></a
+        >
+        <div class="eyebrow">Найдено в данных</div>
+        <a class="pal-item" href="22-diary.html"
+          ><svg class="ic" aria-hidden="true"><use href="#i-book" /></svg
+          ><span class="grow"
+            >«…позвонить бабе Тоне до четверга…»
+            <span class="t-label">Дневник · 29.10</span></span
+          ></a
+        >
+        <a class="pal-item" href="14-finance.html"
+          ><svg class="ic" aria-hidden="true"><use href="#i-wallet" /></svg
+          ><span class="grow"
+            >Żabka · −36,98 PLN
+            <span class="t-label">Финансы · сегодня</span></span
+          ></a
+        >
+        <div class="eyebrow">Спросить</div>
+        <a class="pal-item" href="20-ai.html"
+          ><svg class="ic" aria-hidden="true"><use href="#i-ai" /></svg
+          ><span class="grow">? Хватит ли денег до 10-го</span
+          ><span class="t-label answer">≈ 150 PLN</span></a
+        >
+        <a class="pal-item" href="12-telemetry.html"
+          ><svg class="ic" aria-hidden="true"><use href="#i-chart" /></svg
+          ><span class="grow"
+            >~ Когда я ложился позже часа <span class="new">новое</span></span
+          ><span class="t-label">телеметрия</span></a
+        >
+        <div class="eyebrow">Оформление</div>
+        <button class="pal-item" type="button" id="pal-theme">
+          <svg class="ic" aria-hidden="true"><use href="#i-sun" /></svg
+          ><span class="grow">Тема: светлая / тёмная / как на устройстве</span>
+        </button>
+      </div>
+      <div class="pal-hint t-label">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> выбрать</span
+        ><span><kbd>Enter</kbd> открыть</span
+        ><span><kbd>&gt;</kbd> команды</span><span><kbd>/</kbd> разделы</span
+        ><span><kbd>?</kbd> AI</span><span><kbd>~</kbd> телеметрия</span>
+      </div>
+    </dialog>
+
+    <dialog id="quick" aria-labelledby="quick-t">
+      <div class="dlg-head">
+        <span class="t-title" id="quick-t">Быстро записать</span
+        ><span class="t-label">Ctrl K → «&gt;»</span
+        ><button class="icon-btn" type="button" aria-label="Закрыть" data-close>
+          <svg class="ic" aria-hidden="true"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div class="dlg-body">
+        <div class="seg" role="tablist" aria-label="Что записать">
+          <button type="button" role="tab" aria-selected="true" data-q="tx">
+            <svg class="ic s" aria-hidden="true"><use href="#i-wallet" /></svg
+            >Операция
+          </button>
+          <button type="button" role="tab" aria-selected="false" data-q="task">
+            <svg class="ic s" aria-hidden="true"><use href="#i-task" /></svg
+            >Задача
+          </button>
+          <button type="button" role="tab" aria-selected="false" data-q="note">
+            <svg class="ic s" aria-hidden="true"><use href="#i-book" /></svg
+            >Дневник
+          </button>
+        </div>
+        <div role="tabpanel" id="q-tx">
+          <div class="field">
+            <label class="t-label" for="q-amount">Сумма, PLN</label
+            ><input
+              id="q-amount"
+              class="amount"
+              inputmode="decimal"
+              value="36,98"
+            />
+          </div>
+          <div class="chips" style="margin-top: 12px" aria-label="Тип">
+            <button class="chip on" type="button" aria-pressed="true">
+              Расход</button
+            ><button class="chip" type="button" aria-pressed="false">
+              Доход
+            </button>
+          </div>
+          <div class="t-label" style="margin: 12px 0 8px">
+            Категория — AI предлагает по названию
+          </div>
+          <div class="chips">
+            <button class="chip on" type="button" aria-pressed="true">
+              Продукты</button
+            ><button class="chip" type="button" aria-pressed="false">
+              Транспорт</button
+            ><button class="chip" type="button" aria-pressed="false">
+              Кафе</button
+            ><button class="chip" type="button" aria-pressed="false">
+              Связь
+            </button>
+          </div>
+          <div class="field" style="margin-top: 12px">
+            <label class="t-label" for="q-who">Где</label
+            ><input id="q-who" value="Żabka" />
+          </div>
+          <p class="t-label" style="margin-top: 8px">
+            PKO ••6677 · сегодня · остаток станет 3 607,68
+          </p>
+        </div>
+        <div role="tabpanel" id="q-task" hidden>
+          <div class="field">
+            <label class="t-label" for="q-tt">Что сделать</label
+            ><input id="q-tt" value="Записаться на анализ крови" />
+          </div>
+          <div class="chips" style="margin-top: 12px">
+            <button class="chip on" type="button" aria-pressed="true">
+              Сегодня</button
+            ><button class="chip" type="button" aria-pressed="false">
+              Завтра</button
+            ><button class="chip" type="button" aria-pressed="false">
+              На неделе</button
+            ><button class="chip" type="button" aria-pressed="false">
+              Без срока
+            </button>
+          </div>
+          <p class="t-label" style="margin-top: 8px">
+            Попадёт во «Входящие». «завтра в 9» в тексте — станет сроком и
+            напоминанием.
+          </p>
+        </div>
+        <div role="tabpanel" id="q-note" hidden>
+          <div class="field">
+            <label class="t-label" for="q-text"
+              >Добавить к записи за сегодня</label
+            ><textarea id="q-text" rows="4">
+Спросить у врача про пульс в покое — браслет пишет 58–61</textarea>
+          </div>
+          <p class="t-label" style="margin-top: 8px">
+            Допишется в конец записи за 04.11. Фото — перетащите сюда.
+          </p>
+        </div>
+      </div>
+      <div class="dlg-foot">
+        <button class="btn" type="button" data-close>Отмена</button
+        ><button class="btn filled" type="button" data-close>Записать</button>
+      </div>
+    </dialog>
+
+    <dialog id="bell" aria-labelledby="bell-t">
+      <div class="dlg-head">
+        <span class="t-title" id="bell-t">Уведомления</span
+        ><button class="btn s" type="button">Прочитать всё</button
+        ><button class="icon-btn" type="button" aria-label="Закрыть" data-close>
+          <svg class="ic" aria-hidden="true"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div class="dlg-body" style="gap: 8px">
+        <div class="eyebrow">Ждут ответа · 1</div>
+        <div class="qcard">
+          <div class="t-title-s">Как вам «Анора»?</div>
+          <div class="t-label">Кино · досмотрено вчера в 23:41</div>
+          <div class="chips">
+            <button class="chip" type="button">Отлично</button
+            ><button class="chip" type="button">Нормально</button
+            ><button class="chip" type="button">Не моё</button>
+          </div>
+          <div class="t-label">
+            Ответ закроет этот вопрос и в Telegram, и на телефоне.
+          </div>
+        </div>
+        <div class="eyebrow">Последние</div>
+        <div class="list">
+          <a class="row" href="41-notifications.html"
+            ><span class="dot crit"></span>
+            <div class="grow">
+              <div class="t-title-s">LanguageTool не отвечает</div>
+              <div class="t-label">Система · 17 ч</div>
+            </div>
+            <span class="t-label">08:02</span></a
+          >
+          <a class="row" href="41-notifications.html"
+            ><span class="dot warn"></span>
+            <div class="grow">
+              <div class="t-title-s">Бюджет «Кафе» потрачен на 80 %</div>
+              <div class="t-label">Финансы</div>
+            </div>
+            <span class="t-label">вчера</span></a
+          >
+          <a class="row" href="41-notifications.html"
+            ><span class="dot off"></span>
+            <div class="grow">
+              <div class="t-title-s">Новая ачивка: «Неделя без пропусков»</div>
+              <div class="t-label">Ачивки · +120 XP</div>
+            </div>
+            <span class="t-label">вчера</span></a
+          >
+        </div>
+        <a
+          class="btn tonal s"
+          href="41-notifications.html"
+          style="align-self: flex-start"
+          >Все уведомления</a
+        >
+      </div>
+    </dialog>
+
+    <dialog id="more" aria-labelledby="more-t">
+      <div class="dlg-head">
+        <span class="t-title" id="more-t">Все разделы</span
+        ><button class="icon-btn" type="button" aria-label="Закрыть" data-close>
+          <svg class="ic" aria-hidden="true"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div class="dlg-body" style="gap: 4px">
+        <details class="nav-group">
+          <summary>
+            <svg class="ic" aria-hidden="true"><use href="#i-task" /></svg
+            >Дела<span class="count">4</span
+            ><svg class="ic s gchev" aria-hidden="true">
+              <use href="#i-chevd" />
+            </svg>
+          </summary>
+          <a class="nav-item sub" href="13-tasks.html"
+            >Задачи<span class="count">3</span></a
+          ><a class="nav-item sub" href="40-automations.html"
+            >Автоматизации<span class="count">6</span></a
+          ><a class="nav-item sub" href="36-birthdays.html"
+            >Дни рождения<span class="dot warn"></span></a
+          ><a class="nav-item sub" href="35-screenshots.html">Скриншоты</a>
+        </details>
+        <details class="nav-group">
+          <summary>
+            <svg class="ic" aria-hidden="true"><use href="#i-user" /></svg
+            >Я<span class="count">4</span
+            ><svg class="ic s gchev" aria-hidden="true">
+              <use href="#i-chevd" />
+            </svg>
+          </summary>
+          <a class="nav-item sub" href="22-diary.html"
+            >Дневник<span class="dot warn"></span></a
+          ><a class="nav-item sub" href="23-psychology.html">Психология</a
+          ><a class="nav-item sub" href="15-health.html">Здоровье</a
+          ><a class="nav-item sub" href="24-habits.html">Привычки</a>
+        </details>
+        <details class="nav-group">
+          <summary>
+            <svg class="ic" aria-hidden="true"><use href="#i-code" /></svg
+            >Работа<span class="count">4</span
+            ><svg class="ic s gchev" aria-hidden="true">
+              <use href="#i-chevd" />
+            </svg>
+          </summary>
+          <a class="nav-item sub" href="31-projects.html">Проекты и сайты</a
+          ><a class="nav-item sub" href="29-development.html">Разработка</a
+          ><a class="nav-item sub" href="30-activity.html">Активность</a
+          ><a class="nav-item sub" href="33-writing.html"
+            >Текст<span class="dot crit"></span
+          ></a>
+        </details>
+        <details class="nav-group">
+          <summary>
+            <svg class="ic" aria-hidden="true"><use href="#i-game" /></svg
+            >Досуг<span class="count">3</span
+            ><svg class="ic s gchev" aria-hidden="true">
+              <use href="#i-chevd" />
+            </svg>
+          </summary>
+          <a class="nav-item sub" href="27-music.html">Музыка</a
+          ><a class="nav-item sub" href="26-movies.html"
+            >Кино<span class="count">2</span></a
+          ><a class="nav-item sub" href="28-games.html">Игры</a>
+        </details>
+        <details class="nav-group">
+          <summary>
+            <svg class="ic" aria-hidden="true"><use href="#i-shield" /></svg
+            >Безопасность<span class="count">3</span
+            ><svg class="ic s gchev" aria-hidden="true">
+              <use href="#i-chevd" />
+            </svg>
+          </summary>
+          <a class="nav-item sub" href="25-vault.html">Пароли</a
+          ><a class="nav-item sub" href="34-security.html"
+            >Проверка<span class="dot warn"></span
+            ><span class="count">3</span></a
+          ><a class="nav-item sub" href="17-vpn.html">VPN</a>
+        </details>
+        <div class="divider"></div>
+        <a class="nav-item" href="38-achievements.html"
+          ><span class="lvl" style="--v: 34"><b>12</b></span
+          >Ачивки<span class="count">182/512</span></a
+        >
+        <a class="nav-item" href="39-system.html"
+          ><svg class="ic" aria-hidden="true"><use href="#i-server" /></svg
+          >Система<span class="dot crit" style="margin-left: auto"></span
+        ></a>
+        <a class="nav-item" href="37-weather.html"
+          ><svg class="ic" aria-hidden="true"><use href="#i-sun" /></svg
+          >Погода</a
+        >
+        <a class="nav-item" href="16-settings.html"
+          ><svg class="ic" aria-hidden="true"><use href="#i-settings" /></svg
+          >Настройки</a
+        >
+      </div>
+    </dialog>
+
+    <dialog id="drawer" aria-labelledby="drawer-t">
+      <div class="dlg-head">
+        <span class="t-title" id="drawer-t">Подробнее</span
+        ><button class="icon-btn" type="button" aria-label="Закрыть" data-close>
+          <svg class="ic" aria-hidden="true"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div class="dlg-body" id="drawer-body"></div>
+    </dialog>
+
+    <template id="t-health">
+      <div class="kv">
+        <span class="ring warn" style="--v: 86; --size: 56px"
+          ><span>86</span></span
+        >
+        <div>
+          <div class="t-title">Внимание</div>
+          <div class="t-label">90+ — норма, 70–89 — внимание, ниже — плохо</div>
+        </div>
+      </div>
+      <p class="t-body">
+        Оценка <span class="new">новое</span> складывается из того, что уже
+        собирается. Каждая потеря баллов — ссылка на причину.
+      </p>
+      <div class="list">
+        <div class="row">
+          <span class="dot crit"></span>
+          <div class="grow">
+            <div class="t-title-s">2 сервиса не отвечают</div>
+            <div class="t-label">
+              LanguageTool с 31.10 18:53, WakaTime с 07:40
+            </div>
+          </div>
+          <span class="val crit">−12</span>
+        </div>
+        <div class="row">
+          <span class="dot warn"></span>
+          <div class="grow">
+            <div class="t-title-s">
+              Браслет ещё ни разу не синхронизировался
+            </div>
+            <div class="t-label">Google Health подключён, данных нет</div>
+          </div>
+          <span class="val warn">−2</span>
+        </div>
+        <div class="row">
+          <span class="dot"></span>
+          <div class="grow">
+            <div class="t-title-s">Фоновые задачи 45 / 45</div>
+            <div class="t-label">последняя ошибка — 3 дня назад</div>
+          </div>
+          <span class="val">0</span>
+        </div>
+        <div class="row">
+          <span class="dot"></span>
+          <div class="grow">
+            <div class="t-title-s">Копия данных свежая</div>
+            <div class="t-label">
+              сегодня 03:00, восстановление проверено 27.10
+            </div>
+          </div>
+          <span class="val">0</span>
+        </div>
+        <div class="row">
+          <span class="dot"></span>
+          <div class="grow">
+            <div class="t-title-s">Сайты, SSL, синхронизация</div>
+            <div class="t-label">всё в норме</div>
+          </div>
+          <span class="val">0</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow"><div class="t-title-s">Оценка за 14 дней</div></div>
+        <svg
+          class="spark"
+          style="width: 96px; height: 24px"
+          data-v="96,96,94,98,98,92,96,96,90,94,96,98,88,86"
+          data-c="w"
+        ></svg
+        ><span class="val">86</span>
+      </div>
+      <a class="btn tonal" href="39-system.html">Открыть «Систему»</a>
+    </template>
+
+    <template id="t-alerts">
+      <p class="t-body">
+        Две тревоги — из 5 записей журнала. Повторы одной ошибки сложены в одну
+        строку.
+      </p>
+      <div class="list">
+        <div class="row">
+          <span class="dot crit"></span>
+          <div class="grow">
+            <div class="t-title-s">LanguageTool не отвечает</div>
+            <div class="t-label">
+              17 ч · проверка текста не работает в «Тексте», расширении и
+              приложении
+            </div>
+          </div>
+          <span class="badge crit">×231</span>
+        </div>
+        <div class="row">
+          <span class="dot crit"></span>
+          <div class="grow">
+            <div class="t-title-s">WakaTime не отвечает</div>
+            <div class="t-label">
+              с 07:40 · время кодинга за сегодня неполное
+            </div>
+          </div>
+          <span class="badge crit">×3</span>
+        </div>
+        <div class="row">
+          <span class="dot warn"></span>
+          <div class="grow">
+            <div class="t-title-s">Медленный ответ банка</div>
+            <div class="t-label">PKO, 12:15 · 4,1 с · прошло</div>
+          </div>
+          <span class="badge warn">×1</span>
+        </div>
+      </div>
+      <div class="chips">
+        <button
+          class="btn filled s"
+          type="button"
+          data-open="quick"
+          data-tab="restart"
+        >
+          <svg class="ic s" aria-hidden="true"><use href="#i-restart" /></svg
+          >Перезапустить LanguageTool</button
+        ><button class="btn outlined s" type="button">
+          Проверить WakaTime
+        </button>
+      </div>
+    </template>
+
+    <template id="t-mcp">
+      <div class="kv">
+        <span class="badge ok"><span class="dot"></span>Отвечает</span
+        ><span class="t-label">2 токена · только чтение</span>
+      </div>
+      <div class="list">
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-plug" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Claude Code</div>
+            <div class="t-label">
+              последний вызов 11:52 · tasks.list · 140 мс
+            </div>
+          </div>
+          <span class="val">36 сег.</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-plug" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Телефон · ассистент</div>
+            <div class="t-label">последний вызов вчера 22:10</div>
+          </div>
+          <span class="val">4</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow"><div class="t-title-s">Вызовы за 14 дней</div></div>
+        <svg
+          class="spark"
+          style="width: 96px; height: 24px"
+          data-v="4,9,0,12,18,7,22,30,11,5,16,28,40,36"
+        ></svg
+        ><span class="val">36</span>
+      </div>
+      <p class="t-label">
+        Время последнего вызова уже хранится (<code>lastUsedAt</code> токена).
+        Число вызовов и задержка — <span class="new">новое</span>.
+      </p>
+    </template>
+
+    <template id="t-bot">
+      <div class="kv">
+        <span class="badge ok"><span class="dot"></span>На связи</span
+        ><span class="t-label">пинг 140 мс <span class="new">новое</span></span>
+      </div>
+      <div class="list">
+        <div class="row">
+          <div class="grow">
+            <div class="t-title-s">Доставлено за сутки</div>
+            <div class="t-label">
+              утренний дайджест 08:30, 3 напоминания о лекарствах, браслет
+            </div>
+          </div>
+          <span class="val">11</span>
+        </div>
+        <div class="row">
+          <div class="grow"><div class="t-title-s">Не дошло</div></div>
+          <span class="val">0</span>
+        </div>
+        <div class="row">
+          <div class="grow"><div class="t-title-s">Ждут отправки</div></div>
+          <span class="val">0</span>
+        </div>
+        <div class="row">
+          <div class="grow">
+            <div class="t-title-s">Последняя команда</div>
+            <div class="t-label">«/d» — запись в дневник</div>
+          </div>
+          <span class="val">08:31</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="grow"><div class="t-title-s">Уведомлений в день</div></div>
+        <svg
+          class="spark"
+          style="width: 96px; height: 24px"
+          data-v="9,12,10,14,11,8,13,12,10,11,9,12,10,11"
+        ></svg
+        ><span class="val">11</span>
+      </div>
+    </template>
+
+    <template id="t-backup">
+      <div class="kv">
+        <span class="badge ok"><span class="dot"></span>Свежая</span
+        ><span class="t-label">сегодня 03:00 · 14 копий на сервере</span>
+      </div>
+      <div class="list">
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-server" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Копия на сервере</div>
+            <div class="t-label">
+              ежедневно; проверка восстановления — раз в неделю
+            </div>
+          </div>
+          <span class="val">03:00</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-laptop" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Копия на компьютере</div>
+            <div class="t-label">переживёт потерю сервера</div>
+          </div>
+          <span class="val">04:12</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-restart" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Восстановление проверено</div>
+            <div class="t-label">копия открылась, таблицы на месте</div>
+          </div>
+          <span class="val">27.10</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-lock" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Где живут данные</div>
+            <div class="t-label">
+              свой сервер Hetzner + этот компьютер; пароли зашифрованы на
+              устройстве
+            </div>
+          </div>
+          <span class="badge">2 места</span>
+        </div>
+      </div>
+      <div
+        class="hs"
+        style="height: 14px"
+        data-h="3333333333333t"
+        aria-label="14 дней копий: все на месте"
+      ></div>
+      <div class="chips">
+        <a class="btn tonal s" href="16-settings.html#tab=data"
+          >Выгрузить всё (ZIP)</a
+        ><span class="t-label">JSON, Markdown, CSV</span>
+      </div>
+    </template>
+
+    <template id="t-sync">
+      <div class="kv">
+        <span class="badge ok"><span class="dot"></span>Совпадает</span
+        ><span class="t-label">последняя 12:22 · ничего не ждёт</span>
+      </div>
+      <div class="list">
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-phone" /></svg>
+          <div class="grow">
+            <div class="t-title-s">REDMI 17</div>
+            <div class="t-label">отправил 12:15 · очередь пуста</div>
+          </div>
+          <span class="val">8 мин</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-laptop" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Компьютер</div>
+            <div class="t-label">отправил 12:23</div>
+          </div>
+          <span class="val">1 мин</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-globe" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Расширение Chrome</div>
+            <div class="t-label">отправило 12:23</div>
+          </div>
+          <span class="val">1 мин</span>
+        </div>
+        <div class="row">
+          <svg class="ic" aria-hidden="true"><use href="#i-watch" /></svg>
+          <div class="grow">
+            <div class="t-title-s">Браслет</div>
+            <div class="t-label">ещё ни разу</div>
+          </div>
+          <span class="badge warn">нет данных</span>
+        </div>
+      </div>
+    </template>
+    <script>
+      (() => {
+        const root = document.documentElement;
+        const body = document.body;
+        const qs = new URLSearchParams(location.search);
+        const inFrame = qs.has('frame');
+        const store = (k, v) => {
+          try {
+            if (v === undefined) return localStorage.getItem(k);
+            localStorage.setItem(k, v);
+          } catch (e) {
+            return null;
+          }
+        };
+
+        // Theme: system, light, dark. A phone frame takes it from its address.
+        const order = ['', 'light', 'dark'];
+        const names = {'': 'как в системе', light: 'светлая', dark: 'тёмная'};
+        const setTheme = t => {
+          if (t) root.dataset.theme = t;
+          else delete root.dataset.theme;
+          const tb = document.getElementById('mock-theme');
+          if (tb) tb.textContent = 'Тема: ' + names[t];
+        };
+        let theme = inFrame ? qs.get('theme') || '' : store('r3-theme') || '';
+        setTheme(theme);
+
+        // Designer notes on/off.
+        const ab = document.getElementById('mock-anno');
+        const setAnno = on => {
+          body.classList.toggle('anno-on', on);
+          if (ab) {
+            ab.setAttribute('aria-pressed', on);
+            ab.textContent = 'Пояснения: ' + (on ? 'вкл' : 'выкл');
+          }
+        };
+        let anno = inFrame ? qs.get('anno') !== '0' : store('r3-anno') !== '0';
+        setAnno(anno);
+
+        // Width: 1440 (this window) or 390 (the same file in a phone-sized frame).
+        let stage = null;
+        const frameSrc = () =>
+          location.pathname +
+          '?frame=1&theme=' +
+          theme +
+          '&anno=' +
+          (anno ? '1' : '0') +
+          location.hash;
+        const setWidth = w => {
+          document
+            .querySelectorAll('.seg-m [data-w]')
+            .forEach(b => b.setAttribute('aria-pressed', b.dataset.w === w));
+          body.classList.toggle('phone-mode', w === 'phone');
+          if (w === 'phone') {
+            if (!stage) {
+              stage = document.createElement('div');
+              stage.className = 'phone-stage';
+              stage.innerHTML =
+                '<div class="phone-dev"><iframe title="Тот же экран шириной 390 px"></iframe></div><p class="t-label">390 × 844 · тот же файл, телефонная раскладка. Прокручивается внутри.</p>';
+              body.appendChild(stage);
+            }
+            stage.querySelector('iframe').src = frameSrc();
+          }
+          store('r3-width', w);
+        };
+        if (inFrame) root.classList.add('in-frame');
+        else {
+          document
+            .querySelectorAll('.seg-m [data-w]')
+            .forEach(b =>
+              b.addEventListener('click', () => setWidth(b.dataset.w)),
+            );
+          if (store('r3-width') === 'phone' && innerWidth > 700)
+            setWidth('phone');
+        }
+        const tb = document.getElementById('mock-theme');
+        if (tb)
+          tb.addEventListener('click', () => {
+            theme = order[(order.indexOf(theme) + 1) % 3];
+            setTheme(theme);
+            store('r3-theme', theme);
+            if (stage && body.classList.contains('phone-mode'))
+              setWidth('phone');
+          });
+        if (ab)
+          ab.addEventListener('click', () => {
+            anno = !body.classList.contains('anno-on');
+            setAnno(anno);
+            store('r3-anno', anno ? '1' : '0');
+            if (stage && body.classList.contains('phone-mode'))
+              setWidth('phone');
+          });
+
+        // Dialogs: palette, quick add, bell, the phone "Ещё" sheet, the side drawer.
+        const selectQ = k => {
+          document
+            .querySelectorAll('#quick [data-q]')
+            .forEach(b => b.setAttribute('aria-selected', b.dataset.q === k));
+          document
+            .querySelectorAll('#quick [role=tabpanel]')
+            .forEach(p => (p.hidden = p.id !== 'q-' + k));
+        };
+        const open = (id, el) => {
+          const d = document.getElementById(id);
+          if (!d) return;
+          document
+            .querySelectorAll('dialog[open]')
+            .forEach(x => x !== d && x.close());
+          if (id === 'quick' && el && el.dataset.tab) selectQ(el.dataset.tab);
+          if (id === 'drawer' && el && el.dataset.tpl) {
+            const t = document.getElementById(el.dataset.tpl);
+            document.getElementById('drawer-t').textContent =
+              el.dataset.title || 'Подробнее';
+            const b = document.getElementById('drawer-body');
+            b.innerHTML = t ? t.innerHTML : '';
+            paint(b);
+          }
+          if (!d.open) d.showModal();
+        };
+        document.addEventListener('click', e => {
+          const o = e.target.closest('[data-open]');
+          if (o) {
+            e.preventDefault();
+            open(o.dataset.open, o);
+            return;
+          }
+          const c = e.target.closest('[data-close]');
+          if (c) {
+            c.closest('dialog').close();
+            return;
+          }
+          const f = e.target.closest('[data-fake]');
+          if (f) {
+            f.textContent = f.dataset.fake;
+            f.disabled = true;
+            return;
+          }
+          const ch = e.target.closest('.chips .chip[aria-pressed]');
+          if (ch && !ch.hasAttribute('data-multi')) {
+            ch.parentElement
+              .querySelectorAll('.chip[aria-pressed]')
+              .forEach(x => {
+                x.setAttribute('aria-pressed', x === ch);
+                x.classList.toggle('on', x === ch);
+              });
+          } else if (ch) {
+            const on = ch.getAttribute('aria-pressed') !== 'true';
+            ch.setAttribute('aria-pressed', on);
+            ch.classList.toggle('on', on);
+          }
+          // In-page tabs.
+          const tab = e.target.closest('[data-tabset] [data-tab]');
+          if (tab) {
+            const set = tab.closest('[data-tabset]').dataset.tabset;
+            selectTab(set, tab.dataset.tab);
+            const more = tab.closest('details.tab-more');
+            if (more) more.open = false;
+          }
+          // List → detail: on the phone the detail is its own screen.
+          const item = e.target.closest('[data-detail]');
+          if (item) {
+            const ld = item.closest('.ld');
+            if (ld) {
+              ld.querySelectorAll('[data-detail]').forEach(x =>
+                x.classList.toggle('sel', x === item),
+              );
+              ld.classList.add('show-detail');
+            }
+          }
+          const backBtn = e.target.closest('[data-ld-back]');
+          if (backBtn) backBtn.closest('.ld').classList.remove('show-detail');
+          if (e.target.closest('#pal-theme')) {
+            theme = order[(order.indexOf(theme) + 1) % 3];
+            setTheme(theme);
+            store('r3-theme', theme);
+          }
+        });
+        const selectTab = (set, id) => {
+          document
+            .querySelectorAll(`[data-tabset="${set}"] [data-tab]`)
+            .forEach(b =>
+              b.setAttribute('aria-selected', b.dataset.tab === id),
+            );
+          document
+            .querySelectorAll(`[data-panelset="${set}"]`)
+            .forEach(p => (p.hidden = p.dataset.panel !== id));
+          const more = document.querySelector(
+            `[data-tabset="${set}"] .tab-more`,
+          );
+          if (more)
+            more.classList.toggle(
+              'has-sel',
+              !!more.querySelector('[aria-selected="true"]'),
+            );
+        };
+        // A tab can be opened from the address: page.html#tab=links
+        const fromHash = () => {
+          const m = /tab=([\w-]+)/.exec(location.hash);
+          if (!m) return;
+          const b = document.querySelector(`[data-tab="${m[1]}"]`);
+          if (b) selectTab(b.closest('[data-tabset]').dataset.tabset, m[1]);
+        };
+        fromHash();
+        addEventListener('hashchange', fromHash);
+        document
+          .querySelectorAll('dialog')
+          .forEach(d =>
+            d.addEventListener('click', e => e.target === d && d.close()),
+          );
+        document.addEventListener('keydown', e => {
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            open('palette');
+          }
+        });
+        document
+          .querySelectorAll('#quick [data-q]')
+          .forEach(b =>
+            b.addEventListener('click', () => selectQ(b.dataset.q)),
+          );
+
+        // Sparklines (past solid, future dashed) and day strips from data attributes.
+        const paint = scope => {
+          scope.querySelectorAll('svg.spark[data-v]').forEach(s => {
+            const v = s.dataset.v.split(',').map(Number);
+            const f = (s.dataset.f || '')
+              .split(',')
+              .filter(Boolean)
+              .map(Number);
+            const all = v.concat(f);
+            const min = Math.min(...all);
+            const max = Math.max(...all);
+            const n = all.length - 1 || 1;
+            const h = 26;
+            const y = x =>
+              (h - ((x - min) / (max - min || 1)) * (h - 4) - 2).toFixed(1);
+            const pts = v.map(
+              (x, i) => ((i * 100) / n).toFixed(1) + ',' + y(x),
+            );
+            s.setAttribute('viewBox', '0 0 100 ' + h);
+            s.setAttribute('preserveAspectRatio', 'none');
+            let html = '';
+            if (s.classList.contains('area'))
+              html +=
+                '<polygon class="a" points="0,' +
+                h +
+                ' ' +
+                pts.join(' ') +
+                ' ' +
+                (((v.length - 1) * 100) / n).toFixed(1) +
+                ',' +
+                h +
+                '"/>';
+            html +=
+              '<polyline class="p ' +
+              (s.dataset.c || '') +
+              '" points="' +
+              pts.join(' ') +
+              '"/>';
+            if (f.length) {
+              const s0 = v.length - 1;
+              html +=
+                '<polyline class="f" points="' +
+                [v[s0]]
+                  .concat(f)
+                  .map((x, i) => (((s0 + i) * 100) / n).toFixed(1) + ',' + y(x))
+                  .join(' ') +
+                '"/>';
+            }
+            s.innerHTML = html;
+          });
+          scope.querySelectorAll('.hs[data-h]').forEach(el => {
+            const map = {
+              0: '',
+              1: 'l1',
+              2: 'l2',
+              3: 'l3',
+              w: 'w',
+              c: 'c',
+              '-': 'na',
+              t: 'l3 t',
+              o: 'o',
+            };
+            el.innerHTML = el.dataset.h
+              .split('')
+              .map(c => '<i class="' + (map[c] ?? '') + '"></i>')
+              .join('');
+          });
+        };
+        window.r3paint = paint;
+        paint(document);
+      })();
+    </script>
+  </body>
+</html>

@@ -56,7 +56,7 @@ const COMPACT = 3;
             }
             @if (day.numbers.length) {
               <ul class="numbers">
-                @for (number of day.numbers; track number.key) {
+                @for (number of day.numbers; track number.day + number.key) {
                   <li>
                     <span
                       class="dot"
@@ -80,6 +80,15 @@ const COMPACT = 3;
                         'life.links.unusual.usual'
                           | transloco: {value: value(number, number.usual)}
                       }}
+                      @if (compact()) {
+                        ·
+                        {{
+                          (number.today
+                            ? 'life.links.unusual.todayShort'
+                            : 'life.links.unusual.yesterdayShort'
+                          ) | transloco
+                        }}
+                      }
                       @if (number.baseline === 'kind' && !compact()) {
                         · {{ 'life.links.unusual.kind' | transloco }}
                       }
@@ -167,14 +176,24 @@ export class UnusualCardComponent {
   protected readonly data = httpResource<Unusual>(() => CORE_READS.unusual());
 
   protected readonly days = computed(() => {
-    const days = this.data.hasValue() ? this.data.value().days : [];
+    // Each number knows its day: the widget mixes both, and one number may be in both.
+    const days = (this.data.hasValue() ? this.data.value().days : []).map(
+      day => ({
+        ...day,
+        numbers: day.numbers.map(number => ({
+          ...number,
+          day: day.day,
+          today: !day.complete,
+        })),
+      }),
+    );
     if (!this.compact()) {
       return days;
     }
     // The widget: the rarest of both days, today's first among equals.
     const rarest = days
       .flatMap(day => day.numbers)
-      .sort((a, b) => b.beyond - a.beyond)
+      .sort((a, b) => b.beyond - a.beyond || Number(b.today) - Number(a.today))
       .slice(0, COMPACT);
     return [{day: 'both', complete: true, numbers: rarest}];
   });

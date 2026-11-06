@@ -59,8 +59,8 @@ The interface is in English and Russian.
   loops, phone notifications, coding per project — and indices of the day: deep work, draining
   and nourishing time, the restless phone, screens after bedtime, against your own norm; what is
   unusual today and yesterday (beyond 9 of 10 of your usual days, also on Home and in the evening
-  summary), what changed over your whole history and since when (a calm Telegram note at most
-  weekly), links of two and three days later, and pairs that are not straight lines with a
+  summary), what changed over the last three years and since when (told in the Monday morning
+  digest), links of two and three days later, and pairs that are not straight lines with a
   dose–response chart);
   the last commit before a site went down;
   subscriptions you pay for and do not use

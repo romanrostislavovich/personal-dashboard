@@ -6,7 +6,12 @@ import {
   input,
 } from '@angular/core';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
-import {CorrelationLag, CorrelationMetric, doseGroups} from '@pd/contracts';
+import {
+  CorrelationLag,
+  CorrelationMetric,
+  DoseGroup,
+  doseGroups,
+} from '@pd/contracts';
 import {laterDay} from './correlation-scatter.component';
 import {formatValue} from './links-format';
 
@@ -25,7 +30,7 @@ import {formatValue} from './links-format';
         {{ 'life.links.dose.title' | transloco: {a: name(a()), b: name(b())} }}
       </p>
       <ul class="rows">
-        @for (row of rows; track row.range) {
+        @for (row of rows; track $index) {
           <li>
             <span class="range">{{ row.range }}</span>
             <span class="bar"><span [style.width.%]="row.width"></span></span>
@@ -63,6 +68,14 @@ import {formatValue} from './links-format';
       font: var(--mat-sys-body-small);
       color: var(--mat-sys-on-surface-variant);
       font-variant-numeric: tabular-nums;
+    }
+    /* A long money range wraps on a phone rather than push the chart sideways. */
+    .range {
+      min-width: 0;
+      max-width: 9em;
+      overflow-wrap: anywhere;
+    }
+    .days {
       white-space: nowrap;
     }
     .bar {
@@ -96,18 +109,8 @@ export class DoseChartComponent {
   }
 
   protected readonly rows = computed(() => {
-    const [a, b, lag] = [this.a(), this.b(), this.lag()];
-    const later = new Map(b.values.map(value => [value.day, value.value]));
-    const x: number[] = [];
-    const y: number[] = [];
-    for (const {day, value} of a.values) {
-      const after = later.get(laterDay(day, lag));
-      if (after !== undefined) {
-        x.push(value);
-        y.push(after);
-      }
-    }
-    const groups = doseGroups(x, y);
+    const [a, b] = [this.a(), this.b()];
+    const {groups} = dosePoints(a, b, this.lag());
     if (groups.length < 2) {
       return null;
     }
@@ -117,15 +120,35 @@ export class DoseChartComponent {
       formatValue(metric, value, this.transloco.getActiveLang(), hours =>
         this.transloco.translate('life.hours', {value: hours}),
       );
-    return groups.map(group => ({
-      range:
-        group.from === group.to
-          ? format(a, group.from)
-          : `${format(a, group.from)}–${format(a, group.to)}`,
-      // The lowest average still gets a sliver, so every group is seen.
-      width: high > low ? 8 + ((group.mean - low) / (high - low)) * 92 : 50,
-      mean: format(b, group.mean),
-      n: group.n,
-    }));
+    return groups.map(group => {
+      const [from, to] = [format(a, group.from), format(a, group.to)];
+      return {
+        // Ends that read the same once rounded are one value, not "1 h–1 h".
+        range: from === to ? from : `${from}–${to}`,
+        // The lowest average still gets a sliver, so every group is seen.
+        width: high > low ? 8 + ((group.mean - low) / (high - low)) * 92 : 50,
+        mean: format(b, group.mean),
+        n: group.n,
+      };
+    });
   });
+}
+
+/** The days of a pair as the chart reads them (`b` `lag` days after `a`), in groups of `a`. */
+export function dosePoints(
+  a: CorrelationMetric,
+  b: CorrelationMetric,
+  lag: CorrelationLag,
+): {groups: DoseGroup[]} {
+  const later = new Map(b.values.map(value => [value.day, value.value]));
+  const x: number[] = [];
+  const y: number[] = [];
+  for (const {day, value} of a.values) {
+    const after = later.get(laterDay(day, lag));
+    if (after !== undefined) {
+      x.push(value);
+      y.push(after);
+    }
+  }
+  return {groups: doseGroups(x, y)};
 }

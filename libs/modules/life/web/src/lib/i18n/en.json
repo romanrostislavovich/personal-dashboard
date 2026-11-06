@@ -177,17 +177,19 @@
       "evenYesterday": "An even day: every number within its usual range.",
       "even": "Everything within its usual range.",
       "failed": "Could not count the unusual numbers.",
-      "open": "Links"
+      "open": "Links",
+      "todayShort": "today",
+      "yesterdayShort": "yesterday"
     },
     "changes": {
       "title": "What changed",
-      "hint": "The days a number settled at a new level, over your whole history. When, not why: think back to what happened then.",
+      "hint": "The days a number settled at a new level, over the last three years. When, not why: think back to what happened then.",
       "since": "since {{day}}",
       "large": "a large change",
       "noticeable": "a noticeable change",
       "near": "Changed around then too:",
       "alone": "Nothing else changed within a week of it.",
-      "none": "No changes found yet: they are searched every night over the whole history.",
+      "none": "No changes found yet: they are searched every night over the last three years.",
       "failed": "Could not read the changes.",
       "all": "The whole history ({{count}})",
       "less": "Only the latest"

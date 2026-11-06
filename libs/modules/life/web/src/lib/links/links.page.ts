@@ -28,13 +28,21 @@ import {
 import {LifeApi} from '../life.api';
 import {BeforeAfterComponent} from './before-after.component';
 import {ChangesCardComponent} from './changes-card.component';
-import {DoseChartComponent} from './dose-chart.component';
+import {CurvesCardComponent, curveSentence} from './curves-card.component';
+import {DoseChartComponent, dosePoints} from './dose-chart.component';
 import {UnusualCardComponent} from './unusual-card.component';
 import {CorrelationGraphComponent} from './correlation-graph.component';
 import {CorrelationMatrixComponent} from './correlation-matrix.component';
 import {CorrelationScatterComponent} from './correlation-scatter.component';
 import {LinksControlsComponent} from './links-controls.component';
 import {DIGITAL_METRIC_KEYS, isDigitalMetric} from './digital-metrics';
+import {
+  EXTRA_KEY,
+  localDate,
+  PAIRS_KEY,
+  remember,
+  remembered,
+} from './links-memory';
 import {moduleColor, SelectedPair} from './links-format';
 
 const PERIODS = [90, 180, 365, 730] as const;
@@ -42,31 +50,6 @@ const PERIODS = [90, 180, 365, 730] as const;
 const LISTED = 10;
 /** A link of a day to the next one that stays this strong with yesterday held fixed comes first. */
 const LEADS_FROM = 0.2;
-
-/** The filter's choice, remembered on this device. */
-const PAIRS_KEY = 'pd.links.pairs';
-const EXTRA_KEY = 'pd.links.extra';
-
-function remembered(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function remember(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // A private window: the choice lasts until the page is closed.
-  }
-}
-
-function localDate(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
 
 /**
  * Life → Links: how the daily numbers of every section go together — the strongest links in
@@ -80,6 +63,7 @@ function localDate(date: Date): string {
     BeforeAfterComponent,
     ChangesCardComponent,
     CorrelationGraphComponent,
+    CurvesCardComponent,
     CorrelationMatrixComponent,
     CorrelationScatterComponent,
     DecimalPipe,
@@ -146,7 +130,7 @@ export class LinksPage {
     () => new Set((this.result()?.metrics ?? []).map(metric => metric.key)),
   );
 
-  private readonly byKey = computed(
+  protected readonly byKey = computed(
     () =>
       new Map(
         (this.result()?.metrics ?? []).map(metric => [metric.key, metric]),
@@ -217,7 +201,23 @@ export class LinksPage {
     }
     // A pair of the same day chosen the other way round (a curve of b along a): its chart too.
     const turned = chosen && !found.lag && found.a === chosen.b;
-    return {pair: found, a, b, doseA: turned ? b : a, doseB: turned ? a : b};
+    // Opened from the curves: said as the curve, not as the weak straight link it also is.
+    const curve = chosen
+      ? this.curves().find(
+          item =>
+            item.a === chosen.a &&
+            item.b === chosen.b &&
+            item.lag === chosen.lag,
+        )
+      : undefined;
+    return {
+      pair: found,
+      a,
+      b,
+      doseA: turned ? b : a,
+      doseB: turned ? a : b,
+      curve,
+    };
   });
 
   protected metric(key: string): CorrelationMetric | undefined {
@@ -254,12 +254,8 @@ export class LinksPage {
     return moduleColor(this.metric(key)?.module ?? '');
   }
 
-  /** A curve in words: a hill ("most in the middle") or a valley. */
-  protected curveSentence(curve: CorrelationCurve): string {
-    return this.transloco.translate(
-      curve.bend < 0 ? 'life.links.curves.hill' : 'life.links.curves.valley',
-      {a: this.nameOf(curve.a), b: this.nameOf(curve.b)},
-    );
+  protected curveText(curve: CorrelationCurve): string {
+    return curveSentence(curve, key => this.nameOf(key), this.transloco);
   }
 
   /** The link in words: of the same day or the next, together or against. */
@@ -294,10 +290,14 @@ export class LinksPage {
 
   protected choose(pair: SelectedPair): void {
     this.chosen.set(pair);
-    // For the achievements only: a lost mark is not worth a message.
-    this.api
-      .seen({kind: 'dose', key: `${pair.a}|${pair.b}`})
-      .subscribe({error: () => undefined});
+    // For the achievements only, and only when the pair has a chart to look at; a lost mark is
+    // not worth a message.
+    const [a, b] = [this.metric(pair.a), this.metric(pair.b)];
+    if (a && b && dosePoints(a, b, pair.lag).groups.length >= 2) {
+      this.api
+        .seen({kind: 'dose', key: `${pair.a}|${pair.b}|${pair.lag}`})
+        .subscribe({error: () => undefined});
+    }
     document
       .getElementById('pd-links-pair')
       ?.scrollIntoView({behavior: 'smooth', block: 'start'});

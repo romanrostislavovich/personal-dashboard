@@ -409,6 +409,8 @@ becomes targets of this one forecaster, not formulas of their own.
 - **Achievements:** for exploring — change points and dose charts opened, and "an even day" (no
   number unusual); never for the numbers themselves.
 
-**Built (2026-11-06):** all of the above. The Telegram note names no number — the server has no
-translations of the numbers' names (they live in the web), so it says how many changed and links
-to Links → What changed; the evening summary likewise says how many numbers are above usual.
+**Built (2026-11-06):** all of the above, changed after the team review by the owner's word: the
+fresh changes are told in the **Monday morning digest** (its AI names the numbers by their
+keys), not in a message of their own; the history searched is three years; of one pair a day,
+two and three days later only the strongest lag counts as a link. The evening summary says how
+many numbers are above usual (the server has no translations of the numbers' names).
