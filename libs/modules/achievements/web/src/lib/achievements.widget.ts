@@ -12,7 +12,7 @@ import {RouterLink} from '@angular/router';
 import {TranslocoPipe} from '@jsverse/transloco';
 import {RealtimeClient} from '@pd/web-core';
 import {AchievementCardComponent} from './achievement-card.component';
-import {AchievementsApi} from './achievements.api';
+import {AchievementsApi, lastLoaded} from './achievements.api';
 
 const LATEST_COUNT = 2;
 
@@ -33,14 +33,20 @@ const LATEST_COUNT = 2;
         <mat-card-title
           >🏆 {{ 'achievements.title' | transloco }}</mat-card-title
         >
-        <mat-card-subtitle>
-          {{
-            'achievements.summary'
-              | transloco: {unlocked: unlocked().length, total: total()}
-          }}
-        </mat-card-subtitle>
+        <!-- Nothing while the first load runs: "0 of 0" would read as no achievements. -->
+        @if (list().length) {
+          <mat-card-subtitle>
+            {{
+              'achievements.summary'
+                | transloco: {unlocked: unlocked().length, total: total()}
+            }}
+          </mat-card-subtitle>
+        }
       </mat-card-header>
       <mat-card-content class="content">
+        @if (achievements.error() && !list().length) {
+          <span class="label">{{ 'achievements.failed' | transloco }}</span>
+        }
         @for (achievement of latest(); track achievement.id) {
           <pd-achievement-card [achievement]="achievement" />
         }
@@ -52,6 +58,11 @@ const LATEST_COUNT = 2;
         }
       </mat-card-content>
       <mat-card-actions align="end">
+        @if (achievements.error()) {
+          <button matButton (click)="achievements.reload()">
+            {{ 'achievements.retry' | transloco }}
+          </button>
+        }
         <a matButton routerLink="/achievements">{{
           'achievements.widget.all' | transloco
         }}</a>
@@ -73,7 +84,8 @@ const LATEST_COUNT = 2;
   `,
 })
 export class AchievementsWidget {
-  private readonly achievements = inject(AchievementsApi).list();
+  protected readonly achievements = inject(AchievementsApi).list();
+  protected readonly list = lastLoaded(this.achievements);
 
   constructor() {
     const unlocks = inject(RealtimeClient).achievementUnlocks;
@@ -84,9 +96,9 @@ export class AchievementsWidget {
     });
   }
 
-  protected readonly total = computed(() => this.achievements.value().length);
+  protected readonly total = computed(() => this.list().length);
   protected readonly unlocked = computed(() =>
-    this.achievements.value().filter(a => a.unlockedAt),
+    this.list().filter(a => a.unlockedAt),
   );
 
   protected readonly latest = computed(() =>
@@ -97,9 +109,7 @@ export class AchievementsWidget {
 
   /** The locked achievement with the highest progress — "almost there". */
   protected readonly next = computed(() => {
-    const locked = this.achievements
-      .value()
-      .filter(a => !a.unlockedAt && a.progress > 0);
+    const locked = this.list().filter(a => !a.unlockedAt && a.progress > 0);
     return (
       locked.sort((a, b) => b.progress / b.goal - a.progress / a.goal)[0] ??
       null

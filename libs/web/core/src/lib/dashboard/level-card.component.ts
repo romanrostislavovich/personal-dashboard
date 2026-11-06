@@ -5,6 +5,7 @@ import {
   computed,
   effect,
   inject,
+  linkedSignal,
   untracked,
 } from '@angular/core';
 import {RouterLink} from '@angular/router';
@@ -38,12 +39,19 @@ import {RealtimeClient} from '../realtime/realtime.client';
               | transloco: {current: p.xpInLevel, next: p.xpForNext}
           }}
         </span>
-        <span class="muted">
-          {{
-            'core.dashboard.unlocked'
-              | transloco: {unlocked: unlocked(), total: total()}
-          }}
-        </span>
+        <!-- Nothing while the first load runs, and no "0 of 0" when it failed. -->
+        @if (list().length) {
+          <span class="muted">
+            {{
+              'core.dashboard.unlocked'
+                | transloco: {unlocked: unlocked(), total: total()}
+            }}
+          </span>
+        } @else if (achievements.error()) {
+          <span class="muted">{{
+            'core.dashboard.achievementsFailed' | transloco
+          }}</span>
+        }
       </span>
     </a>
   `,
@@ -126,16 +134,26 @@ import {RealtimeClient} from '../realtime/realtime.client';
   `,
 })
 export class LevelCardComponent {
-  private readonly achievements = httpResource<Achievement[]>(
+  protected readonly achievements = httpResource<Achievement[]>(
     () => CORE_READS.achievements(),
     {
       defaultValue: [],
     },
   );
 
-  protected readonly total = computed(() => this.achievements.value().length);
+  /** The list last loaded: kept while a reload runs or fails, empty before the first load. */
+  protected readonly list = linkedSignal<
+    Achievement[] | undefined,
+    Achievement[]
+  >({
+    source: () =>
+      this.achievements.hasValue() ? this.achievements.value() : undefined,
+    computation: (loaded, previous) => loaded ?? previous?.value ?? [],
+  });
+
+  protected readonly total = computed(() => this.list().length);
   private readonly unlockedList = computed(() =>
-    this.achievements.value().filter(a => a.unlockedAt),
+    this.list().filter(a => a.unlockedAt),
   );
   protected readonly unlocked = computed(() => this.unlockedList().length);
   protected readonly progress = computed(() =>

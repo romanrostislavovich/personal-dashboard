@@ -21,5 +21,7 @@
   "recount": "Recount",
   "recountConfirm": "Count all achievements again? The ones whose condition is not met today are taken back (they stay in the trash for 30 days).",
   "emptyTitle": "No achievements counted yet",
-  "recountNow": "Count now"
+  "recountNow": "Count now",
+  "failed": "Could not load the achievements.",
+  "retry": "Try again"
 }

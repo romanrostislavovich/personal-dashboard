@@ -23,7 +23,7 @@ import {
 } from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
 import {AchievementCardComponent} from './achievement-card.component';
-import {AchievementsApi} from './achievements.api';
+import {AchievementsApi, lastLoaded} from './achievements.api';
 
 type Filter = 'all' | 'unlocked' | 'locked';
 
@@ -69,7 +69,7 @@ const RECENT_COUNT = 4;
     <div class="overview">
       <pd-level-card />
       <!-- Rarity counters double as a filter: click again to reset. -->
-      @for (stat of rarityStats(); track stat.rarity) {
+      @for (stat of list().length ? rarityStats() : []; track stat.rarity) {
         <button
           type="button"
           class="rarity-stat"
@@ -115,20 +115,33 @@ const RECENT_COUNT = 4;
         </div>
       </section>
     } @empty {
-      <pd-empty-state
-        icon="emoji_events"
-        [title]="'achievements.emptyTitle' | transloco"
-        [text]="'achievements.empty' | transloco"
-      >
-        <button
-          matButton="filled"
-          [disabled]="recounting()"
-          (click)="recount()"
+      <!-- A failed or a running first load is not "nothing counted yet". -->
+      @if (achievements.error() && !list().length) {
+        <pd-empty-state
+          icon="error_outline"
+          [title]="'achievements.failed' | transloco"
         >
-          <mat-icon>refresh</mat-icon>
-          {{ 'achievements.recountNow' | transloco }}
-        </button>
-      </pd-empty-state>
+          <button matButton="filled" (click)="achievements.reload()">
+            <mat-icon>refresh</mat-icon>
+            {{ 'achievements.retry' | transloco }}
+          </button>
+        </pd-empty-state>
+      } @else if (!achievements.isLoading() && !list().length) {
+        <pd-empty-state
+          icon="emoji_events"
+          [title]="'achievements.emptyTitle' | transloco"
+          [text]="'achievements.empty' | transloco"
+        >
+          <button
+            matButton="filled"
+            [disabled]="recounting()"
+            (click)="recount()"
+          >
+            <mat-icon>refresh</mat-icon>
+            {{ 'achievements.recountNow' | transloco }}
+          </button>
+        </pd-empty-state>
+      }
     }
   `,
   styles: `
@@ -222,7 +235,8 @@ const RECENT_COUNT = 4;
 export class AchievementsPage {
   private readonly api = inject(AchievementsApi);
   private readonly transloco = inject(TranslocoService);
-  private readonly achievements = this.api.list();
+  protected readonly achievements = this.api.list();
+  protected readonly list = lastLoaded(this.achievements);
 
   protected readonly recounting = signal(false);
 
@@ -231,7 +245,7 @@ export class AchievementsPage {
 
   protected readonly rarityStats = computed(() =>
     ACHIEVEMENT_RARITIES.map(rarity => {
-      const items = this.achievements.value().filter(a => a.rarity === rarity);
+      const items = this.list().filter(a => a.rarity === rarity);
       return {
         rarity,
         total: items.length,
@@ -241,8 +255,7 @@ export class AchievementsPage {
   );
 
   protected readonly recent = computed(() =>
-    this.achievements
-      .value()
+    this.list()
       .filter(a => a.unlockedAt)
       .sort((a, b) => (b.unlockedAt ?? '').localeCompare(a.unlockedAt ?? ''))
       .slice(0, RECENT_COUNT),
@@ -256,7 +269,7 @@ export class AchievementsPage {
       string,
       {all: Achievement[]; visible: Achievement[]}
     >();
-    for (const achievement of this.achievements.value()) {
+    for (const achievement of this.list()) {
       const group = groups.get(achievement.module) ?? {all: [], visible: []};
       group.all.push(achievement);
       const statusMatches =
