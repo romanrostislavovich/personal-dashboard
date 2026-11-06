@@ -12,6 +12,7 @@ import {
   ProjectMonth,
   ProjectOverview,
   toLocalDate,
+  Unusual,
   zonedDateTime,
   zonedToUtc,
 } from '@pd/contracts';
@@ -24,6 +25,8 @@ import {MOOD_METRIC, moodInsights} from './mood-insights';
 import {lastMonths, monthOf} from './project-months';
 import {moodForecast} from './forecast';
 import {withCodingAtComputer} from './project-time';
+import {unusualOn, unusualPeriod} from './unusual';
+import {shift} from './daily-series';
 
 /** Changes of a project shown in its overview. */
 const CHANGES = 15;
@@ -167,6 +170,27 @@ export class ProjectOverviewService {
       metric => !metric.extra && !hidden.includes(metric.module),
     );
     return moodForecast(metrics, today);
+  }
+
+  /**
+   * Today's and yesterday's numbers far from their usual level (see unusualOn): every number,
+   * the extra ones too; today is not over, so only upwards. The `hidden` sections are left out.
+   */
+  async unusual(userId: string, hidden: string[] = []): Promise<Unusual> {
+    const timeZone = this.users.timeZoneOf(await this.users.findById(userId));
+    const today = zonedDateTime(new Date(), timeZone).date;
+    const yesterday = shift(today, -1);
+    const period = {from: unusualPeriod(yesterday).from, to: today};
+    const metrics = (await this.links.dailyMetrics(userId, period)).filter(
+      metric => !hidden.includes(metric.module),
+    );
+    return {
+      today,
+      days: [
+        unusualOn(metrics, today, false),
+        unusualOn(metrics, yesterday, true),
+      ],
+    };
   }
 
   /**

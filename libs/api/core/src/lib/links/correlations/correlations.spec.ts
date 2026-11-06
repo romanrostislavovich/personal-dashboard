@@ -1,5 +1,6 @@
 import {
   addDays,
+  CorrelationLag,
   DailyMetric,
   LocalDate,
   parseLocalDate,
@@ -56,7 +57,7 @@ const result = correlations(
   period,
   {pairs: 'all'},
 );
-const find = (a: string, b: string, lag: 0 | 1) =>
+const find = (a: string, b: string, lag: CorrelationLag) =>
   result.correlations.find(
     pair => pair.a === a && pair.b === b && pair.lag === lag,
   );
@@ -74,6 +75,104 @@ describe('correlations', () => {
   it('calls numbers that have nothing to do with each other unlinked', () => {
     expect(find('development.coding', 'diary.mood', 0)?.strong).toBe(false);
     expect(find('development.coding', 'diary.mood', 1)?.strong).toBe(false);
+  });
+
+  it('looks two and three days ahead only towards an outcome', () => {
+    // A heavy load shows in the mood two days later; coding is not an outcome.
+    const load = Array.from({length: DAYS}, () => 3 + 3 * random());
+    const later = load.map((_, index) =>
+      index > 1 ? 4 - 0.7 * load[index - 2] + 0.4 * random() : 3,
+    );
+    const {correlations: found} = correlations(
+      [
+        metric('tasks.load', load),
+        metric('diary.mood', later, {unit: 'score', outcome: true}),
+        metric('development.coding', coding),
+      ],
+      period,
+      {pairs: 'all'},
+    );
+    const at = (a: string, b: string, lag: CorrelationLag) =>
+      found.find(pair => pair.a === a && pair.b === b && pair.lag === lag);
+    expect(at('tasks.load', 'diary.mood', 2)?.strong).toBe(true);
+    expect(at('tasks.load', 'diary.mood', 3)).toBeDefined();
+    expect(at('diary.mood', 'development.coding', 2)).toBeUndefined();
+    expect(at('tasks.load', 'development.coding', 3)).toBeUndefined();
+  });
+
+  it('finds a pair that bends, and leaves a straight one to the links', () => {
+    // Some coffee lifts the mood, a lot of it brings it down: a hill a straight line misses.
+    const coffee = Array.from({length: DAYS}, () => 2 + 4 * random());
+    const hill = coffee.map(
+      value => 4 - 0.6 * (value - 2) ** 2 + 0.3 * random(),
+    );
+    const {correlations: links, curves} = correlations(
+      [
+        metric('finance.coffee', coffee, {unit: 'count'}),
+        metric('diary.mood', hill, {unit: 'score', outcome: true}),
+        metric('activity.games', games),
+        metric('diary.energy', mood, {unit: 'score', outcome: true}),
+      ],
+      period,
+      {pairs: 'all'},
+    );
+    const curve = curves.find(
+      item => item.a === 'diary.mood' || item.b === 'diary.mood',
+    );
+    expect(curve).toMatchObject({lag: 0});
+    expect(curve?.bend).toBeLessThan(-0.25);
+    // The chart: the middle groups have the best mood.
+    const means = curve?.groups.map(group => group.mean) ?? [];
+    expect(Math.max(...means)).toBeGreaterThan(means[0]);
+    expect(Math.max(...means)).toBeGreaterThan(means[means.length - 1]);
+    // Games and the next day's mood are a straight link: not a curve.
+    expect(
+      links.find(
+        pair =>
+          pair.a === 'activity.games' && pair.b === 'diary.energy' && pair.lag,
+      )?.strong,
+    ).toBe(true);
+    expect(
+      curves.find(
+        item => item.a === 'activity.games' && item.b === 'diary.energy',
+      ),
+    ).toBeUndefined();
+  });
+
+  it('keeps only the strongest of the lags of one pair strong', () => {
+    const {correlations: found} = correlations(
+      [
+        metric('activity.games', games),
+        metric('diary.mood', mood, {unit: 'score', outcome: true}),
+      ],
+      period,
+      {pairs: 'all'},
+    );
+    const strongLags = found.filter(
+      pair =>
+        pair.a === 'activity.games' &&
+        pair.b === 'diary.mood' &&
+        pair.lag &&
+        pair.strong,
+    );
+    expect(strongLags.map(pair => pair.lag)).toEqual([1]);
+  });
+
+  it('calls a slow shared trend no bend', () => {
+    // Two numbers drifting together over weeks: alike neighbouring days, no bend.
+    const drift = noise(21);
+    let level = 0;
+    const slow = Array.from({length: DAYS}, () => (level += drift() * 0.6));
+    const follows = slow.map(value => value * value * 0.2 + drift() * 0.3);
+    const {curves} = correlations(
+      [
+        metric('activity.unlocks', slow, {unit: 'count'}),
+        metric('diary.energy', follows, {unit: 'score', outcome: true}),
+      ],
+      period,
+      {pairs: 'all'},
+    );
+    expect(curves).toEqual([]);
   });
 
   it('never compares a number with a part of it', () => {

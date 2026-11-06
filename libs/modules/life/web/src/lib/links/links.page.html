@@ -18,6 +18,11 @@
     <span>{{ 'life.links.caution' | transloco }}</span>
   </p>
 
+  <div class="grid">
+    <pd-unusual-card />
+    <pd-changes-card />
+  </div>
+
   <pd-before-after />
 
   @if (data.isLoading()) {
@@ -62,7 +67,7 @@
             @for (pair of listed(); track pair.a + pair.b + pair.lag) {
               <li>
                 <button type="button" (click)="choose(pair)">
-                  <span class="dots">
+                  <span class="dots" aria-hidden="true">
                     <span class="dot" [style.background]="color(pair.a)"></span>
                     <span class="dot" [style.background]="color(pair.b)"></span>
                   </span>
@@ -110,6 +115,13 @@
         </mat-card-content>
       </mat-card>
     }
+    @if (curves().length) {
+      <pd-curves-card
+        [curves]="curves()"
+        [metrics]="byKey()"
+        (pick)="choose($event)"
+      />
+    }
     @if (correlations().length) {
       <div class="grid">
         <mat-card appearance="outlined">
@@ -140,7 +152,9 @@
               'life.links.pair.title' | transloco
             }}</mat-card-title>
             @if (pair(); as shown) {
-              <mat-card-subtitle>{{ sentence(shown.pair) }}</mat-card-subtitle>
+              <mat-card-subtitle>{{
+                shown.curve ? curveText(shown.curve) : sentence(shown.pair)
+              }}</mat-card-subtitle>
             }
           </mat-card-header>
           <mat-card-content>
@@ -168,12 +182,19 @@
                   <dd>{{ shown.pair.beyondItself | number: '1.2-2' }}</dd>
                 }
               </dl>
+              <pd-dose-chart
+                [a]="shown.doseA"
+                [b]="shown.doseB"
+                [lag]="shown.pair.lag"
+              />
               <p class="hint">
                 {{
-                  (shown.pair.lag
-                    ? 'life.links.pair.hintNext'
-                    : 'life.links.pair.hintSame'
-                  ) | transloco
+                  (shown.pair.lag > 1
+                    ? 'life.links.pair.hintLater'
+                    : shown.pair.lag
+                      ? 'life.links.pair.hintNext'
+                      : 'life.links.pair.hintSame'
+                  ) | transloco: {days: shown.pair.lag}
                 }}
               </p>
             }
@@ -221,9 +242,15 @@
             @for (term of regression.terms; track term.key + term.lag) {
               <span class="term-name" [class.muted]="term.p >= 0.05">
                 {{ nameOf(term.key) }}
-                @if (term.lag) {
+                @if (term.lag === 1) {
                   <span class="muted"
                     >({{ 'life.links.dayBefore' | transloco }})</span
+                  >
+                } @else if (term.lag) {
+                  <span class="muted"
+                    >({{
+                      'life.links.daysBefore' | transloco: {days: term.lag}
+                    }})</span
                   >
                 }
               </span>

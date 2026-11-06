@@ -46,6 +46,16 @@ export const lifeModule: WebDashboardModule = {
     en: () => import('./i18n/en.json'),
     ru: () => import('./i18n/ru.json'),
   },
+  widgets: [
+    {
+      id: 'life.unusual',
+      size: 'small',
+      loadComponent: () =>
+        import('./links/unusual-widget.component').then(
+          m => m.UnusualWidgetComponent,
+        ),
+    },
+  ],
   commands: [
     {
       id: 'life.chronicle',

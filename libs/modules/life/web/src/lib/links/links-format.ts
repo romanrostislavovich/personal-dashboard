@@ -1,4 +1,4 @@
-import {CorrelationMetric} from '@pd/contracts';
+import {CorrelationLag, CorrelationMetric} from '@pd/contracts';
 
 /** A colour of a section, the same for it on every chart of the page. */
 const PALETTE = [
@@ -67,5 +67,5 @@ export function rhoColor(rho: number): string {
 export interface SelectedPair {
   a: string;
   b: string;
-  lag: 0 | 1;
+  lag: CorrelationLag;
 }

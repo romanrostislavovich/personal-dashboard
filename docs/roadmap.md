@@ -767,11 +767,12 @@ assistant as a tutor that knows the materials of the courses.
 #### Big steps
 
 - **Links v2** — 🚧 stage 0 (every signal a number; main and extra numbers; outcomes) and stage 1
-  (the day's indices, a card, a Home widget, the evening summary) built 2026-11-05/06, not yet
-  seen on real data. Next: indices made of several signals (phone restlessness, deep work, nourishing vs
-  draining time), hours and not only days, personal baselines, dose–response and change points,
-  the owner's hypotheses as question cards, insight cards, forecasts (overload, habit lapse, the
-  productive window). The plan: [proposals/links-v2.md](proposals/links-v2.md)
+  (the day's indices, a card, a Home widget, the evening summary) built 2026-11-05/06; stage 2
+  (unusual today against the personal baseline, change points of three years told in the Monday
+  morning digest, lags of 2–3 days to the outcomes, curves and dose–response charts, achievements
+  of exploring) built 2026-11-06 — none of it seen on real data yet. Next: forecasts for any
+  number (bedtime, deep work, tasks done, mood), hours and not only days, the owner's hypotheses
+  as question cards, insight cards, the overload warning. The plan: [proposals/links-v2.md](proposals/links-v2.md)
 
 - **Mobile app & Smart Band Wearables Integration** — mobile application collecting data from
   the smartphone and wearable devices (smart watch / smart band via BLE, Google Health Connect, Apple Health).

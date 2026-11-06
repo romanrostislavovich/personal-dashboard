@@ -1,3 +1,4 @@
+import {DoseGroup} from './links-dose';
 import {z} from 'zod';
 import {LocalDate} from './local-date';
 
@@ -238,13 +239,21 @@ export interface ExtraMetric extends Omit<
 }
 
 /**
+ * Days between `a` and `b` of a pair: 0 — the same day; 1 — `b` of the next day; 2 and 3 — `b`
+ * two or three days later, for the outcomes only (sleep or a heavy load often show later).
+ */
+export const CORRELATION_LAGS = [0, 1, 2, 3] as const;
+export type CorrelationLag = (typeof CORRELATION_LAGS)[number];
+
+/**
  * How two daily numbers go together. `lag` 1 — `a` of a day against `b` of the next one
- * ("a short night, a slow next day"); 0 — of the same day (then `a` and `b` are in key order).
+ * ("a short night, a slow next day"), 2–3 — of a later one; 0 — of the same day (then `a` and
+ * `b` are in key order).
  */
 export interface Correlation {
   a: string;
   b: string;
-  lag: 0 | 1;
+  lag: CorrelationLag;
   /** Spearman's rank correlation, −1…1. */
   rho: number;
   /** Days both have a value on. */
@@ -254,8 +263,8 @@ export interface Correlation {
   /** `p` corrected for how many pairs were compared (Benjamini–Hochberg). */
   q: number;
   /**
-   * For a lag of a day: the correlation with `b` of the day before held fixed — whether `a`
-   * tells about tomorrow's `b` more than today's `b` does (Granger's idea). `null` for lag 0.
+   * For a lag: the correlation with `b` of `a`'s own day held fixed — whether `a` tells about
+   * the later `b` more than `b` already did that day (Granger's idea). `null` for lag 0.
    */
   beyondItself: number | null;
   /**
@@ -270,6 +279,24 @@ export interface Correlation {
   strong: boolean;
 }
 
+/**
+ * A pair that goes along a curve, not a straight line ("the mood rises with walking up to about
+ * 40 minutes, then stays"): found where the straight link is not strong, by the bend of the ranks
+ * (see `bend`), corrected for the number of pairs like the links.
+ */
+export interface CorrelationCurve {
+  a: string;
+  b: string;
+  lag: CorrelationLag;
+  n: number;
+  /** The standardized bend: + a valley (less in the middle), − a hill (more in the middle). */
+  bend: number;
+  /** The bend's p-value, corrected for the pairs compared (Benjamini–Hochberg). */
+  q: number;
+  /** The days in groups of `a`, with `b`'s average in each: the chart. */
+  groups: DoseGroup[];
+}
+
 /** What predicts a number, the others held fixed: a multiple regression. */
 export interface CorrelationRegression {
   target: string;
@@ -279,8 +306,8 @@ export interface CorrelationRegression {
   r2: number;
   terms: {
     key: string;
-    /** `1` — of the day before the target's day. */
-    lag: 0 | 1;
+    /** Days before the target's day: `1` — of the day before. */
+    lag: CorrelationLag;
     /** Standardized coefficient: the change of the target, in its spreads, for one spread of this. */
     beta: number;
     p: number;
@@ -295,6 +322,8 @@ export interface Correlations {
   correlations: Correlation[];
   /** For `target` of the query; `null` — too few days, or no such number. */
   regression: CorrelationRegression | null;
+  /** The pairs that bend, the surest first (see CorrelationCurve). */
+  curves: CorrelationCurve[];
   /** Every extra number with a value in the period, switched on or not: the filter's list. */
   extras: ExtraMetric[];
 }
@@ -320,6 +349,95 @@ export const correlationsQuerySchema = z.object({
   extra: z.string().max(4000).optional(),
 });
 export type CorrelationsQuery = z.infer<typeof correlationsQuerySchema>;
+
+// --- Unusual today (Life → Links, stage 2) ---
+
+/** A number far from its usual level on a day. */
+export interface UnusualNumber {
+  key: string;
+  module: string;
+  labelKey: string;
+  label?: string;
+  unit: DailyMetric['unit'];
+  currency?: string;
+  extra?: true;
+  outcome?: true;
+  value: number;
+  /** The median of the days it was compared with. */
+  usual: number;
+  direction: 'up' | 'down';
+  /**
+   * The share of those days the value was beyond — lower than it (`up`) or higher (`down`):
+   * 0.9 and more ("more than on 9 of 10 days").
+   */
+  beyond: number;
+  /** How many days it was compared with. */
+  days: number;
+  /**
+   * `days` — the last 28; `kind` — only the same kind of day (weekends or weekdays) of the last
+   * eight weeks, for a number that differs between them.
+   */
+  baseline: 'days' | 'kind';
+}
+
+export interface UnusualDay {
+  day: LocalDate;
+  /** `false` for today: not over, so a number is unusual only upwards (a sum can still grow). */
+  complete: boolean;
+  /** The rarest first. */
+  numbers: UnusualNumber[];
+}
+
+/** Today and yesterday, each with its unusual numbers. */
+export interface Unusual {
+  today: LocalDate;
+  days: UnusualDay[];
+}
+
+// --- What changed: the change points of the history (Life → Links, stage 2) ---
+
+/** A day a number's level changed, found over the whole history by a nightly job. */
+export interface LinksChange {
+  id: string;
+  key: string;
+  module: string;
+  labelKey: string;
+  label?: string;
+  unit: DailyMetric['unit'];
+  currency?: string;
+  extra?: true;
+  outcome?: true;
+  /** The first day of the new level. */
+  day: LocalDate;
+  /** The median of the level before and of the one after. */
+  before: number;
+  after: number;
+  /** The difference in the days' spread: 0.5 a noticeable change, 1 and more a large one. */
+  effect: number;
+  /** The other changes within a week of it (their ids): what else changed around then. */
+  near: string[];
+}
+
+/** Every change point, the latest first. */
+export interface LinksChanges {
+  changes: LinksChange[];
+}
+
+/** What of Links the user opens, for the achievements of exploring. */
+export const LINKS_SEEN_KINDS = ['change', 'dose'] as const;
+export const linksSeenSchema = z.discriminatedUnion('kind', [
+  /** A change point, by its id. */
+  z.object({kind: z.literal('change'), key: z.uuid()}),
+  /** A pair's chart: `a|b|lag`, the keys of the two numbers in the order the chart reads them. */
+  z.object({
+    kind: z.literal('dose'),
+    key: z
+      .string()
+      .max(300)
+      .regex(/^[^|]+\|[^|]+\|[0-3]$/),
+  }),
+]);
+export type LinksSeen = z.infer<typeof linksSeenSchema>;
 
 // --- Before and after an event of a life (Life → Links) ---
 

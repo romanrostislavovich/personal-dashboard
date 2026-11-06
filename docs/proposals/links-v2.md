@@ -386,3 +386,31 @@ becomes targets of this one forecaster, not formulas of their own.
   on Home, the evening summary and the assistant's tools.
 - **Steps of tasks and long tasks stay in the open loops** — a long task that does not move may be
   the very thing to notice.
+
+## Decisions for stage 2 (2026-11-06, the owner's)
+
+- **The baseline:** the last 28 days; a number that differs by weekday (weekends unlike weekdays)
+  is compared with the same weekdays of the last eight weeks instead.
+- **"Unusual":** further than on 9 of 10 days of the baseline (above its 90th percentile or below
+  its 10th). Today is not over: its numbers are "unusual" only upwards (a sum can still grow);
+  yesterday both ways.
+- **Which numbers:** all, the extra ones too.
+- **Shown:** a block on the Links page, a Home widget, a line in the evening summary, the
+  assistant's tools. **No judgement**: "more than on 9 of 10 days", an arrow, no good/bad colours.
+- **Change points:** over the whole history, found by a nightly server job and kept (a derived
+  table, like the indices); a "What changed" block on Links (the fresh ones first, the whole
+  history on a button) with what else changed around then, the assistant's tools, and **one calm
+  Telegram message about a fresh change of a main number, at most once a week**.
+- **Dose–response:** a small chart in the card of any pair (the first number in five groups of
+  its own days, the second's average in each), and a search for links that are not straight
+  lines ("up, then flat"), corrected for the number of pairs like the rest.
+- **Lags of 2–3 days:** to the outcomes only (what a day gives), in the same correction.
+- **Forecasts:** a stage of their own, right after this one.
+- **Achievements:** for exploring — change points and dose charts opened, and "an even day" (no
+  number unusual); never for the numbers themselves.
+
+**Built (2026-11-06):** all of the above, changed after the team review by the owner's word: the
+fresh changes are told in the **Monday morning digest** (its AI names the numbers by their
+keys), not in a message of their own; the history searched is three years; of one pair a day,
+two and three days later only the strongest lag counts as a link. The evening summary says how
+many numbers are above usual (the server has no translations of the numbers' names).

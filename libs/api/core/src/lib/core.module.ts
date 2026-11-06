@@ -34,6 +34,7 @@ import {AppsService} from './apps/apps.service';
 import {OutboundPolicy} from './net/outbound-policy';
 import {LinksService} from './links/links.service';
 import {ProjectOverviewService} from './links/project-overview.service';
+import {ChangePointsService} from './links/change-points.service';
 import {CoreSecuritySources} from './security/core.security-sources';
 import {SecurityAgent} from './security/security-agent.service';
 import {SecurityController} from './security/security.controller';
@@ -195,6 +196,7 @@ import {UserActivityService} from './realtime/user-activity.service';
     LinksAchievements,
     SectionsAchievements,
     ProjectOverviewService,
+    ChangePointsService,
     SignInLog,
     SecurityService,
     SecurityAgent,

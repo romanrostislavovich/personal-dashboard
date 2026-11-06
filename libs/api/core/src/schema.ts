@@ -5,6 +5,7 @@ export * from './lib/projects/projects.schema';
 export * from './lib/secrets/secrets.schema';
 export * from './lib/achievements/achievements.schema';
 export * from './lib/achievements/active-days.schema';
+export * from './lib/links/links.schema';
 export * from './lib/ai/ai.schema';
 export * from './lib/notifications/notifications.schema';
 export * from './lib/mcp/access-tokens.schema';

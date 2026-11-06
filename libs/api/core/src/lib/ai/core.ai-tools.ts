@@ -12,6 +12,7 @@ import {AchievementsService} from '../achievements/achievements.service';
 import {LifeService} from '../life/life.service';
 import {LinksService} from '../links/links.service';
 import {ProjectOverviewService} from '../links/project-overview.service';
+import {ChangePointsService} from '../links/change-points.service';
 import {ProjectsService} from '../projects/projects.service';
 import {
   changedFields,
@@ -58,6 +59,7 @@ export class CoreAiTools implements OnModuleInit {
     private readonly actions: AiActionsService,
     private readonly memories: AiMemoryService,
     private readonly recall: RecallService,
+    private readonly changes: ChangePointsService,
   ) {}
 
   onModuleInit(): void {
@@ -195,11 +197,15 @@ export class CoreAiTools implements OnModuleInit {
         'the outcomes (mood, tasks done, sleep, coding, focus; the `target` counts as one), ' +
         'everything against everything with `pairs: all`; extra (technical) numbers only when ' +
         'switched on in `extra` — `extras` lists their keys. ' +
-        'of the same day (lag 0) and of the next day (lag 1: `a` of a day, `b` of the day ' +
-        'after), by Spearman correlation `rho`, with `q` — the p-value corrected for the ' +
-        'number of pairs (and for the days’ own trends). Only the strong links are returned. ' +
-        '`beyondItself` (lag 1) — the correlation with yesterday’s `b` held fixed: when it ' +
-        'stays strong, `a` comes before `b` and tells about it (Granger’s idea). ' +
+        'of the same day (lag 0), of the next day (lag 1: `a` of a day, `b` of the day ' +
+        'after) and, towards the outcomes, two and three days later (lag 2, 3), by Spearman ' +
+        'correlation `rho`, with `q` — the p-value corrected for the ' +
+        'number of pairs (and for the days’ own trends). Only the strong links are returned; ' +
+        'of one pair a day, two and three days later only the strongest lag counts as strong. ' +
+        '`beyondItself` (a lag) — the correlation with `b` of `a`’s own day held fixed: ' +
+        'when it stays strong, `a` comes before `b` and tells about it (Granger’s idea). ' +
+        '`curves` — pairs that are not a straight line (`bend` − a hill, "up, then down"; + a ' +
+        'valley), with `groups`: `b`’s average on the days `a` was between `from` and `to`. ' +
         '`regression` — what predicts `target` (the mood by default) with the others held ' +
         'fixed: standardized `beta`, adjusted `r2`. It is still not proof of a cause: say so. ' +
         'Use a long period (three months and more).',
@@ -259,7 +265,97 @@ export class CoreAiTools implements OnModuleInit {
               slope,
             })),
           regression: found.regression,
+          curves: found.curves.slice(0, 15),
           extras: found.extras.map(({key, on}) => ({key, on})),
+        };
+      },
+    });
+    this.ai.registerTool({
+      name: 'core_unusual',
+      module: 'life',
+      description:
+        "Today's and yesterday's daily numbers far from the user's usual level: beyond 9 of " +
+        '10 days of the baseline (`beyond` — the share of those days the value was beyond; ' +
+        '`days` — how many; `baseline` `days` — the last 28, `kind` — the same kind of day, ' +
+        'weekends or weekdays, of eight weeks, for a number that differs between them). Today ' +
+        'is not over (`complete: false`): only what is already higher than usual. `usual` is ' +
+        'the median of the baseline. Say it without judgement ("more than on 9 of 10 days").',
+      parameters: {type: 'object', properties: {}},
+      handler: async userId => {
+        const found = await this.overviews.unusual(
+          userId,
+          await this.ai.hiddenFromShared(userId),
+        );
+        return {
+          today: found.today,
+          days: found.days.map(({day, complete, numbers}) => ({
+            day,
+            complete,
+            numbers: numbers.map(
+              ({
+                key,
+                unit,
+                value,
+                usual,
+                direction,
+                beyond,
+                days,
+                baseline,
+              }) => ({
+                key,
+                unit,
+                value,
+                usual,
+                direction,
+                beyond,
+                days,
+                baseline,
+              }),
+            ),
+          })),
+        };
+      },
+    });
+    this.ai.registerTool({
+      name: 'core_change_points',
+      module: 'life',
+      description:
+        'The days the level of a daily number changed, over the whole history, the latest ' +
+        'first ("since about 12 September the late-night phone is up"): `day` — the first ' +
+        'day of the new level, `before` and `after` — the medians of the levels, `effect` — ' +
+        'the difference in the days’ spread (0.5 noticeable, 1 and more large), `near` — the ' +
+        'keys of the other numbers that changed within a week of it. Found by a nightly ' +
+        'search; it says when, not why — say so, and ask what happened then.',
+      parameters: {
+        type: 'object',
+        properties: {
+          since: {
+            type: 'string',
+            description: 'Only the changes from this day on (YYYY-MM-DD)',
+          },
+        },
+      },
+      handler: async (userId, args) => {
+        const since = typeof args['since'] === 'string' ? args['since'] : '';
+        const {changes} = await this.changes.list(
+          userId,
+          await this.ai.hiddenFromShared(userId),
+        );
+        const keyOf = new Map(changes.map(change => [change.id, change.key]));
+        return {
+          changes: changes
+            .filter(change => change.day >= since)
+            .slice(0, 60)
+            .map(({key, unit, day, before, after, effect, extra, near}) => ({
+              key,
+              unit,
+              day,
+              before,
+              after,
+              effect,
+              extra: Boolean(extra),
+              near: near.map(id => keyOf.get(id)),
+            })),
         };
       },
     });

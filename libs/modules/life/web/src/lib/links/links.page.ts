@@ -20,16 +20,29 @@ import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {CORE_READS} from '@pd/client-core';
 import {
   Correlation,
+  CorrelationCurve,
   CorrelationMetric,
   CorrelationPairs,
   Correlations,
 } from '@pd/contracts';
+import {LifeApi} from '../life.api';
 import {BeforeAfterComponent} from './before-after.component';
+import {ChangesCardComponent} from './changes-card.component';
+import {CurvesCardComponent, curveSentence} from './curves-card.component';
+import {DoseChartComponent, dosePoints} from './dose-chart.component';
+import {UnusualCardComponent} from './unusual-card.component';
 import {CorrelationGraphComponent} from './correlation-graph.component';
 import {CorrelationMatrixComponent} from './correlation-matrix.component';
 import {CorrelationScatterComponent} from './correlation-scatter.component';
 import {LinksControlsComponent} from './links-controls.component';
 import {DIGITAL_METRIC_KEYS, isDigitalMetric} from './digital-metrics';
+import {
+  EXTRA_KEY,
+  localDate,
+  PAIRS_KEY,
+  remember,
+  remembered,
+} from './links-memory';
 import {moduleColor, SelectedPair} from './links-format';
 
 const PERIODS = [90, 180, 365, 730] as const;
@@ -37,31 +50,6 @@ const PERIODS = [90, 180, 365, 730] as const;
 const LISTED = 10;
 /** A link of a day to the next one that stays this strong with yesterday held fixed comes first. */
 const LEADS_FROM = 0.2;
-
-/** The filter's choice, remembered on this device. */
-const PAIRS_KEY = 'pd.links.pairs';
-const EXTRA_KEY = 'pd.links.extra';
-
-function remembered(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function remember(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // A private window: the choice lasts until the page is closed.
-  }
-}
-
-function localDate(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
 
 /**
  * Life → Links: how the daily numbers of every section go together — the strongest links in
@@ -73,10 +61,13 @@ function localDate(date: Date): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     BeforeAfterComponent,
+    ChangesCardComponent,
     CorrelationGraphComponent,
+    CurvesCardComponent,
     CorrelationMatrixComponent,
     CorrelationScatterComponent,
     DecimalPipe,
+    DoseChartComponent,
     LinksControlsComponent,
     MatButtonModule,
     MatButtonToggleModule,
@@ -88,12 +79,14 @@ function localDate(date: Date): string {
     MatTooltipModule,
     PercentPipe,
     TranslocoPipe,
+    UnusualCardComponent,
   ],
   templateUrl: './links.page.html',
   styleUrl: './links.page.scss',
 })
 export class LinksPage {
   private readonly transloco = inject(TranslocoService);
+  private readonly api = inject(LifeApi);
 
   protected readonly periods = PERIODS;
   protected readonly days = signal<number>(PERIODS[2]);
@@ -137,7 +130,7 @@ export class LinksPage {
     () => new Set((this.result()?.metrics ?? []).map(metric => metric.key)),
   );
 
-  private readonly byKey = computed(
+  protected readonly byKey = computed(
     () =>
       new Map(
         (this.result()?.metrics ?? []).map(metric => [metric.key, metric]),
@@ -168,6 +161,18 @@ export class LinksPage {
     this.showAll() ? this.strong() : this.strong().slice(0, LISTED),
   );
 
+  /** The pairs that bend (not a straight line), within the section filter like the links. */
+  protected readonly curves = computed(() => {
+    const filter = this.digitalFilter();
+    return (this.result()?.curves ?? []).filter(
+      curve =>
+        !filter ||
+        (filter === 'digital'
+          ? isDigitalMetric(curve.a) || isDigitalMetric(curve.b)
+          : curve.a === filter || curve.b === filter),
+    );
+  });
+
   /** Every extra number the filter can switch, on or off. */
   protected readonly extras = computed(() => this.result()?.extras ?? []);
 
@@ -191,7 +196,28 @@ export class LinksPage {
         )
       : (this.strong()[0] ?? all[0]);
     const [a, b] = found ? [this.metric(found.a), this.metric(found.b)] : [];
-    return found && a && b ? {pair: found, a, b} : null;
+    if (!found || !a || !b) {
+      return null;
+    }
+    // A pair of the same day chosen the other way round (a curve of b along a): its chart too.
+    const turned = chosen && !found.lag && found.a === chosen.b;
+    // Opened from the curves: said as the curve, not as the weak straight link it also is.
+    const curve = chosen
+      ? this.curves().find(
+          item =>
+            item.a === chosen.a &&
+            item.b === chosen.b &&
+            item.lag === chosen.lag,
+        )
+      : undefined;
+    return {
+      pair: found,
+      a,
+      b,
+      doseA: turned ? b : a,
+      doseB: turned ? a : b,
+      curve,
+    };
   });
 
   protected metric(key: string): CorrelationMetric | undefined {
@@ -228,18 +254,28 @@ export class LinksPage {
     return moduleColor(this.metric(key)?.module ?? '');
   }
 
+  protected curveText(curve: CorrelationCurve): string {
+    return curveSentence(curve, key => this.nameOf(key), this.transloco);
+  }
+
   /** The link in words: of the same day or the next, together or against. */
   protected sentence(pair: Correlation): string {
-    const key = pair.lag
-      ? pair.rho > 0
-        ? 'life.links.thenMore'
-        : 'life.links.thenLess'
-      : pair.rho > 0
-        ? 'life.links.together'
-        : 'life.links.against';
+    const key =
+      pair.lag > 1
+        ? pair.rho > 0
+          ? 'life.links.laterMore'
+          : 'life.links.laterLess'
+        : pair.lag
+          ? pair.rho > 0
+            ? 'life.links.thenMore'
+            : 'life.links.thenLess'
+          : pair.rho > 0
+            ? 'life.links.together'
+            : 'life.links.against';
     return this.transloco.translate(key, {
       a: this.nameOf(pair.a),
       b: this.nameOf(pair.b),
+      days: pair.lag,
     });
   }
 
@@ -254,6 +290,14 @@ export class LinksPage {
 
   protected choose(pair: SelectedPair): void {
     this.chosen.set(pair);
+    // For the achievements only, and only when the pair has a chart to look at; a lost mark is
+    // not worth a message.
+    const [a, b] = [this.metric(pair.a), this.metric(pair.b)];
+    if (a && b && dosePoints(a, b, pair.lag).groups.length >= 2) {
+      this.api
+        .seen({kind: 'dose', key: `${pair.a}|${pair.b}|${pair.lag}`})
+        .subscribe({error: () => undefined});
+    }
     document
       .getElementById('pd-links-pair')
       ?.scrollIntoView({behavior: 'smooth', block: 'start'});

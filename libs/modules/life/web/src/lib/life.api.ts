@@ -1,7 +1,7 @@
 import {httpResource} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {CORE_READS, lifeApi} from '@pd/client-core';
-import {LifeStory} from '@pd/contracts';
+import {LifeStory, LinksSeen} from '@pd/contracts';
 import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /** The Life requests of the client core (`@pd/client-core`) for Angular. */
@@ -17,5 +17,10 @@ export class LifeApi {
 
   writeStory(period: string) {
     return fromCore(() => this.life.writeStory(period));
+  }
+
+  /** Something of Links opened (a change point, a pair's chart): for the achievements. */
+  seen(item: LinksSeen) {
+    return fromCore(() => this.life.seen(item));
   }
 }

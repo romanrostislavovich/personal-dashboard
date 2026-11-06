@@ -47,6 +47,7 @@ const NOT_EXPORTED = new Set([
   'vpn_days',
   // Counted again from the spans by the server's job (Links v2's indices of the days).
   'activity_day_indices',
+  'links_change_points',
 ]);
 
 export const USER_COLUMN = 'user_id';

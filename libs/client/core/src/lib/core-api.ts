@@ -11,6 +11,7 @@ import {
   AuthClient as AuthClientKind,
   AuthConfig,
   CorrelationPairs,
+  LinksSeen,
   AutomationRule,
   AutomationRuleInput,
   LifeStory,
@@ -155,6 +156,10 @@ export const CORE_READS = {
     }),
   /** Every daily number before and after the start or the end of a period of Health. */
   beforeAfter: (weeks: number) => apiRequest('/api/life/before-after', {weeks}),
+  /** Today's and yesterday's numbers far from their usual level. */
+  unusual: () => apiRequest('/api/life/unusual'),
+  /** The days the numbers' levels changed, over the whole history. */
+  changePoints: () => apiRequest('/api/life/changes'),
   /** The AI's kept story of `YYYY-MM` or `YYYY`: `{ story: null }` — not written yet. */
   lifeStory: (period: string) => apiRequest('/api/life/story', {period}),
   /** Every connection to an outside service with its state. */
@@ -226,6 +231,8 @@ export function lifeApi(api: ApiClient) {
     /** Writes (or writes again) the AI's story of `YYYY-MM` or `YYYY`. */
     writeStory: (period: string) =>
       api.post<{story: LifeStory | null}>('/api/life/story', {period}),
+    /** Something of Links opened: a change point or a pair's chart (for the achievements). */
+    seen: (item: LinksSeen) => api.post<void>('/api/life/seen', item),
   };
 }
 

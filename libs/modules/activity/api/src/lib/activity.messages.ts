@@ -1,6 +1,15 @@
 import {pickMessages} from '@pd/api-core';
 import {DaySummary} from './evening-summary';
 
+/** The Russian form of a count: 1 число, 2 числа, 5 чисел. */
+function plural(count: number, one: string, few: string, many: string) {
+  const [tens, units] = [count % 100, count % 10];
+  if (tens >= 11 && tens <= 14) {
+    return many;
+  }
+  return units === 1 ? one : units >= 2 && units <= 4 ? few : many;
+}
+
 /** "Deep work 2 h 10 min · draining 40 min" — what is known of the two; empty when neither. */
 function indexLine(
   indices: DaySummary['indices'],
@@ -114,6 +123,9 @@ const messages = {
           ? `Focus: ${summary.focus.completed} sessions, ${hours(summary.focus.seconds, 'h', 'min')}`
           : '',
         indexLine(summary.indices, 'Deep work', 'draining', 'h', 'min'),
+        summary.unusual
+          ? `Above usual today: ${summary.unusual} ${summary.unusual === 1 ? 'number' : 'numbers'} — see Links`
+          : '',
         ...summary.limits.map(
           l =>
             `Limit reached: ${l.label} (${hours(l.minutes * 60, 'h', 'min')})`,
@@ -184,6 +196,9 @@ const messages = {
           ? `Фокус: ${summary.focus.completed} сес., ${hours(summary.focus.seconds, 'ч', 'мин')}`
           : '',
         indexLine(summary.indices, 'Глубокая работа', 'истощающее', 'ч', 'мин'),
+        summary.unusual
+          ? `Выше обычного сегодня: ${summary.unusual} ${plural(summary.unusual, 'число', 'числа', 'чисел')} — смотри в Links`
+          : '',
         ...summary.limits.map(
           l =>
             `Лимит превышен: ${l.label} (${hours(l.minutes * 60, 'ч', 'мин')})`,
