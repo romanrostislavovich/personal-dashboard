@@ -15,6 +15,7 @@ import {ProjectsService} from '../projects/projects.service';
 import {UsersService} from '../users/users.service';
 import {Period} from './links.service';
 import {ProjectOverviewService} from './project-overview.service';
+import {ChangePointsService, EVEN_DAY} from './change-points.service';
 
 /** Shown under "Home" on the achievements page, with the others about the dashboard itself. */
 const MODULE = 'dashboard';
@@ -67,6 +68,7 @@ export class LinksAchievements implements OnModuleInit {
     private readonly projects: ProjectsService,
     private readonly overviews: ProjectOverviewService,
     private readonly users: UsersService,
+    private readonly changes: ChangePointsService,
   ) {}
 
   onModuleInit(): void {
@@ -141,6 +143,94 @@ export class LinksAchievements implements OnModuleInit {
             en: 'Five things differ between your good and bad days',
             ru: 'Пять вещей отличают ваши хорошие дни от плохих',
           },
+        ],
+      ),
+    });
+
+    // Links v2, stage 2: for exploring one's own numbers, never for the numbers themselves.
+    this.achievements.register({
+      id: 'dashboard.changes-explored',
+      module: MODULE,
+      measure: userId => this.changes.seenCount(userId, 'change'),
+      tiers: achievementTiers(
+        [
+          1,
+          '📈',
+          {en: 'Turning point', ru: 'Точка перелома'},
+          {
+            en: 'Look at a day a number of yours changed its level (Links → What changed)',
+            ru: 'Посмотреть день, когда одно из ваших чисел сменило уровень (Links → Что менялось)',
+          },
+        ],
+        [
+          10,
+          '🗺️',
+          {en: 'Chronicler', ru: 'Летописец'},
+          {en: 'Look at ten changes', ru: 'Посмотреть десять переломов'},
+        ],
+        [
+          50,
+          '📜',
+          {en: 'Historian of oneself', ru: 'Историк самого себя'},
+          {en: 'Look at fifty changes', ru: 'Посмотреть пятьдесят переломов'},
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'dashboard.doses-explored',
+      module: MODULE,
+      measure: userId => this.changes.seenCount(userId, 'dose'),
+      tiers: achievementTiers(
+        [
+          1,
+          '⚖️',
+          {en: 'How much is enough', ru: 'Сколько — в самый раз'},
+          {
+            en: 'Open how one number goes with another, group by group (Links → a pair)',
+            ru: 'Открыть, как одно число идёт с другим по группам (Links → пара)',
+          },
+        ],
+        [
+          10,
+          '🧪',
+          {en: 'Measured dose', ru: 'Выверенная доза'},
+          {en: 'Open ten pairs this way', ru: 'Открыть так десять пар'},
+        ],
+        [
+          50,
+          '🔬',
+          {en: 'Own laboratory', ru: 'Своя лаборатория'},
+          {en: 'Open fifty pairs this way', ru: 'Открыть так пятьдесят пар'},
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'dashboard.even-days',
+      module: MODULE,
+      measure: userId => this.changes.seenCount(userId, EVEN_DAY),
+      tiers: achievementTiers(
+        [
+          1,
+          '🌤️',
+          {en: 'An even day', ru: 'Ровный день'},
+          {
+            en: 'A day with none of your numbers far from usual',
+            ru: 'День, когда ни одно из ваших чисел не ушло далеко от обычного',
+          },
+        ],
+        [
+          10,
+          '🍃',
+          {en: 'Steady pace', ru: 'Ровный ход'},
+          {en: 'Ten even days', ru: 'Десять ровных дней'},
+        ],
+        [
+          50,
+          '⛰️',
+          {en: 'Calm waters', ru: 'Тихая вода'},
+          {en: 'Fifty even days', ru: 'Пятьдесят ровных дней'},
         ],
       ),
     });

@@ -3,6 +3,7 @@ import {
   DB,
   Database,
   NotificationsService,
+  ProjectOverviewService,
   SchedulerService,
   UsersService,
 } from '@pd/api-core';
@@ -38,6 +39,7 @@ export class EveningSummaryJob implements OnModuleInit {
     private readonly activity: ActivityService,
     private readonly wellbeing: WellbeingService,
     private readonly dayIndices: IndicesService,
+    private readonly overviews: ProjectOverviewService,
   ) {}
 
   onModuleInit(): void {
@@ -91,6 +93,13 @@ export class EveningSummaryJob implements OnModuleInit {
       .where(eq(activityLimits.userId, userId));
     const text = activityMessages((await this.users.findById(userId))?.locale);
     const indices = await this.todayIndices(userId, now.date);
+    const unusual = await this.overviews
+      .unusual(userId)
+      .then(found => found.days[0]?.numbers.length ?? null)
+      .catch(error => {
+        this.logger.warn(`Unusual numbers not known for ${userId}: ${error}`);
+        return null;
+      });
     const summary = summaryOf(
       stats,
       {completed: focus.completed, seconds: focus.focusSeconds},
@@ -101,6 +110,7 @@ export class EveningSummaryJob implements OnModuleInit {
           minutes: limit.minutes,
         })),
       indices,
+      unusual,
     );
     if (!summary) {
       return;

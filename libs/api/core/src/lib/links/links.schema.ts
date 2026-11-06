@@ -54,9 +54,12 @@ export const linksSeen = pgTable(
     userId: uuid()
       .notNull()
       .references(() => users.id, {onDelete: 'cascade'}),
-    /** `change` — a change point; `dose` — the chart of a pair. */
+    /**
+     * `change` — a change point; `dose` — the chart of a pair; `even` — a day with nothing
+     * unusual, kept by the nightly job.
+     */
     kind: text().notNull(),
-    /** The change's `key@day`, or the pair's `a|b`. */
+    /** The change's id, the pair's `a|b`, or the even day. */
     key: text().notNull(),
     seenAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },

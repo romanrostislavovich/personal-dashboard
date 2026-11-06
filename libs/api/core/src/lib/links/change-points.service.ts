@@ -14,7 +14,8 @@ import {forEachUser} from '../scheduler/for-each-user';
 import {SchedulerService} from '../scheduler/scheduler.service';
 import {UsersService} from '../users/users.service';
 import {ChangePoint, changePoints} from './change-points';
-import {shift} from './daily-series';
+import {seriesOf, shift} from './daily-series';
+import {unusualOn} from './unusual';
 import {LinksService} from './links.service';
 import {linksChangePoints, linksSeen} from './links.schema';
 
@@ -26,11 +27,16 @@ const FRESH_DAYS = 28;
 const MESSAGE_EVERY_DAYS = 7;
 /** A change found again a few days off is the same change (its message is not sent again). */
 const SAME_WITHIN_DAYS = 7;
+/** A day is "even" (nothing unusual) only when at least this many numbers had a value. */
+const EVEN_DAY_NUMBERS = 10;
 /** What else changed "around then": within this many days. */
 const NEAR_DAYS = 7;
 const DAY_MS = 86_400_000;
 
 type Row = typeof linksChangePoints.$inferSelect;
+
+/** The kind of a `links_seen` row of a day with nothing unusual (kept by the job, see markEven). */
+export const EVEN_DAY = 'even';
 
 /**
  * "What changed": the change points of every number over the whole history (see changePoints),
@@ -68,6 +74,31 @@ export class ChangePointsService implements OnModuleInit {
     const found = changePoints(metrics, period);
     const kept = await this.keep(userId, metrics, found);
     await this.tell(userId, kept, today, now);
+    await this.markEven(userId, metrics, period.to);
+  }
+
+  /**
+   * Yesterday kept as "an even day" when none of its numbers was unusual (for the achievement;
+   * a day of a few numbers says nothing). Here, not in the read of the unusual numbers: a read
+   * writes nothing.
+   */
+  private async markEven(
+    userId: string,
+    metrics: DailyMetric[],
+    day: string,
+  ): Promise<void> {
+    const known = metrics.filter(metric =>
+      seriesOf(metric, [day]).has(day),
+    ).length;
+    if (
+      known >= EVEN_DAY_NUMBERS &&
+      !unusualOn(metrics, day, true).numbers.length
+    ) {
+      await this.db
+        .insert(linksSeen)
+        .values({userId, kind: EVEN_DAY, key: day})
+        .onConflictDoNothing();
+    }
   }
 
   async list(userId: string, hidden: string[] = []): Promise<LinksChanges> {
@@ -89,8 +120,11 @@ export class ChangePointsService implements OnModuleInit {
       .onConflictDoNothing();
   }
 
-  /** How many things of a kind the user has opened. */
-  async seenCount(userId: string, kind: LinksSeen['kind']): Promise<number> {
+  /** How many things of a kind the user has opened (or how many even days were kept). */
+  async seenCount(
+    userId: string,
+    kind: LinksSeen['kind'] | typeof EVEN_DAY,
+  ): Promise<number> {
     const [row] = await this.db
       .select({value: count()})
       .from(linksSeen)

@@ -1,4 +1,5 @@
 import {ActivityStats} from '@pd/contracts';
+import {activityMessages} from './activity.messages';
 import {isSummaryDue, summaryOf} from './evening-summary';
 
 describe('isSummaryDue', () => {
@@ -37,6 +38,25 @@ describe('summaryOf', () => {
       'games',
       'browsing',
     ]);
+  });
+
+  it('tells how many numbers are above usual, in the right Russian form', () => {
+    const summary = (unusual: number | null) =>
+      summaryOf(
+        stats(5600),
+        {completed: 0, seconds: 0},
+        [],
+        {deepWork: null, draining: null},
+        unusual,
+      );
+    const ru = activityMessages('ru');
+    expect(ru.summaryBody(summary(1)!)).toContain('1 число');
+    expect(ru.summaryBody(summary(3)!)).toContain('3 числа');
+    expect(ru.summaryBody(summary(11)!)).toContain('11 чисел');
+    expect(activityMessages('en').summaryBody(summary(2)!)).toContain(
+      'Above usual today: 2 numbers',
+    );
+    expect(ru.summaryBody(summary(0)!)).not.toContain('обычного');
   });
 
   it('skips a day with almost nothing', () => {

@@ -10,6 +10,8 @@ export interface DaySummary {
   limits: {label: string; minutes: number}[];
   /** Links v2's indices of today, hours: deep work and the draining time; `null` — not known. */
   indices: {deepWork: number | null; draining: number | null};
+  /** How many of today's numbers are far above their usual level (Links); `null` — not known. */
+  unusual: number | null;
 }
 
 /** Less than this at the computer is not a day worth summing up. */
@@ -20,6 +22,7 @@ export function summaryOf(
   focus: {completed: number; seconds: number},
   limits: DaySummary['limits'],
   indices: DaySummary['indices'] = {deepWork: null, draining: null},
+  unusual: number | null = null,
 ): DaySummary | null {
   if (stats.totalSeconds < SUMMARY_MIN_SECONDS) {
     return null;
@@ -30,6 +33,7 @@ export function summaryOf(
     focus,
     limits,
     indices,
+    unusual,
   };
 }
 
