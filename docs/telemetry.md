@@ -129,6 +129,7 @@ Fixed keys plus families (`<category>`, `<site>`, `<habit id>`, `<analyte>`, `<n
 | `health.lab.<analyte>\|<unit>`          | score                               | each lab value on the day it was taken                                                         |        |                     |
 | `psychology.who5`, `.gad7`, `.phq9`     | score                               | questionnaires, held until the next answer                                                     |        |                     |
 | `diary.mood`                            | score (1–5)                         | the diary's mood                                                                               |        |                     |
+| `diary.energy`, `diary.anxiety`         | score (1–5)                         | the evening check-in next to the mood (the page, the bot after the mood); outcomes             |        |                     |
 | `diary.words`                           | count                               | words written                                                                                  |        |                     |
 | `habits.<habit id>`                     | count                               | marked days (0 on a clean day)                                                                 |        |                     |
 | `tasks.done`, `tasks.created`           | count                               | tasks                                                                                          |        |                     |

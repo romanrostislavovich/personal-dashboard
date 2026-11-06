@@ -169,7 +169,9 @@
     "mood": "Mood",
     "words": "Words in the diary",
     "moodSpread": "Mood swings (two weeks)",
-    "tag": "A diary tag"
+    "tag": "A diary tag",
+    "energy": "Energy (evening check-in)",
+    "anxiety": "Anxiety (evening check-in)"
   },
   "dayContext": {
     "title": "What the day was like"
@@ -177,5 +179,23 @@
   "held": {
     "evening": "The quiet hours hold it: it comes at {{till}}. Change the quiet hours →",
     "weekly": "The quiet hours hold the review: it comes at {{till}}. Change the quiet hours →"
+  },
+  "feelings": {
+    "energy": {
+      "label": "Energy",
+      "1": "1 — none",
+      "2": "2 — little",
+      "3": "3 — some",
+      "4": "4 — good",
+      "5": "5 — plenty"
+    },
+    "anxiety": {
+      "label": "Anxiety",
+      "1": "1 — calm",
+      "2": "2 — a little",
+      "3": "3 — noticeable",
+      "4": "4 — strong",
+      "5": "5 — very anxious"
+    }
   }
 }

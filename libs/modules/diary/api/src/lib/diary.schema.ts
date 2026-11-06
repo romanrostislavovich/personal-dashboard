@@ -38,6 +38,9 @@ export const diaryEntries = pgTable(
     /** Counted when the entry is saved: the database cannot count the words of ciphertext. */
     words: integer().notNull().default(0),
     mood: smallint(),
+    /** The evening check-in next to the mood, 1–5 each: how much energy, how much anxiety. */
+    energy: smallint(),
+    anxiety: smallint(),
     /** Hashtags from the text — stored separately for fast filtering. */
     tags: text().array().notNull().default([]),
     /** Emoji marks from the text (`==🔥 text==`) — for filtering by emoji. */

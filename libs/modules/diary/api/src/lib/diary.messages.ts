@@ -12,6 +12,12 @@ const messages = {
       'How was your day? Tap a mood — then I will ask for a couple of words.',
     checkInAskWords: (emoji: string) =>
       `${emoji} Saved. A few words about the day? Your next message goes to the diary.`,
+    moodNoted: (emoji: string) => `${emoji} Noted.`,
+    energyTitle: '🔋 Energy',
+    energyBody: 'How much energy did you have today? 1 — none, 5 — plenty.',
+    anxietyTitle: '🌊 Anxiety',
+    anxietyBody: 'How anxious were you today? 1 — calm, 5 — very anxious.',
+    feelingNoted: 'Noted.',
     weeklyTitle: '📔 Your week',
     weeklyAnswer: '✍️ Answer',
     weeklyAnswerAsk:
@@ -34,6 +40,13 @@ const messages = {
       'Как прошёл день? Нажми на настроение — потом спрошу пару слов.',
     checkInAskWords: (emoji: string) =>
       `${emoji} Записал. Пару слов о дне? Следующее сообщение пойдёт в дневник.`,
+    moodNoted: (emoji: string) => `${emoji} Записал.`,
+    energyTitle: '🔋 Энергия',
+    energyBody: 'Сколько сегодня было энергии? 1 — совсем нет, 5 — много.',
+    anxietyTitle: '🌊 Тревога',
+    anxietyBody:
+      'Насколько тревожно было сегодня? 1 — спокойно, 5 — очень тревожно.',
+    feelingNoted: 'Записал.',
     weeklyTitle: '📔 Твоя неделя',
     weeklyAnswer: '✍️ Ответить',
     weeklyAnswerAsk:

@@ -29,6 +29,8 @@ export class DiaryLinks implements OnModuleInit {
           .select({
             day: diaryEntries.day,
             mood: diaryEntries.mood,
+            energy: diaryEntries.energy,
+            anxiety: diaryEntries.anxiety,
             words: diaryEntries.words,
             tags: diaryEntries.tags,
           })
@@ -52,6 +54,19 @@ export class DiaryLinks implements OnModuleInit {
               mood === null ? [] : [{day, value: mood}],
             ),
           },
+          // The evening check-in: what a day gives, like the mood.
+          ...(['energy', 'anxiety'] as const).map((feeling): DailyMetric => ({
+            key: `diary.${feeling}`,
+            module: 'diary',
+            labelKey: `diary.links.${feeling}`,
+            unit: 'score',
+            outcome: true,
+            days: days.flatMap(day =>
+              day[feeling] === null
+                ? []
+                : [{day: day.day, value: day[feeling] as number}],
+            ),
+          })),
           {
             key: 'diary.words',
             module: 'diary',

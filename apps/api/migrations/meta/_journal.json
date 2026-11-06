@@ -904,6 +904,13 @@
       "when": 1793926116090,
       "tag": "0128_activity_day_indices",
       "breakpoints": true
+    },
+    {
+      "idx": 129,
+      "version": "7",
+      "when": 1793931148048,
+      "tag": "0129_diary_check_in",
+      "breakpoints": true
     }
   ]
 }

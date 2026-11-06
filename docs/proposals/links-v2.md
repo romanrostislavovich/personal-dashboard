@@ -367,6 +367,10 @@ becomes targets of this one forecaster, not formulas of their own.
 - **The catalogue's drop list:** dropped as proposed.
 - **An evening check-in in Psychology:** yes — **energy** and **anxiety** to start with, more
   questions later; the answers come to Links as numbers (outcomes).
+- **The check-in lives in the Diary** (2026-11-06, the owner's): asked together with the diary's
+  evening question — the mood, then energy, then anxiety (1–5 each, Telegram buttons), then a few
+  words — and kept in the day's entry (`diary_entries.energy`, `anxiety`); `diary.energy` and
+  `diary.anxiety` are outcomes of Links.
 - **The first forecasts:** bedtime, tomorrow's deep work, tasks done, mood.
 - **Start with stage 0**, then stage 1.
 

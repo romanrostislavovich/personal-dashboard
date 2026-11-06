@@ -45,6 +45,7 @@ import {
   FormatAction,
   TABLE_ACTIONS,
 } from './editor/format-actions';
+import {FeelingPickerComponent} from './feeling-picker.component';
 import {MOOD_EMOJI} from './mood';
 
 /** Pause in typing after which the entry is saved. */
@@ -54,12 +55,20 @@ interface Snapshot {
   day: LocalDate;
   content: string;
   mood: number | null;
+  energy: number | null;
+  anxiety: number | null;
   /** The stored version the text was written over (see DiaryEntryInput.basedOn). */
   basedOn: string | null;
 }
 
 /** What the editor shows for a day without an entry. */
-const NO_ENTRY = {content: '', mood: null, updatedAt: null};
+const NO_ENTRY = {
+  content: '',
+  mood: null,
+  energy: null,
+  anxiety: null,
+  updatedAt: null,
+};
 
 type EditorMode = 'visual' | 'markdown';
 
@@ -72,6 +81,7 @@ type EditorMode = 'visual' | 'markdown';
   selector: 'pd-diary-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    FeelingPickerComponent,
     DatePipe,
     FormsModule,
     MatCardModule,
@@ -108,6 +118,9 @@ export class DiaryEditorComponent {
 
   protected readonly content = signal('');
   protected readonly mood = signal<number | null>(null);
+  /** The evening check-in next to the mood, 1–5 each. */
+  protected readonly energy = signal<number | null>(null);
+  protected readonly anxiety = signal<number | null>(null);
   protected readonly mode = signal<EditorMode>('visual');
   protected readonly status = signal<'idle' | 'saving' | 'error'>('idle');
   protected readonly savedAt = signal<string | null>(null);
@@ -150,10 +163,13 @@ export class DiaryEditorComponent {
       if (this.entry.status() !== 'resolved') {
         return;
       }
-      const {content, mood, updatedAt} = this.entry.value() ?? NO_ENTRY;
+      const {content, mood, energy, anxiety, updatedAt} =
+        this.entry.value() ?? NO_ENTRY;
       untracked(() => {
         this.content.set(content);
         this.mood.set(mood);
+        this.energy.set(energy);
+        this.anxiety.set(anxiety);
         this.savedAt.set(updatedAt);
         this.basedOn = updatedAt;
         this.status.set('idle');
@@ -193,12 +209,22 @@ export class DiaryEditorComponent {
     this.scheduleSave();
   }
 
+  protected setFeeling(
+    feeling: 'energy' | 'anxiety',
+    value: number | null,
+  ): void {
+    this[feeling].set(value);
+    this.scheduleSave();
+  }
+
   /** Remembers what to save and waits for a pause in typing. */
   protected scheduleSave(): void {
     this.pending = {
       day: this.day(),
       content: this.content(),
       mood: this.mood(),
+      energy: this.energy(),
+      anxiety: this.anxiety(),
       basedOn: this.basedOn,
     };
     this.status.set('saving');
@@ -225,6 +251,8 @@ export class DiaryEditorComponent {
         this.api.save(snapshot.day, {
           content: snapshot.content,
           mood: snapshot.mood,
+          energy: snapshot.energy,
+          anxiety: snapshot.anxiety,
           basedOn: snapshot.basedOn,
         }),
       );

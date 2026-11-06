@@ -52,6 +52,16 @@
           </button>
         }
       </div>
+      <pd-diary-feeling-picker
+        feeling="energy"
+        [value]="energy()"
+        (changed)="setFeeling('energy', $event)"
+      />
+      <pd-diary-feeling-picker
+        feeling="anxiety"
+        [value]="anxiety()"
+        (changed)="setFeeling('anxiety', $event)"
+      />
       <mat-button-toggle-group
         [value]="mode()"
         (change)="switchMode($event.value)"
