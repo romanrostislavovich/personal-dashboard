@@ -12,6 +12,7 @@ import {AchievementsService} from '../achievements/achievements.service';
 import {LifeService} from '../life/life.service';
 import {LinksService} from '../links/links.service';
 import {ProjectOverviewService} from '../links/project-overview.service';
+import {ChangePointsService} from '../links/change-points.service';
 import {ProjectsService} from '../projects/projects.service';
 import {
   changedFields,
@@ -58,6 +59,7 @@ export class CoreAiTools implements OnModuleInit {
     private readonly actions: AiActionsService,
     private readonly memories: AiMemoryService,
     private readonly recall: RecallService,
+    private readonly changes: ChangePointsService,
   ) {}
 
   onModuleInit(): void {
@@ -310,6 +312,49 @@ export class CoreAiTools implements OnModuleInit {
               }),
             ),
           })),
+        };
+      },
+    });
+    this.ai.registerTool({
+      name: 'core_change_points',
+      module: 'life',
+      description:
+        'The days the level of a daily number changed, over the whole history, the latest ' +
+        'first ("since about 12 September the late-night phone is up"): `day` — the first ' +
+        'day of the new level, `before` and `after` — the medians of the levels, `effect` — ' +
+        'the difference in the days’ spread (0.5 noticeable, 1 and more large), `near` — the ' +
+        'keys of the other numbers that changed within a week of it. Found by a nightly ' +
+        'search; it says when, not why — say so, and ask what happened then.',
+      parameters: {
+        type: 'object',
+        properties: {
+          since: {
+            type: 'string',
+            description: 'Only the changes from this day on (YYYY-MM-DD)',
+          },
+        },
+      },
+      handler: async (userId, args) => {
+        const since = typeof args['since'] === 'string' ? args['since'] : '';
+        const {changes} = await this.changes.list(
+          userId,
+          await this.ai.hiddenFromShared(userId),
+        );
+        const keyOf = new Map(changes.map(change => [change.id, change.key]));
+        return {
+          changes: changes
+            .filter(change => change.day >= since)
+            .slice(0, 60)
+            .map(({key, unit, day, before, after, effect, extra, near}) => ({
+              key,
+              unit,
+              day,
+              before,
+              after,
+              effect,
+              extra: Boolean(extra),
+              near: near.map(id => keyOf.get(id)),
+            })),
         };
       },
     });

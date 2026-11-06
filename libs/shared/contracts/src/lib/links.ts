@@ -395,6 +395,44 @@ export interface Unusual {
   days: UnusualDay[];
 }
 
+// --- What changed: the change points of the history (Life → Links, stage 2) ---
+
+/** A day a number's level changed, found over the whole history by a nightly job. */
+export interface LinksChange {
+  id: string;
+  key: string;
+  module: string;
+  labelKey: string;
+  label?: string;
+  unit: DailyMetric['unit'];
+  currency?: string;
+  extra?: true;
+  outcome?: true;
+  /** The first day of the new level. */
+  day: LocalDate;
+  /** The median of the level before and of the one after. */
+  before: number;
+  after: number;
+  /** The difference in the days' spread: 0.5 a noticeable change, 1 and more a large one. */
+  effect: number;
+  /** The other changes within a week of it (their ids): what else changed around then. */
+  near: string[];
+}
+
+/** Every change point, the latest first. */
+export interface LinksChanges {
+  changes: LinksChange[];
+}
+
+/** What of Links the user opens, for the achievements of exploring. */
+export const LINKS_SEEN_KINDS = ['change', 'dose'] as const;
+export const linksSeenSchema = z.object({
+  kind: z.enum(LINKS_SEEN_KINDS),
+  /** A change's id, or a pair as `a|b`. */
+  key: z.string().min(1).max(300),
+});
+export type LinksSeen = z.infer<typeof linksSeenSchema>;
+
 // --- Before and after an event of a life (Life → Links) ---
 
 /** The windows "before and after" compare, in weeks. */

@@ -25,6 +25,11 @@ const messages = {
       legendary: 'Legendary',
     },
     morningDigestTitle: '☀️ Good morning',
+    changesTitle: '📈 Something has changed',
+    changesBody: (count: number) =>
+      count === 1
+        ? 'One of your numbers has settled at a new level lately. See what and since when in Links → What changed.'
+        : `${count} of your numbers have settled at a new level lately. See what and since when in Links → What changed.`,
     aiLanguage: 'English',
     askUsage:
       'Write a question after the command, e.g. /ask what birthdays are this week?',
@@ -123,6 +128,11 @@ Settings → Sync on the computer: "Resync everything" usually fixes it.`,
       legendary: 'Легендарная',
     },
     morningDigestTitle: '☀️ Доброе утро',
+    changesTitle: '📈 Кое-что изменилось',
+    changesBody: (count: number) =>
+      count === 1
+        ? 'Одно из твоих чисел недавно перешло на новый уровень. Что и с какого дня — в Links → Что менялось.'
+        : `Несколько твоих чисел (${count}) недавно перешли на новый уровень. Что и с какого дня — в Links → Что менялось.`,
     aiLanguage: 'Russian',
     askUsage:
       'Напиши вопрос после команды, например: /ask какие дни рождения на этой неделе?',

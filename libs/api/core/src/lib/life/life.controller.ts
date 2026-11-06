@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Post,
   Query,
 } from '@nestjs/common';
@@ -21,6 +22,9 @@ import {
   LifeSummary,
   LifeSummaryQuery,
   lifeSummaryQuerySchema,
+  LinksChanges,
+  LinksSeen,
+  linksSeenSchema,
   MoodForecast,
   MoodInsights,
   MoodInsightsQuery,
@@ -30,6 +34,7 @@ import {
 import {AiService} from '../ai/ai.service';
 import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
 import {ProjectOverviewService} from '../links/project-overview.service';
+import {ChangePointsService} from '../links/change-points.service';
 import {ZodValidationPipe} from '../validation/zod-validation.pipe';
 import {LifeStoriesService} from './life-stories.service';
 import {LifeService} from './life.service';
@@ -42,6 +47,7 @@ export class LifeController {
     private readonly stories: LifeStoriesService,
     private readonly ai: AiService,
     private readonly overviews: ProjectOverviewService,
+    private readonly changes: ChangePointsService,
   ) {}
 
   /** What goes with the days of a good mood and of a bad one, across the sections. */
@@ -74,6 +80,22 @@ export class LifeController {
   @Get('unusual')
   unusual(@CurrentUser() user: AuthUser): Promise<Unusual> {
     return this.overviews.unusual(user.id);
+  }
+
+  /** The days the numbers' levels changed, over the whole history, the latest first. */
+  @Get('changes')
+  changePoints(@CurrentUser() user: AuthUser): Promise<LinksChanges> {
+    return this.changes.list(user.id);
+  }
+
+  /** Something of Links opened: a change point or a pair's chart (for the achievements). */
+  @Post('seen')
+  @HttpCode(204)
+  seen(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(linksSeenSchema)) body: LinksSeen,
+  ): Promise<void> {
+    return this.changes.seen(user.id, body);
   }
 
   /** Every daily number before and after the start or the end of a period of Health. */
