@@ -82,7 +82,10 @@ export class PlacesLinks implements OnModuleInit {
     });
   }
 
-  /** On foot, on the way, at home, new places: each only on the days the phone told enough. */
+  /**
+   * On foot, by bike, riding, on the way, at home, at each named place (the five of the most
+   * days), new places: each only on the days the phone told enough.
+   */
   private async numbers(
     userId: string,
     period: ActivityPeriod,
@@ -104,12 +107,48 @@ export class PlacesLinks implements OnModuleInit {
       }),
     });
     return [
-      metric('walk', 'hours', day => hours(day.walkSeconds)),
+      {
+        ...metric('walk', 'hours', day => hours(day.walkSeconds)),
+        partOf: 'activity.places.onTheWay',
+      },
       metric('onTheWay', 'hours', day => hours(day.tripSeconds)),
       metric('home', 'hours', day =>
         day.homeSeconds === null ? null : hours(day.homeSeconds),
       ),
+      {
+        ...metric('bike', 'hours', day => hours(day.bikeSeconds)),
+        partOf: 'activity.places.onTheWay',
+      },
+      {
+        ...metric('ride', 'hours', day => hours(day.rideSeconds)),
+        partOf: 'activity.places.onTheWay',
+      },
       metric('newPlaces', 'count', day => day.newPlaces),
-    ].filter(one => one.days.length);
+      ...namedPlaces(days).map(({id, name}) => ({
+        ...metric(`at.${id}`, 'hours', day =>
+          hours(day.named.get(id)?.seconds ?? 0),
+        ),
+        labelKey: 'activity.links.atPlace',
+        label: name,
+      })),
+    ].filter(one => one.days.some(day => day.value > 0));
   }
+}
+
+/** The named places of the most days (home is its own number): five at most, five days at least. */
+function namedPlaces(days: PlaceDayNumbers[]): {id: string; name: string}[] {
+  const seen = new Map<string, {name: string; days: number}>();
+  for (const day of days) {
+    for (const [id, {name, seconds}] of day.named) {
+      if (seconds > 0) {
+        const place = seen.get(id) ?? {name, days: 0};
+        seen.set(id, {name, days: place.days + 1});
+      }
+    }
+  }
+  return [...seen]
+    .filter(([, place]) => place.days >= 5)
+    .sort((a, b) => b[1].days - a[1].days)
+    .slice(0, 5)
+    .map(([id, {name}]) => ({id, name}));
 }

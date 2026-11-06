@@ -224,6 +224,22 @@ export class WakatimeService {
   }
 
   /** How many different names of a kind (languages, projects) got at least `minSeconds` in total. */
+  /** How many projects (or languages) were coded in on `minDays` different days or more. */
+  async namesOnDays(
+    userId: string,
+    kind: WakatimeBreakdown,
+    minDays: number,
+  ): Promise<number> {
+    const b = wakatimeDayBreakdown;
+    const rows = await this.db
+      .select({name: b.name})
+      .from(b)
+      .where(and(eq(b.userId, userId), eq(b.kind, kind), sql`${b.seconds} > 0`))
+      .groupBy(b.name)
+      .having(sql`count(distinct ${b.day}) >= ${minDays}`);
+    return rows.length;
+  }
+
   async distinctCount(
     userId: string,
     kind: WakatimeBreakdown,

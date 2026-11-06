@@ -381,7 +381,13 @@
       "terminalErrorPercent": "Desktop: failed commands (%)",
       "terminalErrorPercentDay": "Desktop: {{value}}% failed commands among paired measurements",
       "backspacePercent": "Desktop: backspaces / input events (%)",
-      "backspacePercentDay": "Desktop: {{value}}% backspaces among measured input events"
+      "backspacePercentDay": "Desktop: {{value}}% backspaces among measured input events",
+      "uniqueApps": "Desktop: different programs per five minutes",
+      "uniqueAppsDay": "Desktop: {{value}} different programs per five minutes on average",
+      "focusEntropy": "Desktop: how scattered the focus was (entropy)",
+      "focusEntropyDay": "Desktop: focus scattered by {{value}} (entropy) on average",
+      "typingPauseSeconds": "Desktop: average pause in typing, s",
+      "typingPauseSecondsDay": "Desktop: {{value}} s average pause in typing"
     },
     "browser": {
       "contextSwitches": "Browser: observed context switches",
@@ -403,7 +409,13 @@
       "terminalErrorPercent": "Browser: failed commands (%)",
       "terminalErrorPercentDay": "Browser: {{value}}% failed commands among paired measurements",
       "backspacePercent": "Browser: backspaces / input events (%)",
-      "backspacePercentDay": "Browser: {{value}}% backspaces among measured input events"
+      "backspacePercentDay": "Browser: {{value}}% backspaces among measured input events",
+      "uniqueApps": "Browser: different programs per five minutes",
+      "uniqueAppsDay": "Browser: {{value}} different programs per five minutes on average",
+      "focusEntropy": "Browser: how scattered the focus was (entropy)",
+      "focusEntropyDay": "Browser: focus scattered by {{value}} (entropy) on average",
+      "typingPauseSeconds": "Browser: average pause in typing, s",
+      "typingPauseSecondsDay": "Browser: {{value}} s average pause in typing"
     }
   },
   "life": {
@@ -458,7 +470,49 @@
       "alarm": "Alarm set for",
       "notificationsOpened": "Notifications opened, %",
       "secondsToOpen": "Seconds to open a notification",
-      "batteryMaxC": "Phone battery, max °C"
+      "batteryMaxC": "Phone battery, max °C",
+      "hours": "Time on the phone",
+      "notifications": "Notifications on the phone",
+      "messengerNotifications": "Notifications of messengers",
+      "notificationPeak": "Most notifications in ten minutes",
+      "category": {
+        "development": "Phone: development",
+        "browsing": "Phone: browser",
+        "communication": "Phone: messengers",
+        "office": "Phone: work apps",
+        "design": "Phone: design",
+        "games": "Phone: games",
+        "media": "Phone: video and music",
+        "meetings": "Phone: calls and meetings",
+        "system": "Phone: system",
+        "other": "Phone: other apps"
+      }
+    },
+    "bike": "By bike",
+    "ride": "Riding (car, bus, train)",
+    "atPlace": "At a named place",
+    "focusFinished": "Focus sessions run to the end, %",
+    "focusDistracted": "Minutes lost to distractions in focus",
+    "index": {
+      "phone": {
+        "restlessness": "Phone restlessness (unlocks per hour of use)",
+        "appSwitches": "Phone app switches per hour of use",
+        "shortSessions": "Phone checks under 30 s, %",
+        "bedtimeSpread": "Bedtime spread over a week (phone), h"
+      },
+      "computer": {
+        "restlessness": "Computer restlessness (windows left within a minute, per hour)"
+      },
+      "deepWork": "Deep work (25+ min without a switch or notification)",
+      "deepWorkLongest": "The longest deep work block, min",
+      "draining": "Draining time (feeds, short videos)",
+      "nourishing": "Nourishing time (work, learning, creating)",
+      "focusInterruptions": "Notifications per hour of focus and coding",
+      "lateNight": "Screens after 23:00",
+      "afterBedtime": "Entertainment after the usual bedtime, min",
+      "firstWork": "From the first unlock to work, min",
+      "morningDraining": "Feeds in the two hours after waking, min",
+      "offline": "The longest daytime stretch without screens"
     }
   },
   "usage": {
@@ -630,5 +684,15 @@
       "4": "Restrict the Maps key: Application restrictions → Websites → your dashboard's address and https://localhost/* (the Android app). Restrict the Places key to the Places API.",
       "5": "Paste each key here and save: the Places key is checked against Google."
     }
+  },
+  "indices": {
+    "title": "How the day goes",
+    "hint": "Today and the week, all devices together, counted every hour; the week against your own norm of the four weeks before.",
+    "week": "week {{value}}",
+    "more": "the week more than usual ({{value}})",
+    "less": "the week less than usual ({{value}})",
+    "usual": "the week as usual ({{value}})",
+    "empty": "No indices yet: they are counted from the phone app, the desktop app or the browser extension, within an hour of their first data.",
+    "failed": "Could not read the indices."
   }
 }

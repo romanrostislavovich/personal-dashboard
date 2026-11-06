@@ -83,6 +83,25 @@ describe.skipIf(!ADMIN_URL)('DiaryService', () => {
     expect(await service.dayStarted(photographed, '2026-10-29')).toBe(true);
     expect(await service.dayStarted(wrote, '2026-10-28')).toBe(false);
   });
+
+  it('keeps the evening check-in next to the mood, through saves that do not send it', async () => {
+    const user = await addUser();
+    await service.setMood(user, '2026-11-05', 4);
+    await service.setFeeling(user, '2026-11-05', 'energy', 2);
+    await service.setFeeling(user, '2026-11-05', 'anxiety', 5);
+    // An older client saves the text without the check-in: it stays.
+    await service.save(user, '2026-11-05', {content: 'A long day', mood: 4});
+    const entry = await service.get(user, '2026-11-05');
+    expect(entry).toMatchObject({mood: 4, energy: 2, anxiety: 5});
+    // An answer of the check-in alone is an entry of its own.
+    await service.setFeeling(user, '2026-11-06', 'energy', 3);
+    expect(await service.get(user, '2026-11-06')).toMatchObject({
+      content: '',
+      mood: null,
+      energy: 3,
+      anxiety: null,
+    });
+  });
 });
 
 /** Waits for the closed connections to leave, then drops the scratch database. */

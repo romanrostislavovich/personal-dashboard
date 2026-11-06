@@ -10,6 +10,12 @@ export const diaryEntryInputSchema = z.object({
   /** 1 — very bad … 5 — great; null — not set. */
   mood: z.number().int().min(1).max(5).nullish(),
   /**
+   * The evening check-in, 1–5 each: energy (1 — none … 5 — plenty) and anxiety (1 — calm … 5 —
+   * very anxious); null — cleared, absent — left as it is.
+   */
+  energy: z.number().int().min(1).max(5).nullish(),
+  anxiety: z.number().int().min(1).max(5).nullish(),
+  /**
    * `updatedAt` of the entry the text was written over; `null` — there was none. When the entry
    * changed since (written elsewhere, while this device was offline), nothing is lost: the
    * stored text stays and this one is added below it. Absent — no check (a note added to the end).
@@ -29,6 +35,8 @@ export interface DiaryEntry {
   day: LocalDate;
   content: string;
   mood: number | null;
+  energy: number | null;
+  anxiety: number | null;
   tags: string[];
   /** Fragments marked with an emoji (`==🔥 text==`). */
   marks: DiaryMark[];

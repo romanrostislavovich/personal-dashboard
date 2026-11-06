@@ -3,6 +3,22 @@ import {LinksService} from '@pd/api-core';
 import {DailyMetric, WearableDay} from '@pd/contracts';
 import {WearableService} from './wearable.service';
 
+/** Mostly technical: counted, shown when the Links filter asks (DailyMetric.extra). */
+const BAND_EXTRA = new Set([
+  'health.band.heartRateMax',
+  'health.band.distance',
+  'health.band.spo2',
+  'health.band.skinTemp',
+]);
+
+/** What a night and a day give, for Links to compare the rest with (DailyMetric.outcome). */
+const BAND_OUTCOMES = new Set([
+  'health.band.sleep',
+  'health.band.sleepScore',
+  'health.band.stress',
+  'health.band.resilience',
+]);
+
 /** HH:MM as hours of the day (Links' `clock`); a bedtime after midnight goes over 24 (00:30 → 24.5). */
 function clock(time: string | null, night: boolean): number | null {
   if (!time) {
@@ -31,7 +47,14 @@ export class WearableLinks implements OnModuleInit {
     this.links.registerDailyMetrics({
       module: 'health',
       metrics: async (userId, period) => {
-        const days = await this.wearable.days(userId, period);
+        // The week before the period too: a day's bedtime spread reads its own week.
+        const from = new Date(`${period.from}T00:00:00Z`);
+        from.setUTCDate(from.getUTCDate() - 6);
+        const withWeek = await this.wearable.days(userId, {
+          from: from.toISOString().slice(0, 10),
+          to: period.to,
+        });
+        const days = withWeek.filter(day => day.day >= period.from);
         const metric = (
           key: string,
           unit: DailyMetric['unit'],
@@ -49,9 +72,21 @@ export class WearableLinks implements OnModuleInit {
         });
         return [
           metric('sleep', 'hours', day => hours(day.sleepMinutes)),
-          metric('deepSleep', 'hours', day => hours(day.deepMinutes)),
-          metric('remSleep', 'hours', day => hours(day.remMinutes)),
+          {
+            ...metric('deepSleep', 'hours', day => hours(day.deepMinutes)),
+            partOf: 'health.band.sleep',
+          },
+          {
+            ...metric('remSleep', 'hours', day => hours(day.remMinutes)),
+            partOf: 'health.band.sleep',
+          },
           metric('bedtime', 'clock', day => clock(day.sleepStart, true)),
+          {
+            ...metric('bedtimeSpread', 'score', day =>
+              bedtimeSpread(withWeek, day.day),
+            ),
+            parts: ['health.band.bedtime'],
+          },
           metric('wake', 'clock', day => clock(day.sleepEnd, false)),
           metric('restingHeartRate', 'count', day => day.restingHeartRate),
           metric('hrv', 'score', day => day.hrvMs),
@@ -66,8 +101,38 @@ export class WearableLinks implements OnModuleInit {
           metric('reactions', 'count', day => day.reactions),
           metric('mindfulness', 'count', day => day.mindfulnessMinutes),
           metric('skinTemp', 'degrees', day => day.skinTempDelta),
-        ].filter(one => one.days.length);
+          metric('heartRateAvg', 'count', day => day.heartRateAvg),
+          metric('heartRateMax', 'count', day => day.heartRateMax),
+          metric('awake', 'hours', day => hours(day.awakeMinutes)),
+          metric('distance', 'count', day => day.distanceKm),
+        ]
+          .filter(one => one.days.length)
+          .map(one =>
+            BAND_OUTCOMES.has(one.key)
+              ? {...one, outcome: true as const}
+              : BAND_EXTRA.has(one.key)
+                ? {...one, extra: true as const}
+                : one,
+          );
       },
     });
   }
+}
+
+/** How much the bedtime moved over the week up to a day: the standard deviation, hours (4+ nights). */
+export function bedtimeSpread(days: WearableDay[], day: string): number | null {
+  const from = new Date(`${day}T00:00:00Z`);
+  from.setUTCDate(from.getUTCDate() - 6);
+  const start = from.toISOString().slice(0, 10);
+  const values = days
+    .filter(one => one.day >= start && one.day <= day)
+    .map(one => clock(one.sleepStart, true))
+    .filter((value): value is number => value !== null);
+  if (values.length < 4) {
+    return null;
+  }
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const variance =
+    values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length;
+  return Math.round(Math.sqrt(variance) * 100) / 100;
 }

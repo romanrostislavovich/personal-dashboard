@@ -111,5 +111,13 @@ export const activityModule: WebDashboardModule = {
       loadComponent: () =>
         import('./activity.widget').then(m => m.ActivityWidget),
     },
+    {
+      id: 'activity.indices',
+      size: 'small',
+      loadComponent: () =>
+        import('./indices/indices-widget.component').then(
+          m => m.IndicesWidgetComponent,
+        ),
+    },
   ],
 };

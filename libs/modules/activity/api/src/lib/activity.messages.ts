@@ -1,6 +1,26 @@
 import {pickMessages} from '@pd/api-core';
 import {DaySummary} from './evening-summary';
 
+/** "Deep work 2 h 10 min · draining 40 min" — what is known of the two; empty when neither. */
+function indexLine(
+  indices: DaySummary['indices'],
+  deep: string,
+  draining: string,
+  h: string,
+  min: string,
+): string {
+  return [
+    indices.deepWork !== null
+      ? `${deep} ${hours(indices.deepWork * 3600, h, min)}`
+      : '',
+    indices.draining !== null
+      ? `${draining} ${hours(indices.draining * 3600, h, min)}`
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 /** "3 h 20 min" / "3 ч 20 мин". */
 function hours(seconds: number, h: string, min: string): string {
   const minutes = Math.round(seconds / 60);
@@ -93,6 +113,7 @@ const messages = {
         summary.focus.completed
           ? `Focus: ${summary.focus.completed} sessions, ${hours(summary.focus.seconds, 'h', 'min')}`
           : '',
+        indexLine(summary.indices, 'Deep work', 'draining', 'h', 'min'),
         ...summary.limits.map(
           l =>
             `Limit reached: ${l.label} (${hours(l.minutes * 60, 'h', 'min')})`,
@@ -162,6 +183,7 @@ const messages = {
         summary.focus.completed
           ? `Фокус: ${summary.focus.completed} сес., ${hours(summary.focus.seconds, 'ч', 'мин')}`
           : '',
+        indexLine(summary.indices, 'Глубокая работа', 'истощающее', 'ч', 'мин'),
         ...summary.limits.map(
           l =>
             `Лимит превышен: ${l.label} (${hours(l.minutes * 60, 'ч', 'мин')})`,

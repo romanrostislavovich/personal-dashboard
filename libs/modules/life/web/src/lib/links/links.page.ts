@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  linkedSignal,
   inject,
   signal,
 } from '@angular/core';
@@ -17,11 +18,17 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {CORE_READS} from '@pd/client-core';
-import {Correlation, CorrelationMetric, Correlations} from '@pd/contracts';
+import {
+  Correlation,
+  CorrelationMetric,
+  CorrelationPairs,
+  Correlations,
+} from '@pd/contracts';
 import {BeforeAfterComponent} from './before-after.component';
 import {CorrelationGraphComponent} from './correlation-graph.component';
 import {CorrelationMatrixComponent} from './correlation-matrix.component';
 import {CorrelationScatterComponent} from './correlation-scatter.component';
+import {LinksControlsComponent} from './links-controls.component';
 import {DIGITAL_METRIC_KEYS, isDigitalMetric} from './digital-metrics';
 import {moduleColor, SelectedPair} from './links-format';
 
@@ -30,6 +37,26 @@ const PERIODS = [90, 180, 365, 730] as const;
 const LISTED = 10;
 /** A link of a day to the next one that stays this strong with yesterday held fixed comes first. */
 const LEADS_FROM = 0.2;
+
+/** The filter's choice, remembered on this device. */
+const PAIRS_KEY = 'pd.links.pairs';
+const EXTRA_KEY = 'pd.links.extra';
+
+function remembered(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function remember(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // A private window: the choice lasts until the page is closed.
+  }
+}
 
 function localDate(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, '0');
@@ -50,6 +77,7 @@ function localDate(date: Date): string {
     CorrelationMatrixComponent,
     CorrelationScatterComponent,
     DecimalPipe,
+    LinksControlsComponent,
     MatButtonModule,
     MatButtonToggleModule,
     MatCardModule,
@@ -74,6 +102,14 @@ export class LinksPage {
   protected readonly showAll = signal(false);
   protected readonly digitalFilter = signal('');
   protected readonly digitalMetrics = DIGITAL_METRIC_KEYS;
+  /** With the outcomes only (mood, tasks done, sleep, coding…), or everything with everything. */
+  protected readonly pairs = signal<CorrelationPairs>(
+    remembered(PAIRS_KEY) === 'all' ? 'all' : 'outcomes',
+  );
+  /** The extra numbers switched on (see DailyMetric.extra). */
+  protected readonly extra = signal<string[]>(
+    (remembered(EXTRA_KEY) ?? '').split(',').filter(Boolean),
+  );
 
   protected readonly data = httpResource<Correlations>(() => {
     const to = new Date();
@@ -83,10 +119,22 @@ export class LinksPage {
       localDate(from),
       localDate(to),
       this.target() ?? undefined,
+      {pairs: this.pairs(), extra: this.extra()},
     );
   });
-  private readonly result = computed(() =>
-    this.data.hasValue() ? this.data.value() : undefined,
+  /**
+   * The last links counted: kept while a new choice is being counted (and after a failed one),
+   * so the page and its controls do not vanish on every change.
+   */
+  protected readonly result = linkedSignal<
+    Correlations | undefined,
+    Correlations | undefined
+  >({
+    source: () => (this.data.hasValue() ? this.data.value() : undefined),
+    computation: (value, previous) => value ?? previous?.value,
+  });
+  protected readonly known = computed(
+    () => new Set((this.result()?.metrics ?? []).map(metric => metric.key)),
   );
 
   private readonly byKey = computed(
@@ -120,6 +168,9 @@ export class LinksPage {
     this.showAll() ? this.strong() : this.strong().slice(0, LISTED),
   );
 
+  /** Every extra number the filter can switch, on or off. */
+  protected readonly extras = computed(() => this.result()?.extras ?? []);
+
   /** The metrics a regression can explain: of enough days, by name. */
   protected readonly targets = computed(() =>
     [...(this.result()?.metrics ?? [])].sort((a, b) =>
@@ -145,6 +196,16 @@ export class LinksPage {
 
   protected metric(key: string): CorrelationMetric | undefined {
     return this.byKey().get(key);
+  }
+
+  protected setPairs(pairs: CorrelationPairs): void {
+    this.pairs.set(pairs);
+    remember(PAIRS_KEY, pairs);
+  }
+
+  protected setExtra(keys: string[]): void {
+    this.extra.set(keys);
+    remember(EXTRA_KEY, keys.join(','));
   }
 
   protected filterDigital(key: string): void {

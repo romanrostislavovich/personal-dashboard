@@ -471,7 +471,12 @@
       "resilience": "Resilience",
       "reactions": "Body reactions",
       "mindfulness": "Mindfulness minutes",
-      "skinTemp": "Skin temperature at night"
+      "skinTemp": "Skin temperature at night",
+      "heartRateAvg": "Average heart rate",
+      "heartRateMax": "Highest heart rate",
+      "awake": "Awake in the night",
+      "distance": "Distance (band), km",
+      "bedtimeSpread": "Bedtime spread over a week (band), h"
     }
   },
   "band": {

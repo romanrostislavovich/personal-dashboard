@@ -14,6 +14,7 @@ import {
 import {z} from 'zod';
 import {ActivityLinks} from './activity.links';
 import {ActivityService} from './activity.service';
+import {IndicesService} from './indices/indices.service';
 import {digestTimeline} from './timeline-digest';
 import {SitesService} from './sites.service';
 import {WellbeingService} from './wellbeing.service';
@@ -42,6 +43,7 @@ export class ActivityAiTools implements OnModuleInit {
     private readonly workstates: WorkstateService,
     private readonly telemetry: TelemetrySummaryService,
     private readonly projectTime: ProjectTimeService,
+    private readonly dayIndices: IndicesService,
   ) {}
 
   onModuleInit(): void {
@@ -57,6 +59,22 @@ export class ActivityAiTools implements OnModuleInit {
         'backspacePercent is backspaces / input events, not a typing error diagnosis.',
       parameters: PERIOD_PARAMETERS,
       handler: (userId, args) => this.telemetry.summarize(userId, args),
+    });
+
+    this.ai.registerTool({
+      name: 'activity_indices',
+      module: 'activity',
+      description:
+        "Indices of the user's days counted from the phone, the computer and the browser: deep " +
+        'work (25+ min of work apps without a switch or a notification, hours), nourishing and ' +
+        'draining time (feeds and short videos, hours), phone restlessness (unlocks per hour of ' +
+        'use), notifications per hour of focus, screens after 23:00, entertainment after the ' +
+        'usual bedtime (minutes), from waking to work (minutes), the longest offline stretch. ' +
+        "For each: today, the week's average and the user's own norm (the median of the four " +
+        'weeks before). They describe, they do not judge or diagnose: word them gently. For ' +
+        'their links with mood or sleep use core_correlations (keys activity.index.<key>).',
+      parameters: {type: 'object', properties: {}},
+      handler: userId => this.dayIndices.summary(userId),
     });
 
     this.ai.registerTool({

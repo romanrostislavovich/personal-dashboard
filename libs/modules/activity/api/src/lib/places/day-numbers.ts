@@ -8,10 +8,15 @@ export interface PlaceDayNumbers {
   walkSeconds: number;
   /** On the way, however it went. */
   tripSeconds: number;
+  /** Of it, fast enough for a bike, and faster (a car, a bus, a train). */
+  bikeSeconds: number;
+  rideSeconds: number;
   /** `null` — no home is known yet. */
   homeSeconds: number | null;
   /** Places first seen this day (not in the history before it). */
   newPlaces: number;
+  /** Seconds at each of the user's named places that day, by the place's id. */
+  named: Map<string, {name: string; seconds: number}>;
 }
 
 export interface DayOfPlaces {
@@ -76,12 +81,17 @@ export function placeDayNumbers(
   for (const day of days) {
     let walkSeconds = 0;
     let tripSeconds = 0;
+    let bikeSeconds = 0;
+    let rideSeconds = 0;
+    const named = new Map<string, {name: string; seconds: number}>();
     let homeSeconds = 0;
     let newPlaces = 0;
     for (const entry of day.entries) {
       if (entry.kind === 'trip') {
         tripSeconds += seconds(entry);
         walkSeconds += entry.mode === 'walk' ? seconds(entry) : 0;
+        bikeSeconds += entry.mode === 'bike' ? seconds(entry) : 0;
+        rideSeconds += entry.mode === 'ride' ? seconds(entry) : 0;
         continue;
       }
       const place = placeOf.get(entry);
@@ -90,6 +100,11 @@ export function placeDayNumbers(
       }
       if (place === home) {
         homeSeconds += seconds(entry);
+      }
+      // Home is a number of its own, named or not.
+      if (place !== home && place.placeId && place.name) {
+        const at = named.get(place.placeId) ?? {name: place.name, seconds: 0};
+        named.set(place.placeId, {...at, seconds: at.seconds + seconds(entry)});
       }
       if (!seen.has(place)) {
         seen.add(place);
@@ -101,8 +116,11 @@ export function placeDayNumbers(
         day: day.day,
         walkSeconds,
         tripSeconds,
+        bikeSeconds,
+        rideSeconds,
         homeSeconds: home ? homeSeconds : null,
         newPlaces,
+        named,
       });
     }
   }

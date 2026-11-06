@@ -152,7 +152,8 @@
     "cached": "{{percent}}% из кэша"
   },
   "links": {
-    "messages": "Сообщения ассистенту"
+    "messages": "Сообщения ассистенту",
+    "tokens": "Токены AI"
   },
   "emptyTitle": "Спрашивайте о своих данных",
   "examples": {

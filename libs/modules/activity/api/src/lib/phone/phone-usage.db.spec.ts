@@ -105,5 +105,51 @@ describe.skipIf(!ADMIN_URL)(
       expect(usage.unlocksByHour[8]).toBe(2);
       expect(usage.unlocksByHour[23]).toBe(1);
     });
+
+    it("reads the phone's apps, notifications and busiest ten minutes by the user's day", async () => {
+      const [device] = (await devices.list(userId)).filter(
+        one => one.platform === 'android',
+      );
+      // 10:00, 10:04 and 10:09 local in one stretch; 10:12 in the next; 00:30 local is the 21st.
+      for (const [app, at] of [
+        ['org.telegram.messenger', '2026-10-20T08:00:00.000Z'],
+        ['org.telegram.messenger', '2026-10-20T08:04:00.000Z'],
+        ['com.example.bank', '2026-10-20T08:09:00.000Z'],
+        ['org.telegram.messenger', '2026-10-20T08:12:00.000Z'],
+        ['org.telegram.messenger', '2026-10-20T22:30:00.000Z'],
+      ]) {
+        await db.execute(sql`INSERT INTO activity_phone_notifications
+          (user_id, device_id, app, app_name, title, text, posted_at)
+          VALUES (${userId}, ${device.id}, ${app}, ${app}, '', '', ${at})`);
+      }
+      const rows = await phone.dayRows(userId, {
+        from: '2026-10-20',
+        to: '2026-10-21',
+      });
+      expect(rows.told).toEqual(['2026-10-20']);
+      // The spans of the first test: 20 + 30 min on the 20th, 10 min on the 21st (local).
+      expect(rows.apps).toEqual(
+        expect.arrayContaining([
+          {day: '2026-10-20', app: 'com.instagram.android', seconds: 50 * 60},
+          {day: '2026-10-21', app: 'com.instagram.android', seconds: 10 * 60},
+        ]),
+      );
+      expect(rows.notifications).toEqual(
+        expect.arrayContaining([
+          {day: '2026-10-20', app: 'org.telegram.messenger', count: 3},
+          {day: '2026-10-20', app: 'com.example.bank', count: 1},
+          {day: '2026-10-21', app: 'org.telegram.messenger', count: 1},
+        ]),
+      );
+      // The 20th had 4 notifications; the 21st had one but no unlock (not reported).
+      expect(await phone.quietDays(userId, 3)).toBe(0);
+      expect(await phone.quietDays(userId, 4)).toBe(1);
+      expect(rows.busiest).toEqual(
+        expect.arrayContaining([
+          {day: '2026-10-20', count: 3},
+          {day: '2026-10-21', count: 1},
+        ]),
+      );
+    });
   },
 );

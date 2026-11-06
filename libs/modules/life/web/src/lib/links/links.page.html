@@ -1,41 +1,18 @@
 <div class="links">
-  <div class="controls">
-    <mat-button-toggle-group
-      hideSingleSelectionIndicator
-      [value]="days()"
-      [attr.aria-label]="'life.period' | transloco"
-      (change)="days.set($event.value)"
-    >
-      @for (option of periods; track option) {
-        <mat-button-toggle [value]="option">
-          {{ 'life.mood.days' | transloco: {days: option} }}
-        </mat-button-toggle>
-      }
-    </mat-button-toggle-group>
-    <mat-form-field subscriptSizing="dynamic">
-      <mat-label>{{ 'life.links.digital.filter' | transloco }}</mat-label>
-      <mat-select
-        [value]="digitalFilter()"
-        (selectionChange)="filterDigital($event.value)"
-      >
-        <mat-option value="">{{
-          'life.links.digital.all' | transloco
-        }}</mat-option>
-        <mat-option value="digital">{{
-          'life.links.digital.only' | transloco
-        }}</mat-option>
-        @for (key of digitalMetrics; track key) {
-          <mat-option [value]="key" [disabled]="!metric(key)">
-            {{ key | transloco }}
-            @if (!metric(key)) {
-              ({{ 'life.links.digital.unavailable' | transloco }})
-            }
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-  </div>
-  <p class="hint">{{ 'life.links.digital.hint' | transloco }}</p>
+  <pd-links-controls
+    [periods]="periods"
+    [days]="days()"
+    [digitalFilter]="digitalFilter()"
+    [digitalMetrics]="digitalMetrics"
+    [known]="known()"
+    [pairs]="pairs()"
+    [extras]="extras()"
+    [extra]="extra()"
+    (daysChange)="days.set($event)"
+    (digitalFilterChange)="filterDigital($event)"
+    (pairsChange)="setPairs($event)"
+    (extraChange)="setExtra($event)"
+  />
   <p class="caution">
     <mat-icon>info</mat-icon>
     <span>{{ 'life.links.caution' | transloco }}</span>
@@ -49,7 +26,7 @@
 
   @if (data.error()) {
     <p class="error">{{ 'life.links.failed' | transloco }}</p>
-  } @else if (data.value(); as found) {
+  } @else if (result(); as found) {
     @if (digitalFilter() && !correlations().length) {
       <p role="status" class="hint">
         {{ 'life.links.digital.empty' | transloco }}

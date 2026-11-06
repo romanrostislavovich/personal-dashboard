@@ -10,6 +10,7 @@ import {
   PushStatus,
   AuthClient as AuthClientKind,
   AuthConfig,
+  CorrelationPairs,
   AutomationRule,
   AutomationRuleInput,
   LifeStory,
@@ -135,12 +136,22 @@ export const CORE_READS = {
     apiRequest('/api/life/mood-insights', {from, to}),
   /** Today's mood forecast from yesterday's numbers, by the user's own model. */
   moodForecast: () => apiRequest('/api/life/forecast'),
-  /** How every daily number goes with every other; the regression explains `target`. */
-  correlations: (from: string, to: string, target?: string) =>
+  /**
+   * How the daily numbers go together (with the outcomes only, unless `pairs` is `all`); the
+   * regression explains `target`; `extra` — the extra numbers switched on.
+   */
+  correlations: (
+    from: string,
+    to: string,
+    target?: string,
+    options: {pairs?: CorrelationPairs; extra?: string[]} = {},
+  ) =>
     apiRequest('/api/life/correlations', {
       from,
       to,
       ...(target ? {target} : {}),
+      ...(options.pairs ? {pairs: options.pairs} : {}),
+      ...(options.extra?.length ? {extra: options.extra.join(',')} : {}),
     }),
   /** Every daily number before and after the start or the end of a period of Health. */
   beforeAfter: (weeks: number) => apiRequest('/api/life/before-after', {weeks}),

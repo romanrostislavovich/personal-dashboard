@@ -90,21 +90,19 @@ export class GamesLinks implements OnModuleInit {
     ]);
   }
 
-  /** The hours of Steam of every day, on any computer or console. */
+  /** The hours of Steam of every day, on any computer or console, and of its main games. */
   private async steamDays(
     userId: string,
     period: {from: LocalDate; to: LocalDate},
   ): Promise<DailyMetric[]> {
     const perDay = new Map<LocalDate, number>();
-    for (const {day, minutes} of await this.play.days(
-      userId,
-      period.from,
-      period.to,
-    )) {
+    const played = await this.play.days(userId, period.from, period.to);
+    for (const {day, minutes} of played) {
       perDay.set(day, (perDay.get(day) ?? 0) + minutes);
     }
     return perDay.size
       ? [
+          ...gameMetrics(played, [...perDay.keys()]),
           {
             key: 'games.steam',
             module: 'games',
@@ -190,4 +188,40 @@ export class GamesLinks implements OnModuleInit {
       ),
     ];
   }
+}
+
+/** A game must have been played on this many days to be a number; the five of the most days. */
+const GAME_MIN_DAYS = 10;
+const GAMES = 5;
+
+/** Each main game's hours, a part of Steam's: a day of Steam without it is a zero. */
+export function gameMetrics(
+  played: {day: LocalDate; appId: number; name: string; minutes: number}[],
+  steamDays: LocalDate[],
+): DailyMetric[] {
+  // By the game's id: a name can change, or be missing (then it is the id).
+  const byGame = new Map<number, Map<LocalDate, number>>();
+  const names = new Map<number, string>();
+  for (const {day, appId, name, minutes} of played) {
+    names.set(appId, name);
+    const days = byGame.get(appId) ?? new Map<LocalDate, number>();
+    byGame.set(appId, days.set(day, (days.get(day) ?? 0) + minutes));
+  }
+  const days = [...new Set(steamDays)].sort();
+  return [...byGame]
+    .filter(([, on]) => on.size >= GAME_MIN_DAYS)
+    .sort((a, b) => b[1].size - a[1].size || a[0] - b[0])
+    .slice(0, GAMES)
+    .map(([appId, on]) => ({
+      key: `games.steam.${appId}`,
+      module: 'games',
+      labelKey: 'games.links.steamGame',
+      label: names.get(appId) ?? String(appId),
+      unit: 'hours',
+      partOf: 'games.steam',
+      days: days.map(day => ({
+        day,
+        value: Math.round(((on.get(day) ?? 0) / 60) * 100) / 100,
+      })),
+    }));
 }

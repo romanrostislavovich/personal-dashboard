@@ -15,6 +15,11 @@ const moodArgs = z.object({
   mood: z.number().int().min(1).max(5),
   day: z.iso.date().optional(),
 });
+const feelingArgs = z.object({
+  feeling: z.enum(['energy', 'anxiety']),
+  value: z.number().int().min(1).max(5),
+  day: z.iso.date().optional(),
+});
 const replaceArgs = z.object({
   day: z.iso.date(),
   find: z.string().min(1),
@@ -112,6 +117,40 @@ export class DiaryAiTools implements OnModuleInit {
           mood,
         );
         return {saved: true, day: entry?.day, mood: entry?.mood};
+      },
+    });
+    this.ai.registerTool({
+      name: 'diary_set_feeling',
+      module: 'diary',
+      writes: true,
+      undoTables: [diaryEntries],
+      description:
+        'Records the evening check-in of a day next to the mood: energy (1 — none … 5 — ' +
+        'plenty) or anxiety (1 — calm … 5 — very anxious). Only what the user said; never ' +
+        'guessed from the text.',
+      parameters: {
+        type: 'object',
+        properties: {
+          feeling: {type: 'string', enum: ['energy', 'anxiety']},
+          value: {type: 'number', description: '1–5'},
+          day: DAY,
+        },
+        required: ['feeling', 'value'],
+      },
+      handler: async (userId, args) => {
+        const {feeling, value, day} = feelingArgs.parse(args);
+        const entry = await this.diary.setFeeling(
+          userId,
+          day ?? this.diary.todayDate(),
+          feeling,
+          value,
+        );
+        return {
+          saved: true,
+          day: entry?.day,
+          energy: entry?.energy,
+          anxiety: entry?.anxiety,
+        };
       },
     });
   }

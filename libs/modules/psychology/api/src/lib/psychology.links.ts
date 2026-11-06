@@ -92,6 +92,7 @@ export class PsychologyLinks implements OnModuleInit {
                   module: 'psychology',
                   labelKey: `psychology.links.${questionnaire.id}`,
                   unit: 'score',
+                  outcome: true,
                   days: [...days].map(([day, value]) => ({day, value})),
                 },
               ]

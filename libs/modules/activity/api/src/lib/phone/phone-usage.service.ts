@@ -6,12 +6,14 @@ import {
   PhoneUsageDay,
   PhoneUsageQuery,
 } from '@pd/contracts';
-import {and, eq, gte, inArray, lt, sql} from 'drizzle-orm';
+import {and, AnyColumn, eq, gte, inArray, lt, SQL, sql} from 'drizzle-orm';
 import {
   activityDevices,
   activitySpans,
   ActivityDeviceRow,
 } from '../activity.schema';
+import {activityPhoneNotifications} from '../phone-notifications.schema';
+import {PhoneDayRows} from './phone-day-numbers';
 import {activityPhoneUnlocks} from './phone-unlocks.schema';
 
 const INSERT_CHUNK = 200;
@@ -119,5 +121,113 @@ export class PhoneUsageService {
       nightSeconds: list.reduce((sum, day) => sum + day.nightSeconds, 0),
       unlocksByHour,
     };
+  }
+
+  /**
+   * What the phone's base numbers of Links are counted from (see phoneDayMetrics): the seconds
+   * in each app and the notifications of each app a day, the busiest ten minutes of a day, and
+   * the days it reported unlocks.
+   */
+  async dayRows(
+    userId: string,
+    {from, to}: PhoneUsageQuery,
+  ): Promise<PhoneDayRows> {
+    const zone = this.users.timeZoneOf(await this.users.findById(userId));
+    const start = sql`(${from}::date)::timestamp AT TIME ZONE ${zone}`;
+    const end = sql`((${to}::date + 1))::timestamp AT TIME ZONE ${zone}`;
+    const dayOf = (moment: SQL | AnyColumn) =>
+      sql<LocalDate>`to_char(${moment} AT TIME ZONE ${zone}, 'YYYY-MM-DD')`;
+
+    const s = activitySpans;
+    const apps = await this.db
+      .select({
+        day: dayOf(s.startedAt),
+        app: s.app,
+        seconds: sql<number>`sum(${s.seconds})::int`,
+      })
+      .from(s)
+      .innerJoin(activityDevices, eq(activityDevices.id, s.deviceId))
+      .where(
+        and(
+          eq(s.userId, userId),
+          inArray(activityDevices.platform, [...PHONES]),
+          gte(s.startedAt, start),
+          lt(s.startedAt, end),
+        ),
+      )
+      .groupBy(sql`1`, s.app);
+
+    const n = activityPhoneNotifications;
+    const ofPeriod = and(
+      eq(n.userId, userId),
+      gte(n.postedAt, start),
+      lt(n.postedAt, end),
+    );
+    const notifications = await this.db
+      .select({
+        day: dayOf(n.postedAt),
+        app: n.app,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(n)
+      .where(ofPeriod)
+      .groupBy(sql`1`, n.app);
+    // Ten-minute stretches of the clock (10:00–10:10…), not a sliding window: near enough.
+    const local = sql`(${n.postedAt} AT TIME ZONE ${zone})`;
+    const stretches = this.db
+      .select({
+        day: sql<LocalDate>`to_char(${local}, 'YYYY-MM-DD')`.as('day'),
+        count: sql<number>`count(*)::int`.as('count'),
+      })
+      .from(n)
+      .where(ofPeriod)
+      .groupBy(
+        sql`1`,
+        sql`date_trunc('hour', ${local})`,
+        sql`floor(extract(minute from ${local}) / 10)`,
+      )
+      .as('stretches');
+    const busiest = await this.db
+      .select({
+        day: stretches.day,
+        count: sql<number>`max(${stretches.count})::int`,
+      })
+      .from(stretches)
+      .groupBy(stretches.day);
+
+    const u = activityPhoneUnlocks;
+    const told = await this.db
+      .selectDistinct({day: dayOf(u.at)})
+      .from(u)
+      .where(and(eq(u.userId, userId), gte(u.at, start), lt(u.at, end)));
+    return {apps, notifications, busiest, told: told.map(row => row.day)};
+  }
+
+  /**
+   * The days the phone reported (it was unlocked) with at most `most` notifications, of all
+   * time: the quiet days of the achievements.
+   */
+  async quietDays(userId: string, most: number): Promise<number> {
+    const zone = this.users.timeZoneOf(await this.users.findById(userId));
+    const u = activityPhoneUnlocks;
+    const n = activityPhoneNotifications;
+    const [row] = await this.db
+      .execute<{days: number}>(
+        sql`
+      select count(*)::int as days
+      from (
+        select distinct to_char(${u.at} at time zone ${zone}, 'YYYY-MM-DD') as day
+        from ${u} where ${u.userId} = ${userId}
+      ) told
+      left join (
+        select to_char(${n.postedAt} at time zone ${zone}, 'YYYY-MM-DD') as day,
+          count(*) as count
+        from ${n} where ${n.userId} = ${userId}
+        group by 1
+      ) posted on posted.day = told.day
+      where coalesce(posted.count, 0) <= ${most}`,
+      )
+      .then(result => result.rows);
+    return row?.days ?? 0;
   }
 }

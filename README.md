@@ -53,7 +53,11 @@ The interface is in English and Russian.
   story of the day by the AI, a "Wrapped" of the month or the year, questions to your own history
 - 🔗 **Sections that know each other** — a project with its hours, commits, money and uptime on
   one page; what goes with your good and bad days, and every daily number against every other
-  (Life → Links: correlations of the same and the next day, a graph, what predicts your mood);
+  (Life → Links: correlations of the same and the next day against what a day gives — mood, tasks,
+  sleep, coding — or everything with everything, extra numbers switched on in the filter, a graph,
+  what predicts your mood; every collected signal is a number of its own — diary tags, open
+  loops, phone notifications, coding per project — and indices of the day: deep work, draining
+  and nourishing time, the restless phone, screens after bedtime, against your own norm);
   the last commit before a site went down;
   subscriptions you pay for and do not use
 - ⚡ **Automations** — "if X, then Y" across sections: a site is down → a task, no diary entry by
@@ -96,7 +100,7 @@ The interface is in English and Russian.
 |                     |                                                                                                                                                                                                                                                                           |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 💰 **Finance**      | wallets, main currency, budgets, subscriptions, net worth, your bank directly, a wishlist (prices watched, an Excel list for gifts)                                                                                                                                       |
-| 📔 **Diary**        | Markdown per day, mood, tags, photos, year heatmap, "on this day"                                                                                                                                                                                                         |
+| 📔 **Diary**        | Markdown per day, mood, an evening check-in (energy, anxiety), tags, photos, year heatmap, "on this day"                                                                                                                                                                  |
 | 🧠 **Psychology**   | mood patterns, check-ups, life events, a gentle day for hard days, a brief for an appointment                                                                                                                                                                             |
 | 🌱 **Habits**       | quitting alcohol, smoking or your own, building the gym or your own: runs, an evening question in Telegram                                                                                                                                                                |
 | 🔑 **Passwords**    | a password vault like 1Password: encrypted on the device with a master password, the server keeps only ciphertext                                                                                                                                                         |
@@ -106,7 +110,7 @@ The interface is in English and Russian.
 | 👨‍💻 **Development**  | repositories, stars, releases, npm downloads, contribution streaks, coding time                                                                                                                                                                                           |
 | 🎧 **Music**        | listening history and tops with genres (Last.fm tags), now playing, your own tracks' stats                                                                                                                                                                                |
 | 🎮 **Games**        | Steam library, Dota 2 matches, WoW characters (gear, Mythic+, raids, PvP), Xbox gamerscore and achievements                                                                                                                                                               |
-| ⏱️ **Activity**     | time at the computer per program, project and day, Pomodoro, work contexts                                                                                                                                                                                                |
+| ⏱️ **Activity**     | time at the computer per program, project and day, Pomodoro, work contexts, how the day goes (deep work, draining time, the restless phone)                                                                                                                               |
 | 📡 **Monitoring**   | uptime every 5 minutes, response time, SSL expiry, down / up alerts                                                                                                                                                                                                       |
 | 🌤️ **Weather**      | today and the week ahead, what to wear — tuned to how you take the cold                                                                                                                                                                                                   |
 | 🎂 **Birthdays**    | countdowns and reminders                                                                                                                                                                                                                                                  |

@@ -237,6 +237,8 @@
   "links": {
     "coding": "Coding time (WakaTime)",
     "stars": "Stars of its repositories",
-    "commits": "Commits"
+    "commits": "Commits",
+    "project": "Coding a project",
+    "language": "Coding in a language"
   }
 }

@@ -28,16 +28,16 @@ Contents:
 A section never reads another one; it registers sources with the core `LinksService`
 (`libs/api/core/src/lib/links/links.service.ts`) in its `<module>.links.ts`:
 
-| Source kind                          | What it gives                                                                           | Used by                                                      |
-| ------------------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `registerDailyMetrics`               | a number per day (`DailyMetric`: `key`, `unit`, `days[]`, optional `partOf`, `missing`) | correlations, good/bad mood days, before/after, the forecast |
-| `registerMoments`                    | events with a start (and an end) between two moments                                    | before/after, "what happened then"                           |
-| `registerPeriods`                    | things that lasted: a medication, a condition, a life event                             | the timeline, before/after                                   |
-| `registerProject`                    | facts and changes of one project                                                        | Projects → overview                                          |
-| `registerUsage`                      | whether something paid for is used                                                      | Finance → subscriptions                                      |
-| `registerTimeSpent`                  | seconds spent on a name (`windows` by title, `focus` by the session note)               | tasks, projects                                              |
-| `registerPeople`                     | what a section keeps about a person by name                                             | birthdays, the assistant                                     |
-| `LifeService.register` (`*.life.ts`) | the day's events and the month's cards                                                  | Life, the daily chronicle, the month story                   |
+| Source kind                          | What it gives                                                                                                        | Used by                                                      |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `registerDailyMetrics`               | a number per day (`DailyMetric`: `key`, `unit`, `days[]`, optional `partOf`, `parts`, `missing`, `extra`, `outcome`) | correlations, good/bad mood days, before/after, the forecast |
+| `registerMoments`                    | events with a start (and an end) between two moments                                                                 | before/after, "what happened then"                           |
+| `registerPeriods`                    | things that lasted: a medication, a condition, a life event                                                          | the timeline, before/after                                   |
+| `registerProject`                    | facts and changes of one project                                                                                     | Projects → overview                                          |
+| `registerUsage`                      | whether something paid for is used                                                                                   | Finance → subscriptions                                      |
+| `registerTimeSpent`                  | seconds spent on a name (`windows` by title, `focus` by the session note)                                            | tasks, projects                                              |
+| `registerPeople`                     | what a section keeps about a person by name                                                                          | birthdays, the assistant                                     |
+| `LifeService.register` (`*.life.ts`) | the day's events and the month's cards                                                                               | Life, the daily chronicle, the month story                   |
 
 **Units** (`DailyMetric.unit`): `hours`, `count`, `money` (+ `currency`), `score` (a reading
 with no fixed scale), `degrees`, `percent` (0–100), `clock` (a time of day in hours; over 24 —
@@ -46,7 +46,20 @@ after midnight, e.g. 25.5 = 01:30).
 **Missing days.** `missing: 'absent'` — a day the collector did not report is _unknown_, never a
 zero (the phone, the band, telemetry). Without it a day with nothing is a zero where the section
 says so (no Dota matches = no matches). `partOf` — a part of another number (spending on food of
-all spending; late games of games): the two are never compared with each other.
+all spending; late games of games): the two are never compared with each other; `parts` — the
+numbers a derived one is counted from (a share, a ratio), never compared with it either.
+
+**Main, extra and outcomes** (Links v2, [proposals/links-v2.md](proposals/links-v2.md#8-main-and-extra-numbers-the-filter)).
+Every number is counted and kept. `extra: true` — hidden and left out of the search until the
+Links filter switches it on (by key or by section), and kept out of the good/bad mood days and
+the forecast — **not** out of before/after, where a technical reading (SpO2 around a medication's
+start) matters as much as any; the list with the marks is the table below and the base-layer
+table. `outcome: true` — what a day gives; by default Links compares every number with the
+outcomes only (`pairs=outcomes`; the number the regression explains counts as one), everything
+with everything on request (`pairs=all`);
+now: `diary.mood`, `tasks.done`, `development.coding`, `activity.focus`, the questionnaires,
+`health.band.sleep`, `sleepScore`, `stress`, `resilience`. A new number says which it is in the
+same change.
 
 **Day boundaries.** Days are the user's time zone (`users.time_zone`). A few numbers move the
 night to the evening before: Dota matches and phone night use count 00:00–04:00 to the day
@@ -98,6 +111,7 @@ Fixed keys plus families (`<category>`, `<site>`, `<habit id>`, `<analyte>`, `<n
 | 🧪 `health.band.sleep`                  | hours                               | the band: the main sleep that ended that day                                                   | yes    |                     |
 | 🧪 `health.band.deepSleep`, `…remSleep` | hours                               | its stages                                                                                     | yes    |                     |
 | 🧪 `health.band.bedtime`, `…wake`       | clock                               | fell asleep (before noon → +24), woke up                                                       | yes    |                     |
+| 🧪 `health.band.bedtimeSpread`          | score (h)                           | the spread of the bedtime over the week up to the day (4+ nights); `parts`: the bedtime        | yes    |                     |
 | 🧪 `health.band.restingHeartRate`       | count (bpm)                         | the band's daily resting heart rate                                                            | yes    |                     |
 | 🧪 `health.band.hrv`                    | score (ms)                          | the band's daily HRV                                                                           | yes    |                     |
 | 🧪 `health.band.spo2`                   | percent                             | the band's daily SpO2                                                                          | yes    |                     |
@@ -115,6 +129,7 @@ Fixed keys plus families (`<category>`, `<site>`, `<habit id>`, `<analyte>`, `<n
 | `health.lab.<analyte>\|<unit>`          | score                               | each lab value on the day it was taken                                                         |        |                     |
 | `psychology.who5`, `.gad7`, `.phq9`     | score                               | questionnaires, held until the next answer                                                     |        |                     |
 | `diary.mood`                            | score (1–5)                         | the diary's mood                                                                               |        |                     |
+| `diary.energy`, `diary.anxiety`         | score (1–5)                         | the evening check-in next to the mood (the page, the bot after the mood); outcomes             |        |                     |
 | `diary.words`                           | count                               | words written                                                                                  |        |                     |
 | `habits.<habit id>`                     | count                               | marked days (0 on a clean day)                                                                 |        |                     |
 | `tasks.done`, `tasks.created`           | count                               | tasks                                                                                          |        |                     |
@@ -138,6 +153,55 @@ Fixed keys plus families (`<category>`, `<site>`, `<habit id>`, `<analyte>`, `<n
 | `monitoring.downMinutes`                | count                               | minutes the user's sites were down                                                             |        |                     |
 | `screenshots.taken`                     | count                               | screenshots                                                                                    |        |                     |
 | `ai.messages`                           | count                               | messages to the assistant                                                                      |        |                     |
+
+**Added by Links v2's base layer** (2026-11-05, [proposals/links-v2.md](proposals/links-v2.md#7-everything-collected-becomes-a-number-the-base-layer)).
+_Extra_ — hidden until the Links filter switches it on; _outcome_ — what a day gives.
+
+| Key                                                                              | Unit        | From                                                                             | Marks                |
+| -------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------- | -------------------- |
+| `diary.tag.<tag>`                                                                | count (0/1) | the 10 most used tags (5+ days) as yes/no days of the entries; no entry — absent |                      |
+| `diary.moodSpread`                                                               | score       | the spread of the mood over 14 days (5+ moods); `parts`: the mood                |                      |
+| `tasks.openLoops`, `tasks.overdue`                                               | count       | open at the day's end and undated or past the date; overdue is a part            |                      |
+| `tasks.dueDone`                                                                  | percent     | of the tasks due that day, done by its end (days something was due)              | outcome              |
+| `tasks.importantDone`                                                            | count       | highest-priority tasks done (part of `tasks.done`)                               |                      |
+| `activity.phone.hours`                                                           | hours       | phone spans                                                                      |                      |
+| `activity.phone.category.<category>`                                             | hours       | phone spans by the app's category (part of the hours)                            | extra but four       |
+| `activity.phone.notifications`, `…messengerNotifications`                        | count       | notifications, of messengers (a part); a reported day without any is a zero      |                      |
+| `activity.phone.notificationPeak`                                                | count       | the most notifications in one ten-minute stretch of the clock                    |                      |
+| `activity.places.bike`, `…ride`                                                  | hours       | trips by speed: bike, car/bus/train                                              |                      |
+| `activity.places.at.<place id>`                                                  | hours       | at each named place (5 of the most days, 5+ days)                                |                      |
+| `activity.focusFinished`                                                         | percent     | focus sessions run to the end                                                    |                      |
+| `activity.focusDistracted`                                                       | count (min) | minutes of distractions in focus sessions                                        |                      |
+| `activity.telemetry.<source>.uniqueApps`, `…focusEntropy`, `…typingPauseSeconds` | score       | the average of the telemetry buckets                                             | extra                |
+| `health.band.heartRateAvg`, `…heartRateMax`, `…awake`, `…distance`               | count/hours | the band's day                                                                   | extra: max, distance |
+| `development.project.<name>`, `development.language.<name>`                      | hours       | WakaTime by project / language (5 of the most days, 10+ days; part of coding)    | extra: languages     |
+| `games.steam.<game>`                                                             | hours       | Steam by game (5 of the most days, 10+ days; part of Steam)                      |                      |
+| `finance.income`                                                                 | money       | income                                                                           | extra                |
+| `ai.tokens`                                                                      | count       | tokens of every model                                                            | extra                |
+
+**Links v2's indices** (stage 1, 2026-11-06): counted every hour by the server job
+`activity.day-indices` from the day's spans, site visits, unlocks, notifications and focus
+sessions (`indices/day-indices.ts`), kept in `activity_day_indices` (synced, not exported), the
+history counted 60 days a run. All `activity.index.<key>`, absent on a day nothing was counted.
+
+| Key                           | Unit        | How                                                                                      |
+| ----------------------------- | ----------- | ---------------------------------------------------------------------------------------- |
+| `phone.restlessness`          | score       | unlocks per hour of phone use                                                            |
+| `phone.appSwitches`           | score       | app changes within a minute, per hour of phone use                                       |
+| `phone.shortSessions`         | percent     | unlocks followed by under 30 s of use                                                    |
+| `phone.bedtimeSpread`         | score (h)   | spread of the phone's last use over 7 days (4+ known)                                    |
+| `computer.restlessness`       | score       | windows left within a minute, per hour at the computer                                   |
+| `deepWork`, `deepWorkLongest` | hours, min  | runs of work apps (development, office, design) of 25+ min, cut by a phone notification  |
+| `draining`, `nourishing`      | hours       | the draining apps and sites (Instagram, TikTok, VK, Reddit, X, Facebook) / work apps     |
+| `focusInterruptions`          | score       | notifications per hour of focus sessions and coding                                      |
+| `lateNight`                   | hours       | any screen 23:00–04:00                                                                   |
+| `afterBedtime`                | count (min) | draining, video and games after the usual bedtime (band median of 28 days, else phone's) |
+| `firstWork`                   | count (min) | from the first unlock after 04:00 to the first work app                                  |
+| `morningDraining`             | count (min) | draining apps in the two hours after the first unlock                                    |
+| `offline`                     | hours       | the longest stretch 08:00–22:00 with no screen and no unlock                             |
+
+YouTube Shorts are not told apart: the extension keeps the site only (youtube.com), the phone the
+app only.
 
 ## The phone (the Android app)
 

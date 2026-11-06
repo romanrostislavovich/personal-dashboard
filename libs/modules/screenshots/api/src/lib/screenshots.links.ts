@@ -59,6 +59,7 @@ export class ScreenshotsLinks implements OnModuleInit {
                 module: 'screenshots',
                 labelKey: 'screenshots.links.taken',
                 unit: 'count',
+                extra: true,
                 days: days.map(({day, count}) => ({day, value: count})),
               },
             ]

@@ -20,7 +20,8 @@ const TELEGRAM_MAX_LENGTH = 4000;
  * - bot commands: `/d text` appends a note to today's entry, `/mood 4` rates the day,
  *   `/today` shows today's entry; a photo sent to the bot is added to today's entry;
  * - at 21:00, an evening check-in for those who enabled it and have not written today: the
- *   bot asks how the day was, a button sets the mood, the next message goes to the entry;
+ *   bot asks how the day was, a button sets the mood, then the energy and the anxiety (1–5),
+ *   and the next message goes to the entry;
  * - on Sundays at 20:00, an AI summary of the week (for those who enabled it).
  */
 /** The button under the Sunday review: the answers go to the diary. */
@@ -114,33 +115,53 @@ export class DiaryJobs implements OnModuleInit {
     );
 
     // The buttons under the evening question: `dmood:<day>:<1–5>`. The day is in the button, so
-    // an answer after midnight still goes to the day that was asked about.
+    // an answer after midnight still goes to the day that was asked about. The check-in goes on:
+    // energy, then anxiety (`dfeel:<e|a>:<day>:<1–5>`), then a few words.
     this.telegram.registerAction({
       name: 'dmood',
       handler: async (user, payload) => {
         const [day, value] = payload.split(':');
         const mood = Number(value);
         const replies = diaryMessages(user.locale);
-        if (
-          !/^\d{4}-\d{2}-\d{2}$/.test(day) ||
-          !Number.isInteger(mood) ||
-          mood < 1 ||
-          mood > 5
-        ) {
+        if (!isDay(day) || !isScore(mood)) {
           return replies.moodUsage;
         }
         await this.diary.setMood(user.id, day, mood);
+        await this.askFeeling(user.id, user.locale, 'e', day);
+        return replies.moodNoted(MOOD_EMOJI[mood]);
+      },
+      // Held by the quiet hours till the morning, the reminder is not sent if the day got written.
+      settled: (user, payload) =>
+        this.diary.dayStarted(user.id, payload.split(':')[0]),
+    });
+
+    this.telegram.registerAction({
+      name: 'dfeel',
+      handler: async (user, payload) => {
+        const [kind, day, value] = payload.split(':');
+        const score = Number(value);
+        const replies = diaryMessages(user.locale);
+        if ((kind !== 'e' && kind !== 'a') || !isDay(day) || !isScore(score)) {
+          return replies.moodUsage;
+        }
+        await this.diary.setFeeling(
+          user.id,
+          day,
+          kind === 'e' ? 'energy' : 'anxiety',
+          score,
+        );
+        if (kind === 'e') {
+          await this.askFeeling(user.id, user.locale, 'a', day);
+          return replies.feelingNoted;
+        }
         return {
-          reply: replies.checkInAskWords(MOOD_EMOJI[mood]),
+          reply: replies.checkInAskWords('📔'),
           expectText: async (author, text) => {
             await this.diary.appendNote(author.id, day, text);
             return diaryMessages(author.locale).saved;
           },
         };
       },
-      // Held by the quiet hours till the morning, the reminder is not sent if the day got written.
-      settled: (user, payload) =>
-        this.diary.dayStarted(user.id, payload.split(':')[0]),
     });
 
     this.scheduler.register({
@@ -220,4 +241,33 @@ export class DiaryJobs implements OnModuleInit {
       },
     );
   }
+
+  /** The next question of the evening check-in, with buttons 1–5. */
+  private async askFeeling(
+    userId: string,
+    locale: string | null | undefined,
+    kind: 'e' | 'a',
+    day: string,
+  ): Promise<void> {
+    const text = diaryMessages(locale ?? 'en');
+    await this.notifications.send(userId, {
+      title: kind === 'e' ? text.energyTitle : text.anxietyTitle,
+      body: kind === 'e' ? text.energyBody : text.anxietyBody,
+      source: 'diary',
+      // Asked right after the answer before it: the quiet hours do not hold it.
+      now: true,
+      actions: [1, 2, 3, 4, 5].map(score => ({
+        label: String(score),
+        action: `dfeel:${kind}:${day}:${score}`,
+      })),
+    });
+  }
+}
+
+function isDay(day: string | undefined): day is string {
+  return !!day && /^\d{4}-\d{2}-\d{2}$/.test(day);
+}
+
+function isScore(value: number): boolean {
+  return Number.isInteger(value) && value >= 1 && value <= 5;
 }

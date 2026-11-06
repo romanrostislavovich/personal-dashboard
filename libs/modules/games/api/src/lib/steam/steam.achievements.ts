@@ -5,10 +5,16 @@ import {
   DB,
   Database,
 } from '@pd/api-core';
-import {eq, SQL, sql} from 'drizzle-orm';
-import {gameAccounts, steamGames} from '../games.schema';
+import {and, eq, SQL, sql} from 'drizzle-orm';
+import {gameAccounts, steamGames, steamPlayDays} from '../games.schema';
 
-/** Steam achievements: hours in the library, games played, achievements unlocked in the games. */
+/** As many days as a game needs to be a number of Links of its own (games.links.ts). */
+const FAVOURITE_DAYS = 10;
+
+/**
+ * Steam achievements: hours in the library, games played, favourite games (played on many days),
+ * achievements unlocked in the games.
+ */
 @Injectable()
 export class SteamAchievements implements OnModuleInit {
   constructor(
@@ -47,6 +53,40 @@ export class SteamAchievements implements OnModuleInit {
           '🧙',
           {en: 'Ten thousand hours', ru: 'Десять тысяч часов'},
           {en: '10,000 hours in Steam games', ru: '10 000 часов в играх Steam'},
+        ],
+      ),
+    });
+    this.achievements.register({
+      id: 'games.steam-favourites',
+      module: 'games',
+      measure: userId => this.favourites(userId),
+      tiers: achievementTiers(
+        [
+          1,
+          '❤️',
+          {en: 'A favourite game', ru: 'Любимая игра'},
+          {
+            en: `A Steam game played on ${FAVOURITE_DAYS} different days`,
+            ru: `Игра Steam, в которую играл ${FAVOURITE_DAYS} разных дней`,
+          },
+        ],
+        [
+          3,
+          '🎮',
+          {en: 'A rotation of favourites', ru: 'Любимая подборка'},
+          {
+            en: `3 Steam games played on ${FAVOURITE_DAYS} days each`,
+            ru: `3 игры Steam, в каждую — ${FAVOURITE_DAYS} дней`,
+          },
+        ],
+        [
+          5,
+          '🕹️',
+          {en: 'A true collection', ru: 'Настоящая коллекция'},
+          {
+            en: `5 Steam games played on ${FAVOURITE_DAYS} days each`,
+            ru: `5 игр Steam, в каждую — ${FAVOURITE_DAYS} дней`,
+          },
         ],
       ),
     });
@@ -127,5 +167,17 @@ export class SteamAchievements implements OnModuleInit {
       .innerJoin(gameAccounts, eq(gameAccounts.id, steamGames.accountId))
       .where(eq(gameAccounts.userId, userId));
     return row?.value ?? 0;
+  }
+
+  /** The games played on FAVOURITE_DAYS days or more: the ones Links follows by themselves. */
+  private async favourites(userId: string): Promise<number> {
+    const d = steamPlayDays;
+    const rows = await this.db
+      .select({appId: d.appId})
+      .from(d)
+      .where(and(eq(d.userId, userId), sql`${d.minutes} > 0`))
+      .groupBy(d.appId)
+      .having(sql`count(distinct ${d.day}) >= ${FAVOURITE_DAYS}`);
+    return rows.length;
   }
 }

@@ -6,14 +6,16 @@ import {
   LocalDate,
   parseLocalDate,
   toLocalDate,
+  zonedDateTime,
   zonedToUtc,
 } from '@pd/contracts';
-import {and, eq, gte, isNotNull, isNull, lt, sql} from 'drizzle-orm';
+import {and, eq, gte, isNotNull, isNull, lt, or, sql} from 'drizzle-orm';
+import {TaskDayNumbers, taskDayNumbers} from './tasks-metrics';
 import {tasks} from './tasks.schema';
 
 /**
  * What tasks tell the other sections (see LinksService): the tasks of a project for its
- * overview, and the tasks done and the tasks that came up on every day.
+ * overview, and the tasks done and the tasks that came up on every day, and the open loops.
  */
 @Injectable()
 export class TasksLinks implements OnModuleInit {
@@ -104,6 +106,7 @@ export class TasksLinks implements OnModuleInit {
             module: 'tasks',
             labelKey: 'tasks.links.done',
             unit: 'count',
+            outcome: true,
             days: days.map(({day: date, done}) => ({day: date, value: done})),
           },
           {
@@ -116,6 +119,7 @@ export class TasksLinks implements OnModuleInit {
               value: count,
             })),
           },
+          ...(await this.openLoops(userId, period, timeZone)),
         ];
         return metrics.filter(metric => metric.days.length);
       },
@@ -125,6 +129,81 @@ export class TasksLinks implements OnModuleInit {
       {module: 'tasks', path: '/tasks/todo', description: 'the TODO list'},
       {module: 'tasks', path: '/tasks/reminders', description: 'reminders'},
     ]);
+  }
+
+  /**
+   * The open loops (undated or overdue), the share of what was due that got done, the important
+   * ones done — counted back from the tasks of the period (see taskDayNumbers).
+   */
+  private async openLoops(
+    userId: string,
+    period: {from: LocalDate; to: LocalDate},
+    timeZone: string,
+  ): Promise<DailyMetric[]> {
+    const numbers = await this.dayNumbers(userId, period, timeZone);
+    const metric = (
+      key: keyof typeof numbers,
+      unit: DailyMetric['unit'],
+      more: Partial<DailyMetric> = {},
+    ): DailyMetric => ({
+      key: `tasks.${key}`,
+      module: 'tasks',
+      labelKey: `tasks.links.${key}`,
+      unit,
+      days: numbers[key],
+      ...more,
+    });
+    return [
+      metric('openLoops', 'count'),
+      metric('overdue', 'count', {partOf: 'tasks.openLoops'}),
+      metric('dueDone', 'percent', {outcome: true}),
+      metric('importantDone', 'count', {partOf: 'tasks.done'}),
+    ];
+  }
+
+  /** The tasks' numbers of every day from the first task to today: for the achievements. */
+  async allDays(userId: string): Promise<TaskDayNumbers> {
+    const timeZone = await this.timeZone(userId);
+    const today = zonedDateTime(new Date(), timeZone).date;
+    return this.dayNumbers(userId, {from: '2000-01-01', to: today}, timeZone);
+  }
+
+  /** The numbers counted back from the tasks of the period (see taskDayNumbers). */
+  async dayNumbers(
+    userId: string,
+    period: {from: LocalDate; to: LocalDate},
+    timeZone: string,
+  ): Promise<TaskDayNumbers> {
+    const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
+    const localDay = (
+      column: typeof tasks.createdAt | typeof tasks.completedAt,
+    ) =>
+      sql<LocalDate>`to_char(${column} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`;
+    const rows = await this.db
+      .select({
+        created: localDay(tasks.createdAt),
+        done: sql<LocalDate | null>`case when ${tasks.completedAt} is null then null else ${localDay(tasks.completedAt)} end`,
+        due: tasks.dueDate,
+        priority: tasks.priority,
+      })
+      .from(tasks)
+      .where(
+        and(
+          eq(tasks.userId, userId),
+          lt(
+            tasks.createdAt,
+            zonedToUtc({date: after, time: '00:00'}, timeZone),
+          ),
+          or(
+            isNull(tasks.completedAt),
+            gte(
+              tasks.completedAt,
+              zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+            ),
+          ),
+        ),
+      );
+    return taskDayNumbers(rows, period);
   }
 
   /** Done on the user's own days of a period. */

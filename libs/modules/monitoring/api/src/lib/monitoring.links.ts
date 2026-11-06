@@ -246,6 +246,8 @@ export class MonitoringLinks implements OnModuleInit {
         module: 'monitoring',
         labelKey: 'monitoring.links.downMinutes',
         unit: 'count',
+        // About the user's sites, not the user's day: shown when the Links filter asks for it.
+        extra: true,
         days: [...days].map(([day, value]) => ({day, value})),
       },
     ];

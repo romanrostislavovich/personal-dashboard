@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import {AuthUser, CurrentUser, Public, ZodValidationPipe} from '@pd/api-core';
 import {
+  ActivityIndices,
   ActivityBrowserConfig,
   ActivitySiteTime,
   ActivitySiteVisits,
@@ -58,6 +59,7 @@ import {
 } from '@pd/contracts';
 import {ActivityLinks} from './activity.links';
 import {ActivityService} from './activity.service';
+import {IndicesService} from './indices/indices.service';
 import {DevicesService} from './devices.service';
 import {DiskAdviceService} from './disk/disk-advice.service';
 import {ProjectTimeService} from './project-time.service';
@@ -82,6 +84,7 @@ export class ActivityController {
     private readonly sites: SitesService,
     private readonly suggestions: RuleSuggestionsService,
     private readonly projectTime: ProjectTimeService,
+    private readonly dayIndices: IndicesService,
   ) {}
 
   // --- A tracker ---
@@ -138,6 +141,12 @@ export class ActivityController {
   }
 
   // --- The user ---
+
+  /** Links v2's indices: today, the week and the owner's norm (the card, the Home widget). */
+  @Get('indices')
+  indices(@CurrentUser() user: AuthUser): Promise<ActivityIndices> {
+    return this.dayIndices.summary(user.id);
+  }
 
   @Get('stats')
   async stats(

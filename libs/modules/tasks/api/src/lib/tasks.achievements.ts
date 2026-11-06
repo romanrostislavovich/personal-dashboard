@@ -1,11 +1,13 @@
 import {Injectable, OnModuleInit} from '@nestjs/common';
 import {AchievementsService, achievementTiers} from '@pd/api-core';
 import {RemindersService} from './reminders.service';
+import {TasksLinks} from './tasks.links';
 import {TasksService} from './tasks.service';
 
 /**
  * Achievements of the tasks section: tasks done (in total, in a day, in a row, on time, by their
- * horizon), tasks with steps seen through, and reminders dealt with.
+ * horizon), tasks with steps seen through, reminders dealt with, and the days of Links'
+ * numbers: no open loops, everything due done.
  */
 @Injectable()
 export class TasksAchievements implements OnModuleInit {
@@ -13,6 +15,7 @@ export class TasksAchievements implements OnModuleInit {
     private readonly achievements: AchievementsService,
     private readonly tasks: TasksService,
     private readonly reminders: RemindersService,
+    private readonly links: TasksLinks,
   ) {}
 
   onModuleInit(): void {
@@ -378,6 +381,90 @@ export class TasksAchievements implements OnModuleInit {
           {
             en: '500 reminders dealt with',
             ru: '500 напоминаний, по которым всё сделано',
+          },
+        ],
+      ),
+    });
+    // Counted back from the tasks (see taskDayNumbers): a date changed later counts as it is now.
+    this.achievements.register({
+      id: 'tasks.no-open-loops',
+      module: 'tasks',
+      measure: async userId =>
+        (await this.links.allDays(userId)).openLoops.filter(
+          day => day.value === 0,
+        ).length,
+      tiers: achievementTiers(
+        [
+          1,
+          '🧶',
+          {en: 'No loose ends', ru: 'Ни одного хвоста'},
+          {
+            en: 'A day ended with no undated or overdue task',
+            ru: 'День закончился без задач без даты и просроченных',
+          },
+        ],
+        [
+          7,
+          '🪢',
+          {en: 'All tied up', ru: 'Всё подвязано'},
+          {
+            en: '7 days ended with no loose ends',
+            ru: '7 дней без хвостов',
+          },
+        ],
+        [
+          30,
+          '🧘',
+          {en: 'Clear head', ru: 'Чистая голова'},
+          {
+            en: '30 days ended with no loose ends',
+            ru: '30 дней без хвостов',
+          },
+        ],
+      ),
+    });
+    this.achievements.register({
+      id: 'tasks.due-all-done',
+      module: 'tasks',
+      measure: async userId =>
+        (await this.links.allDays(userId)).dueDone.filter(
+          day => day.value === 100,
+        ).length,
+      tiers: achievementTiers(
+        [
+          1,
+          '🎯',
+          {en: 'Today, all of it', ru: 'Всё на сегодня'},
+          {
+            en: 'Every task due on a day done that day',
+            ru: 'Все задачи на день сделаны в тот же день',
+          },
+        ],
+        [
+          10,
+          '📅',
+          {en: 'Keeps the plan', ru: 'Держу план'},
+          {
+            en: '10 days with every task due done',
+            ru: '10 дней, когда сделано всё запланированное',
+          },
+        ],
+        [
+          50,
+          '🗓️',
+          {en: 'The plan is the law', ru: 'План — закон'},
+          {
+            en: '50 days with every task due done',
+            ru: '50 дней, когда сделано всё запланированное',
+          },
+        ],
+        [
+          100,
+          '🏅',
+          {en: 'A hundred days to plan', ru: 'Сто дней по плану'},
+          {
+            en: '100 days with every task due done',
+            ru: '100 дней, когда сделано всё запланированное',
           },
         ],
       ),

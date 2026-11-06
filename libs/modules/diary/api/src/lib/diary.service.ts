@@ -111,7 +111,21 @@ export class DiaryService {
       : null;
     const content = merged?.content ?? input.content;
     const mood = merged ? merged.mood : (input.mood ?? null);
-    if (!content.trim() && mood === null) {
+    // The check-in is kept unless the input says otherwise (a save from an older client).
+    const kept =
+      input.energy === undefined || input.anxiety === undefined
+        ? (stored ?? (await this.findRow(userId, day)))
+        : undefined;
+    const energy =
+      input.energy === undefined ? (kept?.energy ?? null) : input.energy;
+    const anxiety =
+      input.anxiety === undefined ? (kept?.anxiety ?? null) : input.anxiety;
+    if (
+      !content.trim() &&
+      mood === null &&
+      energy === null &&
+      anxiety === null
+    ) {
       await this.remove(userId, day);
       return null;
     }
@@ -119,6 +133,8 @@ export class DiaryService {
       content,
       words: countWords(content),
       mood,
+      energy,
+      anxiety,
       tags: extractTags(content),
       marks: parseDiaryMarks(content),
       updatedAt: new Date(),
@@ -185,6 +201,21 @@ export class DiaryService {
   ): Promise<DiaryEntry | null> {
     const existing = await this.findRow(userId, day);
     return this.save(userId, day, {content: existing?.content ?? '', mood});
+  }
+
+  /** One answer of the evening check-in (energy or anxiety, 1–5), the rest of the day kept. */
+  async setFeeling(
+    userId: string,
+    day: LocalDate,
+    feeling: 'energy' | 'anxiety',
+    value: number,
+  ): Promise<DiaryEntry | null> {
+    const existing = await this.findRow(userId, day);
+    return this.save(userId, day, {
+      content: existing?.content ?? '',
+      mood: existing?.mood ?? null,
+      [feeling]: value,
+    });
   }
 
   async todayEntry(userId: string): Promise<DiaryEntry | null> {
@@ -493,6 +524,8 @@ function toEntry(row: DiaryEntryRow): DiaryEntry {
     day: row.day,
     content: row.content,
     mood: row.mood,
+    energy: row.energy,
+    anxiety: row.anxiety,
     tags: row.tags,
     marks: row.marks,
     updatedAt: row.updatedAt.toISOString(),

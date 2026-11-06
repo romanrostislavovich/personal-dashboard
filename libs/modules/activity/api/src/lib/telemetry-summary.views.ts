@@ -1,6 +1,16 @@
 import {DailyMetric, LifeCard, LifeEvent} from '@pd/contracts';
 import {TELEMETRY_RATES, TelemetrySummaryMetric} from './telemetry-summary';
 
+/** Raw counts behind the rates and the finer readings: shown when the Links filter asks (DailyMetric.extra). */
+const TELEMETRY_EXTRA = new Set([
+  'inputCount',
+  'terminalCommands',
+  'terminalFailures',
+  'uniqueApps',
+  'focusEntropy',
+  'typingPauseSeconds',
+]);
+
 /** Core seriesOf must honor missing:'absent' before these quantities enter correlations. */
 export function telemetryDailyMetrics(
   metrics: TelemetrySummaryMetric[],
@@ -11,6 +21,7 @@ export function telemetryDailyMetrics(
     labelKey: `activity.telemetry.${metric.source}.${metric.name}`,
     unit: metric.unit,
     missing: 'absent',
+    ...(TELEMETRY_EXTRA.has(metric.name) ? {extra: true as const} : {}),
     days: metric.days,
   }));
 }

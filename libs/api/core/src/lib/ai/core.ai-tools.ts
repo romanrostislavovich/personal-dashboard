@@ -191,7 +191,10 @@ export class CoreAiTools implements OnModuleInit {
       name: 'core_correlations',
       module: 'life',
       description:
-        'Links between the daily numbers of all the sections: every one against every other, ' +
+        'Links between the daily numbers of all the sections: by default every one against ' +
+        'the outcomes (mood, tasks done, sleep, coding, focus; the `target` counts as one), ' +
+        'everything against everything with `pairs: all`; extra (technical) numbers only when ' +
+        'switched on in `extra` — `extras` lists their keys. ' +
         'of the same day (lag 0) and of the next day (lag 1: `a` of a day, `b` of the day ' +
         'after), by Spearman correlation `rho`, with `q` — the p-value corrected for the ' +
         'number of pairs (and for the days’ own trends). Only the strong links are returned. ' +
@@ -208,6 +211,19 @@ export class CoreAiTools implements OnModuleInit {
             type: 'string',
             description:
               'The key of the number to explain, e.g. diary.mood, development.coding',
+          },
+          pairs: {
+            type: 'string',
+            enum: ['outcomes', 'all'],
+            description:
+              'outcomes (default): every number against the outcomes (mood, tasks done, ' +
+              'sleep, coding, focus); all: everything against everything',
+          },
+          extra: {
+            type: 'string',
+            description:
+              'Extra (technical, hidden by default) numbers to include, comma-separated keys ' +
+              'or section ids, e.g. activity.phone.mobileData,vpn',
           },
         },
         required: PERIOD_PARAMETERS.required,
@@ -243,6 +259,7 @@ export class CoreAiTools implements OnModuleInit {
               slope,
             })),
           regression: found.regression,
+          extras: found.extras.map(({key, on}) => ({key, on})),
         };
       },
     });

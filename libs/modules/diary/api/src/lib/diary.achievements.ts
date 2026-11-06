@@ -11,7 +11,10 @@ import {diaryEntries} from './diary.schema';
 import {DiaryPhotosService} from './diary-photos.service';
 import {DiaryService} from './diary.service';
 
-/** Diary achievements: the longest streak of days in a row and the number of entries. */
+/**
+ * Diary achievements: the longest streak of days in a row, the number of entries, the moods and
+ * the evening check-ins answered.
+ */
 @Injectable()
 export class DiaryAchievements implements OnModuleInit {
   constructor(
@@ -117,6 +120,39 @@ export class DiaryAchievements implements OnModuleInit {
 
   /** Great days and the variety of hashtags. */
   private registerMoodAndTags(): void {
+    // Answering is what counts, never the answer: no anxiety level is "better" here.
+    this.achievements.register({
+      id: 'diary.check-ins',
+      module: 'diary',
+      measure: userId =>
+        this.aggregate(
+          userId,
+          sql`count(*) FILTER (WHERE ${diaryEntries.energy} IS NOT NULL AND ${diaryEntries.anxiety} IS NOT NULL)`,
+        ),
+      tiers: achievementTiers(
+        [
+          1,
+          '🫶',
+          {en: 'Listening to myself', ru: 'Прислушиваюсь к себе'},
+          {
+            en: 'The evening check-in answered: energy and anxiety',
+            ru: 'Ответил на вечерний опрос: энергия и тревога',
+          },
+        ],
+        [
+          30,
+          '🧭',
+          {en: 'A month of check-ins', ru: 'Месяц опросов'},
+          {en: '30 evening check-ins', ru: '30 вечерних опросов'},
+        ],
+        [
+          100,
+          '🌿',
+          {en: 'A habit of noticing', ru: 'Привычка замечать'},
+          {en: '100 evening check-ins', ru: '100 вечерних опросов'},
+        ],
+      ),
+    });
     this.achievements.register({
       id: 'diary.great-days',
       module: 'diary',

@@ -1,15 +1,25 @@
 import {Injectable, OnModuleInit} from '@nestjs/common';
 import {LinksService} from '@pd/api-core';
 import {ActivityPeriod, DailyMetric, PhoneSignalsDay} from '@pd/contracts';
+import {ActivityService} from '../activity.service';
+import {phoneDayMetrics} from './phone-day-numbers';
 import {PhoneSignalsService} from './phone-signals.service';
 import {PhoneUsageService} from './phone-usage.service';
 import {hoursOf} from './signals-day';
 
 const HOUR = 3600;
 
+/** The phone's technical numbers: counted, shown when the Links filter asks (DailyMetric.extra). */
+const PHONE_EXTRA = new Set([
+  'activity.phone.mobileData',
+  'activity.phone.batteryMaxC',
+  'activity.phone.noise',
+]);
+
 /**
  * The phone's unlocks and its night to Links: next to mood and sleep they say the most of the
- * phone. Only the days the phone told something — no unlocks is not "did not pick it up".
+ * phone; its signals, its hours by category and its notifications (see phoneDayMetrics). Only
+ * the days the phone told something — no unlocks is not "did not pick it up".
  */
 @Injectable()
 export class PhoneUsageLinks implements OnModuleInit {
@@ -17,6 +27,7 @@ export class PhoneUsageLinks implements OnModuleInit {
     private readonly links: LinksService,
     private readonly phone: PhoneUsageService,
     private readonly signals: PhoneSignalsService,
+    private readonly activity: ActivityService,
   ) {}
 
   onModuleInit(): void {
@@ -25,7 +36,13 @@ export class PhoneUsageLinks implements OnModuleInit {
       metrics: async (userId, period): Promise<DailyMetric[]> => {
         const {days} = await this.phone.usage(userId, period);
         const told = days.filter(day => day.unlocks > 0);
-        const signals = await this.signalMetrics(userId, period);
+        const signals = [
+          ...(await this.signalMetrics(userId, period)),
+          ...phoneDayMetrics(
+            await this.phone.dayRows(userId, period),
+            await this.activity.chosenCategories(userId),
+          ),
+        ];
         if (!told.length) {
           return signals;
         }
@@ -99,6 +116,10 @@ export class PhoneUsageLinks implements OnModuleInit {
       metric('notificationsOpened', 'score', day => day.notificationsOpened),
       metric('secondsToOpen', 'count', day => day.secondsToOpen),
       metric('batteryMaxC', 'score', day => day.batteryMaxC),
-    ].filter(one => one.days.length);
+    ]
+      .filter(one => one.days.length)
+      .map(one =>
+        PHONE_EXTRA.has(one.key) ? {...one, extra: true as const} : one,
+      );
   }
 }

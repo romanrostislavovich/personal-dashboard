@@ -29,6 +29,7 @@ import {
   lastDays,
 } from '../activity-period';
 import {ActivityApi} from '../activity.api';
+import {IndicesCardComponent} from '../indices/indices-card.component';
 import {DayTimelineComponent} from './day-timeline.component';
 
 /** Bars of the chart: a day each up to a month, then months — a year of days is unreadable. */
@@ -54,6 +55,7 @@ const TOP_APPS = 15;
     DurationPipe,
     ShareListComponent,
     DayTimelineComponent,
+    IndicesCardComponent,
   ],
   templateUrl: './overview.page.html',
   styleUrl: './overview.page.scss',
