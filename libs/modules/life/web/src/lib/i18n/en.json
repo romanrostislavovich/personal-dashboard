@@ -115,7 +115,8 @@
       "days": "Days compared",
       "beyond": "Beyond its own yesterday",
       "hintSame": "Each point is a day. The line is how the two change together from day to day, the seasons taken away.",
-      "hintNext": "Each point is a day: across — that day, up — the next one. The line is how the two change together from day to day, the seasons taken away."
+      "hintNext": "Each point is a day: across — that day, up — the next one. The line is how the two change together from day to day, the seasons taken away.",
+      "hintLater": "Each point is a day: across — that day, up — {{days}} days later. The line is how the two change together from day to day, the seasons taken away."
     },
     "regression": {
       "title": "What predicts a number",
@@ -158,6 +159,47 @@
       "days": "· {{days}} d.",
       "hint": "Extra numbers are counted every day but hidden and left out of the search by default: the more numbers are compared, the stricter the check for chance gets for all of them. Switch on the ones you want to look at.",
       "reset": "Switch extras off"
+    },
+    "daysLater": "{{days}} days later",
+    "daysBefore": "{{days}} days before",
+    "laterMore": "After a day of more {{a}}, more {{b}} {{days}} days later",
+    "laterLess": "After a day of more {{a}}, less {{b}} {{days}} days later",
+    "unusual": {
+      "title": "Unusual",
+      "hint": "Numbers further from your usual level than on 9 of 10 days: the last 28 days, or the same kind of day (weekends or weekdays) for a number that differs between them.",
+      "today": "Today so far",
+      "yesterday": "Yesterday",
+      "up": "more than on {{of}} of 10 days",
+      "down": "less than on {{of}} of 10 days",
+      "usual": "usually {{value}}",
+      "kind": "compared with the same kind of day",
+      "evenToday": "Nothing above usual so far: the day is not over, so only what is already higher counts.",
+      "evenYesterday": "An even day: every number within its usual range.",
+      "even": "Everything within its usual range.",
+      "failed": "Could not count the unusual numbers.",
+      "open": "Links"
+    },
+    "changes": {
+      "title": "What changed",
+      "hint": "The days a number settled at a new level, over your whole history. When, not why: think back to what happened then.",
+      "since": "since {{day}}",
+      "large": "a large change",
+      "noticeable": "a noticeable change",
+      "near": "Changed around then too:",
+      "alone": "Nothing else changed within a week of it.",
+      "none": "No changes found yet: they are searched every night over the whole history.",
+      "failed": "Could not read the changes.",
+      "all": "The whole history ({{count}})",
+      "less": "Only the latest"
+    },
+    "curves": {
+      "title": "Not straight lines",
+      "hint": "Pairs where more is not simply more: the best (or the least) is somewhere in the middle. Open one to see it group by group.",
+      "hill": "{{b}} is highest at a middle amount of {{a}}",
+      "valley": "{{b}} is lowest at a middle amount of {{a}}"
+    },
+    "dose": {
+      "title": "{{b}} on the days of each amount of {{a}}"
     }
   },
   "forecast": {

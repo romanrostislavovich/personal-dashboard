@@ -18,6 +18,11 @@
     <span>{{ 'life.links.caution' | transloco }}</span>
   </p>
 
+  <div class="grid">
+    <pd-unusual-card />
+    <pd-changes-card />
+  </div>
+
   <pd-before-after />
 
   @if (data.isLoading()) {
@@ -110,6 +115,57 @@
         </mat-card-content>
       </mat-card>
     }
+    @if (curves().length) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>show_chart</mat-icon>
+          <mat-card-title>{{
+            'life.links.curves.title' | transloco
+          }}</mat-card-title>
+          <mat-card-subtitle>{{
+            'life.links.curves.hint' | transloco
+          }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <ul class="top">
+            @for (
+              curve of curves().slice(0, 10);
+              track curve.a + curve.b + curve.lag
+            ) {
+              <li>
+                <button
+                  type="button"
+                  (click)="choose({a: curve.a, b: curve.b, lag: curve.lag})"
+                >
+                  <span class="dots">
+                    <span
+                      class="dot"
+                      [style.background]="color(curve.a)"
+                    ></span>
+                    <span
+                      class="dot"
+                      [style.background]="color(curve.b)"
+                    ></span>
+                  </span>
+                  <span class="text">
+                    <span>{{ curveSentence(curve) }}</span>
+                    <span class="meta">
+                      {{ 'life.links.days' | transloco: {days: curve.n} }}
+                      @if (curve.lag) {
+                        ·
+                        {{
+                          'life.links.daysLater' | transloco: {days: curve.lag}
+                        }}
+                      }
+                    </span>
+                  </span>
+                </button>
+              </li>
+            }
+          </ul>
+        </mat-card-content>
+      </mat-card>
+    }
     @if (correlations().length) {
       <div class="grid">
         <mat-card appearance="outlined">
@@ -168,12 +224,19 @@
                   <dd>{{ shown.pair.beyondItself | number: '1.2-2' }}</dd>
                 }
               </dl>
+              <pd-dose-chart
+                [a]="shown.doseA"
+                [b]="shown.doseB"
+                [lag]="shown.pair.lag"
+              />
               <p class="hint">
                 {{
-                  (shown.pair.lag
-                    ? 'life.links.pair.hintNext'
-                    : 'life.links.pair.hintSame'
-                  ) | transloco
+                  (shown.pair.lag > 1
+                    ? 'life.links.pair.hintLater'
+                    : shown.pair.lag
+                      ? 'life.links.pair.hintNext'
+                      : 'life.links.pair.hintSame'
+                  ) | transloco: {days: shown.pair.lag}
                 }}
               </p>
             }
@@ -221,9 +284,15 @@
             @for (term of regression.terms; track term.key + term.lag) {
               <span class="term-name" [class.muted]="term.p >= 0.05">
                 {{ nameOf(term.key) }}
-                @if (term.lag) {
+                @if (term.lag === 1) {
                   <span class="muted"
                     >({{ 'life.links.dayBefore' | transloco }})</span
+                  >
+                } @else if (term.lag) {
+                  <span class="muted"
+                    >({{
+                      'life.links.daysBefore' | transloco: {days: term.lag}
+                    }})</span
                   >
                 }
               </span>

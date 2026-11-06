@@ -92,8 +92,10 @@ interface Point {
       </svg>
       <p class="y-label">
         ↑ {{ name(b()) }}
-        @if (pair().lag) {
+        @if (pair().lag === 1) {
           ({{ 'life.links.nextDay' | transloco }})
+        } @else if (pair().lag) {
+          ({{ 'life.links.daysLater' | transloco: {days: pair().lag} }})
         }
       </p>
     }
@@ -155,7 +157,7 @@ export class CorrelationScatterComponent {
     const later = new Map(b.values.map(value => [value.day, value.value]));
     const raw: {x: number; y: number; day: string}[] = [];
     for (const {day, value} of a.values) {
-      const y = later.get(pair.lag ? nextDay(day) : day);
+      const y = later.get(laterDay(day, pair.lag));
       if (y !== undefined) {
         raw.push({x: value, y, day});
       }
@@ -215,8 +217,9 @@ function clamp(value: number, low: number, high: number): number {
   return Math.min(high, Math.max(low, value));
 }
 
-function nextDay(day: string): string {
+/** The day `lag` days after `day`. */
+export function laterDay(day: string, lag: number): string {
   const date = new Date(`${day}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + 1);
+  date.setUTCDate(date.getUTCDate() + lag);
   return date.toISOString().slice(0, 10);
 }
