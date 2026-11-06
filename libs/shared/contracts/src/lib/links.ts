@@ -1,3 +1,4 @@
+import {DoseGroup} from './links-dose';
 import {z} from 'zod';
 import {LocalDate} from './local-date';
 
@@ -238,13 +239,21 @@ export interface ExtraMetric extends Omit<
 }
 
 /**
+ * Days between `a` and `b` of a pair: 0 — the same day; 1 — `b` of the next day; 2 and 3 — `b`
+ * two or three days later, for the outcomes only (sleep or a heavy load often show later).
+ */
+export const CORRELATION_LAGS = [0, 1, 2, 3] as const;
+export type CorrelationLag = (typeof CORRELATION_LAGS)[number];
+
+/**
  * How two daily numbers go together. `lag` 1 — `a` of a day against `b` of the next one
- * ("a short night, a slow next day"); 0 — of the same day (then `a` and `b` are in key order).
+ * ("a short night, a slow next day"), 2–3 — of a later one; 0 — of the same day (then `a` and
+ * `b` are in key order).
  */
 export interface Correlation {
   a: string;
   b: string;
-  lag: 0 | 1;
+  lag: CorrelationLag;
   /** Spearman's rank correlation, −1…1. */
   rho: number;
   /** Days both have a value on. */
@@ -254,8 +263,9 @@ export interface Correlation {
   /** `p` corrected for how many pairs were compared (Benjamini–Hochberg). */
   q: number;
   /**
-   * For a lag of a day: the correlation with `b` of the day before held fixed — whether `a`
-   * tells about tomorrow's `b` more than today's `b` does (Granger's idea). `null` for lag 0.
+   * For a lag: the correlation with `b` of the day before `b`'s day held fixed — whether `a`
+   * tells about that later `b` more than the `b` just before it does (Granger's idea). `null`
+   * for lag 0.
    */
   beyondItself: number | null;
   /**
@@ -270,6 +280,24 @@ export interface Correlation {
   strong: boolean;
 }
 
+/**
+ * A pair that goes along a curve, not a straight line ("the mood rises with walking up to about
+ * 40 minutes, then stays"): found where the straight link is not strong, by the bend of the ranks
+ * (see `bend`), corrected for the number of pairs like the links.
+ */
+export interface CorrelationCurve {
+  a: string;
+  b: string;
+  lag: CorrelationLag;
+  n: number;
+  /** The standardized bend: + a valley (less in the middle), − a hill (more in the middle). */
+  bend: number;
+  /** The bend's p-value, corrected for the pairs compared (Benjamini–Hochberg). */
+  q: number;
+  /** The days in groups of `a`, with `b`'s average in each: the chart. */
+  groups: DoseGroup[];
+}
+
 /** What predicts a number, the others held fixed: a multiple regression. */
 export interface CorrelationRegression {
   target: string;
@@ -279,8 +307,8 @@ export interface CorrelationRegression {
   r2: number;
   terms: {
     key: string;
-    /** `1` — of the day before the target's day. */
-    lag: 0 | 1;
+    /** Days before the target's day: `1` — of the day before. */
+    lag: CorrelationLag;
     /** Standardized coefficient: the change of the target, in its spreads, for one spread of this. */
     beta: number;
     p: number;
@@ -295,6 +323,8 @@ export interface Correlations {
   correlations: Correlation[];
   /** For `target` of the query; `null` — too few days, or no such number. */
   regression: CorrelationRegression | null;
+  /** The pairs that bend, the surest first (see CorrelationCurve). */
+  curves: CorrelationCurve[];
   /** Every extra number with a value in the period, switched on or not: the filter's list. */
   extras: ExtraMetric[];
 }

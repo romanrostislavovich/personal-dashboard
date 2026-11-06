@@ -1,13 +1,17 @@
 import {
   Correlation,
+  CorrelationCurve,
+  CorrelationLag,
   CorrelationMetric,
   CorrelationPairs,
   CorrelationRegression,
   Correlations,
   DailyMetric,
+  doseGroups,
   ExtraMetric,
   LocalDate,
 } from '@pd/contracts';
+import {Bend, bendOf, MIN_BEND} from './curves';
 import {
   daysOf,
   round,
@@ -54,6 +58,9 @@ const MIN_BEYOND = 0.15;
  */
 const SEASON_DAYS = 14;
 
+/** The lags beyond the next day, towards the outcomes only. */
+const LATER: CorrelationLag[] = [2, 3];
+
 /** Weekends shape most of the numbers at once: a number of their own, to see it and allow for it. */
 export const WEEKEND_METRIC = 'life.weekend';
 
@@ -78,7 +85,7 @@ export interface CorrelationOptions {
 
 /**
  * The links engine: every daily number of every section against every other (or against the
- * outcomes only, see CorrelationPairs), of the same day and of the next one, with what predicts
+ * outcomes only, see CorrelationPairs), of the same day and of the next ones, with what predicts
  * a chosen number when the others are held fixed.
  *
  * It finds what goes together and what comes before what; that is not proof that one causes
@@ -108,7 +115,8 @@ export function correlations(
       : undefined);
   // The number the regression explains is compared with everything, like an outcome: its
   // candidates come from its own pairs.
-  const found = pairs(prepared, which, wanted);
+  const compared = pairs(prepared, which, wanted);
+  const found = compared.map(item => item.pair);
   const q = benjaminiHochberg(found.map(pair => pair.p));
   const all: Correlation[] = found.map((pair, index) => ({
     ...pair,
@@ -128,6 +136,7 @@ export function correlations(
     metrics: prepared.map(({metric, series}) => describe(metric, series)),
     correlations: all,
     regression: wanted ? regression(prepared, all, wanted) : null,
+    curves: curves(prepared, compared, all),
     // Every extra number, on or off — one switched on but of too few days stays listed, so the
     // filter can still switch it off.
     extras: metrics
@@ -200,14 +209,24 @@ function autocorrelation(series: Series, days: LocalDate[]): number {
 
 type Pair = Omit<Correlation, 'q' | 'strong'>;
 
+/**
+ * A pair compared, with how it bends (see bendOf) for the curves. A bend is seen one way only
+ * (`b` along `a`); of the same day both ways are tried, and `reversed` says `a` goes along `b`.
+ */
+interface Compared {
+  pair: Pair;
+  bend: Bend | null;
+  reversed: boolean;
+}
+
 function pairs(
   prepared: Prepared[],
   which: CorrelationPairs,
   target: string | undefined,
-): Pair[] {
+): Compared[] {
   const outcome = (metric: DailyMetric) =>
     Boolean(metric.outcome) || metric.key === target;
-  const result: Pair[] = [];
+  const result: Compared[] = [];
   const sorted = [...prepared].sort((a, b) =>
     a.metric.key.localeCompare(b.metric.key),
   );
@@ -221,14 +240,19 @@ function pairs(
       ) {
         continue;
       }
-      // Of the same day, a pair once; of the next day, both ways round.
-      const lags: (0 | 1)[] = a.metric.key < b.metric.key ? [0, 1] : [1];
+      // Of the same day, a pair once; of the next day, both ways round; two and three days
+      // later, only towards an outcome (what a day gives may show later, see CorrelationLag).
+      const lags: CorrelationLag[] = [
+        ...(a.metric.key < b.metric.key ? [0 as const] : []),
+        1,
+        ...(outcome(b.metric) ? LATER : []),
+      ];
       // Whether tomorrow is a Saturday is known without any number.
       const calendar = [a, b].some(item => item.metric.key === WEEKEND_METRIC);
       for (const lag of calendar ? lags.filter(one => one === 0) : lags) {
-        const pair = compare(a, b, lag);
-        if (pair) {
-          result.push(pair);
+        const item = compare(a, b, lag);
+        if (item) {
+          result.push(item);
         }
       }
     }
@@ -254,37 +278,133 @@ function related(a: DailyMetric, b: DailyMetric): boolean {
   );
 }
 
-function compare(a: Prepared, b: Prepared, lag: 0 | 1): Pair | null {
+function compare(
+  a: Prepared,
+  b: Prepared,
+  lag: CorrelationLag,
+): Compared | null {
   const x: number[] = [];
   const y: number[] = [];
-  // For a lag: b of the same day as a, held fixed in beyondItself.
+  // For a lag: b of the day before b's day, held fixed in beyondItself.
   const z: number[] = [];
   for (const [day, value] of a.daily) {
-    const next = lag ? shift(day, 1) : day;
-    const later = b.daily.get(next);
+    const later = b.daily.get(shift(day, lag));
     if (later === undefined) {
       continue;
     }
     x.push(value);
     y.push(later);
-    z.push(b.daily.get(day) ?? NaN);
+    z.push(lag ? (b.daily.get(shift(day, lag - 1)) ?? NaN) : NaN);
   }
   if (x.length < MIN_DAYS) {
     return null;
   }
   const rho = spearman(x, y);
   const n = x.length;
-  const p = correlationP(rho, effectiveDays(n, a.auto, b.auto));
+  const days = effectiveDays(n, a.auto, b.auto);
+  const p = correlationP(rho, days);
   return {
-    a: a.metric.key,
-    b: b.metric.key,
-    lag,
-    rho: round(rho, 3),
-    n,
-    p: round(p, 6),
-    beyondItself: lag ? beyond(x, y, z) : null,
-    slope: round(slope(x, y), 4),
+    pair: {
+      a: a.metric.key,
+      b: b.metric.key,
+      lag,
+      rho: round(rho, 3),
+      n,
+      p: round(p, 6),
+      beyondItself: lag ? beyond(x, y, z) : null,
+      slope: round(slope(x, y), 4),
+    },
+    ...steeperBend(x, y, days, lag),
   };
+}
+
+function steeperBend(
+  x: number[],
+  y: number[],
+  days: number,
+  lag: CorrelationLag,
+): {bend: Bend | null; reversed: boolean} {
+  const along = bendOf(x, y, days);
+  const back = lag ? null : bendOf(y, x, days);
+  return back && Math.abs(back.beta) > Math.abs(along?.beta ?? 0)
+    ? {bend: back, reversed: true}
+    : {bend: along, reversed: false};
+}
+
+/**
+ * The pairs that bend: the bends' p-values corrected for every pair compared, like the links;
+ * a pair already a strong straight link is left to the links, a next-day bend that only repeats
+ * the same day's is left out too (the same day's is kept). The groups are of the values as they
+ * were, so the chart speaks in the numbers' own units.
+ */
+function curves(
+  prepared: Prepared[],
+  compared: Compared[],
+  links: Correlation[],
+): CorrelationCurve[] {
+  const q = benjaminiHochberg(compared.map(item => item.bend?.p ?? 1));
+  const strong = new Set(
+    links
+      .filter(link => link.strong)
+      .map(link => `${link.a}|${link.b}|${link.lag}`),
+  );
+  const byKey = new Map(prepared.map(item => [item.metric.key, item]));
+  const found = compared.flatMap(
+    ({pair, bend, reversed}, index): CorrelationCurve[] => {
+      const a = byKey.get(reversed ? pair.b : pair.a);
+      const b = byKey.get(reversed ? pair.a : pair.b);
+      if (
+        !bend ||
+        !a ||
+        !b ||
+        q[index] >= MAX_Q ||
+        Math.abs(bend.beta) < MIN_BEND ||
+        strong.has(`${pair.a}|${pair.b}|${pair.lag}`)
+      ) {
+        return [];
+      }
+      const x: number[] = [];
+      const y: number[] = [];
+      for (const [day, value] of a.series) {
+        const later = b.series.get(shift(day, pair.lag));
+        if (later !== undefined) {
+          x.push(value);
+          y.push(later);
+        }
+      }
+      const groups = doseGroups(x, y).map(group => ({
+        from: round(group.from, 3),
+        to: round(group.to, 3),
+        mean: round(group.mean, 3),
+        n: group.n,
+      }));
+      return groups.length > 2
+        ? [
+            {
+              a: a.metric.key,
+              b: b.metric.key,
+              lag: pair.lag,
+              n: pair.n,
+              bend: round(bend.beta, 3),
+              q: round(q[index], 4),
+              groups,
+            },
+          ]
+        : [];
+    },
+  );
+  // A pair bends both of the same day and of the next one: the same day's says it.
+  const sameDay = new Set(
+    found.filter(curve => !curve.lag).map(curve => `${curve.a}|${curve.b}`),
+  );
+  return found
+    .filter(
+      curve =>
+        !curve.lag ||
+        (!sameDay.has(`${curve.a}|${curve.b}`) &&
+          !sameDay.has(`${curve.b}|${curve.a}`)),
+    )
+    .sort((a, b) => a.q - b.q);
 }
 
 /** The partial correlation of x and y with z held fixed, on the days z is known. */
@@ -313,19 +433,19 @@ function regression(
   if (!goal) {
     return null;
   }
-  type Candidate = {key: string; lag: 0 | 1; p: number};
+  type Candidate = {key: string; lag: CorrelationLag; p: number};
   const candidates = found
     .flatMap((pair): Candidate[] => {
       if (pair.lag === 0 && (pair.a === target || pair.b === target)) {
         return [{key: pair.a === target ? pair.b : pair.a, lag: 0, p: pair.p}];
       }
-      return pair.lag === 1 && pair.b === target
-        ? [{key: pair.a, lag: 1, p: pair.p}]
+      return pair.lag > 0 && pair.b === target
+        ? [{key: pair.a, lag: pair.lag, p: pair.p}]
         : [];
     })
     .filter(candidate => candidate.p < TERM_MAX_P)
     .sort((a, b) => a.p - b.p);
-  // One lag a number (of its day or of the day before, whichever says more), and never a
+  // One lag a number (of its day or of a day before, whichever says more), and never a
   // number together with a part of it: the two would share what they explain.
   const metricOf = (key: string) =>
     prepared.find(item => item.metric.key === key)?.metric;
@@ -381,7 +501,7 @@ function regression(
 function rowsOf(
   prepared: Prepared[],
   goal: Prepared,
-  terms: {key: string; lag: 0 | 1}[],
+  terms: {key: string; lag: CorrelationLag}[],
 ): number[][] {
   const series = terms.map(term =>
     prepared.find(item => item.metric.key === term.key),
@@ -390,9 +510,7 @@ function rowsOf(
   for (const [day, value] of goal.daily) {
     const row = [value];
     terms.forEach((term, index) => {
-      row.push(
-        series[index]?.daily.get(term.lag ? shift(day, -1) : day) ?? NaN,
-      );
+      row.push(series[index]?.daily.get(shift(day, -term.lag)) ?? NaN);
     });
     if (row.every(cell => !Number.isNaN(cell))) {
       rows.push(row);

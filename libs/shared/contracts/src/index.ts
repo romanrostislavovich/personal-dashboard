@@ -21,6 +21,7 @@ export * from './lib/lifelog';
 export * from './lib/automations';
 export * from './lib/projects';
 export * from './lib/links';
+export * from './lib/links-dose';
 export * from './lib/integrations';
 export * from './lib/notifications';
 export * from './lib/birthdays';
