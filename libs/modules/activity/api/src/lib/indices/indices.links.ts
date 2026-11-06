@@ -14,7 +14,8 @@ const INDICES: Record<
   'phone.shortSessions': {unit: 'percent'},
   'phone.bedtimeSpread': {unit: 'score', parts: ['activity.phone.lastUse']},
   'computer.restlessness': {unit: 'score'},
-  deepWork: {unit: 'hours', outcome: true},
+  // Deep work is a part of the nourishing time (runs of the same work apps).
+  deepWork: {unit: 'hours', outcome: true, partOf: 'activity.index.nourishing'},
   deepWorkLongest: {unit: 'count', parts: ['activity.index.deepWork']},
   draining: {unit: 'hours'},
   nourishing: {unit: 'hours'},

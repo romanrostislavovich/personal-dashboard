@@ -7,7 +7,7 @@ export interface ActivityIndex {
   unit: 'hours' | 'count' | 'score' | 'percent';
   /** `null` — nothing counted today yet. */
   today: number | null;
-  /** The average of the last 7 days with a value (today included). */
+  /** The average of the 7 days before today with a value (today, half counted, left out). */
   week: number | null;
   /** The owner's own norm: the median of the 28 days before those 7. */
   norm: number | null;

@@ -405,6 +405,7 @@ export class IndicesService {
         end: row.end.getTime(),
       })),
       bedtime: await this.bedtime(userId, day, context.bandBedtimes),
+      now: Date.now(),
     };
   }
 

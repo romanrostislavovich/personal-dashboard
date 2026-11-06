@@ -110,6 +110,16 @@ describe('dayIndices', () => {
     expect(indices.get('offline')).toBe(7);
   });
 
+  it('counts no offline stretch before the day is over: the afternoon is not lived yet', () => {
+    const indices = dayIndices(
+      day({
+        spans: [span('phone', 'x', 'other', at(9), 60)],
+        now: at(15),
+      }),
+    );
+    expect(indices.has('offline')).toBe(false);
+  });
+
   it('says nothing of what it has no data for', () => {
     expect([...dayIndices(day({})).keys()]).toEqual([]);
   });

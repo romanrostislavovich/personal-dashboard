@@ -47,6 +47,8 @@ const NOT_TRASHED = new Set([
   // Private context retention must also apply to device-deletion cascades.
   'telemetry_dynamics',
   'activity_workstates',
+  // Links v2's indices of the days: counted again from the spans every hour.
+  'activity_day_indices',
 ]);
 
 /**

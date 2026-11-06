@@ -28,12 +28,12 @@ export const SHOWN_INDICES: {key: string; unit: ActivityIndex['unit']}[] = [
 const WEEK = 7;
 const NORM = 28;
 
-/** The days the summary reads back from `today`: a week and the four weeks before it. */
+/** The days the summary reads back from `today`: today, the week before it and four weeks more. */
 export function summaryPeriod(today: LocalDate): {
   from: LocalDate;
   to: LocalDate;
 } {
-  return {from: shift(today, -(WEEK + NORM) + 1), to: today};
+  return {from: shift(today, -(WEEK + NORM)), to: today};
 }
 
 /** Today, the week's average and the owner's norm (the median before the week) of each index. */
@@ -41,13 +41,16 @@ export function indexSummary(
   kept: Map<string, {day: LocalDate; value: number}[]>,
   today: LocalDate,
 ): ActivityIndex[] {
-  const weekFrom = shift(today, -WEEK + 1);
+  // The week is the seven whole days before today: today, half counted, would pull it down.
+  const weekFrom = shift(today, -WEEK);
   return SHOWN_INDICES.flatMap(({key, unit}): ActivityIndex[] => {
     const days = kept.get(key) ?? [];
     if (!days.length) {
       return [];
     }
-    const week = days.filter(one => one.day >= weekFrom).map(one => one.value);
+    const week = days
+      .filter(one => one.day >= weekFrom && one.day < today)
+      .map(one => one.value);
     const before = days.filter(one => one.day < weekFrom).map(one => one.value);
     return [
       {

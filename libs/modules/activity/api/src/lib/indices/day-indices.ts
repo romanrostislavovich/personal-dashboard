@@ -35,6 +35,8 @@ export interface DayMoments {
   notifications: number[];
   /** Focus sessions of the day: when they ran. */
   focus: {start: number; end: number}[];
+  /** Now, ms: a stretch of the day still to come is not counted as offline. */
+  now?: number;
   /** The owner's usual bedtime, hours of the day (23.5; over 24 — after midnight); `null` unknown. */
   bedtime: number | null;
 }
@@ -230,12 +232,11 @@ export function dayIndices(day: DayMoments): Map<string, number> {
     );
   }
 
-  // The longest daytime stretch with no screen at all.
-  if (ofDay.length || unlocks.length) {
-    set(
-      'offline',
-      longestGap(screen, unlocks, at(AWAKE_FROM), at(AWAKE_TO)) / HOUR,
-    );
+  // The longest daytime stretch with no screen at all — once the day's window is over: an
+  // afternoon not lived yet is no stretch offline.
+  const awakeTo = at(AWAKE_TO);
+  if ((ofDay.length || unlocks.length) && (day.now ?? Infinity) >= awakeTo) {
+    set('offline', longestGap(screen, unlocks, at(AWAKE_FROM), awakeTo) / HOUR);
   }
   return result;
 }

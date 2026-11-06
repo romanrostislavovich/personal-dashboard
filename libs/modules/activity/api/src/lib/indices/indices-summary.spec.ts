@@ -12,11 +12,11 @@ describe('indexSummary', () => {
     const days = [
       // The four weeks before: 1 hour of deep work a day.
       ...Array.from({length: 28}, (_, index) => ({
-        day: day(7 + index),
+        day: day(8 + index),
         value: 1,
       })),
       // The week: 2 hours, today 3.
-      ...Array.from({length: 6}, (_, index) => ({
+      ...Array.from({length: 7}, (_, index) => ({
         day: day(1 + index),
         value: 2,
       })),
@@ -27,7 +27,7 @@ describe('indexSummary', () => {
       key: 'deepWork',
       unit: 'hours',
       today: 3,
-      week: 2.14,
+      week: 2,
       norm: 1,
     });
   });
@@ -42,6 +42,6 @@ describe('indexSummary', () => {
 
   it('leaves out an index never counted, and reads five weeks back', () => {
     expect(indexSummary(new Map(), TODAY)).toEqual([]);
-    expect(summaryPeriod(TODAY)).toEqual({from: day(34), to: TODAY});
+    expect(summaryPeriod(TODAY)).toEqual({from: day(35), to: TODAY});
   });
 });
