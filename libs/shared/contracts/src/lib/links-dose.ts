@@ -52,15 +52,24 @@ export function doseGroups(
       n: part.length,
     });
   }
-  // A short last group (ties pulled its days into the one before) joins that one.
-  const last = result[result.length - 1];
-  if (result.length > 1 && last.n < MIN_GROUP_DAYS) {
-    const before = result[result.length - 2];
-    const n = before.n + last.n;
-    result.splice(-2, 2, {
-      from: before.from,
-      to: last.to,
-      mean: (before.mean * before.n + last.mean * last.n) / n,
+  // A group of too few days (a value seen once on a 1–5 scale, ties pulling days away) joins
+  // its smaller neighbour: an average of one day is a guess.
+  for (
+    let small = result.findIndex(group => group.n < MIN_GROUP_DAYS);
+    small >= 0 && result.length > 1;
+    small = result.findIndex(group => group.n < MIN_GROUP_DAYS)
+  ) {
+    const [left, right] = [result[small - 1], result[small + 1]];
+    const other = !right || (left && left.n <= right.n) ? small - 1 : small + 1;
+    const [first, second] =
+      other < small
+        ? [result[other], result[small]]
+        : [result[small], result[other]];
+    const n = first.n + second.n;
+    result.splice(Math.min(small, other), 2, {
+      from: first.from,
+      to: second.to,
+      mean: (first.mean * first.n + second.mean * second.n) / n,
       n,
     });
   }

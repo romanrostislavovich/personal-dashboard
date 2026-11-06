@@ -21,6 +21,15 @@ describe('doseGroups', () => {
     ]);
   });
 
+  it('joins a group of too few days to its smaller neighbour', () => {
+    // A 1–5 scale where 3 was seen on a single day.
+    const x = [1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5];
+    const groups = doseGroups(x, x);
+    expect(groups.every(group => group.n >= 3)).toBe(true);
+    expect(groups.reduce((sum, group) => sum + group.n, 0)).toBe(20);
+    expect(groups.some(group => group.from <= 3 && group.to >= 3)).toBe(true);
+  });
+
   it('says nothing of too few days or of a number that never changes', () => {
     expect(doseGroups([1, 2, 3, 4], [1, 2, 3, 4])).toEqual([]);
     expect(doseGroups(Array(20).fill(5), Array(20).fill(1))).toEqual([]);

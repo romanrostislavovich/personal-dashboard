@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
+import {MatIconModule} from '@angular/material/icon';
 import {RouterLink} from '@angular/router';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {CORE_READS} from '@pd/client-core';
@@ -26,10 +27,19 @@ const COMPACT = 3;
 @Component({
   selector: 'pd-unusual-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatCardModule, RouterLink, TranslocoPipe],
+  imports: [
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    RouterLink,
+    TranslocoPipe,
+  ],
   template: `
     <mat-card appearance="outlined">
       <mat-card-header>
+        @if (!compact()) {
+          <mat-icon mat-card-avatar>bolt</mat-icon>
+        }
         <mat-card-title>{{
           'life.links.unusual.title' | transloco
         }}</mat-card-title>
