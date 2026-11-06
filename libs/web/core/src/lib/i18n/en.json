@@ -63,6 +63,7 @@
     "level": "Level {{level}}",
     "xp": "{{current}} / {{next}} XP to the next level",
     "unlocked": "{{unlocked}} of {{total}} achievements",
+    "achievementsFailed": "Could not load the achievements",
     "edit": {
       "start": "Edit",
       "done": "Done",

@@ -53,6 +53,7 @@
     "level": "Уровень {{level}}",
     "xp": "{{current}} / {{next}} XP до следующего уровня",
     "unlocked": "{{unlocked}} из {{total}} ачивок",
+    "achievementsFailed": "Не удалось загрузить ачивки",
     "edit": {
       "start": "Изменить",
       "done": "Готово",
