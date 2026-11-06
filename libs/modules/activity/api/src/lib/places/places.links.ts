@@ -107,13 +107,22 @@ export class PlacesLinks implements OnModuleInit {
       }),
     });
     return [
-      metric('walk', 'hours', day => hours(day.walkSeconds)),
+      {
+        ...metric('walk', 'hours', day => hours(day.walkSeconds)),
+        partOf: 'activity.places.onTheWay',
+      },
       metric('onTheWay', 'hours', day => hours(day.tripSeconds)),
       metric('home', 'hours', day =>
         day.homeSeconds === null ? null : hours(day.homeSeconds),
       ),
-      metric('bike', 'hours', day => hours(day.bikeSeconds)),
-      metric('ride', 'hours', day => hours(day.rideSeconds)),
+      {
+        ...metric('bike', 'hours', day => hours(day.bikeSeconds)),
+        partOf: 'activity.places.onTheWay',
+      },
+      {
+        ...metric('ride', 'hours', day => hours(day.rideSeconds)),
+        partOf: 'activity.places.onTheWay',
+      },
       metric('newPlaces', 'count', day => day.newPlaces),
       ...namedPlaces(days).map(({id, name}) => ({
         ...metric(`at.${id}`, 'hours', day =>

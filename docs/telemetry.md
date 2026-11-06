@@ -51,11 +51,12 @@ numbers a derived one is counted from (a share, a ratio), never compared with it
 
 **Main, extra and outcomes** (Links v2, [proposals/links-v2.md](proposals/links-v2.md#8-main-and-extra-numbers-the-filter)).
 Every number is counted and kept. `extra: true` — hidden and left out of the search until the
-Links filter switches it on (by key or by section), and kept out of the good/bad mood days,
-before/after and the forecast; now: the phone's mobile data, noise and battery heat, the raw
-telemetry counts (`inputCount`, `terminalCommands`, `terminalFailures`), VPN megabytes, the sites'
-downtime, screenshots. `outcome: true` — what a day gives; by default Links compares every number
-with the outcomes only (`pairs=outcomes`), everything with everything on request (`pairs=all`);
+Links filter switches it on (by key or by section), and kept out of the good/bad mood days and
+the forecast — **not** out of before/after, where a technical reading (SpO2 around a medication's
+start) matters as much as any; the list with the marks is the table below and the base-layer
+table. `outcome: true` — what a day gives; by default Links compares every number with the
+outcomes only (`pairs=outcomes`; the number the regression explains counts as one), everything
+with everything on request (`pairs=all`);
 now: `diary.mood`, `tasks.done`, `development.coding`, `activity.focus`, the questionnaires,
 `health.band.sleep`, `sleepScore`, `stress`, `resilience`. A new number says which it is in the
 same change.

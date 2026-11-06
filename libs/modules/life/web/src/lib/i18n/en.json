@@ -148,14 +148,16 @@
     },
     "pairs": {
       "label": "Which pairs to compare",
-      "outcomes": "With the outcomes",
+      "outcomes": "Outcomes",
       "outcomesHint": "Everything against what a day gives: mood, tasks done, sleep, coding, focus, the questionnaires",
-      "all": "Everything with everything"
+      "all": "All pairs",
+      "allHint": "Every number against every other: more links, and more of them by chance."
     },
     "extra": {
       "label": "Extra numbers: {{on}} of {{all}}",
       "days": "· {{days}} d.",
-      "hint": "Extra numbers are counted every day but hidden and left out of the search by default: the more numbers are compared, the stricter the check for chance gets for all of them. Switch on the ones you want to look at."
+      "hint": "Extra numbers are counted every day but hidden and left out of the search by default: the more numbers are compared, the stricter the check for chance gets for all of them. Switch on the ones you want to look at.",
+      "reset": "Switch extras off"
     }
   },
   "forecast": {

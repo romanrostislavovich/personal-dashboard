@@ -228,11 +228,14 @@ export interface CorrelationMetric {
   outcome?: true;
 }
 
-/** An extra number left out of the search (see DailyMetric.extra): for the filter's list. */
-export type ExtraMetric = Omit<
+/** An extra number (see DailyMetric.extra), for the filter's list. */
+export interface ExtraMetric extends Omit<
   CorrelationMetric,
   'values' | 'extra' | 'outcome'
->;
+> {
+  /** Switched on by the query (searched when it has enough days). */
+  on: boolean;
+}
 
 /**
  * How two daily numbers go together. `lag` 1 — `a` of a day against `b` of the next one
@@ -292,7 +295,7 @@ export interface Correlations {
   correlations: Correlation[];
   /** For `target` of the query; `null` — too few days, or no such number. */
   regression: CorrelationRegression | null;
-  /** The extra numbers not switched on: what the filter can add. */
+  /** Every extra number with a value in the period, switched on or not: the filter's list. */
   extras: ExtraMetric[];
 }
 

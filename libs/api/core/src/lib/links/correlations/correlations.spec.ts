@@ -54,6 +54,7 @@ const result = correlations(
     metric('development.coding', coding),
   ],
   period,
+  {pairs: 'all'},
 );
 const find = (a: string, b: string, lag: 0 | 1) =>
   result.correlations.find(
@@ -155,19 +156,22 @@ describe('correlations', () => {
       new Set(found.correlations.flatMap(pair => [pair.a, pair.b]));
 
     it('leaves an extra number out of the search and lists it for the filter', () => {
-      const found = correlations(numbers, period);
+      const found = correlations(numbers, period, {pairs: 'all'});
       expect(keysOf(found).has('activity.phone.batteryMaxC')).toBe(false);
-      expect(found.extras.map(item => item.key)).toEqual([
-        'activity.phone.batteryMaxC',
+      expect(found.extras).toEqual([
+        expect.objectContaining({
+          key: 'activity.phone.batteryMaxC',
+          days: DAYS,
+          on: false,
+        }),
       ]);
-      expect(found.extras[0].days).toBe(DAYS);
     });
 
     it('searches an extra number switched on by its key or its section', () => {
       for (const extra of [['activity.phone.batteryMaxC'], ['activity']]) {
-        const found = correlations(numbers, period, {extra});
+        const found = correlations(numbers, period, {extra, pairs: 'all'});
         expect(keysOf(found).has('activity.phone.batteryMaxC')).toBe(true);
-        expect(found.extras).toEqual([]);
+        expect(found.extras.map(item => item.on)).toEqual([true]);
         expect(
           found.metrics.find(item => item.key === 'activity.phone.batteryMaxC')
             ?.extra,
@@ -189,8 +193,33 @@ describe('correlations', () => {
       );
     });
 
+    it('keeps a switched-on extra of too few days in the list, to switch it off', () => {
+      const few = metric('vpn.megabytes', [1, 2, 3], {
+        unit: 'count',
+        extra: true,
+      });
+      const found = correlations([...numbers, few], period, {
+        extra: ['vpn.megabytes'],
+      });
+      expect(found.extras).toContainEqual(
+        expect.objectContaining({key: 'vpn.megabytes', on: true, days: 3}),
+      );
+    });
+
+    it('explains a number that is not an outcome from all the others', () => {
+      const found = correlations(numbers, period, {target: 'activity.games'});
+      expect(
+        found.correlations.some(
+          pair =>
+            [pair.a, pair.b].includes('activity.games') &&
+            [pair.a, pair.b].includes('development.coding'),
+        ),
+      ).toBe(true);
+      expect(found.regression?.target).toBe('activity.games');
+    });
+
     it('never compares a number with what it is counted from', () => {
-      const found = correlations(numbers, period);
+      const found = correlations(numbers, period, {pairs: 'all'});
       expect(
         found.correlations.some(
           pair =>
@@ -251,6 +280,7 @@ describe('correlations', () => {
         ),
       ],
       year,
+      {pairs: 'all'},
     );
     const pair = (a: string, b: string, lag: 0 | 1) =>
       found.correlations.find(

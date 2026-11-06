@@ -77,6 +77,16 @@ describe('the numbers of a day of places', () => {
     expect(day.named.get('cafe-1')).toEqual({name: 'Café', seconds: 2 * 3600});
   });
 
+  it('leaves home out of the named places: it is a number of its own', () => {
+    const days = [
+      {day: '2026-10-20', start: 0, entries: [stay(HOME, 0, 9 * H)]},
+    ];
+    const named = [{id: 'home-1', name: 'Дом', ...HOME, radiusM: 100}];
+    const [day] = placeDayNumbers(days, named, '2026-10-20');
+    expect(day.homeSeconds).toBe(9 * 3600);
+    expect(day.named.size).toBe(0);
+  });
+
   it('knows no home without a night', () => {
     const days = [
       {day: '2026-10-20', start: 0, entries: [stay(CAFE, 10 * H, 12 * H)]},

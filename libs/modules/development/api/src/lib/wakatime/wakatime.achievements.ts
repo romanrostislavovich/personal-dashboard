@@ -11,6 +11,8 @@ import {WakatimeService} from './wakatime.service';
 const HOUR = 3600;
 /** A language counts as used once an hour was spent in it. */
 const LANGUAGE_MIN_SECONDS = HOUR;
+/** As many days as a project needs to be a number of Links (development-metrics.ts). */
+const PROJECT_MIN_DAYS = 10;
 
 /** Coding time achievements: hours in total and in a day, days and streaks, languages. */
 @Injectable()
@@ -24,6 +26,7 @@ export class WakatimeAchievements implements OnModuleInit {
     this.registerHours();
     this.registerDays();
     this.registerLanguages();
+    this.registerProjects();
   }
 
   /** Hours of coding: all of them and the best day. */
@@ -189,6 +192,45 @@ export class WakatimeAchievements implements OnModuleInit {
           {
             en: 'An hour or more in 10 languages',
             ru: 'По часу и больше на 10 языках',
+          },
+        ],
+      ),
+    });
+  }
+
+  /** The projects that became numbers of Links of their own: coded in on 10 days or more. */
+  private registerProjects(): void {
+    this.achievements.register({
+      id: 'development.coding-projects',
+      module: 'development',
+      measure: userId =>
+        this.wakatime.namesOnDays(userId, 'project', PROJECT_MIN_DAYS),
+      tiers: achievementTiers(
+        [
+          1,
+          '📂',
+          {en: 'A project of my own', ru: 'Свой проект'},
+          {
+            en: `A project coded in on ${PROJECT_MIN_DAYS} days`,
+            ru: `Над проектом работал ${PROJECT_MIN_DAYS} дней`,
+          },
+        ],
+        [
+          3,
+          '🗂️',
+          {en: 'Several fronts', ru: 'Несколько фронтов'},
+          {
+            en: `3 projects coded in on ${PROJECT_MIN_DAYS} days each`,
+            ru: `3 проекта, над каждым — ${PROJECT_MIN_DAYS} дней работы`,
+          },
+        ],
+        [
+          5,
+          '🏭',
+          {en: 'A workshop', ru: 'Мастерская'},
+          {
+            en: `5 projects coded in on ${PROJECT_MIN_DAYS} days each`,
+            ru: `5 проектов, над каждым — ${PROJECT_MIN_DAYS} дней работы`,
           },
         ],
       ),

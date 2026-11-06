@@ -185,6 +185,8 @@ export class ActivityLinks implements OnModuleInit {
             module: 'activity',
             labelKey: 'activity.links.hours',
             unit: 'hours' as const,
+            // The phone's spans are in it too (see PhoneUsageLinks).
+            parts: ['activity.phone.hours'],
             days: hours(stats.days),
           },
           {
@@ -192,6 +194,7 @@ export class ActivityLinks implements OnModuleInit {
             module: 'activity',
             labelKey: 'activity.links.games',
             unit: 'hours' as const,
+            parts: ['activity.phone.category.games'],
             days: hours([...games].map(([day, seconds]) => ({day, seconds}))),
           },
           ...(await this.sites(userId, period)),

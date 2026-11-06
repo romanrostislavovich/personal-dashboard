@@ -20,7 +20,7 @@ import {UsersService} from '../users/users.service';
 import {LinksService, Period, ProjectRef} from './links.service';
 import {beforeAfter} from './before-after/before-after';
 import {correlations} from './correlations/correlations';
-import {moodInsights} from './mood-insights';
+import {MOOD_METRIC, moodInsights} from './mood-insights';
 import {lastMonths, monthOf} from './project-months';
 import {moodForecast} from './forecast';
 import {withCodingAtComputer} from './project-time';
@@ -138,10 +138,13 @@ export class ProjectOverviewService {
 
   /** What goes with the days of a good mood and of a bad one (see moodInsights). */
   async moodInsights(userId: string, period: Period): Promise<MoodInsights> {
-    // The extra numbers stay out until the Links filter has them (see DailyMetric.extra).
+    // The extra numbers stay out until the Links filter has them (see DailyMetric.extra), and so
+    // do the numbers counted from the mood itself (its spread goes with it by arithmetic).
     const metrics = await this.links.dailyMetrics(userId, period);
     return moodInsights(
-      metrics.filter(metric => !metric.extra),
+      metrics.filter(
+        metric => !metric.extra && !metric.parts?.includes(MOOD_METRIC),
+      ),
       period,
     );
   }
@@ -186,7 +189,7 @@ export class ProjectOverviewService {
     );
     return correlations(metrics, period, {
       target: query.target,
-      pairs: query.pairs ?? 'outcomes',
+      pairs: query.pairs,
       extra: query.extra?.split(',').filter(Boolean) ?? [],
     });
   }
@@ -214,8 +217,10 @@ export class ProjectOverviewService {
     if (!periods.length) {
       return {weeks: query.weeks, results: []};
     }
+    // Every number, the extra ones too: around a medication's start the technical readings
+    // (SpO2, skin temperature) matter as much as any.
     const metrics = (await this.links.dailyMetrics(userId, range)).filter(
-      metric => !metric.extra && !hidden.includes(metric.module),
+      metric => !hidden.includes(metric.module),
     );
     const result = beforeAfter(metrics, periods, range, query.weeks);
     // A period that began before the two years can still have ended within them.

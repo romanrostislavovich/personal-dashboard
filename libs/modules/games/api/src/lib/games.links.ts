@@ -196,24 +196,27 @@ const GAMES = 5;
 
 /** Each main game's hours, a part of Steam's: a day of Steam without it is a zero. */
 export function gameMetrics(
-  played: {day: LocalDate; name: string; minutes: number}[],
+  played: {day: LocalDate; appId: number; name: string; minutes: number}[],
   steamDays: LocalDate[],
 ): DailyMetric[] {
-  const byGame = new Map<string, Map<LocalDate, number>>();
-  for (const {day, name, minutes} of played) {
-    const days = byGame.get(name) ?? new Map<LocalDate, number>();
-    byGame.set(name, days.set(day, (days.get(day) ?? 0) + minutes));
+  // By the game's id: a name can change, or be missing (then it is the id).
+  const byGame = new Map<number, Map<LocalDate, number>>();
+  const names = new Map<number, string>();
+  for (const {day, appId, name, minutes} of played) {
+    names.set(appId, name);
+    const days = byGame.get(appId) ?? new Map<LocalDate, number>();
+    byGame.set(appId, days.set(day, (days.get(day) ?? 0) + minutes));
   }
   const days = [...new Set(steamDays)].sort();
   return [...byGame]
     .filter(([, on]) => on.size >= GAME_MIN_DAYS)
-    .sort((a, b) => b[1].size - a[1].size || a[0].localeCompare(b[0]))
+    .sort((a, b) => b[1].size - a[1].size || a[0] - b[0])
     .slice(0, GAMES)
-    .map(([name, on]) => ({
-      key: `games.steam.${name.toLowerCase().replace(/\s+/g, '-')}`,
+    .map(([appId, on]) => ({
+      key: `games.steam.${appId}`,
       module: 'games',
       labelKey: 'games.links.steamGame',
-      label: name,
+      label: names.get(appId) ?? String(appId),
       unit: 'hours',
       partOf: 'games.steam',
       days: days.map(day => ({

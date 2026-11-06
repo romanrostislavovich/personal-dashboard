@@ -83,6 +83,8 @@ export function phoneDayMetrics(
           metric(`category.${category}`, 'hours', rounded(days), {
             labelKey: `activity.links.phone.category.${category}`,
             partOf: 'activity.phone.hours',
+            // Video and music apps in front, and "something playing", are nearly one number.
+            ...(category === 'media' ? {parts: ['activity.phone.media']} : {}),
             ...(MAIN_CATEGORIES.has(category) ? {} : {extra: true}),
           }),
         );
@@ -95,7 +97,9 @@ export function phoneDayMetrics(
       metric('messengerNotifications', 'count', messengers, {
         partOf: 'activity.phone.notifications',
       }),
-      metric('notificationPeak', 'count', busiest),
+      metric('notificationPeak', 'count', busiest, {
+        parts: ['activity.phone.notifications'],
+      }),
     );
   }
   return metrics.filter(one => one.days.length);

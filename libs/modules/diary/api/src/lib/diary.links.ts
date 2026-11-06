@@ -5,14 +5,14 @@ import {moodVolatility, shift, tagDays} from './diary-metrics';
 import {and, eq, gte, lte} from 'drizzle-orm';
 import {diaryEntries} from './diary.schema';
 
+/** The mood's spread is of the last two weeks. */
+const VOLATILITY_DAYS = 14;
+
 /**
  * What the diary tells the other sections (see LinksService): the mood of every day — what the
  * numbers of the other sections are compared against ("what goes with a good day") — its spread,
  * the words, and the most used tags as yes/no days ("#sport" against the mood).
  */
-/** The mood's spread is of the last two weeks. */
-const VOLATILITY_DAYS = 14;
-
 @Injectable()
 export class DiaryLinks implements OnModuleInit {
   constructor(

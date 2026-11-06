@@ -6,13 +6,18 @@ const days = Array.from({length: 12}, (_, index) => day(index));
 describe('gameMetrics', () => {
   it("makes a game of enough days a part of Steam's hours, zero on other Steam days", () => {
     const played = [
-      ...days.map(one => ({day: one, name: 'Hades II', minutes: 90})),
-      {day: day(0), name: 'Once', minutes: 30},
+      ...days.map(one => ({
+        day: one,
+        appId: 1145350,
+        name: 'Hades II',
+        minutes: 90,
+      })),
+      {day: day(0), appId: 1, name: 'Once', minutes: 30},
     ];
     const [game, ...rest] = gameMetrics(played, [...days, day(20)]);
     expect(rest).toEqual([]);
     expect(game).toMatchObject({
-      key: 'games.steam.hades-ii',
+      key: 'games.steam.1145350',
       label: 'Hades II',
       partOf: 'games.steam',
     });

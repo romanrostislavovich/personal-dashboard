@@ -213,6 +213,10 @@ runs on what is switched on, and v2 searches **actions × outcomes** by default 
 matrix: what you do against mood, tasks done, sleep, focus, deep work, coding), all × all only on
 request.
 
+**Who reads the extra numbers:** the Links search only when switched on; the good/bad mood
+days and the forecast never; before/after always (a technical reading around a medication's start
+matters). The number a regression explains is searched like an outcome, whatever it is.
+
 **A number made of others is never paired with its own parts** ("deep work share" against "focus
 hours" is arithmetic, not a finding): each derived number names its parents and the engine skips
 those pairs.

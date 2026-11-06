@@ -202,4 +202,32 @@ export class PhoneUsageService {
       .where(and(eq(u.userId, userId), gte(u.at, start), lt(u.at, end)));
     return {apps, notifications, busiest, told: told.map(row => row.day)};
   }
+
+  /**
+   * The days the phone reported (it was unlocked) with at most `most` notifications, of all
+   * time: the quiet days of the achievements.
+   */
+  async quietDays(userId: string, most: number): Promise<number> {
+    const zone = this.users.timeZoneOf(await this.users.findById(userId));
+    const u = activityPhoneUnlocks;
+    const n = activityPhoneNotifications;
+    const [row] = await this.db
+      .execute<{days: number}>(
+        sql`
+      select count(*)::int as days
+      from (
+        select distinct to_char(${u.at} at time zone ${zone}, 'YYYY-MM-DD') as day
+        from ${u} where ${u.userId} = ${userId}
+      ) told
+      left join (
+        select to_char(${n.postedAt} at time zone ${zone}, 'YYYY-MM-DD') as day,
+          count(*) as count
+        from ${n} where ${n.userId} = ${userId}
+        group by 1
+      ) posted on posted.day = told.day
+      where coalesce(posted.count, 0) <= ${most}`,
+      )
+      .then(result => result.rows);
+    return row?.days ?? 0;
+  }
 }

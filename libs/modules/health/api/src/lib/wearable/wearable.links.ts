@@ -65,8 +65,14 @@ export class WearableLinks implements OnModuleInit {
         });
         return [
           metric('sleep', 'hours', day => hours(day.sleepMinutes)),
-          metric('deepSleep', 'hours', day => hours(day.deepMinutes)),
-          metric('remSleep', 'hours', day => hours(day.remMinutes)),
+          {
+            ...metric('deepSleep', 'hours', day => hours(day.deepMinutes)),
+            partOf: 'health.band.sleep',
+          },
+          {
+            ...metric('remSleep', 'hours', day => hours(day.remMinutes)),
+            partOf: 'health.band.sleep',
+          },
           metric('bedtime', 'clock', day => clock(day.sleepStart, true)),
           metric('wake', 'clock', day => clock(day.sleepEnd, false)),
           metric('restingHeartRate', 'count', day => day.restingHeartRate),

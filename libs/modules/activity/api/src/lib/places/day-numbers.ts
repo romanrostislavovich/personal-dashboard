@@ -101,7 +101,8 @@ export function placeDayNumbers(
       if (place === home) {
         homeSeconds += seconds(entry);
       }
-      if (place.placeId && place.name) {
+      // Home is a number of its own, named or not.
+      if (place !== home && place.placeId && place.name) {
         const at = named.get(place.placeId) ?? {name: place.name, seconds: 0};
         named.set(place.placeId, {...at, seconds: at.seconds + seconds(entry)});
       }

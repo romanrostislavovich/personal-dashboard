@@ -1,82 +1,18 @@
 <div class="links">
-  <div class="controls">
-    <mat-button-toggle-group
-      hideSingleSelectionIndicator
-      [value]="days()"
-      [attr.aria-label]="'life.period' | transloco"
-      (change)="days.set($event.value)"
-    >
-      @for (option of periods; track option) {
-        <mat-button-toggle [value]="option">
-          {{ 'life.mood.days' | transloco: {days: option} }}
-        </mat-button-toggle>
-      }
-    </mat-button-toggle-group>
-    <mat-form-field subscriptSizing="dynamic">
-      <mat-label>{{ 'life.links.digital.filter' | transloco }}</mat-label>
-      <mat-select
-        [value]="digitalFilter()"
-        (selectionChange)="filterDigital($event.value)"
-      >
-        <mat-option value="">{{
-          'life.links.digital.all' | transloco
-        }}</mat-option>
-        <mat-option value="digital">{{
-          'life.links.digital.only' | transloco
-        }}</mat-option>
-        @for (key of digitalMetrics; track key) {
-          <mat-option [value]="key" [disabled]="!metric(key)">
-            {{ key | transloco }}
-            @if (!metric(key)) {
-              ({{ 'life.links.digital.unavailable' | transloco }})
-            }
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-    <mat-button-toggle-group
-      hideSingleSelectionIndicator
-      [value]="pairs()"
-      [attr.aria-label]="'life.links.pairs.label' | transloco"
-      (change)="setPairs($event.value)"
-    >
-      <mat-button-toggle
-        value="outcomes"
-        [matTooltip]="'life.links.pairs.outcomesHint' | transloco"
-      >
-        {{ 'life.links.pairs.outcomes' | transloco }}
-      </mat-button-toggle>
-      <mat-button-toggle value="all">
-        {{ 'life.links.pairs.all' | transloco }}
-      </mat-button-toggle>
-    </mat-button-toggle-group>
-    @if (extras().length) {
-      <mat-form-field subscriptSizing="dynamic">
-        <mat-label>{{
-          'life.links.extra.label'
-            | transloco: {on: extra().length, all: extras().length}
-        }}</mat-label>
-        <mat-select
-          multiple
-          [value]="extra()"
-          (selectionChange)="setExtra($event.value)"
-        >
-          @for (item of extras(); track item.key) {
-            <mat-option [value]="item.key">
-              {{ name(item) }}
-              <span class="days">{{
-                'life.links.extra.days' | transloco: {days: item.days}
-              }}</span>
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    }
-  </div>
-  <p class="hint">{{ 'life.links.digital.hint' | transloco }}</p>
-  @if (extras().length) {
-    <p class="hint">{{ 'life.links.extra.hint' | transloco }}</p>
-  }
+  <pd-links-controls
+    [periods]="periods"
+    [days]="days()"
+    [digitalFilter]="digitalFilter()"
+    [digitalMetrics]="digitalMetrics"
+    [known]="known()"
+    [pairs]="pairs()"
+    [extras]="extras()"
+    [extra]="extra()"
+    (daysChange)="days.set($event)"
+    (digitalFilterChange)="filterDigital($event)"
+    (pairsChange)="setPairs($event)"
+    (extraChange)="setExtra($event)"
+  />
   <p class="caution">
     <mat-icon>info</mat-icon>
     <span>{{ 'life.links.caution' | transloco }}</span>
@@ -90,7 +26,7 @@
 
   @if (data.error()) {
     <p class="error">{{ 'life.links.failed' | transloco }}</p>
-  } @else if (data.value(); as found) {
+  } @else if (result(); as found) {
     @if (digitalFilter() && !correlations().length) {
       <p role="status" class="hint">
         {{ 'life.links.digital.empty' | transloco }}

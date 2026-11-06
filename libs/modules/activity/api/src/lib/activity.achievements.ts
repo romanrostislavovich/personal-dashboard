@@ -5,7 +5,8 @@ import {
   AchievementTierTuple,
 } from '@pd/api-core';
 import {ActivityCategory} from '@pd/contracts';
-import {ActivityLinks} from './activity.links';
+import {ActivityLinks, focusSessionMetrics} from './activity.links';
+import {PhoneUsageService} from './phone/phone-usage.service';
 import {ActivityAllTime, ActivityService} from './activity.service';
 import {ProjectTimeService} from './project-time.service';
 import {WellbeingService} from './wellbeing.service';
@@ -13,6 +14,9 @@ import {WellbeingService} from './wellbeing.service';
 const HOUR = 3600;
 /** One check measures every metric: they share the numbers instead of asking again each. */
 const RECORDS_FRESH_MS = 30_000;
+
+/** A day of the phone this quiet or quieter is a quiet day. */
+const QUIET_NOTIFICATIONS = 20;
 
 const hours = (seconds: number) => Math.floor(seconds / HOUR);
 const inCategory = (category: ActivityCategory) => (records: ActivityAllTime) =>
@@ -37,6 +41,7 @@ export class ActivityAchievements implements OnModuleInit {
     private readonly wellbeing: WellbeingService,
     private readonly links: ActivityLinks,
     private readonly projectTime: ProjectTimeService,
+    private readonly phone: PhoneUsageService,
   ) {}
 
   onModuleInit(): void {
@@ -610,6 +615,80 @@ export class ActivityAchievements implements OnModuleInit {
         ],
       ],
     );
+
+    this.achievements.register({
+      id: 'activity.quiet-phone-days',
+      module: 'activity',
+      measure: userId => this.phone.quietDays(userId, QUIET_NOTIFICATIONS),
+      tiers: achievementTiers(
+        [
+          1,
+          '🔕',
+          {en: 'A quiet day', ru: 'Тихий день'},
+          {
+            en: `A day with ${QUIET_NOTIFICATIONS} notifications on the phone at most`,
+            ru: `День, когда на телефон пришло не больше ${QUIET_NOTIFICATIONS} уведомлений`,
+          },
+        ],
+        [
+          10,
+          '🍃',
+          {en: 'Silence suits me', ru: 'Тишина мне к лицу'},
+          {en: '10 quiet days', ru: '10 тихих дней'},
+        ],
+        [
+          50,
+          '🏝️',
+          {en: 'An island of calm', ru: 'Остров спокойствия'},
+          {en: '50 quiet days', ru: '50 тихих дней'},
+        ],
+      ),
+    });
+    this.achievements.register({
+      id: 'activity.focus-all-finished',
+      module: 'activity',
+      measure: async userId => {
+        const today = await this.activity.today(userId);
+        const {sessions} = await this.wellbeing.focusStats(userId, {
+          from: '2000-01-01',
+          to: today,
+        });
+        const [finished] = focusSessionMetrics(
+          sessions,
+          await this.activity.timeZone(userId),
+        );
+        return finished?.days.filter(day => day.value === 100).length ?? 0;
+      },
+      tiers: achievementTiers(
+        [
+          1,
+          '🎬',
+          {en: 'To the end', ru: 'До конца'},
+          {
+            en: 'A day with every focus session run to the end',
+            ru: 'День, когда все фокус-сессии доведены до конца',
+          },
+        ],
+        [
+          10,
+          '🧱',
+          {en: 'Solid focus', ru: 'Крепкий фокус'},
+          {
+            en: '10 days with every focus session run to the end',
+            ru: '10 дней, когда все фокус-сессии доведены до конца',
+          },
+        ],
+        [
+          50,
+          '🗿',
+          {en: 'Unbreakable', ru: 'Несгибаемый'},
+          {
+            en: '50 days with every focus session run to the end',
+            ru: '50 дней, когда все фокус-сессии доведены до конца',
+          },
+        ],
+      ),
+    });
 
     this.metric('activity.devices', records => records.devices, [
       [

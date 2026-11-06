@@ -1,0 +1,93 @@
+<div class="controls">
+  <mat-button-toggle-group
+    hideSingleSelectionIndicator
+    [value]="days()"
+    [attr.aria-label]="'life.period' | transloco"
+    (change)="daysChange.emit($event.value)"
+  >
+    @for (option of periods(); track option) {
+      <mat-button-toggle [value]="option">
+        {{ 'life.mood.days' | transloco: {days: option} }}
+      </mat-button-toggle>
+    }
+  </mat-button-toggle-group>
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>{{ 'life.links.digital.filter' | transloco }}</mat-label>
+    <mat-select
+      [value]="digitalFilter()"
+      (selectionChange)="digitalFilterChange.emit($event.value)"
+    >
+      <mat-option value="">{{
+        'life.links.digital.all' | transloco
+      }}</mat-option>
+      <mat-option value="digital">{{
+        'life.links.digital.only' | transloco
+      }}</mat-option>
+      @for (key of digitalMetrics(); track key) {
+        <mat-option [value]="key" [disabled]="!known().has(key)">
+          {{ key | transloco }}
+          @if (!known().has(key)) {
+            ({{ 'life.links.digital.unavailable' | transloco }})
+          }
+        </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-button-toggle-group
+    class="pairs"
+    hideSingleSelectionIndicator
+    [value]="pairs()"
+    [attr.aria-label]="'life.links.pairs.label' | transloco"
+    (change)="pairsChange.emit($event.value)"
+  >
+    <mat-button-toggle value="outcomes">
+      {{ 'life.links.pairs.outcomes' | transloco }}
+    </mat-button-toggle>
+    <mat-button-toggle value="all">
+      {{ 'life.links.pairs.all' | transloco }}
+    </mat-button-toggle>
+  </mat-button-toggle-group>
+  @if (extras().length) {
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-label>{{
+        'life.links.extra.label'
+          | transloco: {on: switchedOn(), all: extras().length}
+      }}</mat-label>
+      <mat-select
+        multiple
+        [value]="draft()"
+        (selectionChange)="draft.set($event.value)"
+        (openedChange)="opened($event)"
+      >
+        @for (item of sorted(); track item.key) {
+          <mat-option [value]="item.key">
+            {{ name(item) }}
+            <span class="detail">
+              @if (kind(item); as kind) {
+                {{ kind }} ·
+              }
+              {{ 'life.links.extra.days' | transloco: {days: item.days} }}
+            </span>
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+  @if (extra().length) {
+    <button matButton type="button" (click)="reset()">
+      {{ 'life.links.extra.reset' | transloco }}
+    </button>
+  }
+</div>
+<p class="hint">
+  {{
+    (pairs() === 'outcomes'
+      ? 'life.links.pairs.outcomesHint'
+      : 'life.links.pairs.allHint'
+    ) | transloco
+  }}
+</p>
+<p class="hint">{{ 'life.links.digital.hint' | transloco }}</p>
+@if (extras().length) {
+  <p class="hint">{{ 'life.links.extra.hint' | transloco }}</p>
+}

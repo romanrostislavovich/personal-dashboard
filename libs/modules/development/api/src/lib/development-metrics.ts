@@ -7,19 +7,23 @@ const MAX_NAMES = 5;
 
 /**
  * WakaTime's split of a day (by project or by language) as daily numbers: the five of the most
- * days, each a part of the coding time; a day of coding without it is a zero, a day without
- * coding is left out (the coding number has it).
+ * days, each a part of the coding time; a day of coding without it is a zero.
  */
 export function breakdownMetrics(
   rows: {day: LocalDate; name: string; seconds: number}[],
   codingDays: LocalDate[],
   kind: 'project' | 'language',
 ): DailyMetric[] {
+  // By a key safe for a list in a query (no commas or spaces); names that differ only in case
+  // or spacing are one project.
   const byName = new Map<string, Map<LocalDate, number>>();
+  const names = new Map<string, string>();
   for (const {day, name, seconds} of rows) {
-    if (seconds > 0) {
-      const days = byName.get(name) ?? new Map<LocalDate, number>();
-      byName.set(name, days.set(day, (days.get(day) ?? 0) + seconds));
+    const slug = slugOf(name);
+    if (seconds > 0 && slug) {
+      names.set(slug, names.get(slug) ?? name);
+      const days = byName.get(slug) ?? new Map<LocalDate, number>();
+      byName.set(slug, days.set(day, (days.get(day) ?? 0) + seconds));
     }
   }
   const days = [...new Set(codingDays)].sort();
@@ -27,11 +31,11 @@ export function breakdownMetrics(
     .filter(([, on]) => on.size >= MIN_DAYS)
     .sort((a, b) => b[1].size - a[1].size || a[0].localeCompare(b[0]))
     .slice(0, MAX_NAMES)
-    .map(([name, on]) => ({
-      key: `development.${kind}.${name.toLowerCase()}`,
+    .map(([slug, on]) => ({
+      key: `development.${kind}.${slug}`,
       module: 'development',
       labelKey: `development.links.${kind}`,
-      label: name,
+      label: names.get(slug) ?? slug,
       unit: 'hours',
       partOf: 'development.coding',
       // The languages are many and say little apart from the projects.
@@ -41,4 +45,11 @@ export function breakdownMetrics(
         value: Math.round(((on.get(day) ?? 0) / 3600) * 100) / 100,
       })),
     }));
+}
+
+function slugOf(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[\s,]+/g, '-');
 }

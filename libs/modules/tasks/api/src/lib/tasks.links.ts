@@ -6,10 +6,11 @@ import {
   LocalDate,
   parseLocalDate,
   toLocalDate,
+  zonedDateTime,
   zonedToUtc,
 } from '@pd/contracts';
 import {and, eq, gte, isNotNull, isNull, lt, or, sql} from 'drizzle-orm';
-import {taskDayNumbers} from './tasks-metrics';
+import {TaskDayNumbers, taskDayNumbers} from './tasks-metrics';
 import {tasks} from './tasks.schema';
 
 /**
@@ -139,6 +140,40 @@ export class TasksLinks implements OnModuleInit {
     period: {from: LocalDate; to: LocalDate},
     timeZone: string,
   ): Promise<DailyMetric[]> {
+    const numbers = await this.dayNumbers(userId, period, timeZone);
+    const metric = (
+      key: keyof typeof numbers,
+      unit: DailyMetric['unit'],
+      more: Partial<DailyMetric> = {},
+    ): DailyMetric => ({
+      key: `tasks.${key}`,
+      module: 'tasks',
+      labelKey: `tasks.links.${key}`,
+      unit,
+      days: numbers[key],
+      ...more,
+    });
+    return [
+      metric('openLoops', 'count'),
+      metric('overdue', 'count', {partOf: 'tasks.openLoops'}),
+      metric('dueDone', 'percent', {outcome: true}),
+      metric('importantDone', 'count', {partOf: 'tasks.done'}),
+    ];
+  }
+
+  /** The tasks' numbers of every day from the first task to today: for the achievements. */
+  async allDays(userId: string): Promise<TaskDayNumbers> {
+    const timeZone = await this.timeZone(userId);
+    const today = zonedDateTime(new Date(), timeZone).date;
+    return this.dayNumbers(userId, {from: '2000-01-01', to: today}, timeZone);
+  }
+
+  /** The numbers counted back from the tasks of the period (see taskDayNumbers). */
+  async dayNumbers(
+    userId: string,
+    period: {from: LocalDate; to: LocalDate},
+    timeZone: string,
+  ): Promise<TaskDayNumbers> {
     const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
     const localDay = (
       column: typeof tasks.createdAt | typeof tasks.completedAt,
@@ -168,25 +203,7 @@ export class TasksLinks implements OnModuleInit {
           ),
         ),
       );
-    const numbers = taskDayNumbers(rows, period);
-    const metric = (
-      key: keyof typeof numbers,
-      unit: DailyMetric['unit'],
-      more: Partial<DailyMetric> = {},
-    ): DailyMetric => ({
-      key: `tasks.${key}`,
-      module: 'tasks',
-      labelKey: `tasks.links.${key}`,
-      unit,
-      days: numbers[key],
-      ...more,
-    });
-    return [
-      metric('openLoops', 'count'),
-      metric('overdue', 'count', {partOf: 'tasks.openLoops'}),
-      metric('dueDone', 'percent', {outcome: true}),
-      metric('importantDone', 'count', {partOf: 'tasks.done'}),
-    ];
+    return taskDayNumbers(rows, period);
   }
 
   /** Done on the user's own days of a period. */

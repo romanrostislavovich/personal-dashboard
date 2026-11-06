@@ -70,7 +70,7 @@ interface Prepared {
 export interface CorrelationOptions {
   /** The number the regression explains; the mood when not given. */
   target?: string;
-  /** Which pairs are compared; `all` when not given. */
+  /** Which pairs are compared; `outcomes` when not given (as the API's default). */
   pairs?: CorrelationPairs;
   /** The extra numbers switched on: their keys, or whole sections by id. */
   extra?: string[];
@@ -90,22 +90,25 @@ export interface CorrelationOptions {
 export function correlations(
   metrics: DailyMetric[],
   period: {from: LocalDate; to: LocalDate},
-  {target, pairs: which = 'all', extra = []}: CorrelationOptions = {},
+  {target, pairs: which = 'outcomes', extra = []}: CorrelationOptions = {},
 ): Correlations {
   const days = daysOf(period);
   const switchedOn = (metric: DailyMetric) =>
     !metric.extra ||
     extra.includes(metric.key) ||
     extra.includes(metric.module);
-  const [searched, left] = [
-    metrics.filter(switchedOn),
-    metrics.filter(metric => !switchedOn(metric)),
-  ];
-  const prepared = [...searched, weekend(days)]
+  const prepared = [...metrics.filter(switchedOn), weekend(days)]
     .map(metric => prepare(metric, days))
     .filter(item => item.series.size >= MIN_DAYS);
 
-  const found = pairs(prepared, which);
+  const wanted =
+    target ??
+    (prepared.some(item => item.metric.key === MOOD_METRIC)
+      ? MOOD_METRIC
+      : undefined);
+  // The number the regression explains is compared with everything, like an outcome: its
+  // candidates come from its own pairs.
+  const found = pairs(prepared, which, wanted);
   const q = benjaminiHochberg(found.map(pair => pair.p));
   const all: Correlation[] = found.map((pair, index) => ({
     ...pair,
@@ -120,23 +123,25 @@ export function correlations(
       Number(b.strong) - Number(a.strong) || Math.abs(b.rho) - Math.abs(a.rho),
   );
 
-  const wanted =
-    target ??
-    (prepared.some(item => item.metric.key === MOOD_METRIC)
-      ? MOOD_METRIC
-      : undefined);
   return {
     ...period,
     metrics: prepared.map(({metric, series}) => describe(metric, series)),
     correlations: all,
     regression: wanted ? regression(prepared, all, wanted) : null,
-    extras: left
-      .map(metric => extraOf(metric, days))
+    // Every extra number, on or off — one switched on but of too few days stays listed, so the
+    // filter can still switch it off.
+    extras: metrics
+      .filter(metric => metric.extra)
+      .map(metric => extraOf(metric, days, switchedOn(metric)))
       .filter(item => item.days > 0),
   };
 }
 
-function extraOf(metric: DailyMetric, days: LocalDate[]): ExtraMetric {
+function extraOf(
+  metric: DailyMetric,
+  days: LocalDate[],
+  on: boolean,
+): ExtraMetric {
   const {key, module, labelKey, label, unit, currency} = metric;
   return {
     key,
@@ -146,6 +151,7 @@ function extraOf(metric: DailyMetric, days: LocalDate[]): ExtraMetric {
     unit,
     ...(currency ? {currency} : {}),
     days: seriesOf(metric, days).size,
+    on,
   };
 }
 
@@ -194,7 +200,13 @@ function autocorrelation(series: Series, days: LocalDate[]): number {
 
 type Pair = Omit<Correlation, 'q' | 'strong'>;
 
-function pairs(prepared: Prepared[], which: CorrelationPairs): Pair[] {
+function pairs(
+  prepared: Prepared[],
+  which: CorrelationPairs,
+  target: string | undefined,
+): Pair[] {
+  const outcome = (metric: DailyMetric) =>
+    Boolean(metric.outcome) || metric.key === target;
   const result: Pair[] = [];
   const sorted = [...prepared].sort((a, b) =>
     a.metric.key.localeCompare(b.metric.key),
@@ -205,7 +217,7 @@ function pairs(prepared: Prepared[], which: CorrelationPairs): Pair[] {
         a === b ||
         related(a.metric, b.metric) ||
         surroundings(a.metric, b.metric) ||
-        (which === 'outcomes' && !a.metric.outcome && !b.metric.outcome)
+        (which === 'outcomes' && !outcome(a.metric) && !outcome(b.metric))
       ) {
         continue;
       }

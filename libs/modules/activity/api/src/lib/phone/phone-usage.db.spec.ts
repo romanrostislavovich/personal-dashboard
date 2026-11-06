@@ -141,6 +141,9 @@ describe.skipIf(!ADMIN_URL)(
           {day: '2026-10-21', app: 'org.telegram.messenger', count: 1},
         ]),
       );
+      // The 20th had 4 notifications; the 21st had one but no unlock (not reported).
+      expect(await phone.quietDays(userId, 3)).toBe(0);
+      expect(await phone.quietDays(userId, 4)).toBe(1);
       expect(rows.busiest).toEqual(
         expect.arrayContaining([
           {day: '2026-10-20', count: 3},

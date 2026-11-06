@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  linkedSignal,
   inject,
   signal,
 } from '@angular/core';
@@ -22,12 +23,12 @@ import {
   CorrelationMetric,
   CorrelationPairs,
   Correlations,
-  ExtraMetric,
 } from '@pd/contracts';
 import {BeforeAfterComponent} from './before-after.component';
 import {CorrelationGraphComponent} from './correlation-graph.component';
 import {CorrelationMatrixComponent} from './correlation-matrix.component';
 import {CorrelationScatterComponent} from './correlation-scatter.component';
+import {LinksControlsComponent} from './links-controls.component';
 import {DIGITAL_METRIC_KEYS, isDigitalMetric} from './digital-metrics';
 import {moduleColor, SelectedPair} from './links-format';
 
@@ -76,6 +77,7 @@ function localDate(date: Date): string {
     CorrelationMatrixComponent,
     CorrelationScatterComponent,
     DecimalPipe,
+    LinksControlsComponent,
     MatButtonModule,
     MatButtonToggleModule,
     MatCardModule,
@@ -120,8 +122,19 @@ export class LinksPage {
       {pairs: this.pairs(), extra: this.extra()},
     );
   });
-  private readonly result = computed(() =>
-    this.data.hasValue() ? this.data.value() : undefined,
+  /**
+   * The last links counted: kept while a new choice is being counted (and after a failed one),
+   * so the page and its controls do not vanish on every change.
+   */
+  protected readonly result = linkedSignal<
+    Correlations | undefined,
+    Correlations | undefined
+  >({
+    source: () => (this.data.hasValue() ? this.data.value() : undefined),
+    computation: (value, previous) => value ?? previous?.value,
+  });
+  protected readonly known = computed(
+    () => new Set((this.result()?.metrics ?? []).map(metric => metric.key)),
   );
 
   private readonly byKey = computed(
@@ -155,17 +168,8 @@ export class LinksPage {
     this.showAll() ? this.strong() : this.strong().slice(0, LISTED),
   );
 
-  /** Every extra number the filter can switch: those left out, and those already on. */
-  protected readonly extras = computed((): ExtraMetric[] => {
-    const result = this.result();
-    if (!result) {
-      return [];
-    }
-    const on = result.metrics.filter(metric => metric.extra);
-    return [...result.extras, ...on].sort((a, b) =>
-      this.name(a).localeCompare(this.name(b)),
-    );
-  });
+  /** Every extra number the filter can switch, on or off. */
+  protected readonly extras = computed(() => this.result()?.extras ?? []);
 
   /** The metrics a regression can explain: of enough days, by name. */
   protected readonly targets = computed(() =>
@@ -210,7 +214,7 @@ export class LinksPage {
     this.showAll.set(false);
   }
 
-  protected name(metric: ExtraMetric | undefined): string {
+  protected name(metric: CorrelationMetric | undefined): string {
     return metric
       ? (metric.label ?? this.transloco.translate(metric.labelKey))
       : '';
