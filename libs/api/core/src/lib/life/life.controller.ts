@@ -25,6 +25,7 @@ import {
   MoodInsights,
   MoodInsightsQuery,
   moodInsightsQuerySchema,
+  Unusual,
 } from '@pd/contracts';
 import {AiService} from '../ai/ai.service';
 import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
@@ -67,6 +68,12 @@ export class LifeController {
     query: CorrelationsQuery,
   ): Promise<Correlations> {
     return this.overviews.correlations(user.id, query);
+  }
+
+  /** Today's and yesterday's numbers far from their usual level. */
+  @Get('unusual')
+  unusual(@CurrentUser() user: AuthUser): Promise<Unusual> {
+    return this.overviews.unusual(user.id);
   }
 
   /** Every daily number before and after the start or the end of a period of Health. */

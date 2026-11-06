@@ -155,6 +155,8 @@ export const CORE_READS = {
     }),
   /** Every daily number before and after the start or the end of a period of Health. */
   beforeAfter: (weeks: number) => apiRequest('/api/life/before-after', {weeks}),
+  /** Today's and yesterday's numbers far from their usual level. */
+  unusual: () => apiRequest('/api/life/unusual'),
   /** The AI's kept story of `YYYY-MM` or `YYYY`: `{ story: null }` — not written yet. */
   lifeStory: (period: string) => apiRequest('/api/life/story', {period}),
   /** Every connection to an outside service with its state. */

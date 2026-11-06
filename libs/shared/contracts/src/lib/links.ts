@@ -351,6 +351,50 @@ export const correlationsQuerySchema = z.object({
 });
 export type CorrelationsQuery = z.infer<typeof correlationsQuerySchema>;
 
+// --- Unusual today (Life → Links, stage 2) ---
+
+/** A number far from its usual level on a day. */
+export interface UnusualNumber {
+  key: string;
+  module: string;
+  labelKey: string;
+  label?: string;
+  unit: DailyMetric['unit'];
+  currency?: string;
+  extra?: true;
+  outcome?: true;
+  value: number;
+  /** The median of the days it was compared with. */
+  usual: number;
+  direction: 'up' | 'down';
+  /**
+   * The share of those days the value was beyond — lower than it (`up`) or higher (`down`):
+   * 0.9 and more ("more than on 9 of 10 days").
+   */
+  beyond: number;
+  /** How many days it was compared with. */
+  days: number;
+  /**
+   * `days` — the last 28; `kind` — only the same kind of day (weekends or weekdays) of the last
+   * eight weeks, for a number that differs between them.
+   */
+  baseline: 'days' | 'kind';
+}
+
+export interface UnusualDay {
+  day: LocalDate;
+  /** `false` for today: not over, so a number is unusual only upwards (a sum can still grow). */
+  complete: boolean;
+  /** The rarest first. */
+  numbers: UnusualNumber[];
+}
+
+/** Today and yesterday, each with its unusual numbers. */
+export interface Unusual {
+  today: LocalDate;
+  days: UnusualDay[];
+}
+
 // --- Before and after an event of a life (Life → Links) ---
 
 /** The windows "before and after" compare, in weeks. */
