@@ -111,6 +111,7 @@ Fixed keys plus families (`<category>`, `<site>`, `<habit id>`, `<analyte>`, `<n
 | 🧪 `health.band.sleep`                  | hours                               | the band: the main sleep that ended that day                                                   | yes    |                     |
 | 🧪 `health.band.deepSleep`, `…remSleep` | hours                               | its stages                                                                                     | yes    |                     |
 | 🧪 `health.band.bedtime`, `…wake`       | clock                               | fell asleep (before noon → +24), woke up                                                       | yes    |                     |
+| 🧪 `health.band.bedtimeSpread`          | score (h)                           | the spread of the bedtime over the week up to the day (4+ nights); `parts`: the bedtime        | yes    |                     |
 | 🧪 `health.band.restingHeartRate`       | count (bpm)                         | the band's daily resting heart rate                                                            | yes    |                     |
 | 🧪 `health.band.hrv`                    | score (ms)                          | the band's daily HRV                                                                           | yes    |                     |
 | 🧪 `health.band.spo2`                   | percent                             | the band's daily SpO2                                                                          | yes    |                     |

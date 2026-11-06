@@ -1,7 +1,6 @@
 import {pickMessages} from '@pd/api-core';
 import {DaySummary} from './evening-summary';
 
-/** "3 h 20 min" / "3 ч 20 мин". */
 /** "Deep work 2 h 10 min · draining 40 min" — what is known of the two; empty when neither. */
 function indexLine(
   indices: DaySummary['indices'],
@@ -22,6 +21,7 @@ function indexLine(
     .join(' · ');
 }
 
+/** "3 h 20 min" / "3 ч 20 мин". */
 function hours(seconds: number, h: string, min: string): string {
   const minutes = Math.round(seconds / 60);
   const whole = Math.floor(minutes / 60);

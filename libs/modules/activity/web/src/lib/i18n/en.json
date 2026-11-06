@@ -687,12 +687,12 @@
   },
   "indices": {
     "title": "How the day goes",
-    "hint": "Counted every hour from the phone, the computer and the browser; against your own norm of the four weeks before this one.",
+    "hint": "Today and the week, all devices together, counted every hour; the week against your own norm of the four weeks before.",
     "week": "week {{value}}",
-    "more": "more than usual ({{value}})",
-    "less": "less than usual ({{value}})",
-    "usual": "as usual ({{value}})",
-    "empty": "Nothing counted yet: the first numbers come within an hour.",
+    "more": "the week more than usual ({{value}})",
+    "less": "the week less than usual ({{value}})",
+    "usual": "the week as usual ({{value}})",
+    "empty": "No indices yet: they are counted from the phone app, the desktop app or the browser extension, within an hour of their first data.",
     "failed": "Could not read the indices."
   }
 }

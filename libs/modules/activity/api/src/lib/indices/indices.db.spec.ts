@@ -90,8 +90,17 @@ describe.skipIf(!ADMIN_URL)("the days' indices", {timeout: 60_000}, () => {
       30,
     );
 
-    await indices.count(userId, '2026-11-02', 'Europe/Warsaw');
-    await indices.count(userId, '2026-11-02', 'Europe/Warsaw');
+    const ids = async () =>
+      (
+        await db.execute<{id: string; key: string}>(
+          sql`SELECT id, key FROM activity_day_indices WHERE day = '2026-11-02' ORDER BY key`,
+        )
+      ).rows;
+    await indices.countDays(userId, 'Europe/Warsaw', ['2026-11-02']);
+    const first = await ids();
+    await indices.countDays(userId, 'Europe/Warsaw', ['2026-11-02']);
+    // Counted again, the rows keep their ids: the synced table does not churn.
+    expect(await ids()).toEqual(first);
     const kept = await indices.read(userId, {
       from: '2026-11-02',
       to: '2026-11-02',
@@ -109,14 +118,53 @@ describe.skipIf(!ADMIN_URL)("the days' indices", {timeout: 60_000}, () => {
     expect(count).toBe(1);
   });
 
-  it('counts the history day by day until it is all counted', async () => {
+  it('marks a day with nothing as counted, so the history moves on', async () => {
+    await indices.countDays(userId, 'Europe/Warsaw', ['2026-10-30']);
+    const [{count}] = (
+      await db.execute<{count: number}>(
+        sql`SELECT count(*)::int AS count FROM activity_day_indices
+          WHERE day = '2026-10-30' AND key = '_counted'`,
+      )
+    ).rows;
+    expect(count).toBe(1);
+    expect(
+      (await indices.read(userId, {from: '2026-10-30', to: '2026-10-30'})).size,
+    ).toBe(0);
+  });
+
+  it('counts the history and the last week, for the users active lately', async () => {
+    const [phone] = (await devices.list(userId)).filter(
+      one => one.platform === 'android',
+    );
+    // A span of an hour ago: the user is active whatever the day the test runs on.
+    await span(
+      phone.id,
+      'org.telegram.messenger',
+      new Date(Date.now() - 3_600_000).toISOString(),
+      5,
+    );
+    expect(await indices.activeUserIds()).toContain(userId);
     await indices.refresh(userId);
     const kept = await indices.read(userId, {
       from: '2026-11-02',
       to: '2026-11-02',
     });
     expect(kept.get('deepWork')?.[0].value).toBe(0.67);
-    // Spans of the last two weeks make the user one to count for.
-    expect(await indices.activeUserIds()).toContain(userId);
+  });
+
+  it("leaves another user's days alone", async () => {
+    const otherId = randomUUID();
+    await db.execute(sql`INSERT INTO users (id, email, password_hash, display_name, locale, time_zone)
+      VALUES (${otherId}, 'other-indices@test', 'hash', 'Other', 'en', 'Europe/Warsaw')`);
+    await indices.countDays(otherId, 'Europe/Warsaw', ['2026-11-02']);
+    expect(
+      (await indices.read(otherId, {from: '2026-11-02', to: '2026-11-02'}))
+        .size,
+    ).toBe(0);
+    expect(
+      (await indices.read(userId, {from: '2026-11-02', to: '2026-11-02'})).get(
+        'deepWork',
+      ),
+    ).toHaveLength(1);
   });
 });

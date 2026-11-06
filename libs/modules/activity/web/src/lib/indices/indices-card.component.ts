@@ -1,4 +1,3 @@
-import {DecimalPipe} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -9,14 +8,14 @@ import {
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {RouterLink} from '@angular/router';
-import {TranslocoPipe} from '@jsverse/transloco';
+import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {ActivityIndex} from '@pd/contracts';
 import {DurationPipe} from '@pd/web-core';
 import {ActivityApi} from '../activity.api';
 
 /** On the Home widget: the indices shown first. */
 const COMPACT = 4;
-/** Today differs from the norm when it is this much off (a fifth), else it is "as usual". */
+/** The week differs from the norm when it is this much off (a fifth), else it is "as usual". */
 const NOTABLE = 0.2;
 
 /**
@@ -44,6 +43,10 @@ const NOTABLE = 0.2;
       <mat-card-content>
         @if (data.error()) {
           <p class="muted">{{ 'activity.indices.failed' | transloco }}</p>
+        } @else if (!shown().length) {
+          @if (!data.isLoading()) {
+            <p class="muted">{{ 'activity.indices.empty' | transloco }}</p>
+          }
         } @else {
           <dl class="rows">
             @for (index of shown(); track index.key) {
@@ -67,10 +70,6 @@ const NOTABLE = 0.2;
                   }
                 </dd>
               </div>
-            } @empty {
-              @if (!data.isLoading()) {
-                <p class="muted">{{ 'activity.indices.empty' | transloco }}</p>
-              }
             }
           </dl>
         }
@@ -120,7 +119,14 @@ const NOTABLE = 0.2;
 })
 export class IndicesCardComponent {
   private readonly duration = new DurationPipe();
-  private readonly decimal = new DecimalPipe('en-US');
+  private readonly transloco = inject(TranslocoService);
+
+  /** In the reader's language: 1,5 in Russian, 1.5 in English. */
+  private number(value: number): string {
+    return new Intl.NumberFormat(this.transloco.getActiveLang(), {
+      maximumFractionDigits: 1,
+    }).format(value);
+  }
 
   /** The Home widget's few, without the week. */
   readonly compact = input(false);
@@ -131,13 +137,16 @@ export class IndicesCardComponent {
     return this.compact() ? all.slice(0, COMPACT) : all;
   });
 
-  /** "more than usual", "less than usual", "as usual"; `null` — no norm or no today. */
+  /**
+   * The week against the norm — "more than usual", "less", "as usual"; `null` — no norm yet.
+   * Not today: most indices add up through the day, so a morning would always be "less".
+   */
   protected compare(index: ActivityIndex): string | null {
-    if (index.today === null || index.norm === null) {
+    if (index.week === null || index.norm === null) {
       return null;
     }
     const scale = Math.max(Math.abs(index.norm), 0.1);
-    const off = (index.today - index.norm) / scale;
+    const off = (index.week - index.norm) / scale;
     return off > NOTABLE ? 'more' : off < -NOTABLE ? 'less' : 'usual';
   }
 
@@ -149,12 +158,12 @@ export class IndicesCardComponent {
       case 'hours':
         return this.duration.transform(Math.round(value * 3600));
       case 'count':
-        // The minute counts: after bedtime, to the first work, the longest block.
-        return this.duration.transform(Math.round(value * 60));
+        // Minutes: their labels say so.
+        return this.number(Math.round(value));
       case 'percent':
         return `${Math.round(value)}%`;
       default:
-        return this.decimal.transform(value, '1.0-1') ?? String(value);
+        return this.number(value);
     }
   }
 }

@@ -24,6 +24,11 @@ export interface DayMoments {
   start: number;
   /** The next local midnight, ms. */
   end: number;
+  /**
+   * The start of each wall-clock hour 0…28 (to 04:00 of the next day), ms: on a day the clocks
+   * change "23:00" is still 23:00. Without it the hours are counted from `start`.
+   */
+  hours?: number[];
   /** Every span touching the day and the night after it (to 04:00), oldest first. */
   spans: IndexSpan[];
   unlocks: number[];
@@ -77,6 +82,15 @@ const MORNING_MS = 2 * HOUR;
 /** Offline time is looked for between 08:00 and 22:00. */
 const AWAKE_FROM = 8;
 const AWAKE_TO = 22;
+
+/** The moment of a wall-clock hour of the day (23.5 — half past eleven; 25 — 01:00 after it). */
+export function wallClock(day: DayMoments, hours: number): number {
+  const whole = Math.floor(hours);
+  const start = day.hours?.[whole];
+  return start === undefined
+    ? day.start + hours * HOUR
+    : start + (hours - whole) * HOUR;
+}
 
 export function isDraining(app: string): boolean {
   const name = app.toLowerCase();
@@ -163,7 +177,7 @@ export function dayIndices(day: DayMoments): Map<string, number> {
   }
 
   // The night: any screen from 23:00, and entertainment after the usual bedtime.
-  const at = (hours: number) => day.start + hours * HOUR;
+  const at = (hours: number) => wallClock(day, hours);
   const nightSpans = day.spans.filter(span => span.device !== 'browser');
   if (ofDay.length) {
     set(

@@ -15,7 +15,7 @@ import {
   activitySettings,
 } from './activity.schema';
 import {ActivityService} from './activity.service';
-import {isSummaryDue, summaryOf} from './evening-summary';
+import {DaySummary, isSummaryDue, summaryOf} from './evening-summary';
 import {IndicesService} from './indices/indices.service';
 import {WellbeingService} from './wellbeing.service';
 
@@ -90,15 +90,7 @@ export class EveningSummaryJob implements OnModuleInit {
       .from(activityLimits)
       .where(eq(activityLimits.userId, userId));
     const text = activityMessages((await this.users.findById(userId))?.locale);
-    // Today counted afresh: the hourly job may be up to an hour behind.
-    await this.dayIndices.count(
-      userId,
-      now.date,
-      await this.activity.timeZone(userId),
-    );
-    const indices = (await this.dayIndices.summary(userId)).indices;
-    const todayOf = (key: string) =>
-      indices.find(index => index.key === key)?.today ?? null;
+    const indices = await this.todayIndices(userId, now.date);
     const summary = summaryOf(
       stats,
       {completed: focus.completed, seconds: focus.focusSeconds},
@@ -108,7 +100,7 @@ export class EveningSummaryJob implements OnModuleInit {
           label: text.limitLabel(limit.kind, limit.app),
           minutes: limit.minutes,
         })),
-      {deepWork: todayOf('deepWork'), draining: todayOf('draining')},
+      indices,
     );
     if (!summary) {
       return;
@@ -118,5 +110,30 @@ export class EveningSummaryJob implements OnModuleInit {
       body: text.summaryBody(summary),
       source: 'activity',
     });
+  }
+
+  /**
+   * Today's deep work and draining time, counted afresh (the hourly job may be up to an hour
+   * behind). A failure leaves them out: the day's summary goes without them, never not at all.
+   */
+  private async todayIndices(
+    userId: string,
+    today: string,
+  ): Promise<DaySummary['indices']> {
+    try {
+      await this.dayIndices.countDays(
+        userId,
+        await this.activity.timeZone(userId),
+        [today],
+      );
+      const kept = await this.dayIndices.read(userId, {from: today, to: today});
+      const todayOf = (key: string) => kept.get(key)?.[0]?.value ?? null;
+      return {deepWork: todayOf('deepWork'), draining: todayOf('draining')};
+    } catch (error) {
+      this.logger.warn(
+        `Today's indices were not counted for ${userId}: ${error}`,
+      );
+      return {deepWork: null, draining: null};
+    }
   }
 }

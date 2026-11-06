@@ -47,7 +47,14 @@ export class WearableLinks implements OnModuleInit {
     this.links.registerDailyMetrics({
       module: 'health',
       metrics: async (userId, period) => {
-        const days = await this.wearable.days(userId, period);
+        // The week before the period too: a day's bedtime spread reads its own week.
+        const from = new Date(`${period.from}T00:00:00Z`);
+        from.setUTCDate(from.getUTCDate() - 6);
+        const withWeek = await this.wearable.days(userId, {
+          from: from.toISOString().slice(0, 10),
+          to: period.to,
+        });
+        const days = withWeek.filter(day => day.day >= period.from);
         const metric = (
           key: string,
           unit: DailyMetric['unit'],
@@ -76,7 +83,7 @@ export class WearableLinks implements OnModuleInit {
           metric('bedtime', 'clock', day => clock(day.sleepStart, true)),
           {
             ...metric('bedtimeSpread', 'score', day =>
-              bedtimeSpread(days, day.day),
+              bedtimeSpread(withWeek, day.day),
             ),
             parts: ['health.band.bedtime'],
           },
