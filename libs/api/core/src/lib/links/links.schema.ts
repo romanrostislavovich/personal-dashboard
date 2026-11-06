@@ -2,6 +2,7 @@ import {
   boolean,
   date,
   pgTable,
+  primaryKey,
   real,
   text,
   timestamp,
@@ -37,8 +38,6 @@ export const linksChangePoints = pgTable(
     after: real().notNull(),
     /** The difference of the levels in the days' spread: how large. */
     effect: real().notNull(),
-    /** When a Telegram message told of it; a change moved by a few days keeps it. */
-    notifiedAt: timestamp({withTimezone: true}),
   },
   table => [unique().on(table.userId, table.key, table.day)],
 );
@@ -50,7 +49,8 @@ export const linksChangePoints = pgTable(
 export const linksSeen = pgTable(
   'links_seen',
   {
-    id: uuid().primaryKey().defaultRandom(),
+    // No id of its own: the same thing opened on the server and on a sync client is one row,
+    // merged by the sync instead of clashing on a unique key (as dashboard_active_days).
     userId: uuid()
       .notNull()
       .references(() => users.id, {onDelete: 'cascade'}),
@@ -63,5 +63,5 @@ export const linksSeen = pgTable(
     key: text().notNull(),
     seenAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  table => [unique().on(table.userId, table.kind, table.key)],
+  table => [primaryKey({columns: [table.userId, table.kind, table.key]})],
 );

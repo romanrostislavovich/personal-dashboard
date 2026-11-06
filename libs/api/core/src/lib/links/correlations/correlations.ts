@@ -126,6 +126,7 @@ export function correlations(
       Math.abs(pair.rho) >= MIN_RHO &&
       (pair.lag === 0 || Math.abs(pair.beyondItself ?? 0) >= MIN_BEYOND),
   }));
+  strongestLagOnly(all);
   all.sort(
     (a, b) =>
       Number(b.strong) - Number(a.strong) || Math.abs(b.rho) - Math.abs(a.rho),
@@ -144,6 +145,29 @@ export function correlations(
       .map(metric => extraOf(metric, days, switchedOn(metric)))
       .filter(item => item.days > 0),
   };
+}
+
+/**
+ * Of a pair strong one, two and three days later, only the strongest lag stays strong: the same
+ * link said three times is one link (the others are still compared and on the matrix).
+ */
+function strongestLagOnly(all: Correlation[]): void {
+  const best = new Map<string, Correlation>();
+  for (const pair of all) {
+    if (!pair.strong || !pair.lag) {
+      continue;
+    }
+    const key = `${pair.a}|${pair.b}`;
+    const kept = best.get(key);
+    if (!kept || Math.abs(pair.rho) > Math.abs(kept.rho)) {
+      if (kept) {
+        kept.strong = false;
+      }
+      best.set(key, pair);
+    } else {
+      pair.strong = false;
+    }
+  }
 }
 
 function extraOf(
@@ -285,7 +309,8 @@ function compare(
 ): Compared | null {
   const x: number[] = [];
   const y: number[] = [];
-  // For a lag: b of the day before b's day, held fixed in beyondItself.
+  // For a lag: b of a's own day, held fixed in beyondItself — what b already was when a
+  // happened (Granger's idea), not a later b that a may have moved itself.
   const z: number[] = [];
   for (const [day, value] of a.daily) {
     const later = b.daily.get(shift(day, lag));
@@ -294,7 +319,7 @@ function compare(
     }
     x.push(value);
     y.push(later);
-    z.push(lag ? (b.daily.get(shift(day, lag - 1)) ?? NaN) : NaN);
+    z.push(lag ? (b.daily.get(day) ?? NaN) : NaN);
   }
   if (x.length < MIN_DAYS) {
     return null;
@@ -326,9 +351,12 @@ function steeperBend(
 ): {bend: Bend | null; reversed: boolean} {
   const along = bendOf(x, y, days);
   const back = lag ? null : bendOf(y, x, days);
+  // Of the same day both ways are tried, so the steeper is a pick of two: its p doubles.
+  const picked = (bend: Bend | null) =>
+    bend && !lag ? {...bend, p: Math.min(1, bend.p * 2)} : bend;
   return back && Math.abs(back.beta) > Math.abs(along?.beta ?? 0)
-    ? {bend: back, reversed: true}
-    : {bend: along, reversed: false};
+    ? {bend: picked(back), reversed: true}
+    : {bend: picked(along), reversed: false};
 }
 
 /**

@@ -70,6 +70,17 @@ describe('changePoints', () => {
     }
   });
 
+  it('takes weeks without a report for a gap, not for a fall to zero', () => {
+    const random = noise(9);
+    // Coding of about 4 h, but nothing reported for 25 days in the middle (the computer off).
+    const coding: DailyMetric = {
+      ...metric('development.coding', () => 4 + random()),
+      unit: 'hours',
+    };
+    coding.days = coding.days.filter((_, index) => index < 80 || index >= 105);
+    expect(changePoints([coding], period)).toEqual([]);
+  });
+
   it('needs three weeks on each side', () => {
     const short = metric('diary.mood', index => (index < 10 ? 1 : 4));
     const [change] = changePoints([short], period);

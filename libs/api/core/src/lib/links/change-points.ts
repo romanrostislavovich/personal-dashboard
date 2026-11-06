@@ -16,6 +16,11 @@ const MIN_EFFECT = 0.5;
 const MAX_DEPTH = 4;
 /** Days on each side of a day its local level (a running median) is taken over. */
 const LOCAL_DAYS = 7;
+/**
+ * A quantity's empty days this many in a row are a gap (the computer off, a holiday without the
+ * phone), not zeros: counted as zeros they would make two changes, "down to 0" and "back up".
+ */
+const GAP_DAYS = 7;
 
 /** A day a number's level changed at. */
 export interface ChangePoint {
@@ -47,7 +52,7 @@ export function changePoints(
 ): ChangePoint[] {
   const days = daysOf(period);
   return metrics.flatMap(metric => {
-    const series = seriesOf(metric, days);
+    const series = withoutGaps(metric, seriesOf(metric, days));
     const known = days.filter(day => series.has(day));
     const values = known.map(day => series.get(day) as number);
     const noise = noiseOf(values);
@@ -70,6 +75,32 @@ export function changePoints(
       };
     });
   });
+}
+
+/** The series without its gaps: runs of GAP_DAYS and more days the metric did not report. */
+function withoutGaps(
+  metric: DailyMetric,
+  series: Map<LocalDate, number>,
+): Map<LocalDate, number> {
+  const reported = new Set(metric.days.map(day => day.day));
+  const result = new Map<LocalDate, number>();
+  let run: [LocalDate, number][] = [];
+  const close = () => {
+    if (run.length < GAP_DAYS) {
+      run.forEach(([day, value]) => result.set(day, value));
+    }
+    run = [];
+  };
+  for (const [day, value] of series) {
+    if (reported.has(day)) {
+      close();
+      result.set(day, value);
+    } else {
+      run.push([day, value]);
+    }
+  }
+  close();
+  return result;
 }
 
 /** The splits of values[start, end), the surest first found. */

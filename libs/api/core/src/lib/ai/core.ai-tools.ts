@@ -200,8 +200,9 @@ export class CoreAiTools implements OnModuleInit {
         'of the same day (lag 0), of the next day (lag 1: `a` of a day, `b` of the day ' +
         'after) and, towards the outcomes, two and three days later (lag 2, 3), by Spearman ' +
         'correlation `rho`, with `q` — the p-value corrected for the ' +
-        'number of pairs (and for the days’ own trends). Only the strong links are returned. ' +
-        '`beyondItself` (a lag) — the correlation with the `b` of the day before held fixed: ' +
+        'number of pairs (and for the days’ own trends). Only the strong links are returned; ' +
+        'of one pair a day, two and three days later only the strongest lag counts as strong. ' +
+        '`beyondItself` (a lag) — the correlation with `b` of `a`’s own day held fixed: ' +
         'when it stays strong, `a` comes before `b` and tells about it (Granger’s idea). ' +
         '`curves` — pairs that are not a straight line (`bend` − a hill, "up, then down"; + a ' +
         'valley), with `groups`: `b`’s average on the days `a` was between `from` and `to`. ' +

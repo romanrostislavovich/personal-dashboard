@@ -139,6 +139,42 @@ describe('correlations', () => {
     ).toBeUndefined();
   });
 
+  it('keeps only the strongest of the lags of one pair strong', () => {
+    const {correlations: found} = correlations(
+      [
+        metric('activity.games', games),
+        metric('diary.mood', mood, {unit: 'score', outcome: true}),
+      ],
+      period,
+      {pairs: 'all'},
+    );
+    const strongLags = found.filter(
+      pair =>
+        pair.a === 'activity.games' &&
+        pair.b === 'diary.mood' &&
+        pair.lag &&
+        pair.strong,
+    );
+    expect(strongLags.map(pair => pair.lag)).toEqual([1]);
+  });
+
+  it('calls a slow shared trend no bend', () => {
+    // Two numbers drifting together over weeks: alike neighbouring days, no bend.
+    const drift = noise(21);
+    let level = 0;
+    const slow = Array.from({length: DAYS}, () => (level += drift() * 0.6));
+    const follows = slow.map(value => value * value * 0.2 + drift() * 0.3);
+    const {curves} = correlations(
+      [
+        metric('activity.unlocks', slow, {unit: 'count'}),
+        metric('diary.energy', follows, {unit: 'score', outcome: true}),
+      ],
+      period,
+      {pairs: 'all'},
+    );
+    expect(curves).toEqual([]);
+  });
+
   it('never compares a number with a part of it', () => {
     expect(find('activity.games', 'activity.lateGames', 0)).toBeUndefined();
     expect(find('activity.lateGames', 'activity.games', 1)).toBeUndefined();

@@ -1,5 +1,5 @@
 {
-  "id": "a72bbc53-a8ad-4ce1-9883-2797cd49cdf0",
+  "id": "0375623d-d3f7-4e8b-8a0c-9ecc81f7add4",
   "prevId": "c59e39c8-373f-4868-a8a4-79153097f114",
   "version": "7",
   "dialect": "postgresql",
@@ -1733,12 +1733,6 @@
           "type": "real",
           "primaryKey": false,
           "notNull": true
-        },
-        "notified_at": {
-          "name": "notified_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
@@ -1777,13 +1771,6 @@
       "name": "links_seen",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
         "user_id": {
           "name": "user_id",
           "type": "uuid",
@@ -1826,11 +1813,9 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "links_seen_userId_kind_key_unique": {
-          "name": "links_seen_userId_kind_key_unique",
-          "nullsNotDistinct": false,
+      "compositePrimaryKeys": {
+        "links_seen_user_id_kind_key_pk": {
+          "name": "links_seen_user_id_kind_key_pk",
           "columns": [
             "user_id",
             "kind",
@@ -1838,6 +1823,7 @@
           ]
         }
       },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

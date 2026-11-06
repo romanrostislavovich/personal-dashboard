@@ -93,9 +93,15 @@ export class EveningSummaryJob implements OnModuleInit {
       .where(eq(activityLimits.userId, userId));
     const text = activityMessages((await this.users.findById(userId))?.locale);
     const indices = await this.todayIndices(userId, now.date);
+    // The sections the user hid stay quiet here too, and the technical (extra) numbers are not
+    // worth an evening line.
+    const hidden = this.users.hiddenSections(await this.users.findById(userId));
     const unusual = await this.overviews
-      .unusual(userId)
-      .then(found => found.days[0]?.numbers.length ?? null)
+      .unusual(userId, hidden)
+      .then(
+        found =>
+          found.days[0]?.numbers.filter(number => !number.extra).length ?? null,
+      )
       .catch(error => {
         this.logger.warn(`Unusual numbers not known for ${userId}: ${error}`);
         return null;

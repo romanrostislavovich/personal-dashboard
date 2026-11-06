@@ -263,9 +263,8 @@ export interface Correlation {
   /** `p` corrected for how many pairs were compared (Benjamini–Hochberg). */
   q: number;
   /**
-   * For a lag: the correlation with `b` of the day before `b`'s day held fixed — whether `a`
-   * tells about that later `b` more than the `b` just before it does (Granger's idea). `null`
-   * for lag 0.
+   * For a lag: the correlation with `b` of `a`'s own day held fixed — whether `a` tells about
+   * the later `b` more than `b` already did that day (Granger's idea). `null` for lag 0.
    */
   beyondItself: number | null;
   /**
@@ -426,11 +425,18 @@ export interface LinksChanges {
 
 /** What of Links the user opens, for the achievements of exploring. */
 export const LINKS_SEEN_KINDS = ['change', 'dose'] as const;
-export const linksSeenSchema = z.object({
-  kind: z.enum(LINKS_SEEN_KINDS),
-  /** A change's id, or a pair as `a|b`. */
-  key: z.string().min(1).max(300),
-});
+export const linksSeenSchema = z.discriminatedUnion('kind', [
+  /** A change point, by its id. */
+  z.object({kind: z.literal('change'), key: z.uuid()}),
+  /** A pair's chart: `a|b|lag`, the keys of the two numbers in the order the chart reads them. */
+  z.object({
+    kind: z.literal('dose'),
+    key: z
+      .string()
+      .max(300)
+      .regex(/^[^|]+\|[^|]+\|[0-3]$/),
+  }),
+]);
 export type LinksSeen = z.infer<typeof linksSeenSchema>;
 
 // --- Before and after an event of a life (Life → Links) ---

@@ -38,7 +38,10 @@ export function bendOf(x: number[], y: number[], days: number): Bend | null {
     return null;
   }
   const beta = fit.coefficients[1];
-  return {beta, p: tTwoSidedP(beta / fit.errors[1], df)};
+  // The error is counted on every day; alike neighbouring days are fewer independent ones, so
+  // it is widened to them (else a slow trend would read as a sure bend).
+  const fewer = Math.sqrt(df / Math.max(1, x.length - 3));
+  return {beta, p: tTwoSidedP((beta / fit.errors[1]) * fewer, df)};
 }
 
 function standardized(values: number[]): number[] | null {
