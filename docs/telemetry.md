@@ -61,6 +61,15 @@ now: `diary.mood`, `tasks.done`, `development.coding`, `activity.focus`, the que
 `health.band.sleep`, `sleepScore`, `stress`, `resilience`. A new number says which it is in the
 same change.
 
+**What Links v2 counts from the numbers** (stage 2; no new signal, derived only). _Unusual_ —
+a day's number beyond 9 of 10 days of its baseline (the last 28 days, or the same kind of day of
+eight weeks for a number that differs between weekends and weekdays; counted on request, today
+upwards only). _Change points_ — the days a number's level changed, over the whole history,
+searched nightly by `links.change-points` (04:50) and kept in `links_change_points` (derived:
+not exported, not in the trash). _Even days_ (nothing unusual) and what of Links was opened are
+kept in `links_seen` for the achievements. Lags of 2–3 days are compared towards the outcomes
+only; curves (`bend`) for every pair, in the same correction.
+
 **Day boundaries.** Days are the user's time zone (`users.time_zone`). A few numbers move the
 night to the evening before: Dota matches and phone night use count 00:00–04:00 to the day
 before; `activity.lateGames` is from 23:00.

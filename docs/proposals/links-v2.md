@@ -408,3 +408,7 @@ becomes targets of this one forecaster, not formulas of their own.
 - **Forecasts:** a stage of their own, right after this one.
 - **Achievements:** for exploring — change points and dose charts opened, and "an even day" (no
   number unusual); never for the numbers themselves.
+
+**Built (2026-11-06):** all of the above. The Telegram note names no number — the server has no
+translations of the numbers' names (they live in the web), so it says how many changed and links
+to Links → What changed; the evening summary likewise says how many numbers are above usual.
