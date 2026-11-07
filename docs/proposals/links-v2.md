@@ -420,8 +420,10 @@ many numbers are above usual (the server has no translations of the numbers' nam
 - **The bedtime:** the band's start of sleep, else the phone's last use of the evening.
 - **The targets:** bedtime, deep work, tasks done and mood by default; any main number may be
   added in Links (`links_settings`, at most 12 more).
-- **When:** in the morning for the day (from yesterday) and in the evening for the next day (from
-  the day so far, rougher) — both.
+- **When:** in the morning for the day (from yesterday) and in the evening for the next day —
+  both. The evening's reads yesterday too (after the team review: today is not over, its sums
+  still grow and its bedtime has not come), by a model learnt two days ahead, so it is rougher
+  and trusted only as far as that is right.
 - **Kept:** yes, every forecast made, in `links_forecasts` — to show "forecast 2 h, was 2.5 h" and
   the real accuracy, and one day to teach a model of the owner's own.
 - **Shown:** a card on Links (one that does not beat the plain guess grey), a Home widget (the
@@ -432,5 +434,8 @@ many numbers are above usual (the server has no translations of the numbers' nam
   over the week; the forecast is trusted when its miss on the latest fifth of the days is 5 %
   smaller.
 - **Achievements:** for exploring only — what drove a forecast opened, and a target of one's own.
+
+- **Hidden sections:** what the AI must not see stays out of the forecasts it gets — of the
+  bedtime when Health or Activity is hidden, and of what drove any forecast.
 
 **Built (2026-11-07):** all of the above.
