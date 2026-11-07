@@ -271,5 +271,66 @@
       },
       "open": "Links"
     }
+  },
+  "insights": {
+    "title": "Insights of the week",
+    "today": "Insight of the day",
+    "hint": "What your own days show, found every Monday and told in plain words. Goes together, not causes.",
+    "proof": "The proof",
+    "none": "No findings yet: they are looked for every Monday morning, or now with the button.",
+    "failed": "Could not read the findings.",
+    "refresh": "Look now",
+    "refreshFailed": "Could not look for findings now.",
+    "caution": "A finding is what goes together on your days; a trial (an experiment) tells what helps.",
+    "open": "All findings",
+    "change": "{{number}}: about {{after}} since {{day}}, {{before}} before",
+    "sure": "chance alone gives this with a probability of {{p}}",
+    "since": "the new level since {{day}}: {{value}}"
+  },
+  "questions": {
+    "title": "My questions",
+    "hint": "Your hypotheses as cards: each is answered anew from the days there are.",
+    "failed": "Could not answer the questions.",
+    "missing": "One of its numbers is not collected yet.",
+    "few": "Not enough days yet: {{n}} so far, 20 are needed.",
+    "pair": "{{effect}} {{when}}: {{high}} on the days {{cause}} is above {{threshold}}, {{low}} on the others ({{n}} days)",
+    "after": "{{effect}} in the hour after «{{cause}}»: {{after}}, in the same hours without it {{usual}} ({{n}} times)",
+    "when": {
+      "sameDay": "the same day",
+      "nextDay": "the next day",
+      "hourAfter": "the hour after"
+    },
+    "strong": "sure enough",
+    "unsure": "not sure: may be chance",
+    "holds": "holds within {{what}}",
+    "explains": "may be {{what}}",
+    "confounder": {
+      "weekend": "weekdays and weekends",
+      "rain": "dry and rainy days",
+      "illness": "days ill and well",
+      "travel": "days away and at home"
+    },
+    "condition": "when {{what}} is high: {{high}}; when low: {{low}}",
+    "add": "Ask a question",
+    "remove": "Remove the question",
+    "removeFailed": "Could not remove the question.",
+    "form": {
+      "mode": "How to ask",
+      "pick": "Pick the numbers",
+      "words": "In my words",
+      "text": "Your question, e.g. \"does late phone spoil the next day's focus?\"",
+      "draft": "Turn into a card",
+      "draftFailed": "Could not turn it into a card.",
+      "noAi": "In words needs an AI connection (Settings → AI); the numbers can be picked by hand.",
+      "when": "When",
+      "cause": "What I do",
+      "effect": "What I get",
+      "condition": "Only when",
+      "always": "Always",
+      "high": "it is high",
+      "low": "it is low",
+      "save": "Keep the question",
+      "saveFailed": "Could not keep the question."
+    }
   }
 }

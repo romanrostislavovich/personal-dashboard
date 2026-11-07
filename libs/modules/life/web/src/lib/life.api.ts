@@ -5,9 +5,12 @@ import {
   LifeStory,
   LinksForecasts,
   LinksHourAfter,
+  LinksInsights,
+  LinksQuestions,
   LinksRhythm,
   LinksSeen,
   LinksWindow,
+  QuestionInput,
 } from '@pd/contracts';
 import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
@@ -49,6 +52,32 @@ export class LifeApi {
   /** The productive window of every weekday. */
   productiveWindow() {
     return httpResource<LinksWindow>(() => CORE_READS.productiveWindow());
+  }
+
+  /** The question cards answered, and what a new one may be made of. */
+  questions() {
+    return httpResource<LinksQuestions>(() => CORE_READS.questions());
+  }
+
+  addQuestion(input: QuestionInput) {
+    return fromCore(() => this.life.addQuestion(input));
+  }
+
+  removeQuestion(id: string) {
+    return fromCore(() => this.life.removeQuestion(id));
+  }
+
+  draftQuestion(text: string) {
+    return fromCore(() => this.life.draftQuestion(text));
+  }
+
+  /** The latest week's findings, and which is today's. */
+  insights() {
+    return httpResource<LinksInsights>(() => CORE_READS.insights());
+  }
+
+  refreshInsights() {
+    return fromCore(() => this.life.refreshInsights());
   }
 
   /** The numbers forecast beyond the default ones. */

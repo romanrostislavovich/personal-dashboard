@@ -64,6 +64,14 @@ export const lifeModule: WebDashboardModule = {
         ),
     },
     {
+      id: 'life.insight',
+      size: 'small',
+      loadComponent: () =>
+        import('./links/insight-widget.component').then(
+          m => m.InsightWidgetComponent,
+        ),
+    },
+    {
       id: 'life.window',
       size: 'small',
       loadComponent: () =>
