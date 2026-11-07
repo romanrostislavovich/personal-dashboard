@@ -20,7 +20,10 @@ const DB_NAME = `links_hours_test_${process.pid}`;
 // A Tuesday morning; yesterday was a Monday.
 const NOW = new Date('2026-11-10T09:00:00Z');
 const YESTERDAY = '2026-11-09';
-const DAYS = daysOf({from: shift(YESTERDAY, -89), to: YESTERDAY}) as LocalDate[];
+const DAYS = daysOf({
+  from: shift(YESTERDAY, -89),
+  to: YESTERDAY,
+}) as LocalDate[];
 
 /** Deep work 10–12 on weekdays; `yesterday` — the hours of yesterday's. */
 function deepWork(yesterday: number[]): HourlyMetric {
