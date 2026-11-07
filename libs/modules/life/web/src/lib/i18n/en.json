@@ -343,5 +343,25 @@
     },
     "unknownNumber": "a number not collected",
     "fewTimes": "Not enough times yet: {{n}} so far, 8 are needed."
+  },
+  "overload": {
+    "title": "Overload",
+    "hint": "The last five days against your own usual: the phone at night, sleep, deep work, the mood… Not a diagnosis.",
+    "failed": "Could not count the overload.",
+    "few": "Not enough days yet: it needs three of its numbers over the last days and the weeks before.",
+    "high": "The last days look heavier than usual",
+    "usual": "Within your usual",
+    "learning": "Still learning your usual (a month of days)",
+    "part": "{{recent}} lately, usually {{usual}}",
+    "history": "The overload of the last two months",
+    "warn": "Tell me gently when it is high (once in three days at most)",
+    "saveFailed": "Could not save it.",
+    "caution": "Your own numbers against your own usual — a nudge to rest, not a verdict.",
+    "open": "Links"
+  },
+  "lapse": {
+    "self": {
+      "lapsedToday": "Lapsed today"
+    }
   }
 }

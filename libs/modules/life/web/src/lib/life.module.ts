@@ -72,6 +72,14 @@ export const lifeModule: WebDashboardModule = {
         ),
     },
     {
+      id: 'life.overload',
+      size: 'small',
+      loadComponent: () =>
+        import('./links/overload-widget.component').then(
+          m => m.OverloadWidgetComponent,
+        ),
+    },
+    {
       id: 'life.window',
       size: 'small',
       loadComponent: () =>

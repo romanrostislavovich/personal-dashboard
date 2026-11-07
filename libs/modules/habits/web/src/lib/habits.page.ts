@@ -6,7 +6,13 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {EmptyStateComponent} from '@pd/web-core';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
-import {Habit, HabitInput, HabitKind, isBuilding} from '@pd/contracts';
+import {
+  Habit,
+  HabitInput,
+  HabitKind,
+  HabitLapse,
+  isBuilding,
+} from '@pd/contracts';
 import {firstValueFrom, Observable} from 'rxjs';
 import {HabitCardAction, HabitCardComponent} from './habit-card.component';
 import {HabitDialog, HabitDialogData} from './habit.dialog';
@@ -61,7 +67,11 @@ import {BUILD_ICON, HABIT_ICONS, HabitsApi} from './habits.api';
     }
     <div class="grid">
       @for (habit of habits.value(); track habit.id) {
-        <pd-habit-card [habit]="habit" (action)="act(habit, $event)" />
+        <pd-habit-card
+          [habit]="habit"
+          [risk]="riskOf(habit)"
+          (action)="act(habit, $event)"
+        />
       }
     </div>
     @if (!habits.isLoading() && !habits.error() && !habits.value().length) {
@@ -116,6 +126,15 @@ export class HabitsPage {
   protected readonly icons = HABIT_ICONS;
   protected readonly buildIcon = BUILD_ICON;
   protected readonly habits = this.api.list();
+  /** Tomorrow's chances, by the habit's number in Links (`habits.<id>`). */
+  private readonly lapses = this.api.lapses();
+
+  protected riskOf(habit: Habit): HabitLapse | null {
+    const found = this.lapses.hasValue()
+      ? this.lapses.value().habits.find(one => one.key === `habits.${habit.id}`)
+      : undefined;
+    return found?.trusted && found.chance !== null ? found : null;
+  }
 
   protected async start(kind: HabitKind, build = false): Promise<void> {
     const input = await this.open({kind, build});

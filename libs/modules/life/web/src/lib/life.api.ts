@@ -6,6 +6,7 @@ import {
   LinksForecasts,
   LinksHourAfter,
   LinksInsights,
+  LinksOverload,
   LinksQuestions,
   LinksRhythm,
   LinksSeen,
@@ -74,6 +75,15 @@ export class LifeApi {
   /** The latest week's findings, and which is today's. */
   insights() {
     return httpResource<LinksInsights>(() => CORE_READS.insights());
+  }
+
+  /** The overload score of the last days and whether its warning is sent. */
+  overload() {
+    return httpResource<LinksOverload>(() => CORE_READS.overload());
+  }
+
+  setOverloadEnabled(enabled: boolean) {
+    return fromCore(() => this.life.setOverloadEnabled(enabled));
   }
 
   refreshInsights() {
