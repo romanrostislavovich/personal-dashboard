@@ -208,7 +208,7 @@
     "title": "Forecasts",
     "hint": "From the day before, by a model of your own days. A guess, not a plan.",
     "today": "Today",
-    "tomorrow": "Tomorrow (from the day so far, rougher)",
+    "tomorrow": "Tomorrow (from yesterday: today is not over, so rougher)",
     "bedtime": "Bedtime",
     "miss": "usually off by {{miss}}, {{better}} % closer than the plain guess",
     "notBetter": "not closer than the plain guess yet (yesterday, the same weekday or the week)",
@@ -221,10 +221,15 @@
     "choose": "Forecast also",
     "minutes": "{{value}} min",
     "self": {
-      "yesterday": "The same number yesterday",
+      "last": "The same number on the last day over",
       "week": "The same number over the week",
       "weekday": "The same number on this weekday",
       "weekend": "A weekend"
-    }
+    },
+    "noneTrusted": "None of the forecasts is closer than the plain guess yet.",
+    "max": "Up to {{max}} more numbers",
+    "saveFailed": "Could not save the choice: it is as it was.",
+    "up": "adds {{value}}",
+    "down": "takes away {{value}}"
   }
 }

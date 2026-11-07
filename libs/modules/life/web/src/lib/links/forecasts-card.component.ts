@@ -12,28 +12,10 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatSelectModule} from '@angular/material/select';
 import {RouterLink} from '@angular/router';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
-import {
-  DailyMetric,
-  DEFAULT_FORECAST_TARGETS,
-  ForecastDriver,
-  LinksForecast,
-  PastForecast,
-} from '@pd/contracts';
+import {DEFAULT_FORECAST_TARGETS, MAX_FORECAST_TARGETS} from '@pd/contracts';
 import {LifeApi} from '../life.api';
-import {formatValue, moduleColor} from './links-format';
-
-/** The kept forecasts of a target worth a "how close" line: fewer say nothing. */
-const MIN_PAST = 3;
-
-interface Shown {
-  forecast: LinksForecast;
-  /** How much closer than the plain guess, percent. */
-  better: number;
-  /** The kept trusted forecasts with what the days were: their mean miss and how many. */
-  past: {miss: number; days: number} | null;
-  /** Yesterday's kept forecast of it and what the day was. */
-  yesterday: PastForecast | null;
-}
+import {forecastGroups} from './forecast-groups';
+import {ForecastRowComponent} from './forecast-row.component';
 
 /**
  * Forecasts of the numbers: the bedtime, deep work, tasks done, the mood and the numbers the
@@ -45,6 +27,7 @@ interface Shown {
   selector: 'pd-forecasts-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ForecastRowComponent,
     MatButtonModule,
     MatCardModule,
     MatIconModule,
@@ -80,133 +63,52 @@ interface Shown {
                 ) | transloco
               }}
             </h3>
-            @if (group.shown.length) {
-              <ul class="forecasts">
-                @for (item of group.shown; track item.forecast.key) {
-                  <li [class.weak]="!item.forecast.trusted">
-                    <span
-                      class="dot"
-                      [style.background]="color(item.forecast)"
-                      aria-hidden="true"
-                    ></span>
-                    <span class="name">{{ name(item.forecast) }}</span>
-                    <span class="value">
-                      @if (item.forecast.value !== null) {
-                        ~{{ value(item.forecast, item.forecast.value) }}
-                      }
-                    </span>
-                    <span class="muted line">
-                      @if (item.forecast.value === null) {
-                        {{
-                          'life.forecasts.few'
-                            | transloco: {days: item.forecast.days}
-                        }}
-                      } @else if (!item.forecast.trusted) {
-                        {{ 'life.forecasts.notBetter' | transloco }}
-                      } @else {
-                        {{
-                          'life.forecasts.miss'
-                            | transloco
-                              : {
-                                  miss: amount(
-                                    item.forecast,
-                                    item.forecast.error ?? 0
-                                  ),
-                                  better: item.better,
-                                }
-                        }}
-                      }
-                      @if (!compact() && item.yesterday?.actual !== null) {
-                        @if (item.yesterday; as kept) {
-                          ·
-                          {{
-                            'life.forecasts.yesterday'
-                              | transloco
-                                : {
-                                    value: value(item.forecast, kept.value),
-                                    actual: value(
-                                      item.forecast,
-                                      kept.actual ?? 0
-                                    ),
-                                  }
-                          }}
-                        }
-                      }
-                      @if (!compact() && item.past) {
-                        ·
-                        {{
-                          'life.forecasts.past'
-                            | transloco
-                              : {
-                                  miss: amount(item.forecast, item.past.miss),
-                                  days: item.past.days,
-                                }
-                        }}
-                      }
-                    </span>
-                    @if (
-                      !compact() &&
-                      item.forecast.value !== null &&
-                      item.forecast.drivers.length
-                    ) {
-                      <button
-                        matButton
-                        type="button"
-                        class="why"
-                        [attr.aria-expanded]="isOpen(item.forecast)"
-                        (click)="toggle(item.forecast)"
-                      >
-                        {{ 'life.forecasts.why' | transloco }}
-                      </button>
-                      @if (isOpen(item.forecast)) {
-                        <ul class="drivers">
-                          @for (
-                            driver of item.forecast.drivers;
-                            track driver.key
-                          ) {
-                            <li>
-                              <span>
-                                {{ driverName(driver) }}
-                                @if (
-                                  driver.value !== null &&
-                                  driver.key !== 'self.weekend'
-                                ) {
-                                  <span class="muted">
-                                    ({{ value(driver, driver.value) }})
-                                  </span>
-                                }
-                              </span>
-                              <b>
-                                {{ driver.effect > 0 ? '↑' : '↓' }}
-                                {{ amount(item.forecast, driver.effect) }}
-                              </b>
-                            </li>
-                          }
-                        </ul>
-                      }
-                    }
-                  </li>
-                }
-              </ul>
-            } @else {
-              <p class="muted">{{ 'life.forecasts.none' | transloco }}</p>
-            }
+            <div class="forecasts" role="list">
+              @for (item of group.items; track item.forecast.key) {
+                <pd-forecast-row
+                  role="listitem"
+                  [item]="item"
+                  [compact]="compact()"
+                />
+              }
+            </div>
+          } @empty {
+            <p class="muted">
+              {{
+                (data.value().forecasts.length
+                  ? 'life.forecasts.noneTrusted'
+                  : 'life.forecasts.none'
+                ) | transloco
+              }}
+            </p>
           }
-          @if (!compact()) {
+          @if (!compact() && options().length) {
             <mat-form-field class="targets" subscriptSizing="dynamic">
               <mat-label>{{ 'life.forecasts.choose' | transloco }}</mat-label>
               <mat-select
                 multiple
                 [value]="chosen()"
-                (selectionChange)="choose($event.value)"
+                [disabled]="saving()"
+                (selectionChange)="draft.set($event.value)"
+                (openedChange)="$event || save()"
               >
                 @for (option of options(); track option.key) {
-                  <mat-option [value]="option.key">{{
-                    option.label ?? (option.labelKey | transloco)
-                  }}</mat-option>
+                  <mat-option
+                    [value]="option.key"
+                    [disabled]="
+                      chosen().length >= max && !chosen().includes(option.key)
+                    "
+                    >{{ option.name }}</mat-option
+                  >
                 }
               </mat-select>
+              <mat-hint>{{ 'life.forecasts.max' | transloco: {max} }}</mat-hint>
             </mat-form-field>
+            @if (saveFailed()) {
+              <p class="error" role="alert">
+                {{ 'life.forecasts.saveFailed' | transloco }}
+              </p>
+            }
           }
         }
       </mat-card-content>
@@ -232,55 +134,6 @@ interface Shown {
       flex-direction: column;
       gap: 10px;
       margin: 8px 0 0;
-      padding: 0;
-      list-style: none;
-    }
-    .forecasts > li {
-      display: grid;
-      grid-template-columns: 10px minmax(0, 1fr) auto;
-      gap: 2px 8px;
-      align-items: baseline;
-    }
-    .weak {
-      opacity: 0.6;
-    }
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-    }
-    .name {
-      min-width: 0;
-      overflow-wrap: anywhere;
-    }
-    .value {
-      font: var(--mat-sys-title-small);
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
-    .line,
-    .why,
-    .drivers {
-      grid-column: 2 / -1;
-    }
-    .why {
-      justify-self: start;
-    }
-    .drivers {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-    .drivers li {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 4px 0;
-      border-bottom: 1px solid var(--pd-border);
-    }
-    .drivers b {
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
     }
     .targets {
       width: 100%;
@@ -291,6 +144,11 @@ interface Shown {
       font: var(--mat-sys-body-small);
       color: var(--mat-sys-on-surface-variant);
     }
+    .error {
+      margin: 4px 0 0;
+      font: var(--mat-sys-body-small);
+      color: var(--mat-sys-error);
+    }
   `,
 })
 export class ForecastsCardComponent {
@@ -300,60 +158,21 @@ export class ForecastsCardComponent {
   /** The Home widget: the trusted forecasts only, no explanations. */
   readonly compact = input(false);
 
+  protected readonly max = MAX_FORECAST_TARGETS;
   protected readonly data = this.api.forecasts();
-  private readonly open = signal<string | null>(null);
+  /** The choice while the list is open: saved once, when it closes. */
+  protected readonly draft = signal<string[] | null>(null);
+  protected readonly saving = signal(false);
+  protected readonly saveFailed = signal(false);
 
-  protected readonly groups = computed(() => {
-    if (!this.data.hasValue()) {
-      return [];
-    }
-    const {forecasts, past, today} = this.data.value();
-    const yesterday = shiftDay(today, -1);
-    const days = [...new Set(forecasts.map(one => one.day))].sort();
-    return days.map(day => {
-      const ofDay = forecasts.filter(one => one.day === day);
-      const shown: Shown[] = ofDay
-        .filter(one => !this.compact() || (one.trusted && one.value !== null))
-        .map(forecast => {
-          const kept = past.filter(
-            one =>
-              one.key === forecast.key && one.trusted && one.actual !== null,
-          );
-          return {
-            forecast,
-            better:
-              forecast.error !== null && forecast.baselineError
-                ? Math.round(
-                    (1 - forecast.error / forecast.baselineError) * 100,
-                  )
-                : 0,
-            past:
-              kept.length >= MIN_PAST
-                ? {
-                    miss:
-                      kept.reduce(
-                        (sum, one) =>
-                          sum + Math.abs(one.value - (one.actual as number)),
-                        0,
-                      ) / kept.length,
-                    days: kept.length,
-                  }
-                : null,
-            yesterday:
-              past.find(
-                one =>
-                  one.key === forecast.key &&
-                  one.day === yesterday &&
-                  one.made === 'morning',
-              ) ?? null,
-          };
-        });
-      return {day, made: ofDay[0].made, shown};
-    });
-  });
+  protected readonly groups = computed(() =>
+    this.data.hasValue()
+      ? forecastGroups(this.data.value(), this.compact())
+      : [],
+  );
 
-  /** The chosen targets beyond the default ones. */
-  protected readonly chosen = computed(() =>
+  /** The chosen targets beyond the default ones, as kept. */
+  private readonly kept = computed(() =>
     this.data.hasValue()
       ? this.data
           .value()
@@ -363,84 +182,53 @@ export class ForecastsCardComponent {
           )
       : [],
   );
+  /** … or as being chosen. */
+  protected readonly chosen = computed(() => this.draft() ?? this.kept());
 
-  /** What may be chosen: the chosen ones and the other main numbers. */
+  /** What may be chosen — the chosen ones and the other main numbers — by name, so it stays put. */
   protected readonly options = computed(() => {
     if (!this.data.hasValue()) {
       return [];
     }
     const {forecasts, candidates} = this.data.value();
-    const chosen = this.chosen();
+    const kept = this.kept();
     const current = forecasts.filter(
       (one, index, all) =>
-        chosen.includes(one.key) &&
+        kept.includes(one.key) &&
         all.findIndex(other => other.key === one.key) === index,
     );
-    return [...current, ...candidates];
+    return [...current, ...candidates]
+      .map(one => ({
+        key: one.key,
+        name: one.label ?? this.transloco.translate<string>(one.labelKey),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   });
 
-  protected choose(targets: string[]): void {
-    this.api
-      .setForecastTargets(targets)
-      .subscribe({next: () => this.data.reload()});
-  }
-
-  protected isOpen(forecast: LinksForecast): boolean {
-    return this.open() === `${forecast.key}|${forecast.day}`;
-  }
-
-  /** Opens what drove a forecast; opening one is counted (for the achievements of exploring). */
-  protected toggle(forecast: LinksForecast): void {
-    const key = `${forecast.key}|${forecast.day}`;
-    if (this.open() === key) {
-      this.open.set(null);
+  /** Saves the choice when the list closes, if it changed; a failure goes back to the kept one. */
+  protected save(): void {
+    const draft = this.draft();
+    if (!draft || sameSet(draft, this.kept())) {
+      this.draft.set(null);
       return;
     }
-    this.open.set(key);
-    this.api.seen({kind: 'forecast', key}).subscribe({error: () => undefined});
-  }
-
-  protected name(forecast: LinksForecast): string {
-    return forecast.label ?? this.transloco.translate(forecast.labelKey);
-  }
-
-  protected driverName(driver: ForecastDriver): string {
-    return driver.label ?? this.transloco.translate(driver.labelKey);
-  }
-
-  protected color(forecast: LinksForecast): string {
-    return moduleColor(forecast.module);
-  }
-
-  protected value(
-    metric: Pick<DailyMetric, 'unit' | 'currency'>,
-    value: number,
-  ): string {
-    return formatValue(metric, value, this.transloco.getActiveLang(), hours =>
-      this.transloco.translate('life.hours', {value: hours}),
-    );
-  }
-
-  /**
-   * A difference in the target's unit: of a time (the bedtime) or hours in minutes when under
-   * an hour, else like the value itself.
-   */
-  protected amount(forecast: LinksForecast, value: number): string {
-    const size = Math.abs(value);
-    if ((forecast.unit === 'clock' || forecast.unit === 'hours') && size < 1) {
-      return this.transloco.translate('life.forecasts.minutes', {
-        value: Math.round(size * 60),
-      });
-    }
-    return this.value(
-      forecast.unit === 'clock' ? {unit: 'hours'} : forecast,
-      size,
-    );
+    this.saving.set(true);
+    this.saveFailed.set(false);
+    this.api.setForecastTargets(draft).subscribe({
+      // The draft stays shown until the reload brings the same choice back.
+      next: () => {
+        this.saving.set(false);
+        this.data.reload();
+      },
+      error: () => {
+        this.saving.set(false);
+        this.draft.set(null);
+        this.saveFailed.set(true);
+      },
+    });
   }
 }
 
-function shiftDay(day: string, by: number): string {
-  const date = new Date(`${day}T12:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + by);
-  return date.toISOString().slice(0, 10);
+function sameSet(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every(key => b.includes(key));
 }
