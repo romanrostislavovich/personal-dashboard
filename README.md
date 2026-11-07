@@ -64,7 +64,11 @@ The interface is in English and Russian.
   dose–response chart; forecasts of today and, in the evening, of tomorrow — bedtime, deep work,
   tasks done, mood and any main number you choose — each by a model of your own days, trusted
   only when it beats the plain guess, with what drove it and how close the past ones came, also
-  on Home, in the morning digest and the evening summary);
+  on Home, in the morning digest and the evening summary; hours, not only days — the rhythm of
+  any hourly number by weekday and hour, the hour after a burst of notifications, a game, a
+  draining app, a meeting, a long phone session, a walk, music, a focus session or leaving home
+  against the same hours without it, and your productive window — the hours coding, deep work
+  and tasks done are highest — on Home, in Tasks and in the morning digest);
   the last commit before a site went down;
   subscriptions you pay for and do not use
 - ⚡ **Automations** — "if X, then Y" across sections: a site is down → a task, no diary entry by
