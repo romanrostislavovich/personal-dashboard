@@ -918,6 +918,13 @@
       "when": 1793994232981,
       "tag": "0130_links_change_points",
       "breakpoints": true
+    },
+    {
+      "idx": 131,
+      "version": "7",
+      "when": 1794062131471,
+      "tag": "0131_links_forecasts",
+      "breakpoints": true
     }
   ]
 }

@@ -11,6 +11,7 @@ import {
   AuthClient as AuthClientKind,
   AuthConfig,
   CorrelationPairs,
+  ForecastTargets,
   LinksSeen,
   AutomationRule,
   AutomationRuleInput,
@@ -135,8 +136,8 @@ export const CORE_READS = {
   /** What goes with the days of a good mood and of a bad one, across the sections. */
   moodInsights: (from: string, to: string) =>
     apiRequest('/api/life/mood-insights', {from, to}),
-  /** Today's mood forecast from yesterday's numbers, by the user's own model. */
-  moodForecast: () => apiRequest('/api/life/forecast'),
+  /** Today's forecasts of the numbers (tomorrow's too in the evening) and the kept ones. */
+  forecasts: () => apiRequest('/api/life/forecasts'),
   /**
    * How the daily numbers go together (with the outcomes only, unless `pairs` is `all`); the
    * regression explains `target`; `extra` — the extra numbers switched on.
@@ -233,6 +234,9 @@ export function lifeApi(api: ApiClient) {
       api.post<{story: LifeStory | null}>('/api/life/story', {period}),
     /** Something of Links opened: a change point or a pair's chart (for the achievements). */
     seen: (item: LinksSeen) => api.post<void>('/api/life/seen', item),
+    /** The numbers forecast beyond the default ones. */
+    setForecastTargets: (input: ForecastTargets) =>
+      api.put<void>('/api/life/forecast-targets', input),
   };
 }
 

@@ -30,6 +30,7 @@ import {BeforeAfterComponent} from './before-after.component';
 import {ChangesCardComponent} from './changes-card.component';
 import {CurvesCardComponent, curveSentence} from './curves-card.component';
 import {DoseChartComponent, dosePoints} from './dose-chart.component';
+import {ForecastsCardComponent} from './forecasts-card.component';
 import {UnusualCardComponent} from './unusual-card.component';
 import {CorrelationGraphComponent} from './correlation-graph.component';
 import {CorrelationMatrixComponent} from './correlation-matrix.component';
@@ -79,6 +80,7 @@ const LEADS_FROM = 0.2;
     MatTooltipModule,
     PercentPipe,
     TranslocoPipe,
+    ForecastsCardComponent,
     UnusualCardComponent,
   ],
   templateUrl: './links.page.html',

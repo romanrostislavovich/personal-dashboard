@@ -126,10 +126,14 @@ How it is done here:
    counterparties it never saw; once it is right in 90% of the cases it is sure of (60 examples
    at least), a bank import's new counterparty gets its category from it, and only the rest goes
    to the AI. It also fills the category in the form of a new transaction.
-2. ✅ **Forecasts for Life** (`links/forecast.ts`): today's mood from yesterday's numbers of
-   every section, by a ridge regression over the user's own days, with what pulls the mood up and
-   down. It learns on the earlier days and is measured on the latest ones against "like the last
-   week"; it is shown (Life → Summary, and to the assistant) only when it beats it.
+2. ✅ **Forecasts for Life** (`links/forecast.ts`, `forecasts.service.ts`): the bedtime, deep
+   work, tasks done, the mood and any main number the user chooses, each from the day before by a
+   ridge regression over the user's own days, with what pushed this day's forecast up and down. It
+   learns on the earlier days and is measured on the latest ones against the best plain guess
+   (yesterday, the same weekday, the week); it is trusted only when it beats it. An hourly job
+   keeps the morning's forecast of the day and the evening's of the next (`links_forecasts`), so
+   they can be compared with what the days were — and later teach a model of one's own. Shown in
+   Life → Links, on Home, in the morning digest, the evening summary and `core_forecasts`.
 3. ✅ **Retrieval over the history** — search by meaning (above), the assistant's
    `core_recall`, and its memory (`core_remember`, `core_forget`).
 4. **Your voice (optional)** — LoRA on the diary and your messages, on a rented GPU, served by

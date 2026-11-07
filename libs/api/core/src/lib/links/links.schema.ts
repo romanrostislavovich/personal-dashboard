@@ -1,6 +1,9 @@
+import {ForecastDriver} from '@pd/contracts';
 import {
   boolean,
   date,
+  integer,
+  jsonb,
   pgTable,
   primaryKey,
   real,
@@ -65,3 +68,50 @@ export const linksSeen = pgTable(
   },
   table => [primaryKey({columns: [table.userId, table.kind, table.key]})],
 );
+
+/**
+ * The forecasts made (see forecast.ts): the morning's of the day and the evening's of the next,
+ * kept to say later how close they came — and, one day, to teach a model of the user's own. Made
+ * by the server's job; a sync client gets them with the sync and makes none itself.
+ */
+export const linksForecasts = pgTable(
+  'links_forecasts',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, {onDelete: 'cascade'}),
+    /** The number forecast, e.g. `tasks.done` or `links.bedtime`, and how to show it. */
+    key: text().notNull(),
+    module: text().notNull(),
+    labelKey: text().notNull(),
+    label: text(),
+    unit: text().notNull(),
+    currency: text(),
+    /** The day forecast. */
+    day: date({mode: 'string'}).notNull(),
+    /** `morning` — that day's morning, from the day before; `evening` — the evening before. */
+    made: text().notNull(),
+    value: real().notNull(),
+    /** The model's and the plain guess's mean miss on the latest days, when it was made. */
+    error: real().notNull(),
+    baselineError: real().notNull(),
+    /** Which plain guess it was measured against: `yesterday`, `week` or `weekday`. */
+    baseline: text().notNull(),
+    /** The days it learned from. */
+    days: integer().notNull(),
+    trusted: boolean().notNull(),
+    drivers: jsonb().$type<ForecastDriver[]>().notNull(),
+    madeAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+  },
+  table => [unique().on(table.userId, table.key, table.day, table.made)],
+);
+
+/** The user's choices of Links kept on the server: the jobs read them, not only the page. */
+export const linksSettings = pgTable('links_settings', {
+  userId: uuid()
+    .primaryKey()
+    .references(() => users.id, {onDelete: 'cascade'}),
+  /** The forecast's targets chosen beyond the default ones (DEFAULT_FORECAST_TARGETS). */
+  forecastTargets: text().array().notNull().default([]),
+});

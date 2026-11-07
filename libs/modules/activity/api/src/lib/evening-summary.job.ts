@@ -2,6 +2,7 @@ import {Inject, Injectable, Logger, OnModuleInit} from '@nestjs/common';
 import {
   DB,
   Database,
+  ForecastsService,
   NotificationsService,
   ProjectOverviewService,
   SchedulerService,
@@ -16,7 +17,12 @@ import {
   activitySettings,
 } from './activity.schema';
 import {ActivityService} from './activity.service';
-import {DaySummary, isSummaryDue, summaryOf} from './evening-summary';
+import {
+  DaySummary,
+  isSummaryDue,
+  summaryOf,
+  TomorrowForecast,
+} from './evening-summary';
 import {IndicesService} from './indices/indices.service';
 import {WellbeingService} from './wellbeing.service';
 
@@ -40,6 +46,7 @@ export class EveningSummaryJob implements OnModuleInit {
     private readonly wellbeing: WellbeingService,
     private readonly dayIndices: IndicesService,
     private readonly overviews: ProjectOverviewService,
+    private readonly forecasts: ForecastsService,
   ) {}
 
   onModuleInit(): void {
@@ -106,6 +113,7 @@ export class EveningSummaryJob implements OnModuleInit {
         this.logger.warn(`Unusual numbers not known for ${userId}: ${error}`);
         return null;
       });
+    const tomorrow = await this.tomorrow(userId);
     const summary = summaryOf(
       stats,
       {completed: focus.completed, seconds: focus.focusSeconds},
@@ -117,6 +125,7 @@ export class EveningSummaryJob implements OnModuleInit {
         })),
       indices,
       unusual,
+      tomorrow,
     );
     if (!summary) {
       return;
@@ -126,6 +135,32 @@ export class EveningSummaryJob implements OnModuleInit {
       body: text.summaryBody(summary),
       source: 'activity',
     });
+  }
+
+  /**
+   * Tomorrow's trusted forecasts of the default targets, made and kept now if the hourly job has
+   * not yet. A failure leaves them out, as with the indices.
+   */
+  private async tomorrow(userId: string): Promise<TomorrowForecast | null> {
+    try {
+      const found = await this.forecasts.tomorrow(userId);
+      const of = (key: string) =>
+        found.find(one => one.key === key)?.value ?? undefined;
+      const known = {
+        bedtime: of('links.bedtime'),
+        deepWork: of('activity.index.deepWork'),
+        tasks: of('tasks.done'),
+        mood: of('diary.mood'),
+      };
+      return Object.fromEntries(
+        Object.entries(known).filter(([, value]) => value !== undefined),
+      ) as TomorrowForecast;
+    } catch (error) {
+      this.logger.warn(
+        `Tomorrow's forecasts not known for ${userId}: ${error}`,
+      );
+      return null;
+    }
   }
 
   /**

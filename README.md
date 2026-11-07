@@ -61,7 +61,10 @@ The interface is in English and Russian.
   unusual today and yesterday (beyond 9 of 10 of your usual days, also on Home and in the evening
   summary), what changed over the last three years and since when (told in the Monday morning
   digest), links of two and three days later, and pairs that are not straight lines with a
-  dose–response chart);
+  dose–response chart; forecasts of today and, in the evening, of tomorrow — bedtime, deep work,
+  tasks done, mood and any main number you choose — each by a model of your own days, trusted
+  only when it beats the plain guess, with what drove it and how close the past ones came, also
+  on Home, in the morning digest and the evening summary);
   the last commit before a site went down;
   subscriptions you pay for and do not use
 - ⚡ **Automations** — "if X, then Y" across sections: a site is down → a task, no diary entry by

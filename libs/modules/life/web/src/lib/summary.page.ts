@@ -17,7 +17,6 @@ import {LifeSummary} from '@pd/contracts';
 import {LifelogJournalComponent} from './lifelog-journal.component';
 import {lifelogMonthRange} from './lifelog-dates';
 import {MoodInsightsComponent} from './mood-insights.component';
-import {MoodForecastComponent} from './mood-forecast.component';
 import {StoryCardComponent} from './story-card.component';
 
 /** "Wrapped": the numbers of every module for a month or a year. */
@@ -32,7 +31,6 @@ import {StoryCardComponent} from './story-card.component';
     MatButtonToggleModule,
     MatCardModule,
     MatIconModule,
-    MoodForecastComponent,
     MoodInsightsComponent,
     StoryCardComponent,
     TranslocoPipe,
@@ -117,7 +115,6 @@ import {StoryCardComponent} from './story-card.component';
       }
     </div>
 
-    <pd-mood-forecast />
     <pd-mood-insights />
   `,
   styles: `

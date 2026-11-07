@@ -13,6 +13,7 @@ import {LifeService} from '../life/life.service';
 import {LinksService} from '../links/links.service';
 import {ProjectOverviewService} from '../links/project-overview.service';
 import {ChangePointsService} from '../links/change-points.service';
+import {ForecastsService} from '../links/forecasts.service';
 import {ProjectsService} from '../projects/projects.service';
 import {
   changedFields,
@@ -60,6 +61,7 @@ export class CoreAiTools implements OnModuleInit {
     private readonly memories: AiMemoryService,
     private readonly recall: RecallService,
     private readonly changes: ChangePointsService,
+    private readonly forecasts: ForecastsService,
   ) {}
 
   onModuleInit(): void {
@@ -517,19 +519,20 @@ export class CoreAiTools implements OnModuleInit {
     });
 
     this.ai.registerTool({
-      name: 'core_mood_forecast',
+      name: 'core_forecasts',
       module: 'life',
       description:
-        "Today's mood forecast (1–5) from yesterday's numbers of every section, by a model " +
-        "trained on the user's own days, with what pulls the mood up and down most " +
-        '(`effect`: mood points for a typical difference of the number). Tell it only when ' +
-        '`trusted` (it beat "like the last week"); otherwise say there is not enough to tell.',
+        "Today's forecasts of the user's own numbers (and tomorrow's after 18:00) — the " +
+        'bedtime (links.bedtime, hours of the evening, over 24 after midnight), deep work ' +
+        '(hours), tasks done, the mood (1–5) and the numbers the user chose — each from the ' +
+        "day before by a model trained on the user's own days, with `drivers`: what pushed " +
+        'this forecast up or down (`effect` in the same unit). `error` is its usual miss, ' +
+        '`baselineError` that of the plain guess. Tell one as a forecast only when `trusted` ' +
+        '(it beat the plain guess); otherwise say the model does not know better yet. `past` ' +
+        'are the kept forecasts with what the days turned out to be.',
       parameters: NO_PARAMETERS,
       handler: async userId =>
-        this.overviews.moodForecast(
-          userId,
-          await this.ai.hiddenFromShared(userId),
-        ),
+        this.forecasts.list(userId, await this.ai.hiddenFromShared(userId)),
     });
 
     // "When did I last…": search by meaning over the user's own history.

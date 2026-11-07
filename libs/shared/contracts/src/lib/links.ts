@@ -168,30 +168,6 @@ export interface MoodInsight {
   reading: boolean;
 }
 
-/**
- * Today's mood forecast from yesterday's numbers, by the user's own model (`GET /api/life/forecast`).
- * Shown only when `trusted`: it beat the plain guess "like the last week" on the latest days.
- */
-export interface MoodForecast {
-  /** The day forecast (today). */
-  target: LocalDate;
-  /** 1–5; null — not enough days with a mood. */
-  mood: number | null;
-  /** The days it learned from. */
-  days: number;
-  /** The mean miss of the model, and of "like the last week", on the latest days (mood points). */
-  error: number | null;
-  baselineError: number | null;
-  trusted: boolean;
-  /** What weighs most: mood points for a typical day's difference of the number. */
-  drivers: {
-    key: string;
-    labelKey: string;
-    label: string | null;
-    effect: number;
-  }[];
-}
-
 export interface MoodInsights {
   from: LocalDate;
   to: LocalDate;
@@ -424,7 +400,7 @@ export interface LinksChanges {
 }
 
 /** What of Links the user opens, for the achievements of exploring. */
-export const LINKS_SEEN_KINDS = ['change', 'dose'] as const;
+export const LINKS_SEEN_KINDS = ['change', 'dose', 'forecast'] as const;
 export const linksSeenSchema = z.discriminatedUnion('kind', [
   /** A change point, by its id. */
   z.object({kind: z.literal('change'), key: z.uuid()}),
@@ -436,8 +412,116 @@ export const linksSeenSchema = z.discriminatedUnion('kind', [
       .max(300)
       .regex(/^[^|]+\|[^|]+\|[0-3]$/),
   }),
+  /** What drove a forecast: `key|day`, the number forecast and the day. */
+  z.object({
+    kind: z.literal('forecast'),
+    key: z
+      .string()
+      .max(200)
+      .regex(/^[^|]+\|\d{4}-\d{2}-\d{2}$/),
+  }),
 ]);
 export type LinksSeen = z.infer<typeof linksSeenSchema>;
+
+// --- Forecasts of the numbers (Life → Links, stage 5) ---
+
+/** The forecasts made for every user; more come from the owner's choice of the main numbers. */
+export const DEFAULT_FORECAST_TARGETS = [
+  'links.bedtime',
+  'activity.index.deepWork',
+  'tasks.done',
+  'diary.mood',
+] as const;
+/** The targets one may choose at most (each is a model of its own, retrained every time). */
+export const MAX_FORECAST_TARGETS = 12;
+
+/**
+ * `morning` — made in the morning for the day, from yesterday's numbers; `evening` — made in
+ * the evening for the next day, also from yesterday's (today is not over), so rougher.
+ */
+export type ForecastMade = 'morning' | 'evening';
+
+/** A number of the day the forecast leans on most: its value and what it added. */
+export interface ForecastDriver {
+  key: string;
+  labelKey: string;
+  label: string | null;
+  unit: DailyMetric['unit'];
+  currency?: string;
+  /**
+   * Its value on the day forecast from — the day before in the morning, two days before in the
+   * evening (`null` — not known, its usual was taken).
+   */
+  value: number | null;
+  /** What it added to this forecast, in the target's unit (−0.4 — four tenths less). */
+  effect: number;
+}
+
+/**
+ * The forecast of one number for one day, by the user's own model (ridge regression over the
+ * day before), trusted only when it beat the plain guess on the latest days of the history.
+ */
+export interface LinksForecast {
+  key: string;
+  module: string;
+  labelKey: string;
+  label?: string;
+  unit: DailyMetric['unit'];
+  currency?: string;
+  day: LocalDate;
+  made: ForecastMade;
+  /** `null` — fewer than enough days to learn from. */
+  value: number | null;
+  /** The days it learned from. */
+  days: number;
+  /** The mean miss of the model and of the plain guess on the latest days (in `unit`). */
+  error: number | null;
+  baselineError: number | null;
+  /**
+   * The plain guess it was measured against, the best of three: `yesterday` — the number on
+   * the last day over, `weekday` — on the same weekdays, `week` — over the week.
+   */
+  baseline: 'yesterday' | 'weekday' | 'week' | null;
+  trusted: boolean;
+  /** What drove this day's forecast, the largest first. */
+  drivers: ForecastDriver[];
+}
+
+/** A forecast kept, with what the day turned out to be (`null` — not known yet). */
+export interface PastForecast {
+  key: string;
+  day: LocalDate;
+  made: ForecastMade;
+  value: number;
+  trusted: boolean;
+  actual: number | null;
+}
+
+/** A main number that may be chosen as a target. */
+export interface ForecastCandidate {
+  key: string;
+  module: string;
+  labelKey: string;
+  label?: string;
+  unit: DailyMetric['unit'];
+}
+
+/** `GET /api/life/forecasts`: today's, tomorrow's (in the evening) and the kept ones. */
+export interface LinksForecasts {
+  today: LocalDate;
+  /** The targets, the chosen ones after the default ones. */
+  targets: string[];
+  forecasts: LinksForecast[];
+  /** The last four weeks of the kept forecasts, for how close they came. */
+  past: PastForecast[];
+  candidates: ForecastCandidate[];
+}
+
+export const forecastTargetsSchema = z.object({
+  /** The chosen targets beyond the default ones. */
+  targets: z.array(z.string().min(1).max(120)).max(MAX_FORECAST_TARGETS),
+});
+export type ForecastTargets = z.infer<typeof forecastTargetsSchema>;
 
 // --- Before and after an event of a life (Life → Links) ---
 

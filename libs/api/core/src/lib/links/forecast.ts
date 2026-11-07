@@ -1,16 +1,28 @@
-import {DailyMetric, LocalDate, MoodForecast} from '@pd/contracts';
-import {daysOf, seriesOf, shift} from './daily-series';
-import {MOOD_METRIC} from './mood-insights';
+import {
+  DailyMetric,
+  ForecastDriver,
+  ForecastMade,
+  LinksForecast,
+  LocalDate,
+} from '@pd/contracts';
+import {daysOf, seriesOf, Series, shift} from './daily-series';
 
 /*
- * Today's mood from yesterday's numbers — the user's own model, trained on their own days: a
+ * A number of a day from the day before — the user's own model, trained on their own days: a
  * ridge regression over every daily number of the sections (sleep, steps, hours at the
- * computer, spending, music, the weather…), yesterday's mood and the week's average, and the
- * day of the week. A few hundred days are enough, it explains itself (what pulls the mood up
- * and down), and it is shown only when it beats the plain guess "like the last week".
+ * computer, spending, music, the weather…), the number itself yesterday, over the week and on
+ * the same weekdays, and whether the day is a weekend. A few hundred days are enough, it
+ * explains itself (what pushed this day's forecast up and down), and it is trusted only when it
+ * beats the plain guess — the number yesterday, on the same weekdays or over the week, whichever
+ * of them guessed best — on the latest days.
  */
 
-/** Fewer days with a mood and the next day's mood than this — no model. */
+/** The bedtime: the band's start of sleep, else the phone's last use of the evening. */
+export const BEDTIME_TARGET = 'links.bedtime';
+const BAND_BEDTIME = 'health.band.bedtime';
+const PHONE_LAST_USE = 'activity.phone.lastUse';
+
+/** Fewer days with the number and the number the day before — no model. */
 export const MIN_DAYS = 40;
 /** A number present on fewer of the days than this share is left out. */
 const MIN_COVERAGE = 0.5;
@@ -18,137 +30,249 @@ const MIN_COVERAGE = 0.5;
 const RIDGE = 5;
 /** The last share of the days, kept aside to measure it. */
 const TEST_SHARE = 0.2;
-/** Better than the plain guess by this much, or it is not shown. */
+/** Better than the plain guess by this much, or it is not trusted. */
 const MUST_BEAT = 0.95;
-const DRIVERS = 3;
+const DRIVERS = 4;
+/** The same weekday: over this many weeks back. */
+const WEEKDAY_WEEKS = 8;
 
 interface Feature {
   key: string;
-  metric: DailyMetric | null;
-  /** The value the day before the day forecast. */
+  labelKey: string;
+  label: string | null;
+  unit: DailyMetric['unit'];
+  currency?: string;
+  /** The value on the day the forecast is made from. */
   value: (day: LocalDate) => number | undefined;
 }
 
-/** The forecast of `target`'s mood from the day before it (`target` is today, usually). */
-export function moodForecast(
+/**
+ * The bedtime as a number of its own: the band's where it was worn, the phone's last use on
+ * the other days (both are hours of the evening, over 24 after midnight). `null` — neither.
+ */
+export function bedtimeMetric(metrics: DailyMetric[]): DailyMetric | null {
+  const band = metrics.find(metric => metric.key === BAND_BEDTIME);
+  const phone = metrics.find(metric => metric.key === PHONE_LAST_USE);
+  if (!band && !phone) {
+    return null;
+  }
+  const days = new Map(phone?.days.map(day => [day.day, day.value]));
+  for (const day of band?.days ?? []) {
+    days.set(day.day, day.value);
+  }
+  return {
+    key: BEDTIME_TARGET,
+    module: 'life',
+    labelKey: 'life.forecasts.bedtime',
+    unit: 'clock',
+    outcome: true,
+    days: [...days]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([day, value]) => ({day, value})),
+  };
+}
+
+/** The numbers a target is made of: they are the target itself, not what drives it. */
+export function sourcesOf(target: Pick<DailyMetric, 'key'>): string[] {
+  return target.key === BEDTIME_TARGET
+    ? [BEDTIME_TARGET, BAND_BEDTIME, PHONE_LAST_USE]
+    : [target.key];
+}
+
+/**
+ * The forecast of `target` on `day` from the last day over before it (the day before in the
+ * morning, two days before in the evening), learnt from the days up to it.
+ * `metrics` are the drivers to choose from (the target among them is left out).
+ */
+export function forecast(
   metrics: DailyMetric[],
-  target: LocalDate,
-): MoodForecast {
-  const moodMetric = metrics.find(metric => metric.key === MOOD_METRIC);
-  const empty: MoodForecast = {
-    target,
-    mood: null,
+  target: DailyMetric,
+  day: LocalDate,
+  made: ForecastMade,
+): LinksForecast {
+  const empty: LinksForecast = {
+    key: target.key,
+    module: target.module,
+    labelKey: target.labelKey,
+    ...(target.label ? {label: target.label} : {}),
+    unit: target.unit,
+    ...(target.currency ? {currency: target.currency} : {}),
+    day,
+    made,
+    value: null,
     days: 0,
     error: null,
     baselineError: null,
+    baseline: null,
     trusted: false,
     drivers: [],
   };
-  if (!moodMetric) {
-    return empty;
-  }
-  const allDays = metrics
-    .flatMap(metric => metric.days.map(day => day.day))
+  const allDays = [target, ...metrics]
+    .flatMap(metric => metric.days.map(one => one.day))
     .sort();
-  if (!allDays.length) {
+  if (!allDays.length || allDays[0] > day) {
     return empty;
   }
-  const days = daysOf({from: allDays[0], to: target});
-  const mood = new Map(moodMetric.days.map(day => [day.day, day.value]));
-  const weekMood = (day: LocalDate) => {
-    const values = [...Array(7).keys()]
-      .map(back => mood.get(shift(day, -back)))
-      .filter((value): value is number => value !== undefined);
-    return values.length
-      ? values.reduce((sum, value) => sum + value, 0) / values.length
-      : undefined;
-  };
+  const days = daysOf({from: allDays[0], to: day});
+  const own = seriesOf(target, days);
+  // In the evening today is not over (its sums still grow, its bedtime has not come): the
+  // next day is forecast from yesterday, the last day over — a model of its own, learnt and
+  // measured two days ahead, so it is trusted only as far as that is right.
+  const lag = made === 'evening' ? 2 : 1;
+  const before = (one: LocalDate) => shift(one, -lag);
+  const self = selfGuesses(own, lag);
 
-  // The days to learn from: a mood on the day and on the day before.
-  const rows = days.filter(day => mood.has(day) && mood.has(shift(day, -1)));
+  // The days to learn from: the number on the day and on the day it is forecast from, the days
+  // that are over only (in the evening not today either).
+  const lastOver = before(day);
+  const rows = days.filter(
+    one => one <= lastOver && own.has(one) && own.has(before(one)),
+  );
   if (rows.length < MIN_DAYS) {
     return {...empty, days: rows.length};
   }
 
   const features: Feature[] = [
+    selfFeature(target, 'self.last', self.last),
+    selfFeature(target, 'self.week', self.week),
+    selfFeature(target, 'self.weekday', self.weekday),
     {
-      key: 'mood.yesterday',
-      metric: null,
-      value: day => mood.get(shift(day, -1)),
-    },
-    {key: 'mood.week', metric: null, value: day => weekMood(shift(day, -1))},
-    {
-      key: 'weekend',
-      metric: null,
-      value: day =>
-        [0, 6].includes(new Date(`${day}T12:00:00Z`).getUTCDay()) ? 1 : 0,
+      key: 'self.weekend',
+      labelKey: 'life.forecasts.self.weekend',
+      label: null,
+      unit: 'count',
+      value: one => (isWeekend(one) ? 1 : 0),
     },
   ];
-  for (const metric of metrics.filter(item => item.key !== MOOD_METRIC)) {
+  const sources = sourcesOf(target);
+  for (const metric of metrics) {
+    if (
+      sources.includes(metric.key) ||
+      sources.includes(metric.partOf ?? '') ||
+      metric.parts?.some(part => sources.includes(part))
+    ) {
+      continue;
+    }
     const series = seriesOf(metric, days);
-    const present = rows.filter(day => series.has(shift(day, -1))).length;
+    const present = rows.filter(one => series.has(before(one))).length;
     if (present / rows.length >= MIN_COVERAGE) {
       features.push({
         key: metric.key,
-        metric,
-        value: day => series.get(shift(day, -1)),
+        labelKey: metric.labelKey,
+        label: metric.label ?? null,
+        unit: metric.unit,
+        ...(metric.currency ? {currency: metric.currency} : {}),
+        value: one => series.get(before(one)),
       });
     }
   }
 
-  const matrix = (dayList: LocalDate[]) =>
-    dayList.map(day => features.map(feature => feature.value(day)));
+  const rowOf = (one: LocalDate) => features.map(feature => feature.value(one));
+  const actual = (one: LocalDate) => own.get(one) as number;
   const split = Math.floor(rows.length * (1 - TEST_SHARE));
   const learn = rows.slice(0, split);
   const test = rows.slice(split);
 
-  const trained = fit(
-    matrix(learn),
-    learn.map(day => mood.get(day) as number),
+  const trained = fit(learn.map(rowOf), learn.map(actual));
+  const error = mean(
+    test.map(one => Math.abs(trained.predict(rowOf(one)) - actual(one))),
   );
-  const errors = test.map(day =>
-    Math.abs(trained.predict(matrix([day])[0]) - (mood.get(day) as number)),
-  );
-  const baseline = test.map(day =>
-    Math.abs((weekMood(shift(day, -1)) ?? 3) - (mood.get(day) as number)),
-  );
-  const error = mean(errors);
-  const baselineError = mean(baseline);
+  // The plain guess: the best of the three on the same days.
+  const fallback = mean(learn.map(actual));
+  const guesses = (['last', 'week', 'weekday'] as const).map(name => ({
+    name: name === 'last' ? ('yesterday' as const) : name,
+    error: mean(
+      test.map(one => Math.abs((self[name](one) ?? fallback) - actual(one))),
+    ),
+  }));
+  const best = guesses.reduce((a, b) => (b.error < a.error ? b : a));
 
-  // The model of all the days answers for the target, and tells what weighs most.
-  const model = fit(
-    matrix(rows),
-    rows.map(day => mood.get(day) as number),
-  );
-  const forecast = model.predict(matrix([target])[0]);
-  const drivers = features
-    .map((feature, i) => ({feature, effect: model.weights[i]}))
-    .filter(({feature}) => feature.metric)
+  // The model of all the days answers for the day, and tells what pushed it up and down.
+  const model = fit(rows.map(rowOf), rows.map(actual));
+  const row = rowOf(day);
+  const contributions = model.contributions(row);
+  const drivers: ForecastDriver[] = features
+    .map((feature, i) => ({feature, value: row[i], effect: contributions[i]}))
+    .filter(({effect}) => Math.abs(effect) > 0)
     .sort((a, b) => Math.abs(b.effect) - Math.abs(a.effect))
     .slice(0, DRIVERS)
-    .map(({feature, effect}) => ({
+    .map(({feature, value, effect}) => ({
       key: feature.key,
-      labelKey: feature.metric!.labelKey,
-      label: feature.metric!.label ?? null,
-      // Mood points for a typical day's difference of the number (one standard deviation).
+      labelKey: feature.labelKey,
+      label: feature.label,
+      unit: feature.unit,
+      ...(feature.currency ? {currency: feature.currency} : {}),
+      value: value === undefined ? null : round(value, 2),
       effect: round(effect, 2),
     }));
 
+  // Never beyond what the number has ever been: no 7 of 5, no −1 task.
+  const values = rows.map(actual);
+  const value = Math.min(
+    Math.max(...values),
+    Math.max(Math.min(...values), model.predict(row)),
+  );
   return {
-    target,
-    mood: round(Math.min(5, Math.max(1, forecast)), 1),
+    ...empty,
+    value: round(value, 2),
     days: rows.length,
     error: round(error, 2),
-    baselineError: round(baselineError, 2),
-    trusted: error < baselineError * MUST_BEAT,
+    baselineError: round(best.error, 2),
+    baseline: best.name,
+    trusted: error < best.error * MUST_BEAT,
     drivers,
   };
 }
 
+/**
+ * The plain guesses of a day from the number's own days over `lag` days before it: the last
+ * of them, the week up to it, and the same weekday of the weeks before.
+ */
+function selfGuesses(own: Series, lag: number) {
+  const meanOf = (days: LocalDate[]) => {
+    const values = days
+      .map(one => own.get(one))
+      .filter((value): value is number => value !== undefined);
+    return values.length ? mean(values) : undefined;
+  };
+  return {
+    last: (day: LocalDate) => own.get(shift(day, -lag)),
+    week: (day: LocalDate) =>
+      meanOf([...Array(7).keys()].map(back => shift(day, -lag - back))),
+    weekday: (day: LocalDate) =>
+      meanOf(
+        [...Array(WEEKDAY_WEEKS).keys()].map(week =>
+          shift(day, -7 * (week + 1)),
+        ),
+      ),
+  };
+}
+
+function selfFeature(
+  target: DailyMetric,
+  key: string,
+  value: (day: LocalDate) => number | undefined,
+): Feature {
+  return {
+    key,
+    labelKey: `life.forecasts.${key}`,
+    label: null,
+    unit: target.unit,
+    ...(target.currency ? {currency: target.currency} : {}),
+    value,
+  };
+}
+
+function isWeekend(day: LocalDate): boolean {
+  return [0, 6].includes(new Date(`${day}T12:00:00Z`).getUTCDay());
+}
+
 interface Fitted {
-  /** Per feature: the mood change for one standard deviation of it. */
+  /** Per feature: the target's change for one standard deviation of it. */
   weights: number[];
   predict: (row: (number | undefined)[]) => number;
+  /** Per feature: what it adds to this row's prediction (a missing value adds nothing). */
+  contributions: (row: (number | undefined)[]) => number[];
 }
 
 /**
@@ -157,19 +281,14 @@ interface Fitted {
  */
 export function fit(rows: (number | undefined)[][], target: number[]): Fitted {
   const width = rows[0]?.length ?? 0;
-  const means = [...Array(width).keys()].map(j =>
-    mean(
-      rows
-        .map(row => row[j])
-        .filter((value): value is number => value !== undefined),
-    ),
-  );
-  const deviations = [...Array(width).keys()].map(j => {
-    const values = rows
+  const known = (j: number) =>
+    rows
       .map(row => row[j])
       .filter((value): value is number => value !== undefined);
+  const means = [...Array(width).keys()].map(j => mean(known(j)));
+  const deviations = [...Array(width).keys()].map(j => {
     const spread = Math.sqrt(
-      mean(values.map(value => (value - means[j]) ** 2)),
+      mean(known(j).map(value => (value - means[j]) ** 2)),
     );
     return spread || 1;
   });
@@ -192,11 +311,13 @@ export function fit(rows: (number | undefined)[][], target: number[]): Fitted {
     x.reduce((sum, row, k) => sum + row[i] * y[k], 0),
   );
   const weights = solve(a, b);
+  const contributions = (row: (number | undefined)[]) =>
+    standard(row).map((value, j) => value * weights[j]);
   return {
     weights,
+    contributions,
     predict: row =>
-      bias +
-      standard(row).reduce((sum, value, j) => sum + value * weights[j], 0),
+      bias + contributions(row).reduce((sum, value) => sum + value, 0),
   };
 }
 

@@ -16,6 +16,7 @@ import {UsersService} from '../users/users.service';
 import {Period} from './links.service';
 import {ProjectOverviewService} from './project-overview.service';
 import {ChangePointsService, EVEN_DAY} from './change-points.service';
+import {ForecastsService} from './forecasts.service';
 
 /** Shown under "Home" on the achievements page, with the others about the dashboard itself. */
 const MODULE = 'dashboard';
@@ -69,6 +70,7 @@ export class LinksAchievements implements OnModuleInit {
     private readonly overviews: ProjectOverviewService,
     private readonly users: UsersService,
     private readonly changes: ChangePointsService,
+    private readonly forecasts: ForecastsService,
   ) {}
 
   onModuleInit(): void {
@@ -233,6 +235,57 @@ export class LinksAchievements implements OnModuleInit {
           {en: 'Fifty even days', ru: 'Пятьдесят ровных дней'},
         ],
       ),
+    });
+
+    // Links v2, forecasts: for looking into them, never for what they say.
+    this.achievements.register({
+      id: 'dashboard.forecasts-explored',
+      module: MODULE,
+      measure: userId => this.changes.seenCount(userId, 'forecast'),
+      tiers: achievementTiers(
+        [
+          1,
+          '🔮',
+          {en: 'Why so?', ru: 'Почему так?'},
+          {
+            en: 'Open what drove a forecast of one of your numbers (Links → Forecasts)',
+            ru: 'Открыть, что повлияло на прогноз одного из ваших чисел (Links → Прогнозы)',
+          },
+        ],
+        [
+          10,
+          '🌦️',
+          {en: 'Weather of oneself', ru: 'Своя погода'},
+          {
+            en: 'Open ten forecasts this way',
+            ru: 'Открыть так десять прогнозов',
+          },
+        ],
+        [
+          50,
+          '🛰️',
+          {en: 'Own forecaster', ru: 'Свой синоптик'},
+          {
+            en: 'Open fifty forecasts this way',
+            ru: 'Открыть так пятьдесят прогнозов',
+          },
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'dashboard.forecast-targets',
+      module: MODULE,
+      measure: userId => this.forecasts.chosenCount(userId),
+      tiers: achievementTiers([
+        1,
+        '🎯',
+        {en: 'A forecast of my own', ru: 'Свой прогноз'},
+        {
+          en: 'Choose a number of yours to forecast beyond the default ones',
+          ru: 'Выбрать для прогноза своё число сверх обычных',
+        },
+      ]),
     });
 
     this.achievements.register({

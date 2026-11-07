@@ -35,6 +35,7 @@ import {OutboundPolicy} from './net/outbound-policy';
 import {LinksService} from './links/links.service';
 import {ProjectOverviewService} from './links/project-overview.service';
 import {ChangePointsService} from './links/change-points.service';
+import {ForecastsService} from './links/forecasts.service';
 import {CoreSecuritySources} from './security/core.security-sources';
 import {SecurityAgent} from './security/security-agent.service';
 import {SecurityController} from './security/security.controller';
@@ -197,6 +198,7 @@ import {UserActivityService} from './realtime/user-activity.service';
     SectionsAchievements,
     ProjectOverviewService,
     ChangePointsService,
+    ForecastsService,
     SignInLog,
     SecurityService,
     SecurityAgent,
@@ -293,6 +295,8 @@ import {UserActivityService} from './realtime/user-activity.service';
     // For the links between the sections: a module registers what it knows (see LinksService).
     LinksService,
     ProjectOverviewService,
+    // For the evening summary: tomorrow's forecasts (see ForecastsService).
+    ForecastsService,
     SecurityService,
     DataExportService,
     SearchService,
