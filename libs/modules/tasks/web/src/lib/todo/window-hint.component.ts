@@ -1,14 +1,13 @@
-import {httpResource} from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   input,
 } from '@angular/core';
 import {MatIconModule} from '@angular/material/icon';
 import {TranslocoPipe} from '@jsverse/transloco';
-import {CORE_READS} from '@pd/client-core';
-import {LinksWindow} from '@pd/contracts';
+import {TasksApi} from '../tasks.api';
 
 /**
  * The productive window as a hint for tasks (Links v2, hours): today's on the list, the due
@@ -51,9 +50,7 @@ export class WindowHintComponent {
   /** The due day (`YYYY-MM-DD`); none — today. */
   readonly day = input<string | null>(null);
 
-  private readonly data = httpResource<LinksWindow>(() =>
-    CORE_READS.productiveWindow(),
-  );
+  private readonly data = inject(TasksApi).productiveWindow();
 
   protected readonly shown = computed(() => {
     if (!this.data.hasValue()) {

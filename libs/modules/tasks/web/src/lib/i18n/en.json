@@ -153,7 +153,7 @@
     "deleteAll": "With the steps ({{count}})"
   },
   "window": {
-    "today": "Your productive window today: {{hours}} — hard tasks fit there.",
+    "today": "Your productive window today: {{hours}} — a good time for hard tasks.",
     "day": "On this weekday your productive window is usually {{hours}}."
   }
 }

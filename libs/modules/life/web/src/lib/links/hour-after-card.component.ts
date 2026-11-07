@@ -45,6 +45,7 @@ const SHOWN = 8;
       </mat-card-header>
       <mat-card-content>
         <mat-button-toggle-group
+          hideSingleSelectionIndicator
           [value]="days()"
           (change)="days.set($event.value)"
           [attr.aria-label]="'life.hourly.period' | transloco"
@@ -65,7 +66,7 @@ const SHOWN = 8;
               <p class="muted">{{ 'life.hourly.after.nothing' | transloco }}</p>
             }
             <ul class="results">
-              @for (result of shown(); track result.event + result.outcome) {
+              @for (result of shown(); track id(result)) {
                 <li [class.weak]="!result.strong">
                   <button
                     type="button"
@@ -77,10 +78,7 @@ const SHOWN = 8;
                       {{ name(result.event) }} →
                       {{ name(result.outcome) }}
                     </span>
-                    <b>
-                      {{ result.difference > 0 ? '↑' : '↓' }}
-                      {{ value(result.outcome, abs(result.difference)) }}
-                    </b>
+                    <b>{{ change(result) }}</b>
                   </button>
                   @if (open() === id(result)) {
                     <p class="muted">
@@ -130,8 +128,10 @@ const SHOWN = 8;
     .row {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       gap: 12px;
       width: 100%;
+      min-height: 44px;
       padding: 8px 0;
       border: 0;
       border-bottom: 1px solid var(--pd-border);
@@ -229,7 +229,17 @@ export class HourAfterCardComponent {
     );
   }
 
-  protected abs(value: number): number {
-    return Math.abs(value);
+  /** "↓ 16 min"; a difference that rounds to nothing as "≈ 0", with no arrow. */
+  protected change(result: HourAfter): string {
+    const size = this.value(result.outcome, Math.abs(result.difference));
+    const unit = this.labels().get(result.outcome)?.unit;
+    const rounded =
+      unit === 'minutes'
+        ? Math.round(Math.abs(result.difference))
+        : Math.round(Math.abs(result.difference) * 10) / 10;
+    if (!rounded) {
+      return `≈ ${this.value(result.outcome, 0)}`;
+    }
+    return `${result.difference > 0 ? '↑' : '↓'} ${size}`;
   }
 }

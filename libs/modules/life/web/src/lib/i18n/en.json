@@ -268,7 +268,8 @@
         "low": "not sure yet",
         "medium": "fairly sure",
         "high": "sure"
-      }
+      },
+      "open": "Links"
     }
   }
 }

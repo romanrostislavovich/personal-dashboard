@@ -5,6 +5,7 @@ import {
   inject,
   input,
 } from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
@@ -82,7 +83,7 @@ import {hourRanges, weekdayNames} from './hours-format';
       @if (compact()) {
         <mat-card-actions align="end">
           <a matButton routerLink="/life/links">{{
-            'life.links.unusual.open' | transloco
+            'life.hourly.window.open' | transloco
           }}</a>
         </mat-card-actions>
       }
@@ -135,9 +136,10 @@ export class WindowCardComponent {
       ? this.data.value().week[this.data.value().weekday]
       : null,
   );
-  protected readonly weekdays = computed(() =>
-    weekdayNames(this.transloco.getActiveLang()),
-  );
+  private readonly language = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
+  protected readonly weekdays = computed(() => weekdayNames(this.language()));
 
   protected ranges(windows: {from: number; to: number}[]): string {
     return hourRanges(windows);
