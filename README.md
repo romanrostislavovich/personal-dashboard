@@ -68,7 +68,11 @@ The interface is in English and Russian.
   any hourly number by weekday and hour, the hour after a burst of notifications, a game, a
   draining app, a meeting, a long phone session, a walk, music, a focus session or leaving home
   against the same hours without it, and your productive window — the hours coding, deep work
-  and tasks done are highest — on Home, in Tasks and in the morning digest);
+  and tasks done are highest — on Home, in Tasks and in the morning digest; your hypotheses as
+  question cards — built-in ones and your own, picked from the numbers or asked in words for the
+  AI to turn into a card — each answered from your days, checked against weekends, rain, illness
+  and travel, and "only when" another number is high or low; and the week's insights, found
+  every Monday and worded by the AI from the numbers only, with their proof, one a day on Home);
   the last commit before a site went down;
   subscriptions you pay for and do not use
 - ⚡ **Automations** — "if X, then Y" across sections: a site is down → a task, no diary entry by

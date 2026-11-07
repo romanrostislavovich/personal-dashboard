@@ -49,6 +49,8 @@ const NOT_EXPORTED = new Set([
   'activity_day_indices',
   'activity_hour_values',
   'links_change_points',
+  // The week's findings: found again every Monday (and on the page's button).
+  'links_insights',
 ]);
 
 export const USER_COLUMN = 'user_id';

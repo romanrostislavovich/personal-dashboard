@@ -23,6 +23,7 @@ export * from './lib/projects';
 export * from './lib/links';
 export * from './lib/links-dose';
 export * from './lib/links-hours';
+export * from './lib/links-questions';
 export * from './lib/integrations';
 export * from './lib/notifications';
 export * from './lib/birthdays';

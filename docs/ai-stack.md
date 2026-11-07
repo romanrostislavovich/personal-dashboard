@@ -134,9 +134,15 @@ How it is done here:
    keeps the morning's forecast of the day and the evening's of the next (`links_forecasts`), so
    they can be compared with what the days were — and later teach a model of one's own. Shown in
    Life → Links, on Home, in the morning digest, the evening summary and `core_forecasts`.
-3. ✅ **Retrieval over the history** — search by meaning (above), the assistant's
+3. ✅ **Insights in words** (`links/questions/`): every Monday the strongest of what Links
+   found (links of the days, the hour after an event, fresh changes, answered questions) goes to
+   the AI as keys and numbers only — never texts or places, not the sections hidden from it — and
+   comes back as one calm sentence each in the user's language; without an AI the page words
+   them by a template. A question asked in words is turned by the AI into a card (the cause, the
+   effect, when) from the catalog of the numbers' names, checked before it is kept.
+4. ✅ **Retrieval over the history** — search by meaning (above), the assistant's
    `core_recall`, and its memory (`core_remember`, `core_forget`).
-4. **Your voice (optional)** — LoRA on the diary and your messages, on a rented GPU, served by
+5. **Your voice (optional)** — LoRA on the diary and your messages, on a rented GPU, served by
    Ollama like any local model. Only after 1–3, and only if you want it.
 
 What stays the same in all of them: the data never leaves your server unless you choose a cloud

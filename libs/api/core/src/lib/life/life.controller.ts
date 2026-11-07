@@ -2,8 +2,11 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
+  Param,
+  ParseUUIDPipe,
   Post,
   Put,
   Query,
@@ -28,6 +31,9 @@ import {
   LinksChanges,
   LinksForecasts,
   LinksHourAfter,
+  LinksInsights,
+  LinksQuestion,
+  LinksQuestions,
   LinksRhythm,
   LinksWindow,
   LinksSeen,
@@ -35,6 +41,10 @@ import {
   MoodInsights,
   MoodInsightsQuery,
   moodInsightsQuerySchema,
+  QuestionDraft,
+  questionDraftSchema,
+  QuestionInput,
+  questionInputSchema,
   RhythmDays,
   RhythmQuery,
   rhythmQuerySchema,
@@ -46,6 +56,15 @@ import {ProjectOverviewService} from '../links/project-overview.service';
 import {ChangePointsService} from '../links/change-points.service';
 import {ForecastsService} from '../links/forecasts.service';
 import {HoursService} from '../links/hours/hours.service';
+import {
+  INSIGHTS_REFRESH,
+  InsightsService,
+} from '../links/questions/insights.service';
+import {
+  QUESTION_DRAFT,
+  QuestionsService,
+} from '../links/questions/questions.service';
+import {ServerActions} from '../sync/server-actions';
 import {ZodValidationPipe} from '../validation/zod-validation.pipe';
 import {LifeStoriesService} from './life-stories.service';
 import {LifeService} from './life.service';
@@ -61,6 +80,9 @@ export class LifeController {
     private readonly changes: ChangePointsService,
     private readonly forecasts: ForecastsService,
     private readonly hours: HoursService,
+    private readonly questions: QuestionsService,
+    private readonly insights: InsightsService,
+    private readonly actions: ServerActions,
   ) {}
 
   /** What goes with the days of a good mood and of a bad one, across the sections. */
@@ -95,6 +117,55 @@ export class LifeController {
     @Query(new ZodValidationPipe(rhythmQuerySchema)) query: RhythmQuery,
   ): Promise<LinksHourAfter> {
     return this.hours.hourAfter(user.id, query.days as RhythmDays);
+  }
+
+  /** The question cards answered (built-in and the user's own), and what a new one may use. */
+  @Get('questions')
+  questionList(@CurrentUser() user: AuthUser): Promise<LinksQuestions> {
+    return this.questions.list(user.id);
+  }
+
+  @Post('questions')
+  addQuestion(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(questionInputSchema)) body: QuestionInput,
+  ): Promise<LinksQuestion> {
+    return this.questions.add(user.id, body);
+  }
+
+  /** A question in the user's words turned by the AI into a card to confirm (not kept). */
+  @Post('questions/draft')
+  draftQuestion(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(questionDraftSchema)) body: QuestionDraft,
+  ): Promise<QuestionInput> {
+    // The AI is reached by the server: a sync client asks it.
+    return this.actions.run<QuestionInput>(user.id, QUESTION_DRAFT, {
+      text: body.text,
+    });
+  }
+
+  @Delete('questions/:id')
+  @HttpCode(204)
+  removeQuestion(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.questions.remove(user.id, id);
+  }
+
+  /** The latest week's findings, and which is today's. */
+  @Get('insights')
+  insightList(@CurrentUser() user: AuthUser): Promise<LinksInsights> {
+    return this.insights.list(user.id);
+  }
+
+  /** Looks for this week's findings now (at most once an hour). */
+  @Post('insights/refresh')
+  async refreshInsights(@CurrentUser() user: AuthUser): Promise<LinksInsights> {
+    // Made by the server only: a sync client asks it, and the result comes with the sync.
+    await this.actions.run(user.id, INSIGHTS_REFRESH);
+    return this.insights.list(user.id);
   }
 
   /** The productive window of every weekday, over the last 90 days. */
@@ -148,6 +219,12 @@ export class LifeController {
       if (!(await this.forecasts.isShown(user.id, key, day))) {
         return;
       }
+    }
+    if (
+      body.kind === 'insight' &&
+      !(await this.insights.owns(user.id, body.key))
+    ) {
+      return;
     }
     if (
       (body.kind === 'rhythm' || body.kind === 'after') &&

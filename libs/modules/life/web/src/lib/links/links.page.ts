@@ -32,6 +32,8 @@ import {CurvesCardComponent, curveSentence} from './curves-card.component';
 import {DoseChartComponent, dosePoints} from './dose-chart.component';
 import {ForecastsCardComponent} from './forecasts-card.component';
 import {HourAfterCardComponent} from './hour-after-card.component';
+import {InsightsCardComponent} from './insights-card.component';
+import {QuestionsCardComponent} from './questions-card.component';
 import {RhythmCardComponent} from './rhythm-card.component';
 import {WindowCardComponent} from './window-card.component';
 import {UnusualCardComponent} from './unusual-card.component';
@@ -85,6 +87,8 @@ const LEADS_FROM = 0.2;
     TranslocoPipe,
     ForecastsCardComponent,
     HourAfterCardComponent,
+    InsightsCardComponent,
+    QuestionsCardComponent,
     RhythmCardComponent,
     WindowCardComponent,
     UnusualCardComponent,

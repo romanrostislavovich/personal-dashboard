@@ -15,6 +15,8 @@ import {ProjectOverviewService} from '../links/project-overview.service';
 import {ChangePointsService} from '../links/change-points.service';
 import {ForecastsService} from '../links/forecasts.service';
 import {HoursService} from '../links/hours/hours.service';
+import {InsightsService} from '../links/questions/insights.service';
+import {QuestionsService} from '../links/questions/questions.service';
 import {ProjectsService} from '../projects/projects.service';
 import {
   changedFields,
@@ -64,6 +66,8 @@ export class CoreAiTools implements OnModuleInit {
     private readonly changes: ChangePointsService,
     private readonly forecasts: ForecastsService,
     private readonly hours: HoursService,
+    private readonly questions: QuestionsService,
+    private readonly insights: InsightsService,
   ) {}
 
   onModuleInit(): void {
@@ -611,6 +615,36 @@ export class CoreAiTools implements OnModuleInit {
       parameters: NO_PARAMETERS,
       handler: async userId =>
         this.hours.window(userId, await this.ai.hiddenFromShared(userId)),
+    });
+
+    this.ai.registerTool({
+      name: 'core_insights',
+      module: 'life',
+      description:
+        "The user's findings about their own life (Links): `insights` — this week's, each a " +
+        'sentence (`text`, or the bare `fact`); `questions` — their hypotheses as cards, each ' +
+        'answered from their own days: on the days of more of the cause the effect averages ' +
+        '`high` against `low`, over `n` days, `strong` when it is sure enough, with whether it ' +
+        'holds within weekends, rain, illness and travel (`confounders`). Tell them as "goes ' +
+        'with", never as a cause; a `few` answer needs more days.',
+      parameters: NO_PARAMETERS,
+      handler: async userId => {
+        const hidden = await this.ai.hiddenFromShared(userId);
+        const touches = (modules: string[]) =>
+          modules.some(module => hidden.includes(module));
+        const {insights, week} = await this.insights.list(userId);
+        const {cards} = await this.questions.list(userId, hidden);
+        return {
+          week,
+          insights: insights.filter(({fact}) =>
+            fact.kind === 'change'
+              ? !touches([fact.number.module])
+              : !touches([fact.cause.module, fact.effect.module]),
+          ),
+          // A card of a hidden (or missing) number is left out, its title too.
+          questions: cards.filter(card => card.cause && card.effect),
+        };
+      },
     });
 
     // "When did I last…": search by meaning over the user's own history.

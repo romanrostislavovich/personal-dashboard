@@ -774,8 +774,10 @@ assistant as a tutor that knows the materials of the courses.
   number chosen; the morning's of the day and the evening's of the next, kept to compare with what
   the days were) built 2026-11-07; hours (the day's rhythm, the hour after nine kinds of events,
   the productive window in Tasks, on Home and in the digest) built 2026-11-07 — none of it seen
-  on real data yet. Next: the owner's hypotheses as question cards, insight cards, the overload
-  warning, habit lapse risk. The plan: [proposals/links-v2.md](proposals/links-v2.md)
+  on real data yet; the owner's hypotheses as question cards (their own too, in words through
+  the AI) and the week's insight cards worded by the AI, each checked against weekends, rain,
+  illness and travel, built 2026-11-07. Next: the overload warning, habit lapse risk,
+  experiments. The plan: [proposals/links-v2.md](proposals/links-v2.md)
 
 - **Mobile app & Smart Band Wearables Integration** — mobile application collecting data from
   the smartphone and wearable devices (smart watch / smart band via BLE, Google Health Connect, Apple Health).
