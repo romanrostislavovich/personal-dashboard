@@ -77,7 +77,10 @@ upwards only). _Change points_ — the days a number's level changed, over the l
 the trash); the fresh ones of the main numbers are a section of the Monday morning digest
 (`life.changes`). _Even days_ (nothing unusual) and what of Links was opened are
 kept in `links_seen` for the achievements. Lags of 2–3 days are compared towards the outcomes
-only; curves (`bend`) for every pair, in the same correction.
+only; curves (`bend`) for every pair, in the same correction. _Insights_ — the week's findings,
+made on the user's Monday morning (`links.insights`, hourly in their own time) or on the page's
+button (a server action), kept in `links_insights` (derived: not exported, not in the trash);
+_questions_ of the user's own in `links_questions` (theirs: exported, in the trash).
 
 **Day boundaries.** Days are the user's time zone (`users.time_zone`). A few numbers move the
 night to the evening before: Dota matches and phone night use count 00:00–04:00 to the day

@@ -491,5 +491,14 @@ many numbers are above usual (the server has no translations of the numbers' nam
 - **Shown:** both at the top of Links, "the insight of the day" on Home, the Monday digest, the
   assistant's `core_insights`.
 - **Achievements:** the proof of findings opened, and questions of one's own.
+- **After the team review:** a finding names the outcome as the effect, and a pair is told once
+  (not again as an answered question, nor the other way round); a built-in card of numbers the
+  user does not have is not shown; a finding keeps a key of what it is about, so its proof
+  opened counts once however often the week is looked at again; the week is made on the user's
+  own Monday morning (an hourly job; the Monday digest makes it if it is not there yet), one at a
+  time (a lock), and the button looks at most once an hour even when nothing is found; on a sync
+  client the button and the question in words run on the server; the AI gets diary tags unnamed;
+  a refusal comes as a reason the page tells in its language (the AI's own words only when it
+  gave them); the findings are derived — not exported, not in the trash.
 
 **Built (2026-11-07):** all of the above.
