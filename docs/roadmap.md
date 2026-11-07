@@ -244,7 +244,7 @@ arrives, and quick wins), **Next** is the following round, **Later** is the rest
   by asking; facts it keeps between conversations; "when did my knee hurt?" over the diary,
   tasks, health, life events and people, Russian and English alike (see docs/ai-stack.md)
 - ✅ **Models of one's own** — a category model trained on one's sorted payments (sorts a bank
-  import's new counterparties once it has proven itself), today's mood forecast in Life; evals of
+  import's new counterparties once it has proven itself), forecasts of any number in Life → Links; evals of
   the AI jobs (`npm run ai:eval`); an optional Ollama next to the server
 
 #### Bugs
@@ -770,9 +770,11 @@ assistant as a tutor that knows the materials of the courses.
   (the day's indices, a card, a Home widget, the evening summary) built 2026-11-05/06; stage 2
   (unusual today against the personal baseline, change points of three years told in the Monday
   morning digest, lags of 2–3 days to the outcomes, curves and dose–response charts, achievements
-  of exploring) built 2026-11-06 — none of it seen on real data yet. Next: forecasts for any
-  number (bedtime, deep work, tasks done, mood), hours and not only days, the owner's hypotheses
-  as question cards, insight cards, the overload warning. The plan: [proposals/links-v2.md](proposals/links-v2.md)
+  of exploring) built 2026-11-06; forecasts (bedtime, deep work, tasks done, mood and any main
+  number chosen; the morning's of the day and the evening's of the next, kept to compare with what
+  the days were) built 2026-11-07 — none of it seen on real data yet. Next: hours and not only
+  days, the owner's hypotheses as question cards, insight cards, the overload warning, habit
+  lapse risk. The plan: [proposals/links-v2.md](proposals/links-v2.md)
 
 - **Mobile app & Smart Band Wearables Integration** — mobile application collecting data from
   the smartphone and wearable devices (smart watch / smart band via BLE, Google Health Connect, Apple Health).

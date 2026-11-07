@@ -414,3 +414,23 @@ fresh changes are told in the **Monday morning digest** (its AI names the number
 keys), not in a message of their own; the history searched is three years; of one pair a day,
 two and three days later only the strongest lag counts as a link. The evening summary says how
 many numbers are above usual (the server has no translations of the numbers' names).
+
+## Decisions for the forecasts (2026-11-06/07, the owner's)
+
+- **The bedtime:** the band's start of sleep, else the phone's last use of the evening.
+- **The targets:** bedtime, deep work, tasks done and mood by default; any main number may be
+  added in Links (`links_settings`, at most 12 more).
+- **When:** in the morning for the day (from yesterday) and in the evening for the next day (from
+  the day so far, rougher) — both.
+- **Kept:** yes, every forecast made, in `links_forecasts` — to show "forecast 2 h, was 2.5 h" and
+  the real accuracy, and one day to teach a model of the owner's own.
+- **Shown:** a card on Links (one that does not beat the plain guess grey), a Home widget (the
+  trusted ones only), the morning digest, the evening summary (the four default targets: the
+  server has no translations of the others), the assistant's `core_forecasts`; the old mood
+  forecast (Life → Summary, `core_mood_forecast`) is folded into it.
+- **The plain guess:** the best of the number yesterday, on the same weekdays of eight weeks and
+  over the week; the forecast is trusted when its miss on the latest fifth of the days is 5 %
+  smaller.
+- **Achievements:** for exploring only — what drove a forecast opened, and a target of one's own.
+
+**Built (2026-11-07):** all of the above.

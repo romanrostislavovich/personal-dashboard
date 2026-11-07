@@ -49,6 +49,12 @@ says so (no Dota matches = no matches). `partOf` — a part of another number (s
 all spending; late games of games): the two are never compared with each other; `parts` — the
 numbers a derived one is counted from (a share, a ratio), never compared with it either.
 
+**The forecasts' targets** (Links v2, [forecasts](proposals/links-v2.md#10-forecasts-for-any-number)):
+`links.bedtime` is not collected — it is made of `health.band.bedtime` where the band was worn,
+else `activity.phone.lastUse` (an extra number, still read for it); the other targets are the
+main numbers by their keys. The forecasts made are kept in `links_forecasts`, the chosen targets
+in `links_settings`.
+
 **Main, extra and outcomes** (Links v2, [proposals/links-v2.md](proposals/links-v2.md#8-main-and-extra-numbers-the-filter)).
 Every number is counted and kept. `extra: true` — hidden and left out of the search until the
 Links filter switches it on (by key or by section), and kept out of the good/bad mood days and
