@@ -14,6 +14,8 @@ export interface DaySummary {
   unusual: number | null;
   /** Tomorrow's trusted forecasts (Links), in their units; `null` — none trusted, or not known. */
   tomorrow: TomorrowForecast | null;
+  /** The habits likely to lapse tomorrow (Links): the name, or the kind, and the chance. */
+  lapses: {name: string | null; kind: string | null; chance: number}[];
 }
 
 /** The default targets of the forecasts: the bedtime (hours, over 24 after midnight), deep work
@@ -35,6 +37,7 @@ export function summaryOf(
   indices: DaySummary['indices'] = {deepWork: null, draining: null},
   unusual: number | null = null,
   tomorrow: TomorrowForecast | null = null,
+  lapses: DaySummary['lapses'] = [],
 ): DaySummary | null {
   if (stats.totalSeconds < SUMMARY_MIN_SECONDS) {
     return null;
@@ -47,6 +50,7 @@ export function summaryOf(
     indices,
     unusual,
     tomorrow: tomorrow && Object.keys(tomorrow).length ? tomorrow : null,
+    lapses,
   };
 }
 

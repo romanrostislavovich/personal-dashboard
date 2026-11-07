@@ -38,6 +38,8 @@ import {ChangePointsService} from './links/change-points.service';
 import {ForecastsService} from './links/forecasts.service';
 import {HoursService} from './links/hours/hours.service';
 import {InsightsService} from './links/questions/insights.service';
+import {LapseService} from './links/overload/lapse.service';
+import {OverloadService} from './links/overload/overload.service';
 import {QuestionsService} from './links/questions/questions.service';
 import {CoreSecuritySources} from './security/core.security-sources';
 import {SecurityAgent} from './security/security-agent.service';
@@ -205,6 +207,8 @@ import {UserActivityService} from './realtime/user-activity.service';
     HoursService,
     QuestionsService,
     InsightsService,
+    OverloadService,
+    LapseService,
     SignInLog,
     SecurityService,
     SecurityAgent,
@@ -301,8 +305,9 @@ import {UserActivityService} from './realtime/user-activity.service';
     // For the links between the sections: a module registers what it knows (see LinksService).
     LinksService,
     ProjectOverviewService,
-    // For the evening summary: tomorrow's forecasts (see ForecastsService).
+    // For the evening summary: tomorrow's forecasts (see ForecastsService) and likely lapses.
     ForecastsService,
+    LapseService,
     SecurityService,
     DataExportService,
     SearchService,

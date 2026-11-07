@@ -70,6 +70,23 @@ function tomorrowLine(
   return parts.length ? `${words.lead}: ${parts.join(' · ')}` : '';
 }
 
+/** "Tomorrow the gym may slip (7 in 10)" — a nudge, not a scolding; empty — none likely. */
+function lapseLine(
+  lapses: DaySummary['lapses'],
+  words: {lead: string; kinds: Record<string, string>; step: string},
+): string {
+  if (!lapses.length) {
+    return '';
+  }
+  const named = lapses
+    .map(
+      lapse =>
+        `${lapse.name ?? words.kinds[lapse.kind ?? ''] ?? words.kinds['custom']} (${Math.round(lapse.chance * 10)}/10)`,
+    )
+    .join(', ');
+  return `${words.lead}: ${named}. ${words.step}`;
+}
+
 /** "3 h 20 min" / "3 ч 20 мин". */
 function hours(seconds: number, h: string, min: string): string {
   const minutes = Math.round(seconds / 60);
@@ -175,6 +192,16 @@ const messages = {
           h: 'h',
           min: 'min',
         }),
+        lapseLine(summary.lapses, {
+          lead: 'Tomorrow may slip',
+          kinds: {
+            alcohol: 'no alcohol',
+            smoking: 'no smoking',
+            gym: 'the gym',
+            custom: 'a habit',
+          },
+          step: 'A small step: decide tonight when and how.',
+        }),
         ...summary.limits.map(
           l =>
             `Limit reached: ${l.label} (${hours(l.minutes * 60, 'h', 'min')})`,
@@ -256,6 +283,16 @@ const messages = {
           mood: 'настроение',
           h: 'ч',
           min: 'мин',
+        }),
+        lapseLine(summary.lapses, {
+          lead: 'Завтра легко пропустить',
+          kinds: {
+            alcohol: 'без алкоголя',
+            smoking: 'без курения',
+            gym: 'спортзал',
+            custom: 'привычку',
+          },
+          step: 'Маленький шаг: решить с вечера, когда и как.',
         }),
         ...summary.limits.map(
           l =>

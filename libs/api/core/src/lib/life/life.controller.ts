@@ -32,6 +32,8 @@ import {
   LinksForecasts,
   LinksHourAfter,
   LinksInsights,
+  LinksLapses,
+  LinksOverload,
   LinksQuestion,
   LinksQuestions,
   LinksRhythm,
@@ -41,6 +43,8 @@ import {
   MoodInsights,
   MoodInsightsQuery,
   moodInsightsQuerySchema,
+  OverloadSettings,
+  overloadSettingsSchema,
   QuestionDraft,
   questionDraftSchema,
   QuestionInput,
@@ -64,6 +68,8 @@ import {
   QUESTION_DRAFT,
   QuestionsService,
 } from '../links/questions/questions.service';
+import {LapseService} from '../links/overload/lapse.service';
+import {OverloadService} from '../links/overload/overload.service';
 import {ServerActions} from '../sync/server-actions';
 import {ZodValidationPipe} from '../validation/zod-validation.pipe';
 import {LifeStoriesService} from './life-stories.service';
@@ -83,6 +89,8 @@ export class LifeController {
     private readonly questions: QuestionsService,
     private readonly insights: InsightsService,
     private readonly actions: ServerActions,
+    private readonly overload: OverloadService,
+    private readonly lapse: LapseService,
   ) {}
 
   /** What goes with the days of a good mood and of a bad one, across the sections. */
@@ -166,6 +174,28 @@ export class LifeController {
     // Made by the server only: a sync client asks it, and the result comes with the sync.
     await this.actions.run(user.id, INSIGHTS_REFRESH);
     return this.insights.list(user.id);
+  }
+
+  /** The overload score of the last days that are over, the user's own high, and its history. */
+  @Get('overload')
+  overloadStatus(@CurrentUser() user: AuthUser): Promise<LinksOverload> {
+    return this.overload.status(user.id);
+  }
+
+  /** Whether the overload warning is sent. */
+  @Put('overload-settings')
+  @HttpCode(204)
+  overloadSettings(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(overloadSettingsSchema)) body: OverloadSettings,
+  ): Promise<void> {
+    return this.overload.setEnabled(user.id, body.enabled);
+  }
+
+  /** Tomorrow's chance each habit lapses. */
+  @Get('lapses')
+  lapses(@CurrentUser() user: AuthUser): Promise<LinksLapses> {
+    return this.lapse.lapses(user.id);
   }
 
   /** The productive window of every weekday, over the last 90 days. */

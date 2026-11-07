@@ -3,6 +3,7 @@ import {
   DB,
   Database,
   ForecastsService,
+  LapseService,
   NotificationsService,
   ProjectOverviewService,
   SchedulerService,
@@ -47,6 +48,7 @@ export class EveningSummaryJob implements OnModuleInit {
     private readonly dayIndices: IndicesService,
     private readonly overviews: ProjectOverviewService,
     private readonly forecasts: ForecastsService,
+    private readonly lapse: LapseService,
   ) {}
 
   onModuleInit(): void {
@@ -114,6 +116,27 @@ export class EveningSummaryJob implements OnModuleInit {
         return null;
       });
     const tomorrow = await this.tomorrow(userId);
+    const lapses = await this.lapse
+      .tellTomorrow(userId)
+      .then(found =>
+        found.flatMap(habit =>
+          habit.chance === null
+            ? []
+            : [
+                {
+                  name: habit.label ?? null,
+                  kind: habit.labelKey.startsWith('habits.kinds.')
+                    ? habit.labelKey.slice('habits.kinds.'.length)
+                    : null,
+                  chance: habit.chance,
+                },
+              ],
+        ),
+      )
+      .catch(error => {
+        this.logger.warn(`Likely lapses not known for ${userId}: ${error}`);
+        return [];
+      });
     const summary = summaryOf(
       stats,
       {completed: focus.completed, seconds: focus.focusSeconds},
@@ -126,6 +149,7 @@ export class EveningSummaryJob implements OnModuleInit {
       indices,
       unusual,
       tomorrow,
+      lapses,
     );
     if (!summary) {
       return;
