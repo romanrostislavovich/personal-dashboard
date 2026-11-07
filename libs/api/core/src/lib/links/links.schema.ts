@@ -1,4 +1,4 @@
-import {ForecastDriver} from '@pd/contracts';
+import {ForecastDriver, InsightFact, QuestionWhen} from '@pd/contracts';
 import {
   boolean,
   date,
@@ -114,4 +114,40 @@ export const linksSettings = pgTable('links_settings', {
     .references(() => users.id, {onDelete: 'cascade'}),
   /** The forecast's targets chosen beyond the default ones (DEFAULT_FORECAST_TARGETS). */
   forecastTargets: text().array().notNull().default([]),
+});
+
+/** The owner's own questions of Links ("does A go with B?"): the engine answers them anew each time. */
+export const linksQuestions = pgTable('links_questions', {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: uuid()
+    .notNull()
+    .references(() => users.id, {onDelete: 'cascade'}),
+  /** The owner's own words, when the question was asked in them. */
+  title: text(),
+  cause: text().notNull(),
+  effect: text().notNull(),
+  when: text().$type<QuestionWhen>().notNull(),
+  /** "Only when this number is high (or low)": its key and which. */
+  conditionKey: text(),
+  conditionHigh: boolean(),
+  createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+});
+
+/**
+ * The week's findings (Links v2's insight cards): made by a weekly job from what the engine
+ * found, worded by the AI, kept so the week reads the same and Home shows one a day.
+ */
+export const linksInsights = pgTable('links_insights', {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: uuid()
+    .notNull()
+    .references(() => users.id, {onDelete: 'cascade'}),
+  /** The Monday of the week. */
+  week: date({mode: 'string'}).notNull(),
+  /** The order of the week's cards, the strongest first. */
+  position: integer().notNull(),
+  fact: jsonb().$type<InsightFact>().notNull(),
+  /** The AI's sentence; `null` — no AI, the page words the fact itself. */
+  text: text(),
+  createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
 });

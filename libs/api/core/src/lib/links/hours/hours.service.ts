@@ -203,7 +203,7 @@ export class HoursService implements OnModuleInit {
    * Every section's hours of the last `days` that are over, the `hidden` sections left out;
    * what the sections told is kept an hour.
    */
-  private async hours(
+  async hours(
     userId: string,
     days: number,
     hidden: string[] = [],

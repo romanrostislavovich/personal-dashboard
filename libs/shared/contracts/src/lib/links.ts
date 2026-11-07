@@ -406,6 +406,7 @@ export const LINKS_SEEN_KINDS = [
   'forecast',
   'rhythm',
   'after',
+  'insight',
 ] as const;
 export const linksSeenSchema = z.discriminatedUnion('kind', [
   /** A change point, by its id. */
@@ -430,6 +431,8 @@ export const linksSeenSchema = z.discriminatedUnion('kind', [
   z.object({kind: z.literal('rhythm'), key: z.string().min(1).max(120)}),
   /** The hour after an event, by the event's key. */
   z.object({kind: z.literal('after'), key: z.string().min(1).max(120)}),
+  /** The proof of a finding of the week, by its id. */
+  z.object({kind: z.literal('insight'), key: z.uuid()}),
 ]);
 export type LinksSeen = z.infer<typeof linksSeenSchema>;
 

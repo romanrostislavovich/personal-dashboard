@@ -12,7 +12,10 @@ import {
   AuthConfig,
   CorrelationPairs,
   ForecastTargets,
+  LinksInsights,
+  LinksQuestion,
   LinksSeen,
+  QuestionInput,
   AutomationRule,
   AutomationRuleInput,
   LifeStory,
@@ -145,6 +148,10 @@ export const CORE_READS = {
   hourAfter: (days: number) => apiRequest('/api/life/hour-after', {days}),
   /** The productive window of every weekday, over the last 90 days. */
   productiveWindow: () => apiRequest('/api/life/window'),
+  /** The question cards answered, and what a new one may be made of. */
+  questions: () => apiRequest('/api/life/questions'),
+  /** The latest week's findings, and which is today's. */
+  insights: () => apiRequest('/api/life/insights'),
   /**
    * How the daily numbers go together (with the outcomes only, unless `pairs` is `all`); the
    * regression explains `target`; `extra` — the extra numbers switched on.
@@ -244,6 +251,16 @@ export function lifeApi(api: ApiClient) {
     /** The numbers forecast beyond the default ones. */
     setForecastTargets: (input: ForecastTargets) =>
       api.put<void>('/api/life/forecast-targets', input),
+    addQuestion: (input: QuestionInput) =>
+      api.post<LinksQuestion>('/api/life/questions', input),
+    removeQuestion: (id: string) =>
+      api.delete<void>(`/api/life/questions/${id}`),
+    /** A question in the user's words turned by the AI into a card to confirm. */
+    draftQuestion: (text: string) =>
+      api.post<QuestionInput>('/api/life/questions/draft', {text}),
+    /** Looks for this week's findings now (at most once an hour). */
+    refreshInsights: () =>
+      api.post<LinksInsights>('/api/life/insights/refresh', {}),
   };
 }
 

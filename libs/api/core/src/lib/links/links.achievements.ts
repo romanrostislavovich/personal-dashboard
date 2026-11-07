@@ -18,6 +18,7 @@ import {ProjectOverviewService} from './project-overview.service';
 import {ChangePointsService, EVEN_DAY} from './change-points.service';
 import {ForecastsService} from './forecasts.service';
 import {IN_WINDOW_DAY} from './hours/hours.service';
+import {QuestionsService} from './questions/questions.service';
 
 /** Shown under "Home" on the achievements page, with the others about the dashboard itself. */
 const MODULE = 'dashboard';
@@ -72,6 +73,7 @@ export class LinksAchievements implements OnModuleInit {
     private readonly users: UsersService,
     private readonly changes: ChangePointsService,
     private readonly forecasts: ForecastsService,
+    private readonly questions: QuestionsService,
   ) {}
 
   onModuleInit(): void {
@@ -373,6 +375,65 @@ export class LinksAchievements implements OnModuleInit {
             en: 'Fifty such days',
             ru: 'Пятьдесят таких дней',
           },
+        ],
+      ),
+    });
+
+    // Links v2, questions and insights: for looking into the proof and asking one's own.
+    this.achievements.register({
+      id: 'dashboard.insights-explored',
+      module: MODULE,
+      measure: userId => this.changes.seenCount(userId, 'insight'),
+      tiers: achievementTiers(
+        [
+          1,
+          '💡',
+          {en: 'Show me', ru: 'А докажи'},
+          {
+            en: 'Open the proof of a finding about yourself (Links → Insights)',
+            ru: 'Открыть доказательства вывода о себе (Links → Выводы)',
+          },
+        ],
+        [
+          10,
+          '🧐',
+          {en: 'Sceptic', ru: 'Скептик'},
+          {
+            en: 'Open the proof of ten findings',
+            ru: 'Открыть доказательства десяти выводов',
+          },
+        ],
+        [
+          50,
+          '⚖️',
+          {en: 'Own judge', ru: 'Сам себе судья'},
+          {
+            en: 'Open the proof of fifty findings',
+            ru: 'Открыть доказательства пятидесяти выводов',
+          },
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'dashboard.own-questions',
+      module: MODULE,
+      measure: userId => this.questions.ownCount(userId),
+      tiers: achievementTiers(
+        [
+          1,
+          '❓',
+          {en: 'A question of my own', ru: 'Свой вопрос'},
+          {
+            en: 'Ask your own question of your numbers (Links → My questions)',
+            ru: 'Задать свой вопрос своим числам (Links → Мои вопросы)',
+          },
+        ],
+        [
+          5,
+          '🔭',
+          {en: 'Researcher', ru: 'Исследователь'},
+          {en: 'Five questions of your own', ru: 'Пять своих вопросов'},
         ],
       ),
     });
