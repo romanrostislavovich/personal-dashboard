@@ -41,6 +41,20 @@ export const questionInputSchema = z.object({
 });
 export type QuestionInput = z.infer<typeof questionInputSchema>;
 
+/**
+ * Why a question was not kept or not turned into a card, for the page to tell in its language
+ * (`reason` of a 400 or 422; an AI's own reason comes as `message` instead).
+ */
+export const QUESTION_REJECTIONS = [
+  'noCard',
+  'noWhen',
+  'unknownNumbers',
+  'duplicate',
+  'tooMany',
+  'noAi',
+] as const;
+export type QuestionRejection = (typeof QUESTION_REJECTIONS)[number];
+
 /** A question in the owner's words, for the AI to turn into a card to confirm. */
 export const questionDraftSchema = z.object({
   text: z.string().trim().min(3).max(500),
@@ -133,6 +147,8 @@ export type InsightFact =
 
 export interface LinksInsight {
   id: string;
+  /** What it is about, the same each time it is found again (for "its proof opened"). */
+  key: string;
   /** The Monday of the week it was found in. */
   week: LocalDate;
   fact: InsightFact;

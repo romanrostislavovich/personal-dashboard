@@ -56,8 +56,15 @@ import {ProjectOverviewService} from '../links/project-overview.service';
 import {ChangePointsService} from '../links/change-points.service';
 import {ForecastsService} from '../links/forecasts.service';
 import {HoursService} from '../links/hours/hours.service';
-import {InsightsService} from '../links/questions/insights.service';
-import {QuestionsService} from '../links/questions/questions.service';
+import {
+  INSIGHTS_REFRESH,
+  InsightsService,
+} from '../links/questions/insights.service';
+import {
+  QUESTION_DRAFT,
+  QuestionsService,
+} from '../links/questions/questions.service';
+import {ServerActions} from '../sync/server-actions';
 import {ZodValidationPipe} from '../validation/zod-validation.pipe';
 import {LifeStoriesService} from './life-stories.service';
 import {LifeService} from './life.service';
@@ -75,6 +82,7 @@ export class LifeController {
     private readonly hours: HoursService,
     private readonly questions: QuestionsService,
     private readonly insights: InsightsService,
+    private readonly actions: ServerActions,
   ) {}
 
   /** What goes with the days of a good mood and of a bad one, across the sections. */
@@ -131,7 +139,10 @@ export class LifeController {
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(questionDraftSchema)) body: QuestionDraft,
   ): Promise<QuestionInput> {
-    return this.questions.draft(user.id, body.text);
+    // The AI is reached by the server: a sync client asks it.
+    return this.actions.run<QuestionInput>(user.id, QUESTION_DRAFT, {
+      text: body.text,
+    });
   }
 
   @Delete('questions/:id')
@@ -151,8 +162,10 @@ export class LifeController {
 
   /** Looks for this week's findings now (at most once an hour). */
   @Post('insights/refresh')
-  refreshInsights(@CurrentUser() user: AuthUser): Promise<LinksInsights> {
-    return this.insights.refresh(user.id);
+  async refreshInsights(@CurrentUser() user: AuthUser): Promise<LinksInsights> {
+    // Made by the server only: a sync client asks it, and the result comes with the sync.
+    await this.actions.run(user.id, INSIGHTS_REFRESH);
+    return this.insights.list(user.id);
   }
 
   /** The productive window of every weekday, over the last 90 days. */

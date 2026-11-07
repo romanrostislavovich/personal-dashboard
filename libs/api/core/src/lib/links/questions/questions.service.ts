@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  OnModuleInit,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import {
@@ -17,12 +18,14 @@ import {
   QuestionAnswer,
   QuestionInput,
   QuestionNumber,
+  QuestionRejection,
   QuestionWhen,
   zonedDateTime,
 } from '@pd/contracts';
 import {and, asc, eq} from 'drizzle-orm';
 import {AiService} from '../../ai/ai.service';
 import {DB, Database} from '../../database/database.module';
+import {ServerActions} from '../../sync/server-actions';
 import {UsersService} from '../../users/users.service';
 import {daysOf, seriesOf, shift} from '../daily-series';
 import {hourAfter} from '../hours/hour-after';
@@ -31,6 +34,8 @@ import {LinksService} from '../links.service';
 import {linksQuestions} from '../links.schema';
 import {answerDays, Strata} from './answer';
 
+/** Turning words into a card, run on the server for a sync client (the AI is reached there). */
+export const QUESTION_DRAFT = 'life.question-draft';
 /** The questions read a year of days and 90 days of hours. */
 const HISTORY_DAYS = 365;
 const HOURS_DAYS = 90;
@@ -103,7 +108,7 @@ const DRAFT_INSTRUCTION =
  * and travel.
  */
 @Injectable()
-export class QuestionsService {
+export class QuestionsService implements OnModuleInit {
   private readonly fresh = new Map<
     string,
     {at: number; value: Promise<Known>}
@@ -115,27 +120,29 @@ export class QuestionsService {
     private readonly hours: HoursService,
     private readonly users: UsersService,
     private readonly ai: AiService,
+    private readonly actions: ServerActions,
   ) {}
 
-  /** Every card answered, and what a new one may be made of; `hidden` sections left out. */
+  onModuleInit(): void {
+    this.actions.register(QUESTION_DRAFT, (userId, args) =>
+      this.draft(userId, String(args['text'] ?? '')),
+    );
+  }
+
+  /**
+   * Every card answered, and what a new one may be made of; `hidden` sections left out. A
+   * built-in card of numbers the user does not have is left out too: it could never answer.
+   */
   async list(userId: string, hidden: string[] = []): Promise<LinksQuestions> {
-    const known = await this.known(userId);
-    const visible = <T extends {module: string}>(list: T[]) =>
-      list.filter(one => !hidden.includes(one.module));
-    const days = visible(known.days).filter(one => !one.extra);
-    const hourly = visible(known.hourly);
-    const events = visible(known.events);
-    const questions = [...this.builtIns(days), ...(await this.own(userId))];
-    const visibleKnown = {...known, days, hourly, events};
-    const span = this.daysKnown(days);
-    return {
-      cards: questions.map(question =>
-        this.answer(question, visibleKnown, span),
-      ),
-      numbers: days.map(numberOf),
-      events: events.map(event => numberOf({...event, unit: 'count'})),
-      hourly: hourly.map(numberOf),
-    };
+    const known = await this.visible(userId, hidden);
+    const span = this.daysKnown(known.days);
+    const builtIn = this.builtIns(known.days)
+      .map(question => this.answer(question, known, span))
+      .filter(card => card.answer.status !== 'missing');
+    const own = (await this.own(userId)).map(question =>
+      this.answer(question, known, span),
+    );
+    return {cards: [...builtIn, ...own], ...catalogOf(known)};
   }
 
   /** Any pair of daily numbers answered as a card would be (for the week's findings). */
@@ -162,9 +169,9 @@ export class QuestionsService {
     );
   }
 
-  /** Keeps an own question: its numbers must be ones the user has. */
+  /** Keeps an own question: its numbers must be ones the user has, and it must be new. */
   async add(userId: string, input: QuestionInput): Promise<LinksQuestion> {
-    const {numbers, events, hourly} = await this.list(userId);
+    const {numbers, events, hourly} = catalogOf(await this.visible(userId));
     const has = (list: QuestionNumber[], key: string) =>
       list.some(one => one.key === key);
     const fits =
@@ -174,10 +181,24 @@ export class QuestionsService {
           has(numbers, input.effect) &&
           (!input.condition || has(numbers, input.condition.key));
     if (!fits || input.cause === input.effect) {
-      throw new BadRequestException('Unknown numbers for a question');
+      throw rejected(BadRequestException, 'unknownNumbers');
     }
-    if ((await this.own(userId)).length >= OWN_QUESTIONS) {
-      throw new BadRequestException('Too many questions');
+    const own = await this.own(userId);
+    if (own.length >= OWN_QUESTIONS) {
+      throw rejected(BadRequestException, 'tooMany');
+    }
+    const condition = input.when === 'hourAfter' ? null : input.condition;
+    if (
+      own.some(
+        one =>
+          one.cause === input.cause &&
+          one.effect === input.effect &&
+          one.when === input.when &&
+          one.condition?.key === condition?.key &&
+          one.condition?.high === condition?.high,
+      )
+    ) {
+      throw rejected(BadRequestException, 'duplicate');
     }
     const [row] = await this.db
       .insert(linksQuestions)
@@ -187,10 +208,8 @@ export class QuestionsService {
         cause: input.cause,
         effect: input.effect,
         when: input.when,
-        conditionKey:
-          input.when === 'hourAfter' ? null : (input.condition?.key ?? null),
-        conditionHigh:
-          input.when === 'hourAfter' ? null : (input.condition?.high ?? null),
+        conditionKey: condition?.key ?? null,
+        conditionHigh: condition?.high ?? null,
       })
       .returning();
     return toQuestion(row);
@@ -217,11 +236,10 @@ export class QuestionsService {
    */
   async draft(userId: string, text: string): Promise<QuestionInput> {
     if (!(await this.ai.isConfigured(userId))) {
-      throw new BadRequestException('AI is not configured');
+      throw rejected(BadRequestException, 'noAi');
     }
-    const {numbers, events, hourly} = await this.list(
-      userId,
-      await this.ai.hiddenFromShared(userId),
+    const {numbers, events, hourly} = catalogOf(
+      await this.visible(userId, await this.ai.hiddenFromShared(userId)),
     );
     const catalog = {
       numbers: numbers.map(({key, unit}) => ({key, unit})),
@@ -235,10 +253,27 @@ export class QuestionsService {
       'life',
     );
     const draft = parseDraft(reply, catalog);
-    if ('error' in draft) {
-      throw new UnprocessableEntityException(draft.error);
+    if ('reason' in draft) {
+      throw rejected(UnprocessableEntityException, draft.reason);
+    }
+    if ('aiError' in draft) {
+      // The AI's own reason, in the language of the question.
+      throw new UnprocessableEntityException({message: draft.aiError});
     }
     return {...draft, title: text.slice(0, 200)};
+  }
+
+  /** What the questions read, the `hidden` sections and the extra numbers left out. */
+  private async visible(userId: string, hidden: string[] = []): Promise<Known> {
+    const known = await this.known(userId);
+    const shown = <T extends {module: string}>(list: T[]) =>
+      list.filter(one => !hidden.includes(one.module));
+    return {
+      ...known,
+      days: shown(known.days).filter(one => !one.extra),
+      hourly: shown(known.hourly),
+      events: shown(known.events),
+    };
   }
 
   /** The built-in cards, the night phone's one for each of the habits (a few). */
@@ -388,6 +423,23 @@ export class QuestionsService {
   }
 }
 
+/** What a new question may be made of. */
+function catalogOf(known: Known): Omit<LinksQuestions, 'cards'> {
+  return {
+    numbers: known.days.map(numberOf),
+    events: known.events.map(event => numberOf({...event, unit: 'count'})),
+    hourly: known.hourly.map(numberOf),
+  };
+}
+
+/** A refusal the page tells in its own language by `reason`. */
+function rejected(
+  Exception: typeof BadRequestException | typeof UnprocessableEntityException,
+  reason: QuestionRejection,
+): Error {
+  return new Exception({message: `Question rejected: ${reason}`, reason});
+}
+
 function numberOf(
   metric: Pick<DailyMetric, 'key' | 'module' | 'labelKey' | 'label'> & {
     unit: QuestionNumber['unit'];
@@ -458,22 +510,26 @@ export function parseDraft(
     events: {key: string}[];
     hourly: {key: string}[];
   },
-): Omit<QuestionInput, 'title'> | {error: string} {
+):
+  | Omit<QuestionInput, 'title'>
+  | {reason: QuestionRejection}
+  | {aiError: string} {
   const json = reply.match(/\{[\s\S]*\}/)?.[0];
   let data: Record<string, unknown>;
   try {
     data = JSON.parse(json ?? '');
   } catch {
-    return {error: reply.trim().slice(0, 300) || 'The AI gave no card'};
+    // Not a card at all: its words are not shown (they may be anything).
+    return {reason: 'noCard'};
   }
   if (typeof data['error'] === 'string') {
-    return {error: data['error'].slice(0, 300)};
+    return {aiError: data['error'].slice(0, 300)};
   }
   const when = data['when'] as QuestionWhen;
   const has = (list: {key: string}[], key: unknown) =>
     typeof key === 'string' && list.some(one => one.key === key);
   if (!(QUESTION_WHEN as readonly string[]).includes(when)) {
-    return {error: 'The AI gave no time for the effect'};
+    return {reason: 'noWhen'};
   }
   const fits =
     when === 'hourAfter'
@@ -482,7 +538,7 @@ export function parseDraft(
       : has(catalog.numbers, data['cause']) &&
         has(catalog.numbers, data['effect']);
   if (!fits) {
-    return {error: 'The AI picked numbers that are not there'};
+    return {reason: 'unknownNumbers'};
   }
   const condition = data['condition'] as {key?: unknown; high?: unknown};
   return {

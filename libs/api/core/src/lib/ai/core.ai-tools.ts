@@ -641,7 +641,8 @@ export class CoreAiTools implements OnModuleInit {
               ? !touches([fact.number.module])
               : !touches([fact.cause.module, fact.effect.module]),
           ),
-          questions: cards,
+          // A card of a hidden (or missing) number is left out, its title too.
+          questions: cards.filter(card => card.cause && card.effect),
         };
       },
     });

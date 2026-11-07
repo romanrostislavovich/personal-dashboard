@@ -1,6 +1,7 @@
 import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
 import {ConfigService} from '@nestjs/config';
 import {
+  CorrelationMetric,
   InsightFact,
   LinksInsight,
   LinksInsights,
@@ -8,13 +9,14 @@ import {
   QuestionNumber,
   zonedDateTime,
 } from '@pd/contracts';
-import {and, asc, desc, eq} from 'drizzle-orm';
+import {and, asc, desc, eq, sql} from 'drizzle-orm';
 import {AiService} from '../../ai/ai.service';
-import {AppConfig} from '../../config/env';
 import {MorningDigestService} from '../../ai/morning-digest.service';
+import {AppConfig} from '../../config/env';
 import {DB, Database} from '../../database/database.module';
 import {forEachUser} from '../../scheduler/for-each-user';
 import {SchedulerService} from '../../scheduler/scheduler.service';
+import {ServerActions} from '../../sync/server-actions';
 import {UsersService} from '../../users/users.service';
 import {ChangePointsService} from '../change-points.service';
 import {shift} from '../daily-series';
@@ -34,36 +36,43 @@ const MAX_CHANGES = 2;
 const MAX_QUESTIONS = 2;
 /** A change this fresh is news of the week. */
 const FRESH_CHANGE_DAYS = 28;
-/** Asked to look again sooner than this, the week's findings stay as they are (the AI costs). */
+/** Looked for again sooner than this, the week's findings stay as they are (the AI costs). */
 const REFRESH_MS = 3_600_000;
-const DAY_MS = 86_400_000;
+/** The week's findings are made on the user's Monday from this hour on. */
+const MONDAY_HOUR = 5;
+/** The page's button, run on the server for a sync client (docs/sync.md). */
+export const INSIGHTS_REFRESH = 'life.insights-refresh';
+/** Numbers whose keys carry the user's own words (diary tags): the AI gets them unnamed. */
+const UNNAMED_FOR_AI = ['diary.tag.'];
 
 const WORDING_INSTRUCTION =
   "You word a person's findings about their own life, found by a statistics engine from their " +
   'own numbers. For each finding write one calm sentence in LANGUAGE, as a person would say it: ' +
   'name the numbers in plain words (they come as keys: activity.phone.night is the phone at ' +
-  'night, tasks.done — tasks done, diary.mood — the mood 1–5), tell the difference with its ' +
-  'numbers and on how many days or times it was seen; "goes with", never "causes" or advice. ' +
-  'If `holds` says a link does not hold within weekends, rain, illness or travel, say it may be ' +
-  'that. `pair`: on the days the cause is above `threshold` the effect (the same or the next ' +
-  'day) averages `more` against `less`. `after`: in the hour after the event the number averages ' +
-  '`after` against `usual` in the same hours without it. `change`: the number moved from `before` ' +
-  'to `after` since `day`. `question`: the answer to their own question, like a pair. Answer ' +
-  'with a JSON array of the sentences only, in the same order.';
+  'night, tasks.done — tasks done, diary.mood — the mood 1–5; "a diary tag" is one of their own ' +
+  'diary tags), tell the difference with its numbers and on how many days or times it was seen; ' +
+  '"goes with", never "causes" or advice. If `holds` says a link does not hold within weekends, ' +
+  'rain, illness or travel, say it may be that. `pair`: on the days the cause is above ' +
+  '`threshold` the effect (the same or the next day) averages `more` against `less`. `after`: in ' +
+  'the hour after the event the number averages `after` against `usual` in the same hours without ' +
+  'it. `change`: the number moved from `before` to `after` since `day`. `question`: the answer to ' +
+  'their own question, like a pair. Answer with a JSON array of the sentences only, in the same ' +
+  'order.';
 
 type Row = typeof linksInsights.$inferSelect;
 
 /**
- * The week's findings (Links v2's insight cards): every Monday the strongest of what the engine
- * found — links of the days, the hour after an event, fresh changes, answered questions — each
- * checked against weekends, rain, illness and travel, worded by the AI from the aggregates only
- * (never texts or places), and kept for the week; Home shows one a day, the Monday digest tells
- * the new ones.
+ * The week's findings (Links v2's insight cards): on the user's Monday the strongest of what the
+ * engine found — links of the days, the hour after an event, fresh changes, answered questions —
+ * each checked against weekends, rain, illness and travel, worded by the AI from keys and
+ * numbers only (never texts or places; diary tags unnamed), and kept for the week; Home shows
+ * one a day, the Monday digest tells them. Made by the server only: a sync client asks it.
  */
 @Injectable()
 export class InsightsService implements OnModuleInit {
-  /** A sync client makes none: the server's arrive with the sync (two weeks would clash). */
   private readonly isSyncClient: boolean;
+  /** The last look per user: the button runs it once an hour, found something or not. */
+  private readonly looked = new Map<string, number>();
 
   constructor(
     @Inject(ConfigService) config: AppConfig,
@@ -76,20 +85,22 @@ export class InsightsService implements OnModuleInit {
     private readonly ai: AiService,
     private readonly scheduler: SchedulerService,
     private readonly digest: MorningDigestService,
+    private readonly actions: ServerActions,
   ) {
     this.isSyncClient = config.get('SYNC_MODE', {infer: true}) === 'client';
   }
 
   onModuleInit(): void {
-    // Monday morning, before the digest: the week's findings are in it.
+    // Hourly, in each user's own time: their Monday morning comes at its own hour.
     this.scheduler.register({
       name: 'links.insights',
-      cron: '30 5 * * 1',
+      cron: '35 * * * *',
       handler: async () =>
         forEachUser('links.insights', await this.users.findAll(), user =>
-          this.make(user.id),
+          this.makeIfDue(user.id),
         ),
     });
+    this.actions.register(INSIGHTS_REFRESH, userId => this.refresh(userId));
     this.digest.register({
       id: 'life.insights',
       module: 'life',
@@ -101,10 +112,11 @@ export class InsightsService implements OnModuleInit {
     });
   }
 
-  /** The latest week's findings, and the one of today. */
+  /** The latest week's findings, and the one of today (by the user's own day). */
   async list(userId: string, now = new Date()): Promise<LinksInsights> {
     const rows = await this.latest(userId);
-    const day = Math.floor(now.getTime() / DAY_MS);
+    const today = await this.todayOf(userId, now);
+    const day = Math.floor(Date.parse(`${today}T00:00:00Z`) / 86_400_000);
     return {
       week: rows[0]?.week ?? null,
       insights: rows.map(toInsight),
@@ -113,34 +125,52 @@ export class InsightsService implements OnModuleInit {
   }
 
   /** Looks for this week's findings now (the page's button), at most once an hour. */
-  async refresh(userId: string, now = new Date()): Promise<LinksInsights> {
-    const [last] = await this.latest(userId);
-    if (
-      !this.isSyncClient &&
-      (!last || now.getTime() - last.createdAt.getTime() >= REFRESH_MS)
-    ) {
+  async refresh(userId: string, now = new Date()): Promise<void> {
+    const last = this.looked.get(userId);
+    if (last === undefined || now.getTime() - last >= REFRESH_MS) {
       await this.make(userId, now);
     }
-    return this.list(userId, now);
   }
 
-  /** Whether a finding is the user's own (an opened one counts for the achievements). */
-  async owns(userId: string, id: string): Promise<boolean> {
+  /** Whether a finding of this key is the user's own (an opened one counts once). */
+  async owns(userId: string, key: string): Promise<boolean> {
     const [row] = await this.db
       .select({id: linksInsights.id})
       .from(linksInsights)
-      .where(and(eq(linksInsights.userId, userId), eq(linksInsights.id, id)));
+      .where(and(eq(linksInsights.userId, userId), eq(linksInsights.key, key)))
+      .limit(1);
     return Boolean(row);
   }
 
-  /** Finds, words and keeps the week's findings, in place of the week's earlier ones. */
+  /** The job's: the findings of the user's week, on their Monday morning, once. */
+  async makeIfDue(userId: string, now = new Date()): Promise<void> {
+    const local = zonedDateTime(now, await this.timeZoneOf(userId));
+    const monday =
+      new Date(`${local.date}T12:00:00Z`).getUTCDay() === 1 &&
+      Number(local.time.slice(0, 2)) >= MONDAY_HOUR;
+    if (monday && !(await this.hasWeek(userId, mondayOf(local.date)))) {
+      await this.make(userId, now);
+    }
+  }
+
+  /**
+   * Finds, words and keeps the week's findings in place of the week's earlier ones; one at a
+   * time for a user (the job and the button at once would keep both).
+   */
   async make(userId: string, now = new Date()): Promise<void> {
+    if (this.isSyncClient) {
+      return;
+    }
+    this.looked.set(userId, now.getTime());
     const user = await this.users.findById(userId);
     const today = zonedDateTime(now, this.users.timeZoneOf(user)).date;
     const week = mondayOf(today);
     const facts = (await this.find(userId, today)).slice(0, MAX_INSIGHTS);
     const texts = await this.word(userId, user?.locale ?? 'en', facts);
     await this.db.transaction(async tx => {
+      await tx.execute(
+        sql`SELECT pg_advisory_xact_lock(hashtext(${`links.insights:${userId}`}))`,
+      );
       await tx
         .delete(linksInsights)
         .where(
@@ -151,6 +181,7 @@ export class InsightsService implements OnModuleInit {
           facts.map((fact, position) => ({
             userId,
             week,
+            key: keyOf(fact, week),
             position,
             fact,
             text: texts[position] ?? null,
@@ -160,17 +191,23 @@ export class InsightsService implements OnModuleInit {
     });
   }
 
-  /** The week's news for the Monday digest; the sections hidden from the AI stay out. */
+  /**
+   * The week's findings for the Monday digest (made now if the job has not yet, on the server);
+   * the sections hidden from the AI stay out.
+   */
   async digestFacts(userId: string, now = new Date()): Promise<unknown> {
-    const user = await this.users.findById(userId);
-    const today = zonedDateTime(now, this.users.timeZoneOf(user)).date;
+    const today = await this.todayOf(userId, now);
     if (new Date(`${today}T12:00:00Z`).getUTCDay() !== 1) {
       return null;
+    }
+    const week = mondayOf(today);
+    if (!(await this.hasWeek(userId, week))) {
+      await this.make(userId, now);
     }
     const hidden = await this.ai.hiddenFromShared(userId);
     const rows = (await this.latest(userId)).filter(
       row =>
-        row.week === mondayOf(today) &&
+        row.week === week &&
         !modulesOf(row.fact).some(module => hidden.includes(module)),
     );
     return rows.length
@@ -178,40 +215,12 @@ export class InsightsService implements OnModuleInit {
       : null;
   }
 
-  /** The strongest findings of the engine, each kind capped, the surest first. */
+  /** The strongest findings of the engine, each kind capped, a pair told once only. */
   private async find(userId: string, today: LocalDate): Promise<InsightFact[]> {
-    const yesterday = shift(today, -1);
     const facts: InsightFact[] = [];
+    const told = new Set<string>();
 
-    const {correlations} = await this.overviews.correlations(userId, {
-      from: shift(today, -PAIR_DAYS),
-      to: yesterday,
-      pairs: 'outcomes',
-    });
-    const pairs: InsightFact[] = [];
-    for (const pair of correlations
-      .filter(one => one.strong && one.lag <= 1)
-      .slice(0, PAIRS_LOOKED_AT)) {
-      const card = await this.questions.pair(
-        userId,
-        pair.a,
-        pair.b,
-        pair.lag ? 'nextDay' : 'sameDay',
-      );
-      if (card.answer.strong && card.cause && card.effect) {
-        pairs.push({
-          kind: 'pair',
-          cause: card.cause,
-          effect: card.effect,
-          when: card.question.when as 'sameDay' | 'nextDay',
-          answer: card.answer,
-        });
-      }
-      if (pairs.length >= MAX_PAIRS) {
-        break;
-      }
-    }
-    facts.push(...pairs);
+    facts.push(...(await this.pairs(userId, today, told)));
 
     const after = await this.hours.hourAfter(userId, 90);
     const named = new Map<string, QuestionNumber>([
@@ -226,6 +235,7 @@ export class InsightsService implements OnModuleInit {
       const cause = named.get(result.event);
       const effect = named.get(result.outcome);
       if (cause && effect) {
+        told.add(pairOf(cause.key, effect.key));
         facts.push({
           kind: 'after',
           cause,
@@ -258,21 +268,84 @@ export class InsightsService implements OnModuleInit {
     }
 
     const {cards} = await this.questions.list(userId);
+    let questions = 0;
     for (const card of cards
       .filter(one => one.answer.strong && one.cause && one.effect)
       // The user's own questions first.
-      .sort((a, b) => Number(a.question.builtIn) - Number(b.question.builtIn))
-      .slice(0, MAX_QUESTIONS)) {
+      .sort(
+        (a, b) => Number(a.question.builtIn) - Number(b.question.builtIn),
+      )) {
+      const cause = card.cause as QuestionNumber;
+      const effect = card.effect as QuestionNumber;
+      if (told.has(pairOf(cause.key, effect.key))) {
+        continue;
+      }
+      told.add(pairOf(cause.key, effect.key));
       facts.push({
         kind: 'question',
         title: card.question.title,
-        cause: card.cause as QuestionNumber,
-        effect: card.effect as QuestionNumber,
+        cause,
+        effect,
         when: card.question.when,
         answer: card.answer,
       });
+      if (++questions >= MAX_QUESTIONS) {
+        break;
+      }
     }
     return facts;
+  }
+
+  /** The strongest links of the days, each answered as a card would be, the outcome the effect. */
+  private async pairs(
+    userId: string,
+    today: LocalDate,
+    told: Set<string>,
+  ): Promise<InsightFact[]> {
+    const found: InsightFact[] = [];
+    const {correlations, metrics} = await this.overviews.correlations(userId, {
+      from: shift(today, -PAIR_DAYS),
+      to: shift(today, -1),
+      pairs: 'outcomes',
+    });
+    const byKey = new Map<string, CorrelationMetric>(
+      metrics.map(one => [one.key, one]),
+    );
+    for (const pair of correlations
+      .filter(one => one.strong && one.lag <= 1)
+      .slice(0, PAIRS_LOOKED_AT)) {
+      // The cause is what is done, the effect what a day gives; the next day's is the effect.
+      const [cause, effect] =
+        pair.lag === 0 &&
+        byKey.get(pair.a)?.outcome &&
+        !byKey.get(pair.b)?.outcome
+          ? [pair.b, pair.a]
+          : [pair.a, pair.b];
+      if (told.has(pairOf(cause, effect))) {
+        continue;
+      }
+      const card = await this.questions.pair(
+        userId,
+        cause,
+        effect,
+        pair.lag ? 'nextDay' : 'sameDay',
+      );
+      if (card.answer.strong && card.cause && card.effect) {
+        told.add(pairOf(cause, effect));
+        found.push({
+          kind: 'pair',
+          cause: card.cause,
+          effect: card.effect,
+          when: card.question.when as 'sameDay' | 'nextDay',
+          answer: card.answer,
+        });
+        if (found.length >= MAX_PAIRS) {
+          break;
+        }
+      }
+    }
+
+    return found;
   }
 
   /**
@@ -325,6 +398,17 @@ export class InsightsService implements OnModuleInit {
     }
   }
 
+  private async hasWeek(userId: string, week: LocalDate): Promise<boolean> {
+    const [row] = await this.db
+      .select({id: linksInsights.id})
+      .from(linksInsights)
+      .where(
+        and(eq(linksInsights.userId, userId), eq(linksInsights.week, week)),
+      )
+      .limit(1);
+    return Boolean(row);
+  }
+
   /** The rows of the latest week, in their order. */
   private async latest(userId: string): Promise<Row[]> {
     const [last] = await this.db
@@ -347,6 +431,19 @@ export class InsightsService implements OnModuleInit {
       )
       .orderBy(asc(linksInsights.position));
   }
+
+  private async todayOf(userId: string, now: Date): Promise<LocalDate> {
+    return zonedDateTime(now, await this.timeZoneOf(userId)).date;
+  }
+
+  private async timeZoneOf(userId: string): Promise<string> {
+    return this.users.timeZoneOf(await this.users.findById(userId));
+  }
+}
+
+/** A pair of numbers either way round: told once only. */
+function pairOf(a: string, b: string): string {
+  return [a, b].sort().join('|');
 }
 
 /** The Monday of a day's week. */
@@ -355,10 +452,27 @@ export function mondayOf(day: LocalDate): LocalDate {
   return shift(day, -weekday);
 }
 
+/** What a finding is about, the same each time it is found again in the week. */
+export function keyOf(fact: InsightFact, week: LocalDate): string {
+  const about =
+    fact.kind === 'change'
+      ? `${fact.number.key}|${fact.day}`
+      : fact.kind === 'after'
+        ? `${fact.cause.key}|${fact.effect.key}`
+        : `${fact.cause.key}|${fact.effect.key}|${fact.when}`;
+  return `${week}|${fact.kind}|${about}`;
+}
+
 function modulesOf(fact: InsightFact): string[] {
   return fact.kind === 'change'
     ? [fact.number.module]
     : [fact.cause.module, fact.effect.module];
+}
+
+/** A key as the AI gets it: one carrying the user's own words (a diary tag) unnamed. */
+function forAi(key: string): string {
+  const prefix = UNNAMED_FOR_AI.find(one => key.startsWith(one));
+  return prefix ? `${prefix.slice(0, -1)}` : key;
 }
 
 /** A finding as the AI gets it: keys and numbers only. */
@@ -367,7 +481,7 @@ function brief(fact: InsightFact): Record<string, unknown> {
     case 'change':
       return {
         kind: fact.kind,
-        number: fact.number.key,
+        number: forAi(fact.number.key),
         unit: fact.number.unit,
         day: fact.day,
         before: fact.before,
@@ -376,8 +490,8 @@ function brief(fact: InsightFact): Record<string, unknown> {
     case 'after':
       return {
         kind: fact.kind,
-        event: fact.cause.key,
-        number: fact.effect.key,
+        event: forAi(fact.cause.key),
+        number: forAi(fact.effect.key),
         unit: fact.effect.unit,
         after: fact.after,
         usual: fact.usual,
@@ -386,8 +500,8 @@ function brief(fact: InsightFact): Record<string, unknown> {
     default:
       return {
         kind: fact.kind,
-        cause: fact.cause.key,
-        effect: fact.effect.key,
+        cause: forAi(fact.cause.key),
+        effect: forAi(fact.effect.key),
         effectUnit: fact.effect.unit,
         when: fact.when,
         threshold: fact.answer.threshold,
@@ -402,5 +516,11 @@ function brief(fact: InsightFact): Record<string, unknown> {
 }
 
 function toInsight(row: Row): LinksInsight {
-  return {id: row.id, week: row.week, fact: row.fact, text: row.text};
+  return {
+    id: row.id,
+    key: row.key,
+    week: row.week,
+    fact: row.fact,
+    text: row.text,
+  };
 }

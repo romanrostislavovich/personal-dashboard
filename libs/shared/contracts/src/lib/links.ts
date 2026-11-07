@@ -431,8 +431,8 @@ export const linksSeenSchema = z.discriminatedUnion('kind', [
   z.object({kind: z.literal('rhythm'), key: z.string().min(1).max(120)}),
   /** The hour after an event, by the event's key. */
   z.object({kind: z.literal('after'), key: z.string().min(1).max(120)}),
-  /** The proof of a finding of the week, by its id. */
-  z.object({kind: z.literal('insight'), key: z.uuid()}),
+  /** The proof of a finding of the week, by its key (the same each week it is found again). */
+  z.object({kind: z.literal('insight'), key: z.string().min(1).max(400)}),
 ]);
 export type LinksSeen = z.infer<typeof linksSeenSchema>;
 

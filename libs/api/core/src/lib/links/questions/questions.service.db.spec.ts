@@ -84,22 +84,32 @@ describe.skipIf(!ADMIN_URL)('QuestionsService and InsightsService', () => {
       {hours: async () => ({metrics: [], events: []})} as never,
       users as never,
       ai as never,
+      {register: () => undefined} as never,
     );
+  let looks = 0;
   const insights = (asked = questions(), syncClient = false) =>
     new InsightsService(
       {get: () => (syncClient ? 'client' : 'off')} as never,
       db as never,
       {
-        correlations: async () => ({
-          correlations: [
-            {
-              a: 'activity.index.focusInterruptions',
-              b: 'activity.index.deepWork',
-              lag: 0,
-              strong: true,
-            },
-          ],
-        }),
+        // The outcome first: the finding must still name it the effect.
+        correlations: async () => {
+          looks++;
+          return {
+            metrics: [
+              {key: 'activity.index.deepWork', outcome: true},
+              {key: 'activity.index.focusInterruptions'},
+            ],
+            correlations: [
+              {
+                a: 'activity.index.deepWork',
+                b: 'activity.index.focusInterruptions',
+                lag: 0,
+                strong: true,
+              },
+            ],
+          };
+        },
       } as never,
       {
         hourAfter: async () => ({events: [], outcomes: [], results: []}),
@@ -108,6 +118,7 @@ describe.skipIf(!ADMIN_URL)('QuestionsService and InsightsService', () => {
       asked,
       users as never,
       ai as never,
+      {register: () => undefined} as never,
       {register: () => undefined} as never,
       {register: () => undefined} as never,
     );
@@ -146,11 +157,10 @@ describe.skipIf(!ADMIN_URL)('QuestionsService and InsightsService', () => {
     expect(night?.answer.status).toBe('answered');
     expect(night?.answer.strong).toBe(true);
     expect(night?.answer.difference).toBeLessThan(0);
-    // Not every user has the places: that card says the number is missing.
-    expect(
-      cards.find(card => card.question.id === 'builtin.home.mood')?.answer
-        .status,
-    ).toBe('missing');
+    // Not every user has the places: a card that could never answer is left out.
+    expect(cards.some(card => card.question.id === 'builtin.home.mood')).toBe(
+      false,
+    );
   });
 
   it("keeps the user's own questions, of their numbers only, and not another's", async () => {
@@ -170,6 +180,15 @@ describe.skipIf(!ADMIN_URL)('QuestionsService and InsightsService', () => {
         when: 'sameDay',
       }),
     ).rejects.toThrow();
+    // The same question twice is refused, by a reason the page can tell.
+    await expect(
+      service.add(user, {
+        cause: 'weather.rain',
+        effect: 'activity.index.deepWork',
+        when: 'nextDay',
+        condition: {key: 'activity.phone.night', high: true},
+      }),
+    ).rejects.toMatchObject({response: {reason: 'duplicate'}});
     const own = (await service.list(user)).cards.filter(
       card => !card.question.builtIn,
     );
@@ -192,7 +211,19 @@ describe.skipIf(!ADMIN_URL)('QuestionsService and InsightsService', () => {
       title: 'телефон ночью и спортзал',
     });
     aiReply = '{"cause": "made.up", "effect": "habits.gym", "when": "nextDay"}';
-    await expect(questions().draft(user, 'что-то')).rejects.toThrow();
+    await expect(questions().draft(user, 'что-то')).rejects.toMatchObject({
+      response: {reason: 'unknownNumbers'},
+    });
+    // Not a card at all: its words are not shown.
+    aiReply = 'I cannot help with that';
+    await expect(questions().draft(user, 'что-то')).rejects.toMatchObject({
+      response: {reason: 'noCard'},
+    });
+    // The AI's own reason, in the language of the question.
+    aiReply = '{"error": "Нет такого числа"}';
+    await expect(questions().draft(user, 'что-то')).rejects.toMatchObject({
+      response: {message: 'Нет такого числа'},
+    });
   });
 
   it("finds the week's insights, worded by the AI, and keeps them once an hour", async () => {
@@ -203,14 +234,55 @@ describe.skipIf(!ADMIN_URL)('QuestionsService and InsightsService', () => {
     const {insights: found, week} = await service.list(user);
     expect(week).not.toBeNull();
     expect(found[0].fact.kind).toBe('pair');
+    const fact = found[0].fact as Extract<
+      (typeof found)[number]['fact'],
+      {kind: 'pair'}
+    >;
+    // What is done is the cause, the outcome the effect.
+    expect(fact.cause.key).toBe('activity.index.focusInterruptions');
+    expect(fact.effect.key).toBe('activity.index.deepWork');
+    // The built-in question of the same pair is not told twice.
+    expect(
+      found.filter(
+        one =>
+          one.fact.kind !== 'change' &&
+          one.fact.effect.key === 'activity.index.deepWork' &&
+          one.fact.cause.key === 'activity.index.focusInterruptions',
+      ),
+    ).toHaveLength(1);
     expect(found[0].text).toContain('прерываний');
-    expect(await service.owns(user, found[0].id)).toBe(true);
-    expect(await service.owns(await addUser(), found[0].id)).toBe(false);
+    expect(await service.owns(user, found[0].key)).toBe(true);
+    expect(await service.owns(await addUser(), found[0].key)).toBe(false);
+    // Found again, it keeps its key: its proof opened counts once.
+    await service.make(user);
+    expect((await service.list(user)).insights[0].key).toBe(found[0].key);
     // Asked again at once: the same findings, no second word to the AI.
     const asked = sentToAi.length;
     await service.refresh(user);
     expect(sentToAi.length).toBe(asked);
-    expect((await service.list(user)).insights[0].id).toBe(found[0].id);
+  });
+
+  it('looks once an hour even when nothing is found', async () => {
+    const user = await addUser();
+    const service = insights();
+    looks = 0;
+    await service.refresh(user);
+    await service.refresh(user);
+    expect(looks).toBe(1);
+  });
+
+  it("makes the week's findings on the user's Monday morning, once", async () => {
+    const user = await addUser();
+    const service = insights();
+    await service.makeIfDue(user, new Date('2026-11-10T09:00:00Z'));
+    expect((await service.list(user)).week).toBeNull();
+    await service.makeIfDue(user, new Date('2026-11-09T04:00:00Z'));
+    expect((await service.list(user)).week).toBeNull();
+    looks = 0;
+    await service.makeIfDue(user, new Date('2026-11-09T06:00:00Z'));
+    await service.makeIfDue(user, new Date('2026-11-09T07:00:00Z'));
+    expect((await service.list(user)).week).toBe('2026-11-09');
+    expect(looks).toBe(1);
   });
 
   it('sends the AI nothing of the hidden sections, and words nothing without one', async () => {
