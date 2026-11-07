@@ -55,6 +55,14 @@ export const lifeModule: WebDashboardModule = {
           m => m.UnusualWidgetComponent,
         ),
     },
+    {
+      id: 'life.forecasts',
+      size: 'small',
+      loadComponent: () =>
+        import('./links/forecasts-widget.component').then(
+          m => m.ForecastsWidgetComponent,
+        ),
+    },
   ],
   commands: [
     {

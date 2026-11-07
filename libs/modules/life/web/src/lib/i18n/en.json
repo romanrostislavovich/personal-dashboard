@@ -204,11 +204,27 @@
       "title": "{{b}} on the days of each amount of {{a}}"
     }
   },
-  "forecast": {
-    "title": "Today's mood, forecast",
-    "hint": "From yesterday's numbers of every section, by a model of your own days",
-    "quality": "Learned from {{days}} days; on the latest ones it missed by {{error}} on average, \"like the last week\" by {{baseline}}. What weighs most:",
-    "few": "Needs at least 40 days with a mood in the diary — there are {{days}} so far.",
-    "notBetter": "Your days do not tell yet more than \"like the last week\": no forecast to trust."
+  "forecasts": {
+    "title": "Forecasts",
+    "hint": "From the day before, by a model of your own days. A guess, not a plan.",
+    "today": "Today",
+    "tomorrow": "Tomorrow (from the day so far, rougher)",
+    "bedtime": "Bedtime",
+    "miss": "usually off by {{miss}}, {{better}} % closer than the plain guess",
+    "notBetter": "not closer than the plain guess yet (yesterday, the same weekday or the week)",
+    "few": "needs at least 40 days, {{days}} so far",
+    "yesterday": "yesterday: forecast {{value}}, was {{actual}}",
+    "past": "over 4 weeks off by {{miss}} on average ({{days}} days)",
+    "why": "What drove it",
+    "none": "Nothing to forecast yet.",
+    "failed": "Could not make the forecasts.",
+    "choose": "Forecast also",
+    "minutes": "{{value}} min",
+    "self": {
+      "yesterday": "The same number yesterday",
+      "week": "The same number over the week",
+      "weekday": "The same number on this weekday",
+      "weekend": "A weekend"
+    }
   }
 }

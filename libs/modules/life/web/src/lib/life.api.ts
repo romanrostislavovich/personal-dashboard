@@ -1,7 +1,7 @@
 import {httpResource} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {CORE_READS, lifeApi} from '@pd/client-core';
-import {LifeStory, LinksSeen} from '@pd/contracts';
+import {LifeStory, LinksForecasts, LinksSeen} from '@pd/contracts';
 import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /** The Life requests of the client core (`@pd/client-core`) for Angular. */
@@ -22,5 +22,15 @@ export class LifeApi {
   /** Something of Links opened (a change point, a pair's chart): for the achievements. */
   seen(item: LinksSeen) {
     return fromCore(() => this.life.seen(item));
+  }
+
+  /** Today's forecasts of the numbers (tomorrow's too in the evening) and the kept ones. */
+  forecasts() {
+    return httpResource<LinksForecasts>(() => CORE_READS.forecasts());
+  }
+
+  /** The numbers forecast beyond the default ones. */
+  setForecastTargets(targets: string[]) {
+    return fromCore(() => this.life.setForecastTargets({targets}));
   }
 }
