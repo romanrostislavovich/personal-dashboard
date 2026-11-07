@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import {
@@ -14,6 +15,8 @@ import {
   Correlations,
   CorrelationsQuery,
   correlationsQuerySchema,
+  ForecastTargets,
+  forecastTargetsSchema,
   LifeDay,
   LifeDayQuery,
   lifeDayQuerySchema,
@@ -23,9 +26,9 @@ import {
   LifeSummaryQuery,
   lifeSummaryQuerySchema,
   LinksChanges,
+  LinksForecasts,
   LinksSeen,
   linksSeenSchema,
-  MoodForecast,
   MoodInsights,
   MoodInsightsQuery,
   moodInsightsQuerySchema,
@@ -35,6 +38,7 @@ import {AiService} from '../ai/ai.service';
 import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
 import {ProjectOverviewService} from '../links/project-overview.service';
 import {ChangePointsService} from '../links/change-points.service';
+import {ForecastsService} from '../links/forecasts.service';
 import {ZodValidationPipe} from '../validation/zod-validation.pipe';
 import {LifeStoriesService} from './life-stories.service';
 import {LifeService} from './life.service';
@@ -48,6 +52,7 @@ export class LifeController {
     private readonly ai: AiService,
     private readonly overviews: ProjectOverviewService,
     private readonly changes: ChangePointsService,
+    private readonly forecasts: ForecastsService,
   ) {}
 
   /** What goes with the days of a good mood and of a bad one, across the sections. */
@@ -60,10 +65,20 @@ export class LifeController {
     return this.overviews.moodInsights(user.id, query);
   }
 
-  /** Today's mood forecast from yesterday's numbers, by the user's own model. */
-  @Get('forecast')
-  forecast(@CurrentUser() user: AuthUser): Promise<MoodForecast> {
-    return this.overviews.moodForecast(user.id);
+  /** Today's forecasts of the numbers (and tomorrow's in the evening), by the user's own models. */
+  @Get('forecasts')
+  forecastList(@CurrentUser() user: AuthUser): Promise<LinksForecasts> {
+    return this.forecasts.list(user.id);
+  }
+
+  /** The numbers forecast beyond the default ones. */
+  @Put('forecast-targets')
+  @HttpCode(204)
+  forecastTargets(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(forecastTargetsSchema)) body: ForecastTargets,
+  ): Promise<void> {
+    return this.forecasts.setTargets(user.id, body.targets);
   }
 
   /** How every daily number of the sections goes with every other, and what predicts one. */

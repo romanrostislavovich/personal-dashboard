@@ -96,6 +96,7 @@ export type {
   UsageSource,
 } from './lib/links/links.service';
 export {ProjectOverviewService} from './lib/links/project-overview.service';
+export {ForecastsService} from './lib/links/forecasts.service';
 export {MOOD_METRIC} from './lib/links/mood-insights';
 export type {
   OtherComputerDay,

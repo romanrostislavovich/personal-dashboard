@@ -1,6 +1,6 @@
 import {DailyMetric, LocalDate} from '@pd/contracts';
 import {daysOf, shift} from './daily-series';
-import {fit, MIN_DAYS, moodForecast} from './forecast';
+import {bedtimeMetric, fit, forecast, MIN_DAYS} from './forecast';
 
 /** A made-up life: sleep drives the next day's mood, the steps do nothing. */
 function life(days: number): DailyMetric[] {
@@ -47,7 +47,7 @@ function life(days: number): DailyMetric[] {
   ] as DailyMetric[];
 }
 
-describe('the mood forecast', () => {
+describe('the forecasts', () => {
   it('fits a ridge regression that finds the real driver', () => {
     const rows = [...Array(60).keys()].map(i => [i % 10, (i * 3) % 7]);
     const model = fit(
@@ -60,21 +60,61 @@ describe('the mood forecast', () => {
     );
   });
 
-  it('forecasts today from yesterday, beats "like the last week", and names sleep', () => {
+  it('forecasts the day from the day before, beats the plain guess, and names sleep', () => {
     const metrics = life(200);
-    const target = shift('2026-01-01', 199) as LocalDate;
-    const forecast = moodForecast(metrics, target);
-    expect(forecast.days).toBeGreaterThan(150);
-    expect(forecast.trusted).toBe(true);
-    expect(forecast.error!).toBeLessThan(forecast.baselineError!);
-    expect(forecast.drivers[0].key).toBe('health.sleep');
-    expect(forecast.drivers[0].effect).toBeGreaterThan(0);
-    expect(forecast.mood).toBeGreaterThanOrEqual(1);
+    const day = shift('2026-01-01', 199) as LocalDate;
+    const result = forecast(metrics, metrics[0], day, 'morning');
+    expect(result.days).toBeGreaterThan(150);
+    expect(result.trusted).toBe(true);
+    expect(result.error!).toBeLessThan(result.baselineError!);
+    expect(result.baseline).not.toBeNull();
+    expect(result.drivers.map(driver => driver.key)).toContain('health.sleep');
+    expect(result.drivers.some(driver => driver.key === 'diary.mood')).toBe(
+      false,
+    );
+    // Never beyond what the mood has ever been.
+    expect(result.value!).toBeGreaterThanOrEqual(1);
+    expect(result.value!).toBeLessThanOrEqual(5);
   });
 
-  it('says nothing without enough days of mood', () => {
-    const forecast = moodForecast(life(MIN_DAYS - 5), '2026-02-01');
-    expect(forecast.mood).toBeNull();
-    expect(forecast.trusted).toBe(false);
+  it('in the evening learns only from the days that are over', () => {
+    const metrics = life(200);
+    const tomorrow = shift('2026-01-01', 200) as LocalDate;
+    const evening = forecast(metrics, metrics[0], tomorrow, 'evening');
+    const morning = forecast(metrics, metrics[0], tomorrow, 'morning');
+    expect(evening.made).toBe('evening');
+    expect(evening.days).toBe(morning.days - 1);
+  });
+
+  it('says nothing without enough days of the number', () => {
+    const metrics = life(MIN_DAYS - 5);
+    const result = forecast(metrics, metrics[0], '2026-02-01', 'morning');
+    expect(result.value).toBeNull();
+    expect(result.trusted).toBe(false);
+  });
+
+  it("makes the bedtime of the band's nights and the phone's evenings", () => {
+    const metric = (key: string, days: [string, number][]): DailyMetric => ({
+      key,
+      module: key.split('.')[0],
+      labelKey: key,
+      unit: 'clock',
+      extra: true,
+      days: days.map(([day, value]) => ({day, value})),
+    });
+    const bedtime = bedtimeMetric([
+      metric('activity.phone.lastUse', [
+        ['2026-03-01', 23.5],
+        ['2026-03-02', 24.5],
+      ]),
+      metric('health.band.bedtime', [['2026-03-02', 24]]),
+    ]);
+    expect(bedtime?.key).toBe('links.bedtime');
+    expect(bedtime?.extra).toBeUndefined();
+    expect(bedtime?.days).toEqual([
+      {day: '2026-03-01', value: 23.5},
+      {day: '2026-03-02', value: 24},
+    ]);
+    expect(bedtimeMetric([])).toBeNull();
   });
 });
