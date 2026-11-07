@@ -27,11 +27,17 @@ import {
   lifeSummaryQuerySchema,
   LinksChanges,
   LinksForecasts,
+  LinksHourAfter,
+  LinksRhythm,
+  LinksWindow,
   LinksSeen,
   linksSeenSchema,
   MoodInsights,
   MoodInsightsQuery,
   moodInsightsQuerySchema,
+  RhythmDays,
+  RhythmQuery,
+  rhythmQuerySchema,
   Unusual,
 } from '@pd/contracts';
 import {AiService} from '../ai/ai.service';
@@ -39,6 +45,7 @@ import {AuthUser, CurrentUser} from '../auth/current-user.decorator';
 import {ProjectOverviewService} from '../links/project-overview.service';
 import {ChangePointsService} from '../links/change-points.service';
 import {ForecastsService} from '../links/forecasts.service';
+import {HoursService} from '../links/hours/hours.service';
 import {ZodValidationPipe} from '../validation/zod-validation.pipe';
 import {LifeStoriesService} from './life-stories.service';
 import {LifeService} from './life.service';
@@ -53,6 +60,7 @@ export class LifeController {
     private readonly overviews: ProjectOverviewService,
     private readonly changes: ChangePointsService,
     private readonly forecasts: ForecastsService,
+    private readonly hours: HoursService,
   ) {}
 
   /** What goes with the days of a good mood and of a bad one, across the sections. */
@@ -69,6 +77,30 @@ export class LifeController {
   @Get('forecasts')
   forecastList(@CurrentUser() user: AuthUser): Promise<LinksForecasts> {
     return this.forecasts.list(user.id);
+  }
+
+  /** An hourly number by weekday and hour (the day's rhythm), and the numbers there are. */
+  @Get('rhythm')
+  rhythm(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(rhythmQuerySchema)) query: RhythmQuery,
+  ): Promise<LinksRhythm> {
+    return this.hours.rhythm(user.id, query.days as RhythmDays, query.key);
+  }
+
+  /** Every event against every hourly number in the hour after it. */
+  @Get('hour-after')
+  hourAfter(
+    @CurrentUser() user: AuthUser,
+    @Query(new ZodValidationPipe(rhythmQuerySchema)) query: RhythmQuery,
+  ): Promise<LinksHourAfter> {
+    return this.hours.hourAfter(user.id, query.days as RhythmDays);
+  }
+
+  /** The productive window of every weekday, over the last 90 days. */
+  @Get('window')
+  window(@CurrentUser() user: AuthUser): Promise<LinksWindow> {
+    return this.hours.window(user.id);
   }
 
   /** The numbers forecast beyond the default ones. */
@@ -116,6 +148,12 @@ export class LifeController {
       if (!(await this.forecasts.isShown(user.id, key, day))) {
         return;
       }
+    }
+    if (
+      (body.kind === 'rhythm' || body.kind === 'after') &&
+      !(await this.hours.knows(user.id, body.kind, body.key))
+    ) {
+      return;
     }
     return this.changes.seen(user.id, body);
   }

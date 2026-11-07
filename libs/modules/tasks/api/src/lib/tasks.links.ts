@@ -1,5 +1,5 @@
 import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
-import {DB, Database, LinksService, UsersService} from '@pd/api-core';
+import {DB, Database, daysOf, LinksService, UsersService} from '@pd/api-core';
 import {
   addDays,
   DailyMetric,
@@ -59,6 +59,48 @@ export class TasksLinks implements OnModuleInit {
               },
             ]
           : [];
+      },
+    });
+
+    // Hour by hour: the tasks done in each hour (a productive number of the window).
+    this.links.registerHourly({
+      module: 'tasks',
+      hours: async (userId, period, timeZone) => {
+        const hour = sql<string>`to_char(${tasks.completedAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD"T"HH24')`;
+        const rows = await this.db
+          .select({hour, done: sql<number>`count(*)::int`})
+          .from(tasks)
+          .where(
+            and(
+              eq(tasks.userId, userId),
+              await this.doneWithin(userId, period),
+            ),
+          )
+          .groupBy(sql`1`);
+        const [first] = await this.db
+          .select({
+            day: sql<LocalDate | null>`to_char(min(${tasks.createdAt}) AT TIME ZONE ${timeZone}, 'YYYY-MM-DD')`,
+          })
+          .from(tasks)
+          .where(eq(tasks.userId, userId));
+        // Every day since the first task is a day of the list: an hour of nothing done is a zero.
+        const days = first?.day
+          ? daysOf(period).filter(day => day >= (first.day as LocalDate))
+          : [];
+        return {
+          metrics: [
+            {
+              key: 'tasks.hour.done',
+              module: 'tasks',
+              labelKey: 'tasks.links.done',
+              unit: 'count',
+              productive: true,
+              days,
+              hours: rows.map(row => ({hour: row.hour, value: row.done})),
+            },
+          ],
+          events: [],
+        };
       },
     });
 

@@ -84,6 +84,7 @@ export {LinksService} from './lib/links/links.service';
 export type {
   AppPage,
   DailyMetricSource,
+  HourlySource,
   MomentSource,
   PeopleSource,
   Period,
@@ -98,6 +99,7 @@ export type {
 export {ProjectOverviewService} from './lib/links/project-overview.service';
 export {ForecastsService} from './lib/links/forecasts.service';
 export {MOOD_METRIC} from './lib/links/mood-insights';
+export {daysOf} from './lib/links/daily-series';
 export type {
   OtherComputerDay,
   OtherComputerSource,

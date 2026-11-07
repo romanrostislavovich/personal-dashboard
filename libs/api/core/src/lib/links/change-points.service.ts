@@ -137,7 +137,7 @@ export class ChangePointsService implements OnModuleInit {
   /** How many things of a kind the user has opened (or how many even days were kept). */
   async seenCount(
     userId: string,
-    kind: LinksSeen['kind'] | typeof EVEN_DAY,
+    kind: LinksSeen['kind'] | typeof EVEN_DAY | 'window',
   ): Promise<number> {
     const [row] = await this.db
       .select({value: count()})

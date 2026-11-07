@@ -36,6 +36,7 @@ import {LinksService} from './links/links.service';
 import {ProjectOverviewService} from './links/project-overview.service';
 import {ChangePointsService} from './links/change-points.service';
 import {ForecastsService} from './links/forecasts.service';
+import {HoursService} from './links/hours/hours.service';
 import {CoreSecuritySources} from './security/core.security-sources';
 import {SecurityAgent} from './security/security-agent.service';
 import {SecurityController} from './security/security.controller';
@@ -199,6 +200,7 @@ import {UserActivityService} from './realtime/user-activity.service';
     ProjectOverviewService,
     ChangePointsService,
     ForecastsService,
+    HoursService,
     SignInLog,
     SecurityService,
     SecurityAgent,

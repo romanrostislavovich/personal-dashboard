@@ -30,7 +30,8 @@ import {
   usualBedtime,
   wallClock,
 } from './day-indices';
-import {activityDayIndices} from './indices.schema';
+import {dayHours} from './day-hours';
+import {activityDayIndices, activityHourValues} from './indices.schema';
 import {indexSummary, summaryPeriod} from './indices-summary';
 
 const HOUR = 3_600_000;
@@ -48,8 +49,12 @@ const BEDTIME_DAYS = 28;
 const SPREAD_DAYS = 7;
 /** Kept, not shown (keys starting with `_`): the phone's last use (for the bedtime) … */
 export const LAST_USE = '_lastUse';
-/** … and the mark of a day counted, even one with nothing to count (so it is not again). */
+/** … and the mark of a day counted, even one with nothing to count (so it is not again) … */
 export const COUNTED = '_counted';
+/** … and of a day whose hours were counted too (the hours came later than the indices). */
+export const HOURS_COUNTED = '_hours';
+/** The hours are counted back this far: the day's rhythm reads a year at most. */
+const HOURS_HISTORY_DAYS = 365;
 
 /** What one run reads once for all the days it counts. */
 interface RunContext {
@@ -94,7 +99,18 @@ export class IndicesService {
     const recent = Array.from({length: RECOUNT_DAYS}, (_, back) =>
       shift(today, back - RECOUNT_DAYS + 1),
     );
-    const missing = await this.missingDays(userId, timeZone, recent[0]);
+    const missing = [
+      ...new Set([
+        ...(await this.missingDays(userId, timeZone, recent[0], COUNTED)),
+        ...(await this.missingDays(
+          userId,
+          timeZone,
+          recent[0],
+          HOURS_COUNTED,
+          shift(today, -HOURS_HISTORY_DAYS),
+        )),
+      ]),
+    ].sort();
     // Oldest first: a day's usual bedtime and its spread read the days before it.
     await this.countDays(userId, timeZone, [
       ...missing.slice(0, BACKFILL_DAYS),
@@ -135,6 +151,8 @@ export class IndicesService {
     const moments = await this.moments(userId, day, context);
     const indices = dayIndices(moments);
     indices.set(COUNTED, 1);
+    indices.set(HOURS_COUNTED, 1);
+    await this.keepHours(userId, day, dayHours(moments));
     const lastUse = lastUseOf(moments);
     if (lastUse !== null) {
       indices.set(LAST_USE, lastUse);
@@ -191,6 +209,65 @@ export class IndicesService {
         .delete(d)
         .where(and(eq(d.userId, userId), eq(d.day, day), inArray(d.key, gone)));
     }
+  }
+
+  /** Writes a day's hours like its indices: upserted where changed, gone where no longer. */
+  private async keepHours(
+    userId: string,
+    day: LocalDate,
+    hours: Map<number, Map<string, number>>,
+  ): Promise<void> {
+    const h = activityHourValues;
+    const id = (hour: number, key: string) => `${hour}|${key}`;
+    const now = new Map(
+      [...hours].flatMap(([hour, values]) =>
+        [...values].map(([key, value]) => [id(hour, key), {hour, key, value}]),
+      ),
+    );
+    const before = await this.db
+      .select({id: h.id, hour: h.hour, key: h.key, value: h.value})
+      .from(h)
+      .where(and(eq(h.userId, userId), eq(h.day, day)));
+    const kept = new Map(before.map(row => [id(row.hour, row.key), row]));
+    const changed = [...now.values()].filter(row => {
+      const old = kept.get(id(row.hour, row.key));
+      return !old || Math.fround(row.value) !== Math.fround(old.value);
+    });
+    const gone = before
+      .filter(row => !now.has(id(row.hour, row.key)))
+      .map(row => row.id);
+    if (changed.length) {
+      await this.db
+        .insert(h)
+        .values(changed.map(row => ({userId, day, ...row})))
+        .onConflictDoUpdate({
+          target: [h.userId, h.day, h.hour, h.key],
+          set: {value: sql`excluded.value`},
+        });
+    }
+    if (gone.length) {
+      await this.db
+        .delete(h)
+        .where(and(eq(h.userId, userId), inArray(h.id, gone)));
+    }
+  }
+
+  /** The hours kept of a period: each row's day, hour, key and value. */
+  async hours(
+    userId: string,
+    period: {from: LocalDate; to: LocalDate},
+  ): Promise<{day: LocalDate; hour: number; key: string; value: number}[]> {
+    const h = activityHourValues;
+    return this.db
+      .select({day: h.day, hour: h.hour, key: h.key, value: h.value})
+      .from(h)
+      .where(
+        and(
+          eq(h.userId, userId),
+          gte(h.day, period.from),
+          sql`${h.day} <= ${period.to}`,
+        ),
+      );
   }
 
   /** Today, the week and the owner's norm of each index (see indexSummary). */
@@ -258,11 +335,16 @@ export class IndicesService {
     return new Map(rows.map(row => [row.day, row.value]));
   }
 
-  /** The days from the first span to `before` not counted yet (no COUNTED mark), oldest first. */
+  /**
+   * The days from the first span (or `since`, if later) to `before` without the `mark` (not
+   * counted yet), oldest first.
+   */
   private async missingDays(
     userId: string,
     timeZone: string,
     before: LocalDate,
+    mark: string,
+    since?: LocalDate,
   ): Promise<LocalDate[]> {
     const [first] = await this.db
       .select({
@@ -270,14 +352,15 @@ export class IndicesService {
       })
       .from(activitySpans)
       .where(eq(activitySpans.userId, userId));
-    if (!first?.day || first.day >= before) {
+    const from = first?.day && since && since > first.day ? since : first?.day;
+    if (!from || from >= before) {
       return [];
     }
     const counted = new Set(
-      (await this.kept(userId, COUNTED, first.day, before)).keys(),
+      (await this.kept(userId, mark, from, before)).keys(),
     );
     const days: LocalDate[] = [];
-    for (let day = first.day; day < before; day = shift(day, 1)) {
+    for (let day = from; day < before; day = shift(day, 1)) {
       if (!counted.has(day)) {
         days.push(day);
       }

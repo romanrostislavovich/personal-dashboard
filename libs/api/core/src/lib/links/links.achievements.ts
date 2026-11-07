@@ -17,6 +17,7 @@ import {Period} from './links.service';
 import {ProjectOverviewService} from './project-overview.service';
 import {ChangePointsService, EVEN_DAY} from './change-points.service';
 import {ForecastsService} from './forecasts.service';
+import {IN_WINDOW_DAY} from './hours/hours.service';
 
 /** Shown under "Home" on the achievements page, with the others about the dashboard itself. */
 const MODULE = 'dashboard';
@@ -286,6 +287,94 @@ export class LinksAchievements implements OnModuleInit {
           ru: 'Выбрать для прогноза своё число сверх обычных',
         },
       ]),
+    });
+
+    // Links v2, hours: for looking into one's rhythm, and the deep work in one's own window.
+    this.achievements.register({
+      id: 'dashboard.rhythms-explored',
+      module: MODULE,
+      measure: userId => this.changes.seenCount(userId, 'rhythm'),
+      tiers: achievementTiers(
+        [
+          1,
+          '🕰️',
+          {en: 'Clockwork', ru: 'Как часы'},
+          {
+            en: 'Look at the day’s rhythm of one of your numbers (Links → Rhythm)',
+            ru: 'Посмотреть ритм дня одного из ваших чисел (Links → Ритм)',
+          },
+        ],
+        [
+          5,
+          '🎼',
+          {en: 'Own tempo', ru: 'Свой темп'},
+          {
+            en: 'Look at the rhythm of five numbers',
+            ru: 'Посмотреть ритм пяти чисел',
+          },
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'dashboard.hours-after-explored',
+      module: MODULE,
+      measure: userId => this.changes.seenCount(userId, 'after'),
+      tiers: achievementTiers(
+        [
+          1,
+          '⏱️',
+          {en: 'An hour later', ru: 'Час спустя'},
+          {
+            en: 'Open what the hour after an event looks like (Links → The hour after)',
+            ru: 'Открыть, каким бывает час после события (Links → Час после)',
+          },
+        ],
+        [
+          5,
+          '🧭',
+          {en: 'Cause and course', ru: 'Причины и следствия'},
+          {
+            en: 'Open the hour after five kinds of events',
+            ru: 'Открыть час после пяти видов событий',
+          },
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'dashboard.in-window',
+      module: MODULE,
+      measure: userId => this.changes.seenCount(userId, IN_WINDOW_DAY),
+      tiers: achievementTiers(
+        [
+          1,
+          '🪟',
+          {en: 'In my window', ru: 'В своём окне'},
+          {
+            en: 'A day whose deep work went mostly into your productive window',
+            ru: 'День, когда глубокая работа пришлась в основном на ваше продуктивное окно',
+          },
+        ],
+        [
+          10,
+          '🌅',
+          {en: 'Own hours', ru: 'Свои часы'},
+          {
+            en: 'Ten such days',
+            ru: 'Десять таких дней',
+          },
+        ],
+        [
+          50,
+          '⛵',
+          {en: 'With the wind', ru: 'По ветру'},
+          {
+            en: 'Fifty such days',
+            ru: 'Пятьдесят таких дней',
+          },
+        ],
+      ),
     });
 
     this.achievements.register({
