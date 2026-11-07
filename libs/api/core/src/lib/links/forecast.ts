@@ -42,7 +42,7 @@ interface Feature {
   label: string | null;
   unit: DailyMetric['unit'];
   currency?: string;
-  /** The value the day before the day forecast. */
+  /** The value on the day the forecast is made from. */
   value: (day: LocalDate) => number | undefined;
 }
 
@@ -73,14 +73,15 @@ export function bedtimeMetric(metrics: DailyMetric[]): DailyMetric | null {
 }
 
 /** The numbers a target is made of: they are the target itself, not what drives it. */
-function sourcesOf(target: DailyMetric): string[] {
+export function sourcesOf(target: Pick<DailyMetric, 'key'>): string[] {
   return target.key === BEDTIME_TARGET
     ? [BEDTIME_TARGET, BAND_BEDTIME, PHONE_LAST_USE]
     : [target.key];
 }
 
 /**
- * The forecast of `target` on `day` from the day before it, learnt from the days up to it.
+ * The forecast of `target` on `day` from the last day over before it (the day before in the
+ * morning, two days before in the evening), learnt from the days up to it.
  * `metrics` are the drivers to choose from (the target among them is left out).
  */
 export function forecast(
@@ -114,20 +115,25 @@ export function forecast(
   }
   const days = daysOf({from: allDays[0], to: day});
   const own = seriesOf(target, days);
-  const self = selfGuesses(own);
+  // In the evening today is not over (its sums still grow, its bedtime has not come): the
+  // next day is forecast from yesterday, the last day over — a model of its own, learnt and
+  // measured two days ahead, so it is trusted only as far as that is right.
+  const lag = made === 'evening' ? 2 : 1;
+  const before = (one: LocalDate) => shift(one, -lag);
+  const self = selfGuesses(own, lag);
 
-  // The days to learn from: the number on the day and on the day before, the days that are
-  // over only (in the evening today is not: its number may still grow).
-  const lastOver = shift(day, made === 'evening' ? -2 : -1);
+  // The days to learn from: the number on the day and on the day it is forecast from, the days
+  // that are over only (in the evening not today either).
+  const lastOver = before(day);
   const rows = days.filter(
-    one => one <= lastOver && own.has(one) && own.has(shift(one, -1)),
+    one => one <= lastOver && own.has(one) && own.has(before(one)),
   );
   if (rows.length < MIN_DAYS) {
     return {...empty, days: rows.length};
   }
 
   const features: Feature[] = [
-    selfFeature(target, 'self.yesterday', self.yesterday),
+    selfFeature(target, 'self.last', self.last),
     selfFeature(target, 'self.week', self.week),
     selfFeature(target, 'self.weekday', self.weekday),
     {
@@ -148,7 +154,7 @@ export function forecast(
       continue;
     }
     const series = seriesOf(metric, days);
-    const present = rows.filter(one => series.has(shift(one, -1))).length;
+    const present = rows.filter(one => series.has(before(one))).length;
     if (present / rows.length >= MIN_COVERAGE) {
       features.push({
         key: metric.key,
@@ -156,7 +162,7 @@ export function forecast(
         label: metric.label ?? null,
         unit: metric.unit,
         ...(metric.currency ? {currency: metric.currency} : {}),
-        value: one => series.get(shift(one, -1)),
+        value: one => series.get(before(one)),
       });
     }
   }
@@ -173,8 +179,8 @@ export function forecast(
   );
   // The plain guess: the best of the three on the same days.
   const fallback = mean(learn.map(actual));
-  const guesses = (['yesterday', 'week', 'weekday'] as const).map(name => ({
-    name,
+  const guesses = (['last', 'week', 'weekday'] as const).map(name => ({
+    name: name === 'last' ? ('yesterday' as const) : name,
     error: mean(
       test.map(one => Math.abs((self[name](one) ?? fallback) - actual(one))),
     ),
@@ -218,8 +224,11 @@ export function forecast(
   };
 }
 
-/** The plain guesses of a day from the number's own days before it. */
-function selfGuesses(own: Series) {
+/**
+ * The plain guesses of a day from the number's own days over `lag` days before it: the last
+ * of them, the week up to it, and the same weekday of the weeks before.
+ */
+function selfGuesses(own: Series, lag: number) {
   const meanOf = (days: LocalDate[]) => {
     const values = days
       .map(one => own.get(one))
@@ -227,9 +236,9 @@ function selfGuesses(own: Series) {
     return values.length ? mean(values) : undefined;
   };
   return {
-    yesterday: (day: LocalDate) => own.get(shift(day, -1)),
+    last: (day: LocalDate) => own.get(shift(day, -lag)),
     week: (day: LocalDate) =>
-      meanOf([...Array(7).keys()].map(back => shift(day, -1 - back))),
+      meanOf([...Array(7).keys()].map(back => shift(day, -lag - back))),
     weekday: (day: LocalDate) =>
       meanOf(
         [...Array(WEEKDAY_WEEKS).keys()].map(week =>

@@ -437,7 +437,7 @@ export const MAX_FORECAST_TARGETS = 12;
 
 /**
  * `morning` — made in the morning for the day, from yesterday's numbers; `evening` — made in
- * the evening for the next day, from the day so far (rougher: the day is not over).
+ * the evening for the next day, also from yesterday's (today is not over), so rougher.
  */
 export type ForecastMade = 'morning' | 'evening';
 
@@ -448,7 +448,10 @@ export interface ForecastDriver {
   label: string | null;
   unit: DailyMetric['unit'];
   currency?: string;
-  /** Its value the day before the day forecast (`null` — not known, its usual was taken). */
+  /**
+   * Its value on the day forecast from — the day before in the morning, two days before in the
+   * evening (`null` — not known, its usual was taken).
+   */
   value: number | null;
   /** What it added to this forecast, in the target's unit (−0.4 — four tenths less). */
   effect: number;
@@ -474,7 +477,10 @@ export interface LinksForecast {
   /** The mean miss of the model and of the plain guess on the latest days (in `unit`). */
   error: number | null;
   baselineError: number | null;
-  /** The plain guess it was measured against: the best of the three. */
+  /**
+   * The plain guess it was measured against, the best of three: `yesterday` — the number on
+   * the last day over, `weekday` — on the same weekdays, `week` — over the week.
+   */
   baseline: 'yesterday' | 'weekday' | 'week' | null;
   trusted: boolean;
   /** What drove this day's forecast, the largest first. */

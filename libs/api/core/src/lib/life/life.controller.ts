@@ -106,10 +106,17 @@ export class LifeController {
   /** Something of Links opened: a change point or a pair's chart (for the achievements). */
   @Post('seen')
   @HttpCode(204)
-  seen(
+  async seen(
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(linksSeenSchema)) body: LinksSeen,
   ): Promise<void> {
+    // A forecast is counted only when it is one the user is shown (a change is checked there).
+    if (body.kind === 'forecast') {
+      const [key, day] = body.key.split('|');
+      if (!(await this.forecasts.isShown(user.id, key, day))) {
+        return;
+      }
+    }
     return this.changes.seen(user.id, body);
   }
 

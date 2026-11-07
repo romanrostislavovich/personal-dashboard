@@ -58,12 +58,16 @@ describe.skipIf(!ADMIN_URL)('ForecastsService', () => {
   let pool: Pool;
   let db: NodePgDatabase;
   let metrics: DailyMetric[] = [];
+  let reads = 0;
 
   const service = () =>
     new ForecastsService(
       db as never,
       {
-        dailyMetrics: async () => metrics,
+        dailyMetrics: async () => {
+          reads++;
+          return metrics;
+        },
       } as never,
       {
         findById: async () => ({}),
@@ -183,5 +187,65 @@ describe.skipIf(!ADMIN_URL)('ForecastsService', () => {
     ]);
     // Before 18:00 there is no forecast of tomorrow yet.
     expect(list.forecasts.every(one => one.day === TODAY)).toBe(true);
+  });
+
+  it('leaves the hidden sections out of the bedtime and of what drove a forecast', async () => {
+    const user = await addUser();
+    metrics = [
+      ...life(),
+      metric('health.band.bedtime', index => 23 + (index % 3) / 2, {
+        unit: 'clock',
+      }),
+      metric('activity.phone.lastUse', () => 22, {unit: 'clock', extra: true}),
+    ];
+    // Kept by the job with the band (nothing hidden from the user's own pages).
+    await service().keepDue(user, MORNING);
+    const hidden = await service().list(user, ['health'], MORNING);
+    const bedtime = hidden.forecasts.find(one => one.key === 'links.bedtime');
+    // The phone's evenings only, not the kept forecast made of the band.
+    expect(bedtime?.value).toBe(22);
+    expect(
+      hidden.forecasts.flatMap(one => one.drivers).map(driver => driver.key),
+    ).not.toContain('health.sleep');
+    expect(hidden.past.some(one => one.key === 'links.bedtime')).toBe(false);
+    expect(hidden.candidates.map(one => one.key)).not.toContain('health.sleep');
+
+    const open = await service().list(user, [], MORNING);
+    expect(
+      open.forecasts.find(one => one.key === 'links.bedtime')?.value,
+    ).not.toBe(22);
+    // The bedtime's parts are not offered as targets of their own.
+    expect(open.candidates.map(one => one.key)).not.toContain(
+      'health.band.bedtime',
+    );
+  });
+
+  it('takes a day of no tasks done as a zero', async () => {
+    const user = await addUser();
+    // Tasks are known up to the day before yesterday: yesterday none was done.
+    metrics = life().map(one =>
+      one.key === 'tasks.done'
+        ? {...one, days: one.days.filter(day => day.day < '2026-11-05')}
+        : one,
+    );
+    await service().keepDue(user, new Date('2026-11-05T07:00:00Z'));
+    const list = await service().list(user, [], MORNING);
+    expect(
+      list.past.find(
+        one => one.key === 'tasks.done' && one.day === '2026-11-05',
+      )?.actual,
+    ).toBe(0);
+  });
+
+  it('tries the job once a day, not every hour of the morning', async () => {
+    const user = await addUser();
+    metrics = life();
+    const job = service();
+    reads = 0;
+    await job.keepDue(user, MORNING);
+    await job.keepDue(user, new Date('2026-11-06T08:00:00Z'));
+    await job.keepDue(user, new Date('2026-11-06T09:00:00Z'));
+    // The bedtime and deep work cannot be made here: still one read, not three.
+    expect(reads).toBe(1);
   });
 });

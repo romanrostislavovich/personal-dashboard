@@ -77,13 +77,26 @@ describe('the forecasts', () => {
     expect(result.value!).toBeLessThanOrEqual(5);
   });
 
-  it('in the evening learns only from the days that are over', () => {
+  it('in the evening forecasts from yesterday: the day not over changes nothing', () => {
     const metrics = life(200);
-    const tomorrow = shift('2026-01-01', 200) as LocalDate;
+    const today = shift('2026-01-01', 199) as LocalDate;
+    const tomorrow = shift(today, 1);
     const evening = forecast(metrics, metrics[0], tomorrow, 'evening');
-    const morning = forecast(metrics, metrics[0], tomorrow, 'morning');
     expect(evening.made).toBe('evening');
-    expect(evening.days).toBe(morning.days - 1);
+    expect(evening.value).not.toBeNull();
+    // Today's sleep and mood so far, whatever they are, do not move tomorrow's forecast.
+    const changed = metrics.map(metric => ({
+      ...metric,
+      days: metric.days.map(one =>
+        one.day === today ? {...one, value: one.value * 3} : one,
+      ),
+    }));
+    expect(forecast(changed, changed[0], tomorrow, 'evening').value).toBe(
+      evening.value,
+    );
+    expect(
+      evening.drivers.every(driver => driver.key !== 'self.yesterday'),
+    ).toBe(true);
   });
 
   it('says nothing without enough days of the number', () => {
