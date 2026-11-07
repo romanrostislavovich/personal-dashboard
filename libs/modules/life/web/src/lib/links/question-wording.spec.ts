@@ -1,6 +1,7 @@
 import {QuestionAnswer, QuestionNumber} from '@pd/contracts';
 import {
   answerSentence,
+  chanceOf,
   confounderLines,
   insightSentence,
   Wording,
@@ -98,5 +99,10 @@ describe('the wording of questions and findings', () => {
         wording,
       ),
     ).toContain('life.insights.change(');
+  });
+
+  it('tells a tiny chance as less than a hundredth of a percent', () => {
+    expect(chanceOf(0, wording)).toBe('< 0.01%');
+    expect(chanceOf(0.031, wording)).toBe('3.1%');
   });
 });

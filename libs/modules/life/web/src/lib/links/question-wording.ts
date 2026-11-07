@@ -50,11 +50,13 @@ export function dayOf(day: string, {locale}: Wording): string {
 
 /** How often chance alone gives this, as a share: "< 0.01 %", "3.1 %". */
 export function chanceOf(p: number, {locale}: Wording): string {
-  const percent = new Intl.NumberFormat(locale, {
-    style: 'percent',
-    maximumFractionDigits: 1,
-  });
-  return p < 0.0001 ? `< ${percent.format(0.0001)}` : percent.format(p);
+  const percent = (digits: number) =>
+    new Intl.NumberFormat(locale, {
+      style: 'percent',
+      maximumFractionDigits: digits,
+    });
+  // Below a hundredth of a percent it is "less than that", with the digits to say so.
+  return p < 0.0001 ? `< ${percent(2).format(0.0001)}` : percent(1).format(p);
 }
 
 /** A value in the number's unit: minutes as minutes, the rest as the links show them. */
