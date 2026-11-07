@@ -12,6 +12,17 @@ export interface DaySummary {
   indices: {deepWork: number | null; draining: number | null};
   /** How many of today's numbers are far above their usual level (Links); `null` — not known. */
   unusual: number | null;
+  /** Tomorrow's trusted forecasts (Links), in their units; `null` — none trusted, or not known. */
+  tomorrow: TomorrowForecast | null;
+}
+
+/** The default targets of the forecasts: the bedtime (hours, over 24 after midnight), deep work
+ * (hours), tasks done and the mood (1–5); a target not trusted is left out. */
+export interface TomorrowForecast {
+  bedtime?: number;
+  deepWork?: number;
+  tasks?: number;
+  mood?: number;
 }
 
 /** Less than this at the computer is not a day worth summing up. */
@@ -23,6 +34,7 @@ export function summaryOf(
   limits: DaySummary['limits'],
   indices: DaySummary['indices'] = {deepWork: null, draining: null},
   unusual: number | null = null,
+  tomorrow: TomorrowForecast | null = null,
 ): DaySummary | null {
   if (stats.totalSeconds < SUMMARY_MIN_SECONDS) {
     return null;
@@ -34,6 +46,7 @@ export function summaryOf(
     limits,
     indices,
     unusual,
+    tomorrow: tomorrow && Object.keys(tomorrow).length ? tomorrow : null,
   };
 }
 

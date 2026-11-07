@@ -59,6 +59,33 @@ describe('summaryOf', () => {
     expect(ru.summaryBody(summary(0)!)).not.toContain('обычного');
   });
 
+  it("tells tomorrow's trusted forecasts, the bedtime as a clock", () => {
+    const summary = summaryOf(
+      stats(5600),
+      {completed: 0, seconds: 0},
+      [],
+      {deepWork: null, draining: null},
+      null,
+      {bedtime: 24.67, deepWork: 2, tasks: 3.4},
+    )!;
+    expect(activityMessages('ru').summaryBody(summary)).toContain(
+      'Завтра, похоже: отбой ~00:40 · глубокая работа ~2 ч 0 мин · сделано задач ~3',
+    );
+    expect(activityMessages('en').summaryBody(summary)).toContain(
+      'Tomorrow, likely: bedtime ~00:40',
+    );
+    const none = summaryOf(
+      stats(5600),
+      {completed: 0, seconds: 0},
+      [],
+      undefined,
+      null,
+      {},
+    )!;
+    expect(none.tomorrow).toBeNull();
+    expect(activityMessages('ru').summaryBody(none)).not.toContain('Завтра');
+  });
+
   it('skips a day with almost nothing', () => {
     expect(summaryOf(stats(300), {completed: 0, seconds: 0}, [])).toBeNull();
   });

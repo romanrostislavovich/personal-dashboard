@@ -1,5 +1,5 @@
 import {pickMessages} from '@pd/api-core';
-import {DaySummary} from './evening-summary';
+import {DaySummary, TomorrowForecast} from './evening-summary';
 
 /** The Russian form of a count: 1 число, 2 числа, 5 чисел. */
 function plural(count: number, one: string, few: string, many: string) {
@@ -28,6 +28,46 @@ function indexLine(
   ]
     .filter(Boolean)
     .join(' · ');
+}
+
+/** "00:40" of hours of the evening (24.67 — twenty to one at night). */
+function clock(value: number): string {
+  const minutes = Math.round(value * 60) % (24 * 60);
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+}
+
+/** "Tomorrow, likely: bedtime ~00:40 · deep work ~2 h" — the trusted forecasts; empty — none. */
+function tomorrowLine(
+  tomorrow: TomorrowForecast | null,
+  words: {
+    lead: string;
+    bedtime: string;
+    deep: string;
+    tasks: string;
+    mood: string;
+    h: string;
+    min: string;
+  },
+): string {
+  if (!tomorrow) {
+    return '';
+  }
+  const parts = [
+    tomorrow.bedtime !== undefined
+      ? `${words.bedtime} ~${clock(tomorrow.bedtime)}`
+      : '',
+    tomorrow.deepWork !== undefined
+      ? `${words.deep} ~${hours(tomorrow.deepWork * 3600, words.h, words.min)}`
+      : '',
+    tomorrow.tasks !== undefined
+      ? `${words.tasks} ~${Math.round(tomorrow.tasks)}`
+      : '',
+    tomorrow.mood !== undefined
+      ? `${words.mood} ~${tomorrow.mood.toFixed(1)}`
+      : '',
+  ].filter(Boolean);
+  return parts.length ? `${words.lead}: ${parts.join(' · ')}` : '';
 }
 
 /** "3 h 20 min" / "3 ч 20 мин". */
@@ -126,6 +166,15 @@ const messages = {
         summary.unusual
           ? `Above usual today: ${summary.unusual} ${summary.unusual === 1 ? 'number' : 'numbers'} — see Links`
           : '',
+        tomorrowLine(summary.tomorrow, {
+          lead: 'Tomorrow, likely',
+          bedtime: 'bedtime',
+          deep: 'deep work',
+          tasks: 'tasks done',
+          mood: 'mood',
+          h: 'h',
+          min: 'min',
+        }),
         ...summary.limits.map(
           l =>
             `Limit reached: ${l.label} (${hours(l.minutes * 60, 'h', 'min')})`,
@@ -199,6 +248,15 @@ const messages = {
         summary.unusual
           ? `Выше обычного сегодня: ${summary.unusual} ${plural(summary.unusual, 'число', 'числа', 'чисел')} — смотри в Links`
           : '',
+        tomorrowLine(summary.tomorrow, {
+          lead: 'Завтра, похоже',
+          bedtime: 'отбой',
+          deep: 'глубокая работа',
+          tasks: 'сделано задач',
+          mood: 'настроение',
+          h: 'ч',
+          min: 'мин',
+        }),
         ...summary.limits.map(
           l =>
             `Лимит превышен: ${l.label} (${hours(l.minutes * 60, 'ч', 'мин')})`,
