@@ -86,7 +86,11 @@ import {
             }
           </ul>
           @if (adding()) {
-            <pd-question-form [catalog]="data.value()" (saved)="added()" />
+            <pd-question-form
+              [catalog]="data.value()"
+              (saved)="added()"
+              (cancelled)="adding.set(false)"
+            />
           } @else {
             <button matButton type="button" (click)="adding.set(true)">
               <mat-icon>add</mat-icon>
@@ -210,9 +214,11 @@ export class QuestionsCardComponent {
     if (card.question.title) {
       return card.question.title;
     }
-    const name = (key: string, number: LinksQuestionCard['cause']) =>
-      number ? nameOf(number, wording) : key;
-    return `${name(card.question.cause, card.cause)} → ${name(card.question.effect, card.effect)}`;
+    const name = (number: LinksQuestionCard['cause']) =>
+      number
+        ? nameOf(number, wording)
+        : this.transloco.translate('life.questions.unknownNumber');
+    return `${name(card.cause)} → ${name(card.effect)}`;
   }
 
   /** "Only when sleep is low: −1.5; when high: −0.1". */

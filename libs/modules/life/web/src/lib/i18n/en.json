@@ -284,8 +284,10 @@
     "caution": "A finding is what goes together on your days; a trial (an experiment) tells what helps.",
     "open": "All findings",
     "change": "{{number}}: about {{after}} since {{day}}, {{before}} before",
-    "sure": "chance alone gives this with a probability of {{p}}",
-    "since": "the new level since {{day}}: {{value}}"
+    "sure": "chance alone gives this {{p}} of the time",
+    "noneToday": "No findings yet: Links looks for them every Monday.",
+    "afterProof": "seen {{events}} times; the difference {{difference}}",
+    "changeProof": "since {{day}}: about {{after}}, before it {{before}}"
   },
   "questions": {
     "title": "My questions",
@@ -321,7 +323,6 @@
       "text": "Your question, e.g. \"does late phone spoil the next day's focus?\"",
       "draft": "Turn into a card",
       "draftFailed": "Could not turn it into a card.",
-      "noAi": "In words needs an AI connection (Settings → AI); the numbers can be picked by hand.",
       "when": "When",
       "cause": "What I do",
       "effect": "What I get",
@@ -330,7 +331,17 @@
       "high": "it is high",
       "low": "it is low",
       "save": "Keep the question",
-      "saveFailed": "Could not keep the question."
-    }
+      "saveFailed": "Could not keep the question.",
+      "reason": {
+        "noCard": "The AI did not make a card of it: try other words.",
+        "noWhen": "The AI did not say when the effect is: try other words.",
+        "unknownNumbers": "Those numbers are not collected: pick them from the lists.",
+        "duplicate": "This question is asked already.",
+        "tooMany": "Thirty questions is the most: remove one first.",
+        "noAi": "In words needs an AI connection (Settings → AI); the numbers can be picked by hand."
+      }
+    },
+    "unknownNumber": "a number not collected",
+    "fewTimes": "Not enough times yet: {{n}} so far, 8 are needed."
   }
 }

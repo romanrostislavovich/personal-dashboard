@@ -13,12 +13,16 @@ import {MatButtonToggleModule} from '@angular/material/button-toggle';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
+import {errorBody, errorStatus} from '@pd/web-core';
 import {
   LinksQuestions,
   QUESTION_WHEN,
+  QUESTION_REJECTIONS,
   QuestionInput,
   QuestionNumber,
+  QuestionRejection,
   QuestionWhen,
 } from '@pd/contracts';
 import {LifeApi} from '../life.api';
@@ -78,7 +82,7 @@ import {LifeApi} from '../life.api';
       <div class="fields">
         <mat-form-field subscriptSizing="dynamic">
           <mat-label>{{ 'life.questions.form.when' | transloco }}</mat-label>
-          <mat-select [(ngModel)]="when">
+          <mat-select [(ngModel)]="when" (ngModelChange)="edited()">
             @for (option of whens; track option) {
               <mat-option [value]="option">{{
                 'life.questions.when.' + option | transloco
@@ -88,7 +92,7 @@ import {LifeApi} from '../life.api';
         </mat-form-field>
         <mat-form-field subscriptSizing="dynamic">
           <mat-label>{{ 'life.questions.form.cause' | transloco }}</mat-label>
-          <mat-select [(ngModel)]="cause">
+          <mat-select [(ngModel)]="cause" (ngModelChange)="edited()">
             @for (option of causes(); track option.key) {
               <mat-option [value]="option.key">{{ option.name }}</mat-option>
             }
@@ -96,7 +100,7 @@ import {LifeApi} from '../life.api';
         </mat-form-field>
         <mat-form-field subscriptSizing="dynamic">
           <mat-label>{{ 'life.questions.form.effect' | transloco }}</mat-label>
-          <mat-select [(ngModel)]="effect">
+          <mat-select [(ngModel)]="effect" (ngModelChange)="edited()">
             @for (option of effects(); track option.key) {
               <mat-option [value]="option.key">{{ option.name }}</mat-option>
             }
@@ -142,6 +146,9 @@ import {LifeApi} from '../life.api';
         {{ 'life.questions.form.save' | transloco }}
       </button>
     }
+    <button matButton type="button" (click)="cancelled.emit()">
+      {{ 'core.actions.cancel' | transloco }}
+    </button>
     @if (error(); as message) {
       <p class="error" role="alert">{{ message }}</p>
     }
@@ -177,6 +184,10 @@ export class QuestionFormComponent {
 
   readonly catalog = input.required<LinksQuestions>();
   readonly saved = output<void>();
+  readonly cancelled = output<void>();
+  private readonly language = toSignal(this.transloco.langChanges$, {
+    initialValue: this.transloco.getActiveLang(),
+  });
 
   protected readonly whens = QUESTION_WHEN;
   protected readonly mode = signal<'pick' | 'words'>('pick');
@@ -192,13 +203,16 @@ export class QuestionFormComponent {
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
 
-  private readonly named = (list: QuestionNumber[]) =>
-    list
+  /** By name in the language, so a list reads and stays in order. */
+  private readonly named = (list: QuestionNumber[]) => {
+    const language = this.language();
+    return list
       .map(one => ({
         key: one.key,
         name: one.label ?? this.transloco.translate<string>(one.labelKey),
       }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => a.name.localeCompare(b.name, language));
+  };
   protected readonly numbers = computed(() =>
     this.named(this.catalog().numbers),
   );
@@ -230,19 +244,9 @@ export class QuestionFormComponent {
         this.fill(input);
         this.picked.set(true);
       },
-      error: (failure: {status?: number; body?: {message?: unknown}}) => {
+      error: (failure: unknown) => {
         this.busy.set(false);
-        // The AI's own reason when nothing fits; no AI connected is said plainly.
-        const reason = failure?.body?.message;
-        this.error.set(
-          failure?.status === 422 && typeof reason === 'string'
-            ? reason
-            : this.transloco.translate(
-                failure?.status === 400
-                  ? 'life.questions.form.noAi'
-                  : 'life.questions.form.draftFailed',
-              ),
-        );
+        this.error.set(this.refusal(failure, 'draftFailed'));
       },
     });
   }
@@ -265,13 +269,40 @@ export class QuestionFormComponent {
         this.reset();
         this.saved.emit();
       },
-      error: () => {
+      error: (failure: unknown) => {
         this.busy.set(false);
-        this.error.set(
-          this.transloco.translate('life.questions.form.saveFailed'),
-        );
+        this.error.set(this.refusal(failure, 'saveFailed'));
       },
     });
+  }
+
+  /** A choice changed by hand: the AI's words no longer name it. */
+  protected edited(): void {
+    this.title.set(undefined);
+  }
+
+  /**
+   * Why it did not go, in the page's language: a reason the server names, else the AI's own
+   * words (a 422 without one), else the general failure.
+   */
+  private refusal(failure: unknown, otherwise: string): string {
+    const body = errorBody(failure) as {
+      reason?: unknown;
+      message?: unknown;
+    } | null;
+    const reason = body?.reason;
+    if (
+      typeof reason === 'string' &&
+      (QUESTION_REJECTIONS as readonly string[]).includes(reason)
+    ) {
+      return this.transloco.translate(
+        `life.questions.form.reason.${reason as QuestionRejection}`,
+      );
+    }
+    if (errorStatus(failure) === 422 && typeof body?.message === 'string') {
+      return body.message;
+    }
+    return this.transloco.translate(`life.questions.form.${otherwise}`);
   }
 
   private fill(input: QuestionInput): void {

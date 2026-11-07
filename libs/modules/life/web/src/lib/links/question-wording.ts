@@ -21,9 +21,40 @@ export interface Wording {
   locale: string;
 }
 
-/** A number's name: its own label, else its translation. */
-export function nameOf(number: QuestionNumber, {translate}: Wording): string {
-  return number.label ?? translate(number.labelKey);
+/**
+ * A number's name: its own label, else its translation; `inside` — in the middle of a sentence,
+ * so its first letter small (a label of the user's own stays as written).
+ */
+export function nameOf(
+  number: QuestionNumber,
+  {translate, locale}: Wording,
+  inside = false,
+): string {
+  if (number.label) {
+    return number.label;
+  }
+  const name = translate(number.labelKey);
+  return inside
+    ? name.charAt(0).toLocaleLowerCase(locale) + name.slice(1)
+    : name;
+}
+
+/** A day as the language writes it ("12 October 2026"). */
+export function dayOf(day: string, {locale}: Wording): string {
+  return new Date(`${day}T00:00:00`).toLocaleDateString(locale, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+/** How often chance alone gives this, as a share: "< 0.01 %", "3.1 %". */
+export function chanceOf(p: number, {locale}: Wording): string {
+  const percent = new Intl.NumberFormat(locale, {
+    style: 'percent',
+    maximumFractionDigits: 1,
+  });
+  return p < 0.0001 ? `< ${percent.format(0.0001)}` : percent.format(p);
 }
 
 /** A value in the number's unit: minutes as minutes, the rest as the links show them. */
@@ -53,7 +84,10 @@ export function answerSentence(
     return translate('life.questions.missing');
   }
   if (answer.status === 'few' || answer.high === null || answer.low === null) {
-    return translate('life.questions.few', {n: answer.n});
+    return translate(
+      when === 'hourAfter' ? 'life.questions.fewTimes' : 'life.questions.few',
+      {n: answer.n},
+    );
   }
   if (when === 'hourAfter') {
     return translate('life.questions.after', {
@@ -67,7 +101,7 @@ export function answerSentence(
   return translate('life.questions.pair', {
     effect: nameOf(effect, wording),
     when: translate(`life.questions.when.${when}`),
-    cause: nameOf(cause, wording),
+    cause: nameOf(cause, wording, true),
     threshold: valueOf(cause, answer.threshold ?? 0, wording),
     high: valueOf(effect, answer.high, wording),
     low: valueOf(effect, answer.low, wording),
@@ -98,7 +132,7 @@ export function insightSentence(fact: InsightFact, wording: Wording): string {
     case 'change':
       return wording.translate('life.insights.change', {
         number: nameOf(fact.number, wording),
-        day: fact.day,
+        day: dayOf(fact.day, wording),
         before: valueOf(fact.number, fact.before, wording),
         after: valueOf(fact.number, fact.after, wording),
       });

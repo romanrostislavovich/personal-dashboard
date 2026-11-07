@@ -13,9 +13,12 @@ import {MatIconModule} from '@angular/material/icon';
 import {RouterLink} from '@angular/router';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {LinksInsight} from '@pd/contracts';
+import {needsSetup} from '@pd/web-core';
 import {LifeApi} from '../life.api';
 import {
+  chanceOf,
   confounderLines,
+  dayOf,
   insightSentence,
   valueOf,
   Wording,
@@ -62,7 +65,7 @@ import {
                 @let insight = item.insight;
                 <li>
                   <p class="text">{{ item.sentence }}</p>
-                  @if (!compact()) {
+                  @if (!compact() && item.proof.length) {
                     <button
                       matButton
                       type="button"
@@ -83,7 +86,12 @@ import {
               }
             </ul>
           } @else {
-            <p class="muted">{{ 'life.insights.none' | transloco }}</p>
+            <p class="muted">
+              {{
+                (compact() ? 'life.insights.noneToday' : 'life.insights.none')
+                  | transloco
+              }}
+            </p>
           }
           @if (!compact()) {
             <div class="actions">
@@ -171,6 +179,16 @@ export class InsightsCardComponent {
   protected readonly refreshing = signal(false);
   protected readonly failed = signal(false);
 
+  constructor() {
+    // On Home: no findings yet is a widget waiting, not an empty card.
+    needsSetup(
+      () =>
+        this.compact() &&
+        this.data.hasValue() &&
+        !this.data.value().insights.length,
+    );
+  }
+
   private readonly wording = computed<Wording>(() => ({
     locale: this.language(),
     translate: (key, params) => this.transloco.translate(key, params),
@@ -204,18 +222,29 @@ export class InsightsCardComponent {
       lines.push(insightSentence(fact, wording));
     }
     if (fact.kind === 'pair' || fact.kind === 'question') {
+      if (fact.answer.p !== null) {
+        lines.push(
+          this.transloco.translate('life.insights.sure', {
+            p: chanceOf(fact.answer.p, wording),
+          }),
+        );
+      }
+      lines.push(...confounderLines(fact.answer, wording));
+    }
+    if (fact.kind === 'after') {
       lines.push(
-        this.transloco.translate('life.insights.sure', {
-          p: fact.answer.p ?? 1,
+        this.transloco.translate('life.insights.afterProof', {
+          events: fact.events,
+          difference: `${fact.difference > 0 ? '+' : '−'}${valueOf(fact.effect, Math.abs(fact.difference), wording)}`,
         }),
-        ...confounderLines(fact.answer, wording),
       );
     }
     if (fact.kind === 'change') {
       lines.push(
-        this.transloco.translate('life.insights.since', {
-          day: fact.day,
-          value: valueOf(fact.number, fact.after, wording),
+        this.transloco.translate('life.insights.changeProof', {
+          day: dayOf(fact.day, wording),
+          before: valueOf(fact.number, fact.before, wording),
+          after: valueOf(fact.number, fact.after, wording),
         }),
       );
     }
@@ -230,7 +259,7 @@ export class InsightsCardComponent {
     }
     this.open.set(insight.id);
     this.api
-      .seen({kind: 'insight', key: insight.id})
+      .seen({kind: 'insight', key: insight.key})
       .subscribe({error: () => undefined});
   }
 
