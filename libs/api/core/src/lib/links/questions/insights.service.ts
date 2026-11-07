@@ -42,6 +42,16 @@ const REFRESH_MS = 3_600_000;
 const MONDAY_HOUR = 5;
 /** The page's button, run on the server for a sync client (docs/sync.md). */
 export const INSIGHTS_REFRESH = 'life.insights-refresh';
+/** The night's numbers: on the same day they come before it (last night's sleep). */
+const NIGHT = [
+  'health.band.sleep',
+  'health.band.deep',
+  'health.band.rem',
+  'health.band.light',
+  'health.band.awake',
+  'health.band.bedtime',
+  'health.sleep',
+];
 /** Numbers whose keys carry the user's own words (diary tags): the AI gets them unnamed. */
 const UNNAMED_FOR_AI = ['diary.tag.'];
 
@@ -314,13 +324,9 @@ export class InsightsService implements OnModuleInit {
     for (const pair of correlations
       .filter(one => one.strong && one.lag <= 1)
       .slice(0, PAIRS_LOOKED_AT)) {
-      // The cause is what is done, the effect what a day gives; the next day's is the effect.
-      const [cause, effect] =
-        pair.lag === 0 &&
-        byKey.get(pair.a)?.outcome &&
-        !byKey.get(pair.b)?.outcome
-          ? [pair.b, pair.a]
-          : [pair.a, pair.b];
+      const [cause, effect] = directionOf(pair.a, pair.b, pair.lag, key =>
+        Boolean(byKey.get(key)?.outcome),
+      );
       if (told.has(pairOf(cause, effect))) {
         continue;
       }
@@ -439,6 +445,26 @@ export class InsightsService implements OnModuleInit {
   private async timeZoneOf(userId: string): Promise<string> {
     return this.users.timeZoneOf(await this.users.findById(userId));
   }
+}
+
+/**
+ * Which of a pair is the cause: the next day's number is the effect; on the same day the night
+ * (sleep, the bedtime) comes before the day, and what is done before what a day gives.
+ */
+export function directionOf(
+  a: string,
+  b: string,
+  lag: number,
+  isOutcome: (key: string) => boolean,
+): [string, string] {
+  if (lag) {
+    return [a, b];
+  }
+  const night = (key: string) => NIGHT.some(prefix => key.startsWith(prefix));
+  if (night(a) !== night(b)) {
+    return night(a) ? [a, b] : [b, a];
+  }
+  return isOutcome(a) && !isOutcome(b) ? [b, a] : [a, b];
 }
 
 /** A pair of numbers either way round: told once only. */

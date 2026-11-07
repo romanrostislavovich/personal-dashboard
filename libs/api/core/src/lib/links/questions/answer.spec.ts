@@ -1,6 +1,7 @@
 import {LocalDate} from '@pd/contracts';
 import {daysOf, Series, shift} from '../daily-series';
 import {answerDays, MIN_DAYS, Strata} from './answer';
+import {directionOf} from './insights.service';
 
 const DAYS = daysOf({from: '2026-06-01', to: '2026-08-29'}) as LocalDate[];
 const weekend = (day: LocalDate) =>
@@ -69,5 +70,22 @@ describe('the answer to a question', () => {
     expect(answer.status).toBe('few');
     expect(answer.n).toBe(MIN_DAYS - 2 + 1);
     expect(shift(DAYS[0], 1)).toBe(DAYS[1]);
+  });
+
+  it('puts the night before the day and what is done before what a day gives', () => {
+    const outcome = (key: string) =>
+      ['diary.mood', 'health.band.sleep', 'tasks.done'].includes(key);
+    expect(directionOf('diary.mood', 'health.band.sleep', 0, outcome)).toEqual([
+      'health.band.sleep',
+      'diary.mood',
+    ]);
+    expect(
+      directionOf('tasks.done', 'activity.phone.night', 0, outcome),
+    ).toEqual(['activity.phone.night', 'tasks.done']);
+    // The next day's number is the effect, whatever it is.
+    expect(directionOf('diary.mood', 'health.band.sleep', 1, outcome)).toEqual([
+      'diary.mood',
+      'health.band.sleep',
+    ]);
   });
 });
