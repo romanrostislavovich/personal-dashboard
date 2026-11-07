@@ -59,10 +59,13 @@ export class HoursLinks implements OnModuleInit {
           `${row.day}T${String(row.hour).padStart(2, '0')}`;
         const byKey = new Map<string, {hour: string; value: number}[]>();
         for (const row of rows) {
-          byKey.set(row.key, [
-            ...(byKey.get(row.key) ?? []),
-            {hour: hourOf(row), value: row.value},
-          ]);
+          const list = byKey.get(row.key);
+          const item = {hour: hourOf(row), value: row.value};
+          if (list) {
+            list.push(item);
+          } else {
+            byKey.set(row.key, [item]);
+          }
         }
         const metric = (key: string, unit: HourlyMetric['unit']) => ({
           key: `activity.hour.${key}`,

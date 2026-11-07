@@ -30,15 +30,17 @@ export function hourAfter(
   metrics: HourlyMetric[],
   events: HourEvent[],
 ): HourAfter[] {
+  // Each number's known hours read once, for every event it is compared with.
+  const seen = metrics.map(metric => ({metric, hours: knownHours(metric)}));
   const found: (HourAfter & {p: number})[] = [];
   for (const event of events) {
     const happened = new Set(event.hours);
     const eventDays = new Set(event.days);
-    for (const metric of metrics) {
+    for (const {metric, hours} of seen) {
       if (event.itself?.includes(metric.key)) {
         continue;
       }
-      const result = compare(metric, event, happened, eventDays);
+      const result = compare(metric, hours, event, happened, eventDays);
       if (result) {
         found.push(result);
       }
@@ -54,29 +56,64 @@ export function hourAfter(
     .sort((a, b) => Number(b.strong) - Number(a.strong) || a.q - b.q);
 }
 
-function compare(
-  metric: HourlyMetric,
-  event: HourEvent,
-  happened: Set<LocalHour>,
-  eventDays: Set<string>,
-): (HourAfter & {p: number}) | null {
+interface KnownHour {
+  hour: LocalHour;
+  /** The hour before it: an event then makes it an hour after, not a comparison. */
+  previous: LocalHour;
+  day: string;
+  /** `weekday|hour`: the slot it is compared within. */
+  slot: string;
+  value: number;
+}
+
+/** Every hour of the number's days it has a value for, in order, and the values by hour. */
+function knownHours(metric: HourlyMetric): {
+  list: KnownHour[];
+  byHour: Map<LocalHour, number>;
+} {
   const read = readerOf(metric);
-  // The hours of each weekday and hour both were seen in, without the event the hour before.
-  const slots = new Map<string, {hour: LocalHour; value: number}[]>();
+  const list: KnownHour[] = [];
   for (const day of metric.days) {
-    if (!eventDays.has(day)) {
-      continue;
-    }
     const weekday = weekdayOf(day);
     for (let at = 0; at < 24; at++) {
       const hour = hourOf(day, at);
       const value = read(hour);
-      if (value === undefined || happened.has(previousHour(hour))) {
-        continue;
+      if (value !== undefined) {
+        list.push({
+          hour,
+          previous: previousHour(hour),
+          day,
+          slot: `${weekday}|${at}`,
+          value,
+        });
       }
-      const slot = `${weekday}|${at}`;
-      slots.set(slot, [...(slots.get(slot) ?? []), {hour, value}]);
     }
+  }
+  return {list, byHour: new Map(list.map(one => [one.hour, one.value]))};
+}
+
+function compare(
+  metric: HourlyMetric,
+  known: {list: KnownHour[]; byHour: Map<LocalHour, number>},
+  event: HourEvent,
+  happened: Set<LocalHour>,
+  eventDays: Set<string>,
+): (HourAfter & {p: number}) | null {
+  // The hours of each weekday and hour both were seen in, without the event the hour before
+  // (so the hour after an event is never its own comparison).
+  const slots = new Map<string, number[]>();
+  const all: number[] = [];
+  for (const one of known.list) {
+    if (!eventDays.has(one.day) || happened.has(one.previous)) {
+      continue;
+    }
+    const values = slots.get(one.slot);
+    if (values) {
+      values.push(one.value);
+    } else {
+      slots.set(one.slot, [one.value]);
+    }
+    all.push(one.value);
   }
 
   const differences: number[] = [];
@@ -84,18 +121,16 @@ function compare(
   const usuals: number[] = [];
   for (const hour of [...happened].sort()) {
     const after = nextHour(hour);
-    const value = read(after);
+    const value = known.byHour.get(after);
     if (value === undefined) {
       continue;
     }
     const {day, hour: at} = splitHour(after);
-    const control = (slots.get(`${weekdayOf(day)}|${at}`) ?? []).filter(
-      one => one.hour !== after,
-    );
+    const control = slots.get(`${weekdayOf(day)}|${at}`) ?? [];
     if (control.length < MIN_CONTROL) {
       continue;
     }
-    const usual = mean(control.map(one => one.value));
+    const usual = mean(control);
     afters.push(value);
     usuals.push(usual);
     differences.push(value - usual);
@@ -109,10 +144,8 @@ function compare(
   const spread = Math.sqrt(
     mean(differences.map(one => (one - difference) ** 2)) * (n / (n - 1)),
   );
-  const all = [...slots.values()].flat().map(one => one.value);
   const allMean = mean(all);
   const metricSpread = Math.sqrt(mean(all.map(one => (one - allMean) ** 2)));
-  const t = spread ? difference / (spread / Math.sqrt(n)) : 0;
   return {
     event: event.key,
     outcome: metric.key,
@@ -120,7 +153,12 @@ function compare(
     after: round(mean(afters)),
     usual: round(mean(usuals)),
     difference: round(difference),
-    p: spread ? tTwoSidedP(t, n - 1) : 1,
+    // The same difference every time, with no spread at all, is as sure as it gets.
+    p: spread
+      ? tTwoSidedP(difference / (spread / Math.sqrt(n)), n - 1)
+      : difference
+        ? 0
+        : 1,
     q: 1,
     strong:
       metricSpread > 0 && Math.abs(difference) / metricSpread >= MIN_EFFECT,

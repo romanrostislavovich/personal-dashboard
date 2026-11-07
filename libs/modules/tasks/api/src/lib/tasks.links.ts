@@ -87,6 +87,10 @@ export class TasksLinks implements OnModuleInit {
         const days = first?.day
           ? daysOf(period).filter(day => day >= (first.day as LocalDate))
           : [];
+        // No task ever: no number at all, not one of empty days.
+        if (!days.length) {
+          return {metrics: [], events: []};
+        }
         return {
           metrics: [
             {

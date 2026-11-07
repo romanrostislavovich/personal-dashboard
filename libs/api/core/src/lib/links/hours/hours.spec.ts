@@ -82,6 +82,53 @@ describe('hours', () => {
     ).toBe(false);
   });
 
+  it('tells a difference with no spread at all as sure', () => {
+    const {game} = life();
+    const flat: HourlyMetric = {
+      key: 'activity.hour.phone',
+      module: 'activity',
+      labelKey: 'phone',
+      unit: 'minutes',
+      days: DAYS,
+      hours: DAYS.map(day => ({
+        hour: hourOf(day, 21),
+        value: game.hours.includes(hourOf(day, 20)) ? 55 : 13,
+      })),
+    };
+    const [result] = hourAfter([flat], [game]);
+    expect(result.difference).toBe(42);
+    expect(result.strong).toBe(true);
+  });
+
+  it('reads a year of sixteen numbers against ten events quickly', () => {
+    const year = daysOf({from: '2025-11-01', to: '2026-10-31'}) as LocalDate[];
+    const metrics: HourlyMetric[] = [...Array(16).keys()].map(index => ({
+      key: `x.hour.${index}`,
+      module: 'x',
+      labelKey: 'x',
+      unit: 'minutes',
+      days: year,
+      hours: year.flatMap(day =>
+        [...Array(24).keys()].map(hour => ({
+          hour: hourOf(day, hour),
+          value: (hour * 7 + index + day.length) % 60,
+        })),
+      ),
+    }));
+    const events: HourEvent[] = [...Array(10).keys()].map(index => ({
+      key: `x.event.${index}`,
+      module: 'x',
+      labelKey: 'x',
+      days: year,
+      hours: year
+        .filter((_, day) => day % (index + 2) === 0)
+        .map(day => hourOf(day, 8 + index)),
+    }));
+    const started = Date.now();
+    hourAfter(metrics, events);
+    expect(Date.now() - started).toBeLessThan(3000);
+  });
+
   it('leaves out the numbers that are the event itself', () => {
     const {coding, game} = life();
     expect(

@@ -99,30 +99,34 @@ export class IndicesService {
     const recent = Array.from({length: RECOUNT_DAYS}, (_, back) =>
       shift(today, back - RECOUNT_DAYS + 1),
     );
-    const missing = [
-      ...new Set([
-        ...(await this.missingDays(userId, timeZone, recent[0], COUNTED)),
-        ...(await this.missingDays(
-          userId,
-          timeZone,
-          recent[0],
-          HOURS_COUNTED,
-          shift(today, -HOURS_HISTORY_DAYS),
-        )),
-      ]),
-    ].sort();
+    const missing = (
+      await this.missingDays(userId, timeZone, recent[0], COUNTED)
+    ).slice(0, BACKFILL_DAYS);
     // Oldest first: a day's usual bedtime and its spread read the days before it.
-    await this.countDays(userId, timeZone, [
-      ...missing.slice(0, BACKFILL_DAYS),
-      ...recent,
-    ]);
+    await this.countDays(userId, timeZone, [...missing, ...recent]);
+    // The days counted before the hours were: their hours only — their indices stay as they
+    // were, so what was found from them (the changes, the forecasts) does not move.
+    const counted = new Set([...missing, ...recent]);
+    const hoursOnly = (
+      await this.missingDays(
+        userId,
+        timeZone,
+        recent[0],
+        HOURS_COUNTED,
+        shift(today, -HOURS_HISTORY_DAYS),
+      )
+    )
+      .filter(day => !counted.has(day))
+      .slice(0, BACKFILL_DAYS - missing.length);
+    await this.countDays(userId, timeZone, hoursOnly, true);
   }
 
-  /** Counts the days in order with what they share read once. */
+  /** Counts the days in order with what they share read once (`hoursOnly` — their hours). */
   async countDays(
     userId: string,
     timeZone: string,
     days: LocalDate[],
+    hoursOnly = false,
   ): Promise<void> {
     if (!days.length) {
       return;
@@ -138,7 +142,19 @@ export class IndicesService {
       bandBedtimes: new Map(band?.days.map(one => [one.day, one.value]) ?? []),
     };
     for (const day of days) {
-      await this.count(userId, day, context);
+      if (hoursOnly) {
+        await this.keepHours(
+          userId,
+          day,
+          dayHours(await this.moments(userId, day, context)),
+        );
+        await this.db
+          .insert(activityDayIndices)
+          .values({userId, day, key: HOURS_COUNTED, value: 1})
+          .onConflictDoNothing();
+      } else {
+        await this.count(userId, day, context);
+      }
     }
   }
 

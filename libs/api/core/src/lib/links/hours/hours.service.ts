@@ -26,6 +26,10 @@ import {rhythmOf} from './rhythm';
 
 /** The productive window is of the last 90 days: the rhythm changes with work and seasons. */
 const WINDOW_DAYS = 90;
+/** The longest period the rhythm reads. */
+const LONGEST_DAYS = 365;
+/** The rhythm shown first, when none is asked: what the work is, before the rest. */
+const FIRST_SHOWN = ['activity.hour.deepWork', 'development.hour.coding'];
 /** What the sections told is reused this long: a year of every hour is a lot to read. */
 const FRESH_MS = 3_600_000;
 /** The deep work a day needs for "in my window" to mean anything, minutes. */
@@ -95,7 +99,12 @@ export class HoursService implements OnModuleInit {
     const metrics = [...hours.metrics].sort((a, b) =>
       a.key.localeCompare(b.key),
     );
-    const metric = metrics.find(one => one.key === key) ?? metrics[0];
+    const metric =
+      metrics.find(one => one.key === key) ??
+      FIRST_SHOWN.map(first => metrics.find(one => one.key === first)).find(
+        Boolean,
+      ) ??
+      metrics[0];
     return {
       from: hours.from,
       to: hours.to,
@@ -147,7 +156,8 @@ export class HoursService implements OnModuleInit {
     kind: 'rhythm' | 'after',
     key: string,
   ): Promise<boolean> {
-    const hours = await this.hours(userId, WINDOW_DAYS);
+    // The year: the rhythm can be read over it, and a number seen only then is one too.
+    const hours = await this.hours(userId, LONGEST_DAYS);
     return (kind === 'rhythm' ? hours.metrics : hours.events).some(
       one => one.key === key,
     );

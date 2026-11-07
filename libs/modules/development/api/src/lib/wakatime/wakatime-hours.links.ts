@@ -68,7 +68,11 @@ export class WakatimeHoursLinks implements OnModuleInit {
           }
         }
         const minutes = new Map(
-          [...ms].map(([hour, value]) => [hour, Math.round(value / MINUTE)]),
+          // 60 at most, even in the hour the clocks go back in (it lasts two).
+          [...ms].map(([hour, value]) => [
+            hour,
+            Math.min(60, Math.round(value / MINUTE)),
+          ]),
         );
         const known = [...minutes.keys()].map(hour => hour.slice(0, 10)).sort();
         return {

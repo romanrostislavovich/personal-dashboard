@@ -167,10 +167,13 @@ export function dayHours(day: DayMoments): Map<number, Map<string, number>> {
     day.focus.map(session => session.end),
   );
 
-  // Minutes to one decimal: a day's hours are kept, and noise digits churn the sync.
+  // Minutes to one decimal: a day's hours are kept, and noise digits churn the sync. An hour is
+  // 60 minutes at most, even the one the clocks go back in (it lasts two).
+  const minutes = new Set<string>(HOURLY_MINUTES);
   for (const of of result.values()) {
     for (const [key, value] of of) {
-      of.set(key, Math.round(value * 10) / 10);
+      const capped = minutes.has(key) ? Math.min(60, value) : value;
+      of.set(key, Math.round(capped * 10) / 10);
     }
   }
   return result;

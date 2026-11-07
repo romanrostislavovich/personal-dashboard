@@ -462,5 +462,9 @@ many numbers are above usual (the server has no translations of the numbers' nam
   whose deep work went mostly into its weekday's window, kept by a nightly job.
 - **Kept:** the tracker's hours in `activity_hour_values` (derived, counted with the day's
   indices, a year back); the other sections' hours are read from their own tables.
+- **After the team review:** the days counted before the hours get their hours only (their
+  indices stay, so the changes and the forecasts found from them do not move); an hour is 60
+  minutes at most even when the clocks go back; looking at a rhythm counts when a number is
+  chosen, not when the page opens; the rhythm opens on deep work or coding.
 
 **Built (2026-11-07):** all of the above.
