@@ -151,5 +151,9 @@
     "deleteText": "It has steps: {{count}}. Both ways it goes to the trash and can be restored.",
     "deleteKeep": "Only the task, keep the steps",
     "deleteAll": "With the steps ({{count}})"
+  },
+  "window": {
+    "today": "Your productive window today: {{hours}} — hard tasks fit there.",
+    "day": "On this weekday your productive window is usually {{hours}}."
   }
 }

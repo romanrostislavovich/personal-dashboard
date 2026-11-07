@@ -31,6 +31,9 @@ import {ChangesCardComponent} from './changes-card.component';
 import {CurvesCardComponent, curveSentence} from './curves-card.component';
 import {DoseChartComponent, dosePoints} from './dose-chart.component';
 import {ForecastsCardComponent} from './forecasts-card.component';
+import {HourAfterCardComponent} from './hour-after-card.component';
+import {RhythmCardComponent} from './rhythm-card.component';
+import {WindowCardComponent} from './window-card.component';
 import {UnusualCardComponent} from './unusual-card.component';
 import {CorrelationGraphComponent} from './correlation-graph.component';
 import {CorrelationMatrixComponent} from './correlation-matrix.component';
@@ -81,6 +84,9 @@ const LEADS_FROM = 0.2;
     PercentPipe,
     TranslocoPipe,
     ForecastsCardComponent,
+    HourAfterCardComponent,
+    RhythmCardComponent,
+    WindowCardComponent,
     UnusualCardComponent,
   ],
   templateUrl: './links.page.html',

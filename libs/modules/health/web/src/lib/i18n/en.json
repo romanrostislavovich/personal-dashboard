@@ -477,7 +477,13 @@
       "awake": "Awake in the night",
       "distance": "Distance (band), km",
       "bedtimeSpread": "Bedtime spread over a week (band), h"
-    }
+    },
+    "hour": {
+      "steps": "Steps (an hour)",
+      "pulse": "Pulse (an hour)",
+      "stress": "Stress (an hour)"
+    },
+    "walk": "A walk"
   },
   "band": {
     "period": "Period",

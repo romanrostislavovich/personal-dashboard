@@ -239,6 +239,9 @@
     "stars": "Stars of its repositories",
     "commits": "Commits",
     "project": "Coding a project",
-    "language": "Coding in a language"
+    "language": "Coding in a language",
+    "hour": {
+      "coding": "Coding (an hour)"
+    }
   }
 }

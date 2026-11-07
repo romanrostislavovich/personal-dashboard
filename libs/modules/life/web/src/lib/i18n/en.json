@@ -231,5 +231,44 @@
     "saveFailed": "Could not save the choice: it is as it was.",
     "up": "adds {{value}}",
     "down": "takes away {{value}}"
+  },
+  "hourly": {
+    "number": "Number",
+    "period": "Period",
+    "days": "{{days}} days",
+    "minutes": "{{value}} min",
+    "seen": "Seen on {{days}} days",
+    "none": "No hourly numbers yet: they come from the tracker, the phone, WakaTime, the band, music and tasks.",
+    "failed": "Could not read the hours.",
+    "rhythm": {
+      "title": "Rhythm of the day",
+      "hint": "A number by weekday and hour: darker — more. Hours never seen are blank.",
+      "peaks": "Mostly at {{hours}}",
+      "flat": "No hour stands out."
+    },
+    "after": {
+      "title": "The hour after",
+      "hint": "What a number does in the hour after an event, against the same weekday hours without it.",
+      "noEvents": "No events seen yet: a game, a walk, a burst of notifications…",
+      "nothing": "Nothing stands out yet: these are the surest pairs, grey ones are not sure.",
+      "detail": "in the hour after: {{after}}, in the same hours without it: {{usual}} ({{events}} times)",
+      "unsure": "not sure: may be chance",
+      "all": "Show all ({{count}})",
+      "less": "Only the main ones",
+      "caution": "Goes together is not causes: a game may come after a tiring day."
+    },
+    "window": {
+      "title": "Productive window",
+      "hint": "The hours coding, deep work and tasks done are highest for you, by weekday, over the last 90 days.",
+      "today": "Today: {{hours}}",
+      "noneToday": "No window stands out today.",
+      "none": "Not enough to tell yet: the window needs coding, deep work or tasks done by the hour.",
+      "days": "{{days}} such days seen",
+      "sure": {
+        "low": "not sure yet",
+        "medium": "fairly sure",
+        "high": "sure"
+      }
+    }
   }
 }

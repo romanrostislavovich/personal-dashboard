@@ -513,6 +513,27 @@
       "firstWork": "From the first unlock to work, min",
       "morningDraining": "Feeds in the two hours after waking, min",
       "offline": "The longest daytime stretch without screens"
+    },
+    "hour": {
+      "computer": "At the computer (an hour)",
+      "phone": "On the phone (an hour)",
+      "deepWork": "Deep work (an hour)",
+      "focus": "Focus (an hour)",
+      "draining": "Draining apps (an hour)",
+      "meetings": "Meetings (an hour)",
+      "games": "Games (an hour)",
+      "unlocks": "Phone unlocks (an hour)",
+      "notifications": "Notifications (an hour)",
+      "switches": "App switches (an hour)"
+    },
+    "event": {
+      "notificationBurst": "A burst of notifications",
+      "draining": "A draining app opened",
+      "meeting": "A meeting",
+      "game": "A game",
+      "longPhone": "A long phone session",
+      "focusEnd": "A focus session ended",
+      "leftHome": "Left home"
     }
   },
   "usage": {
