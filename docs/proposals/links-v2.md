@@ -468,3 +468,28 @@ many numbers are above usual (the server has no translations of the numbers' nam
   chosen, not when the page opens; the rhythm opens on deep work or coding.
 
 **Built (2026-11-07):** all of the above.
+
+## Decisions for the questions and insights (2026-11-07, the owner's)
+
+- **Built-in questions:** notifications in coding hours → deep work and coding minutes; time at
+  home → tasks done and mood; music started → deep work in the hour after; phone at night → each
+  habit the next day (five at most). Impulse spending still waits.
+- **Own questions:** picked from the numbers ("A → B", the same day, the next day or the hour
+  after an event, optionally "only when C is high or low"), or asked in words — the AI turns them
+  into such a card from the names of the numbers only, shown to check before it is kept. Thirty
+  at most.
+- **The answer:** the days of more of the cause (above its own middle) against the rest, the
+  effect in each, Welch's test; told when p < 0.05 and the difference is a fifth of the effect's
+  spread; 20 days at least. The hour after reuses stage 3's comparison.
+- **Confounders, for every card and finding:** whether the difference holds within weekdays and
+  weekends, dry and rainy days, days ill (a diagnosis that ended within 30 days) and well, days
+  away (under two hours at home) and at home — "holds" or "may be explained by".
+- **Insight cards:** every Monday (and now on a button, at most once an hour) the strongest of
+  the links of the last 180 days (each checked as a card), the hour after an event, fresh
+  changes and answered questions, eight at most; the AI words them from keys and numbers only, the
+  page words them by a template without one; kept for the week. A sync client makes none.
+- **Shown:** both at the top of Links, "the insight of the day" on Home, the Monday digest, the
+  assistant's `core_insights`.
+- **Achievements:** the proof of findings opened, and questions of one's own.
+
+**Built (2026-11-07):** all of the above.
