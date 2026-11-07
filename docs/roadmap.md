@@ -776,8 +776,8 @@ assistant as a tutor that knows the materials of the courses.
   the productive window in Tasks, on Home and in the digest) built 2026-11-07 — none of it seen
   on real data yet; the owner's hypotheses as question cards (their own too, in words through
   the AI) and the week's insight cards worded by the AI, each checked against weekends, rain,
-  illness and travel, built 2026-11-07. Next: the overload warning, habit lapse risk,
-  experiments. The plan: [proposals/links-v2.md](proposals/links-v2.md)
+  illness and travel, built 2026-11-07; the overload warning and the habit lapse risk built
+  2026-11-08. Next: experiments (personal-lab). The plan: [proposals/links-v2.md](proposals/links-v2.md)
 
 - **Mobile app & Smart Band Wearables Integration** — mobile application collecting data from
   the smartphone and wearable devices (smart watch / smart band via BLE, Google Health Connect, Apple Health).

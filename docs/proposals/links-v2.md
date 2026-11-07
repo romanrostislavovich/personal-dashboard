@@ -502,3 +502,24 @@ many numbers are above usual (the server has no translations of the numbers' nam
   gave them); the findings are derived — not exported, not in the trash.
 
 **Built (2026-11-07):** all of the above.
+
+## Decisions for the overload and the lapses (2026-11-08, the owner's)
+
+- **The overload score:** the last five days that are over against the four weeks before, of the
+  phone at night, a restless phone, the band's sleep, deep work, commits and the mood, each in
+  its own spread (capped at three), the mean of those known (three at least).
+- **High:** above nine of ten of the user's own past scores (the last 120 days but the last week),
+  never below 0.75; the page says "still learning" before a month of days.
+- **The warning:** one message (Telegram, the phone, the computer; the quiet hours wait) in the
+  user's day hours (10–21), at most once in three days, switchable on the Links card, with what
+  pulls most and one small step for it from a fixed list, in the user's language; no AI.
+- **The habit lapse risk:** for a habit to quit or cut down (a marked day is a lapse) and a daily
+  one (an unmarked day); tomorrow's chance from the day's numbers by a model of the user's own
+  year, trusted when it beats "as often as usual"; told in the evening summary when 6 in 10 or
+  more and well above the usual; shown on the habit's card.
+- **Shown:** an Overload card on Links, a Home widget, the assistant's `core_overload`, the
+  chance on each habit's card.
+- **Achievements:** back to the usual after a warning, and a habit kept the day it was said to be
+  likely to slip — never for the load itself.
+
+**Built (2026-11-08):** all of the above.

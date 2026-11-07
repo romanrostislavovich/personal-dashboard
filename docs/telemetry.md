@@ -80,7 +80,14 @@ kept in `links_seen` for the achievements. Lags of 2–3 days are compared towar
 only; curves (`bend`) for every pair, in the same correction. _Insights_ — the week's findings,
 made on the user's Monday morning (`links.insights`, hourly in their own time) or on the page's
 button (a server action), kept in `links_insights` (derived: not exported, not in the trash);
-_questions_ of the user's own in `links_questions` (theirs: exported, in the trash).
+_questions_ of the user's own in `links_questions` (theirs: exported, in the trash). _Overload_
+— the last five days of `activity.phone.night`, `activity.index.phone.restlessness`,
+`health.band.sleep`, `activity.index.deepWork`, `development.commits` and `diary.mood` against the
+four weeks before; the warning (`links.overload`, in the user's day hours) is kept as
+`links_settings.overload_warned_on` and a `links_seen` row (`overload`, then `recovered`). _Habit
+lapses_ — a habit's daily number tells which of its days is a lapse (`DailyMetric.lapse`:
+`marked` for a habit to quit or cut down, `unmarked` for a daily one); the risks told in the
+evening are `links_seen` rows (`risk`, then `kept`).
 
 **Day boundaries.** Days are the user's time zone (`users.time_zone`). A few numbers move the
 night to the evening before: Dota matches and phone night use count 00:00–04:00 to the day
