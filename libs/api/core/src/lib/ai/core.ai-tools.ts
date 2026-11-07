@@ -14,6 +14,7 @@ import {LinksService} from '../links/links.service';
 import {ProjectOverviewService} from '../links/project-overview.service';
 import {ChangePointsService} from '../links/change-points.service';
 import {ForecastsService} from '../links/forecasts.service';
+import {HoursService} from '../links/hours/hours.service';
 import {ProjectsService} from '../projects/projects.service';
 import {
   changedFields,
@@ -62,6 +63,7 @@ export class CoreAiTools implements OnModuleInit {
     private readonly recall: RecallService,
     private readonly changes: ChangePointsService,
     private readonly forecasts: ForecastsService,
+    private readonly hours: HoursService,
   ) {}
 
   onModuleInit(): void {
@@ -533,6 +535,82 @@ export class CoreAiTools implements OnModuleInit {
       parameters: NO_PARAMETERS,
       handler: async userId =>
         this.forecasts.list(userId, await this.ai.hiddenFromShared(userId)),
+    });
+
+    this.ai.registerTool({
+      name: 'core_rhythm',
+      module: 'life',
+      description:
+        "The day's rhythm of one of the user's hourly numbers (coding minutes, deep work, " +
+        'unlocks, notifications, steps, music plays, tasks done…): its mean by weekday (0 — ' +
+        'Monday) and hour over the last `days`, its usual day hour by hour and its peaks ' +
+        '(`[from, to)` hours). Without `key`, the first number; `metrics` lists them all.',
+      parameters: {
+        type: 'object',
+        properties: {
+          key: {
+            type: 'string',
+            description: 'An hourly number, e.g. development.hour.coding',
+          },
+          days: {
+            type: 'number',
+            enum: [30, 90, 365],
+            description: 'Default 90',
+          },
+        },
+      },
+      handler: async (userId, args) =>
+        this.hours.rhythm(
+          userId,
+          ([30, 90, 365].includes(Number(args['days']))
+            ? Number(args['days'])
+            : 90) as 30 | 90 | 365,
+          typeof args['key'] === 'string' ? args['key'] : undefined,
+          await this.ai.hiddenFromShared(userId),
+        ),
+    });
+
+    this.ai.registerTool({
+      name: 'core_hour_after',
+      module: 'life',
+      description:
+        'What the hour after an event looks like for the user — a burst of notifications, a ' +
+        'game, a draining app, a meeting, a long phone session, a walk, music, the end of a ' +
+        'focus session, leaving home — against the same weekday hours without it: each ' +
+        '`result` is the mean of a number in the hour after (`after`) and in those hours ' +
+        '(`usual`), over `events` times. Tell only the `strong` ones as findings, calmly and ' +
+        'as "goes together", not as a cause.',
+      parameters: {
+        type: 'object',
+        properties: {
+          days: {
+            type: 'number',
+            enum: [30, 90, 365],
+            description: 'Default 90',
+          },
+        },
+      },
+      handler: async (userId, args) =>
+        this.hours.hourAfter(
+          userId,
+          ([30, 90, 365].includes(Number(args['days']))
+            ? Number(args['days'])
+            : 90) as 30 | 90 | 365,
+          await this.ai.hiddenFromShared(userId),
+        ),
+    });
+
+    this.ai.registerTool({
+      name: 'core_productive_window',
+      module: 'life',
+      description:
+        "The user's productive window of every weekday (0 — Monday) over the last 90 days: " +
+        'the hours (`[from, to)`, their own clock) when coding, deep work and tasks done are ' +
+        'highest, and how sure it is. `weekday` is today. Useful to suggest when to do hard ' +
+        'tasks; tell a `low` one as not clear yet.',
+      parameters: NO_PARAMETERS,
+      handler: async userId =>
+        this.hours.window(userId, await this.ai.hiddenFromShared(userId)),
     });
 
     // "When did I last…": search by meaning over the user's own history.

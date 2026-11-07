@@ -2,6 +2,7 @@ import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
 import {
   DB,
   Database,
+  daysOf,
   LinksService,
   MOOD_METRIC,
   Period,
@@ -31,6 +32,8 @@ const STREAMING = [
 ];
 /** Genres of a period that get a number of their own in Links. */
 const LINKED_GENRES = 5;
+/** A play after this long without one starts listening again (an event of the hour). */
+const LISTENING_GAP_MS = 60 * 60_000;
 /** Plays told about a stretch of time: a focus session has a few dozen at most. */
 const MAX_MOMENTS = 300;
 
@@ -71,6 +74,75 @@ export class MusicLinks implements OnModuleInit {
           title: play.track,
           subtitle: play.artist,
         }));
+      },
+    });
+
+    // Hour by hour: the plays, and the hours music starts after an hour or more of quiet.
+    this.links.registerHourly({
+      module: 'music',
+      hours: async (userId, period, timeZone) => {
+        const after = toLocalDate(addDays(parseLocalDate(period.to), 1));
+        const plays = await this.db
+          .select({
+            at: scrobbles.playedAt,
+            hour: sql<string>`to_char(${scrobbles.playedAt} AT TIME ZONE ${timeZone}, 'YYYY-MM-DD"T"HH24')`,
+          })
+          .from(scrobbles)
+          .where(
+            and(
+              eq(scrobbles.userId, userId),
+              gte(
+                scrobbles.playedAt,
+                zonedToUtc({date: period.from, time: '00:00'}, timeZone),
+              ),
+              lt(
+                scrobbles.playedAt,
+                zonedToUtc({date: after, time: '00:00'}, timeZone),
+              ),
+            ),
+          )
+          .orderBy(asc(scrobbles.playedAt));
+        if (!plays.length) {
+          return {metrics: [], events: []};
+        }
+        const counts = new Map<string, number>();
+        const starts = new Set<string>();
+        plays.forEach((play, index) => {
+          counts.set(play.hour, (counts.get(play.hour) ?? 0) + 1);
+          const before = plays[index - 1];
+          if (
+            !before ||
+            play.at.getTime() - before.at.getTime() >= LISTENING_GAP_MS
+          ) {
+            starts.add(play.hour);
+          }
+        });
+        // From the first play to the last: before it the plays were not counted yet.
+        const first = plays[0].hour.slice(0, 10);
+        const last = plays[plays.length - 1].hour.slice(0, 10);
+        const days = daysOf(period).filter(day => day >= first && day <= last);
+        return {
+          metrics: [
+            {
+              key: 'music.hour.plays',
+              module: 'music',
+              labelKey: 'music.links.plays',
+              unit: 'count',
+              days,
+              hours: [...counts].map(([hour, value]) => ({hour, value})),
+            },
+          ],
+          events: [
+            {
+              key: 'music.event.listening',
+              module: 'music',
+              labelKey: 'music.links.listening',
+              days,
+              hours: [...starts],
+              itself: ['music.hour.plays'],
+            },
+          ],
+        };
       },
     });
 

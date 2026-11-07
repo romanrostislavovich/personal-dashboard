@@ -118,6 +118,36 @@ describe.skipIf(!ADMIN_URL)("the days' indices", {timeout: 60_000}, () => {
     expect(count).toBe(1);
   });
 
+  it("keeps the day's hours by the user's own clock, in place when counted again", async () => {
+    const hours = () =>
+      indices.hours(userId, {from: '2026-11-02', to: '2026-11-02'});
+    const first = await hours();
+    // 10:00–10:40 local: forty minutes at the computer and of deep work in hour 10.
+    expect(
+      first.find(row => row.hour === 10 && row.key === 'deepWork')?.value,
+    ).toBe(40);
+    // 23:30 local: the feed began, a draining app opened at 23.
+    expect(
+      first.find(row => row.hour === 23 && row.key === 'event.draining')?.value,
+    ).toBe(1);
+    const ids = async () =>
+      (
+        await db.execute<{id: string}>(
+          sql`SELECT id FROM activity_hour_values WHERE day = '2026-11-02' ORDER BY id`,
+        )
+      ).rows;
+    const before = await ids();
+    await indices.countDays(userId, 'Europe/Warsaw', ['2026-11-02']);
+    expect(await ids()).toEqual(before);
+    const [{count}] = (
+      await db.execute<{count: number}>(
+        sql`SELECT count(*)::int AS count FROM activity_day_indices
+          WHERE day = '2026-11-02' AND key = '_hours'`,
+      )
+    ).rows;
+    expect(count).toBe(1);
+  });
+
   it('marks a day with nothing as counted, so the history moves on', async () => {
     await indices.countDays(userId, 'Europe/Warsaw', ['2026-10-30']);
     const [{count}] = (
@@ -150,6 +180,21 @@ describe.skipIf(!ADMIN_URL)("the days' indices", {timeout: 60_000}, () => {
       to: '2026-11-02',
     });
     expect(kept.get('deepWork')?.[0].value).toBe(0.67);
+  });
+
+  it('counts the hours of days counted before the hours were', async () => {
+    // A day whose indices were counted by an older version: no hours, no mark.
+    await db.execute(
+      sql`DELETE FROM activity_hour_values WHERE user_id = ${userId}`,
+    );
+    await db.execute(sql`DELETE FROM activity_day_indices
+      WHERE user_id = ${userId} AND key = '_hours'`);
+    await indices.refresh(userId);
+    const hours = await indices.hours(userId, {
+      from: '2026-11-02',
+      to: '2026-11-02',
+    });
+    expect(hours.some(row => row.key === 'deepWork')).toBe(true);
   });
 
   it("leaves another user's days alone", async () => {

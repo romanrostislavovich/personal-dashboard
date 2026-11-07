@@ -1,4 +1,4 @@
-import {DailyMetricSource} from '@pd/api-core';
+import {DailyMetricSource, HourlySource} from '@pd/api-core';
 import {sql} from 'drizzle-orm';
 import {drizzle, NodePgDatabase} from 'drizzle-orm/node-postgres';
 import {migrate} from 'drizzle-orm/node-postgres/migrator';
@@ -26,6 +26,7 @@ describe.skipIf(!ADMIN_URL)(
     let pool: Pool;
     let db: NodePgDatabase;
     let source: DailyMetricSource;
+    let hourly: HourlySource;
     const userId = randomUUID();
     const otherId = randomUUID();
 
@@ -47,6 +48,7 @@ describe.skipIf(!ADMIN_URL)(
         registerPages: () => undefined,
         registerDailyMetrics: (registered: DailyMetricSource) =>
           (source = registered),
+        registerHourly: (registered: HourlySource) => (hourly = registered),
       };
       const users = {
         findById: async () => ({}),
@@ -85,6 +87,21 @@ describe.skipIf(!ADMIN_URL)(
       // Done at 00:30 on the 2nd (local): the 1st's due task was not done that day.
       expect(days('tasks.dueDone')).toEqual([{day: '2026-11-01', value: 0}]);
       expect(days('tasks.done')).toEqual([{day: '2026-11-02', value: 1}]);
+    });
+
+    it('counts the tasks done by the local hour, from the first task on', async () => {
+      const {metrics} = await hourly.hours(
+        userId,
+        {from: '2026-10-31', to: '2026-11-02'},
+        'Europe/Warsaw',
+      );
+      const [done] = metrics;
+      expect(done.key).toBe('tasks.hour.done');
+      expect(done.productive).toBe(true);
+      // 23:30 UTC on the 1st is 00:30 on the 2nd in Warsaw.
+      expect(done.hours).toEqual([{hour: '2026-11-02T00', value: 1}]);
+      // The list began on the 1st: the 31st is unknown, not a zero.
+      expect(done.days).toEqual(['2026-11-01', '2026-11-02']);
     });
   },
 );

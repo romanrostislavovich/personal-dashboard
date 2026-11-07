@@ -1,6 +1,8 @@
 import {Injectable, Logger} from '@nestjs/common';
 import {
   DailyMetric,
+  HourEvent,
+  HourlyMetric,
   LocalDate,
   Moment,
   PersonNote,
@@ -73,6 +75,20 @@ export interface DailyMetricSource {
   metrics(userId: string, period: Period): Promise<DailyMetric[]>;
 }
 
+/**
+ * A section that knows its numbers hour by hour (Links v2, hours): minutes of coding, unlocks,
+ * steps, and the events that happened at an hour (a game, a walk). The hours are the user's own,
+ * in `timeZone`; the period is of whole days.
+ */
+export interface HourlySource {
+  module: string;
+  hours(
+    userId: string,
+    period: Period,
+    timeZone: string,
+  ): Promise<{metrics: HourlyMetric[]; events: HourEvent[]}>;
+}
+
 /** A section that can tell what happened between two moments: the plays of music. */
 export interface MomentSource {
   module: string;
@@ -125,6 +141,7 @@ export class LinksService {
   private readonly projects: ProjectSource[] = [];
   private readonly usages: UsageSource[] = [];
   private readonly metrics: DailyMetricSource[] = [];
+  private readonly hourly: HourlySource[] = [];
   private readonly moments: MomentSource[] = [];
   private readonly periodSources: PeriodSource[] = [];
   private readonly timeSpent: TimeSpentSource[] = [];
@@ -141,6 +158,10 @@ export class LinksService {
 
   registerDailyMetrics(source: DailyMetricSource): void {
     this.metrics.push(source);
+  }
+
+  registerHourly(source: HourlySource): void {
+    this.hourly.push(source);
   }
 
   registerMoments(source: MomentSource): void {
@@ -216,6 +237,21 @@ export class LinksService {
 
   async dailyMetrics(userId: string, period: Period): Promise<DailyMetric[]> {
     return this.collect(this.metrics, source => source.metrics(userId, period));
+  }
+
+  /** Every section's numbers and events hour by hour, in the user's `timeZone`. */
+  async hours(
+    userId: string,
+    period: Period,
+    timeZone: string,
+  ): Promise<{metrics: HourlyMetric[]; events: HourEvent[]}> {
+    const parts = await this.collect(this.hourly, async source => [
+      await source.hours(userId, period, timeZone),
+    ]);
+    return {
+      metrics: parts.flatMap(part => part.metrics),
+      events: parts.flatMap(part => part.events),
+    };
   }
 
   /**

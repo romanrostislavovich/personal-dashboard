@@ -138,6 +138,13 @@ export const CORE_READS = {
     apiRequest('/api/life/mood-insights', {from, to}),
   /** Today's forecasts of the numbers (tomorrow's too in the evening) and the kept ones. */
   forecasts: () => apiRequest('/api/life/forecasts'),
+  /** An hourly number by weekday and hour over the last `days` (the day's rhythm). */
+  rhythm: (days: number, key?: string) =>
+    apiRequest('/api/life/rhythm', {days, key}),
+  /** Every event against every hourly number in the hour after it. */
+  hourAfter: (days: number) => apiRequest('/api/life/hour-after', {days}),
+  /** The productive window of every weekday, over the last 90 days. */
+  productiveWindow: () => apiRequest('/api/life/window'),
   /**
    * How the daily numbers go together (with the outcomes only, unless `pairs` is `all`); the
    * regression explains `target`; `extra` — the extra numbers switched on.

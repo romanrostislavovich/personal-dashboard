@@ -772,9 +772,10 @@ assistant as a tutor that knows the materials of the courses.
   morning digest, lags of 2–3 days to the outcomes, curves and dose–response charts, achievements
   of exploring) built 2026-11-06; forecasts (bedtime, deep work, tasks done, mood and any main
   number chosen; the morning's of the day and the evening's of the next, kept to compare with what
-  the days were) built 2026-11-07 — none of it seen on real data yet. Next: hours and not only
-  days, the owner's hypotheses as question cards, insight cards, the overload warning, habit
-  lapse risk. The plan: [proposals/links-v2.md](proposals/links-v2.md)
+  the days were) built 2026-11-07; hours (the day's rhythm, the hour after nine kinds of events,
+  the productive window in Tasks, on Home and in the digest) built 2026-11-07 — none of it seen
+  on real data yet. Next: the owner's hypotheses as question cards, insight cards, the overload
+  warning, habit lapse risk. The plan: [proposals/links-v2.md](proposals/links-v2.md)
 
 - **Mobile app & Smart Band Wearables Integration** — mobile application collecting data from
   the smartphone and wearable devices (smart watch / smart band via BLE, Google Health Connect, Apple Health).

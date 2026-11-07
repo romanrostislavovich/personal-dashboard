@@ -439,3 +439,32 @@ many numbers are above usual (the server has no translations of the numbers' nam
   bedtime when Health or Activity is hidden, and of what drove any forecast.
 
 **Built (2026-11-07):** all of the above.
+
+## Decisions for the hours (2026-11-07, the owner's)
+
+- **All of section 2 at once:** the hourly registry, the day's rhythm, the hour after an event
+  and the productive window.
+- **The events:** a burst of notifications (beyond nine of ten of the user's own busiest ten
+  minutes, 4 at least), a game, a draining app opened, a meeting, a long phone session (20+
+  minutes), a walk (1500+ steps in an hour), music started (after an hour of quiet), the end of
+  a focus session, leaving home — "as many as there can be". The hour after is the next clock
+  hour, against the same weekday's same hours without the event the hour before; a pair is told
+  when it survives the correction for the number of pairs and is a fifth of the number's own
+  spread or more.
+- **Productive:** coding minutes, deep work minutes and tasks done, each against its own usual
+  hour; the window — the weekday's best hours (60 % of its best and 1.5× its average, two runs at
+  most), with how sure.
+- **The period:** the last 90 days (the rhythm can be read over 30, 90 or 365).
+- **Shown:** Links (the rhythm, the hour after, the window), Tasks (today's window over the list,
+  the due day's weekday in the form), the morning digest, a Home widget and the assistant's
+  tools. No reminder before the window.
+- **Achievements:** for exploring (rhythms and hours after opened) and "in my window" — a day
+  whose deep work went mostly into its weekday's window, kept by a nightly job.
+- **Kept:** the tracker's hours in `activity_hour_values` (derived, counted with the day's
+  indices, a year back); the other sections' hours are read from their own tables.
+- **After the team review:** the days counted before the hours get their hours only (their
+  indices stay, so the changes and the forecasts found from them do not move); an hour is 60
+  minutes at most even when the clocks go back; looking at a rhythm counts when a number is
+  chosen, not when the page opens; the rhythm opens on deep work or coding.
+
+**Built (2026-11-07):** all of the above.

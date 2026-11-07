@@ -31,6 +31,7 @@ import {
 } from '@pd/contracts';
 import {EditedAtComponent, pickableProjects, ProjectsApi} from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
+import {WindowHintComponent} from './window-hint.component';
 import {RepeatFieldComponent} from '../repeat-field.component';
 import {TasksApi} from '../tasks.api';
 import {parentChoices} from './task-rows';
@@ -67,6 +68,7 @@ export interface TaskDialogData {
     MatSelectModule,
     TranslocoPipe,
     RepeatFieldComponent,
+    WindowHintComponent,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -120,6 +122,9 @@ export interface TaskDialogData {
           </mat-select>
         </mat-form-field>
       </div>
+      @if (dueDate()) {
+        <pd-window-hint [day]="dueDate()" />
+      }
 
       <pd-repeat-field [(value)]="repeat" />
       @if (repeat() && !dueDate()) {

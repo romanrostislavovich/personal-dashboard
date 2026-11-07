@@ -60,7 +60,7 @@ const DRAINING = [
 ];
 
 /** Work and learning: what feeds the day. */
-const NOURISHING = new Set<ActivityCategory>([
+export const NOURISHING = new Set<ActivityCategory>([
   'development',
   'office',
   'design',
@@ -242,7 +242,7 @@ export function dayIndices(day: DayMoments): Map<string, number> {
 }
 
 /** The spans of one app that follow each other closely, as one. */
-function merge(spans: IndexSpan[]): IndexSpan[] {
+export function merge(spans: IndexSpan[]): IndexSpan[] {
   const sorted = [...spans].sort((a, b) => a.start - b.start);
   const merged: IndexSpan[] = [];
   for (const span of sorted) {
@@ -275,6 +275,16 @@ function switches(spans: IndexSpan[]): number {
  * of DEEP_MINUTES or more: their minutes.
  */
 function deepBlocks(computer: IndexSpan[], notifications: number[]): number[] {
+  return deepRuns(computer, notifications).map(run =>
+    Math.round((run.end - run.start) / MINUTE),
+  );
+}
+
+/** The stretches of deep work themselves: when each began and ended (see deepBlocks). */
+export function deepRuns(
+  computer: IndexSpan[],
+  notifications: number[],
+): {start: number; end: number}[] {
   const runs: {start: number; end: number}[] = [];
   for (const span of computer) {
     const last = runs[runs.length - 1];
@@ -287,16 +297,15 @@ function deepBlocks(computer: IndexSpan[], notifications: number[]): number[] {
       runs.push({start: span.start, end: span.end});
     }
   }
-  const blocks: number[] = [];
+  const blocks: {start: number; end: number}[] = [];
   for (const run of runs) {
     const cuts = notifications
       .filter(at => at > run.start && at < run.end)
       .sort((a, b) => a - b);
     let from = run.start;
     for (const to of [...cuts, run.end]) {
-      const minutes = (to - from) / MINUTE;
-      if (minutes >= DEEP_MINUTES) {
-        blocks.push(Math.round(minutes));
+      if ((to - from) / MINUTE >= DEEP_MINUTES) {
+        blocks.push({start: from, end: to});
       }
       from = to;
     }
@@ -304,7 +313,7 @@ function deepBlocks(computer: IndexSpan[], notifications: number[]): number[] {
   return blocks;
 }
 
-function union(parts: {start: number; end: number}[]) {
+export function union(parts: {start: number; end: number}[]) {
   const sorted = [...parts].sort((a, b) => a.start - b.start);
   const result: {start: number; end: number}[] = [];
   for (const part of sorted) {

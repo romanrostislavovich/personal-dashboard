@@ -17,6 +17,7 @@ import {PhoneNotificationsService} from './phone-notifications.service';
 import {PhoneUsageController} from './phone/phone-usage.controller';
 import {PhoneSecurityController} from './phone/phone-security.controller';
 import {PhoneVoiceController} from './phone/phone-voice.controller';
+import {HoursLinks} from './indices/hours.links';
 import {IndicesLinks} from './indices/indices.links';
 import {IndicesService} from './indices/indices.service';
 import {PhoneUsageLinks} from './phone/phone-usage.links';
@@ -82,6 +83,7 @@ import {TelemetrySummaryService} from './telemetry-summary.service';
     PhoneUsageLinks,
     IndicesService,
     IndicesLinks,
+    HoursLinks,
     PhoneUsageService,
     PhoneSignalsService,
     PhoneWatchdogService,

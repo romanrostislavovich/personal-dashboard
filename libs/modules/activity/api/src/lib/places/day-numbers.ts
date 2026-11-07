@@ -126,3 +126,26 @@ export function placeDayNumbers(
   }
   return numbers;
 }
+
+/**
+ * The moments home was left: a stay at home followed by a trip (an event of the hour for Links,
+ * "the hour after leaving home"). A stay cut at midnight is not a leaving.
+ */
+export function homeLeavings(days: DayOfPlaces[], named: Named[]): number[] {
+  const entries = days.flatMap(day => day.entries);
+  const stays = entries.filter(
+    (entry): entry is Entry & {kind: 'stay'} => entry.kind === 'stay',
+  );
+  const {placeOf} = gatherPlaces(stays, named);
+  const home = homeOf(days, placeOf);
+  if (!home) {
+    return [];
+  }
+  return entries.flatMap((entry, index) =>
+    entry.kind === 'stay' &&
+    placeOf.get(entry) === home &&
+    entries[index + 1]?.kind === 'trip'
+      ? [entry.end]
+      : [],
+  );
+}

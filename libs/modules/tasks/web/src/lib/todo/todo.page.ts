@@ -28,6 +28,7 @@ import {
 import {TasksApi} from '../tasks.api';
 import {TaskDeleteDialog} from './task-delete.dialog';
 import {TaskDialogData, TaskFormDialog} from './task-form.dialog';
+import {WindowHintComponent} from './window-hint.component';
 import {TaskGroupData, TaskGroupDialog} from './task-group.dialog';
 import {parentChoices, taskRows} from './task-rows';
 import {
@@ -61,6 +62,7 @@ import {
     MatTooltipModule,
     TranslocoPipe,
     DurationPipe,
+    WindowHintComponent,
   ],
   templateUrl: './todo.page.html',
   styleUrl: './todo.page.scss',

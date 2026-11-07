@@ -31,6 +31,7 @@ A section never reads another one; it registers sources with the core `LinksServ
 | Source kind                          | What it gives                                                                                                        | Used by                                                      |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | `registerDailyMetrics`               | a number per day (`DailyMetric`: `key`, `unit`, `days[]`, optional `partOf`, `parts`, `missing`, `extra`, `outcome`) | correlations, good/bad mood days, before/after, the forecast |
+| `registerHourly`                     | numbers per hour (`HourlyMetric`) and events of an hour (`HourEvent`), in the user's own hours                       | the day's rhythm, the hour after, the productive window      |
 | `registerMoments`                    | events with a start (and an end) between two moments                                                                 | before/after, "what happened then"                           |
 | `registerPeriods`                    | things that lasted: a medication, a condition, a life event                                                          | the timeline, before/after                                   |
 | `registerProject`                    | facts and changes of one project                                                                                     | Projects → overview                                          |
@@ -81,6 +82,30 @@ only; curves (`bend`) for every pair, in the same correction.
 **Day boundaries.** Days are the user's time zone (`users.time_zone`). A few numbers move the
 night to the evening before: Dota matches and phone night use count 00:00–04:00 to the day
 before; `activity.lateGames` is from 23:00.
+
+## Every hourly number and event Links has
+
+Links v2, stage 3 ([proposals/links-v2.md](proposals/links-v2.md#2-hours-not-only-days)). An
+hour is the user's own (`2026-11-07T14` — 14:00–15:00); a `minutes` or `count` hour of a day
+the section saw is a zero, a `score` hour is known only where it was taken. **Productive** — a
+part of the productive window.
+
+| Key                                                                                                  | Unit                  | From                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `activity.hour.computer`, `phone`, `deepWork` (productive), `focus`, `draining`, `meetings`, `games` | minutes               | the spans, focus sessions and notifications of the day, counted with the day's indices and kept in `activity_hour_values` (a year back, derived) |
+| `activity.hour.unlocks`, `notifications`, `switches`                                                 | count                 | the same                                                                                                                                         |
+| `development.hour.coding` (productive)                                                               | minutes               | WakaTime's stretches by project, what overlaps counted once                                                                                      |
+| `tasks.hour.done` (productive)                                                                       | count                 | `tasks.completed_at`                                                                                                                             |
+| `music.hour.plays`                                                                                   | count                 | the scrobbles                                                                                                                                    |
+| `health.hour.steps` / `pulse` / `stress`                                                             | count / score / score | the band's hours, the mean pulse of its minutes, our stress score of the hour                                                                    |
+
+Events (`HourEvent`: the hours each happened in, and the numbers that are the event itself, not
+compared with it): `activity.event.notificationBurst` (the busiest ten minutes of the hour beyond
+nine of ten of the user's own, at least 4 — `_notificationPeak` is kept for it), `draining` (a
+draining app after 15 minutes without), `meeting` (5+ minutes of the meetings category), `game`
+(10+ minutes of games), `longPhone` (20+ minutes on the phone, at its end), `focusEnd`,
+`leftHome` (a stay at home followed by a trip, from the places); `health.event.walk` (an hour of
+1500 steps or more); `music.event.listening` (a play after an hour of quiet).
 
 ## Every daily number Links has
 

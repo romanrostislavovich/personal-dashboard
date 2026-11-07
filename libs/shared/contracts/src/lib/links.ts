@@ -400,7 +400,13 @@ export interface LinksChanges {
 }
 
 /** What of Links the user opens, for the achievements of exploring. */
-export const LINKS_SEEN_KINDS = ['change', 'dose', 'forecast'] as const;
+export const LINKS_SEEN_KINDS = [
+  'change',
+  'dose',
+  'forecast',
+  'rhythm',
+  'after',
+] as const;
 export const linksSeenSchema = z.discriminatedUnion('kind', [
   /** A change point, by its id. */
   z.object({kind: z.literal('change'), key: z.uuid()}),
@@ -420,6 +426,10 @@ export const linksSeenSchema = z.discriminatedUnion('kind', [
       .max(200)
       .regex(/^[^|]+\|\d{4}-\d{2}-\d{2}$/),
   }),
+  /** The day's rhythm of an hourly number, by its key. */
+  z.object({kind: z.literal('rhythm'), key: z.string().min(1).max(120)}),
+  /** The hour after an event, by the event's key. */
+  z.object({kind: z.literal('after'), key: z.string().min(1).max(120)}),
 ]);
 export type LinksSeen = z.infer<typeof linksSeenSchema>;
 

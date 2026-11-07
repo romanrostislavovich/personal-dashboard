@@ -31,6 +31,10 @@
   </button>
 </div>
 
+@if (f.view === 'today') {
+  <pd-window-hint />
+}
+
 @if (selected(); as chosen) {
   <div class="selection" role="status">
     <span>{{ 'tasks.steps.selected' | transloco: {count: chosen.size} }}</span>

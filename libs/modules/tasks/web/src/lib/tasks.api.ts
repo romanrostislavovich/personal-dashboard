@@ -1,7 +1,8 @@
 import {httpResource} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {TASKS_READS, tasksApi} from '@pd/client-core';
+import {CORE_READS, TASKS_READS, tasksApi} from '@pd/client-core';
 import {
+  LinksWindow,
   Reminder,
   ReminderInput,
   ReminderUpdate,
@@ -27,6 +28,11 @@ export class TasksApi {
     return httpResource<TaskList[]>(() => TASKS_READS.lists(), {
       defaultValue: [],
     });
+  }
+
+  /** The productive window of every weekday (Links, through the core): the hint of the list. */
+  productiveWindow() {
+    return httpResource<LinksWindow>(() => CORE_READS.productiveWindow());
   }
 
   reminders() {

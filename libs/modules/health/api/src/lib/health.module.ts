@@ -29,6 +29,7 @@ import {BandService} from './wearable/band.service';
 import {WearableController} from './wearable/wearable.controller';
 import {WearableIntegrations} from './wearable/wearable.integrations';
 import {WearableJob} from './wearable/wearable.job';
+import {WearableHoursLinks} from './wearable/wearable-hours.links';
 import {WearableLinks} from './wearable/wearable.links';
 import {WearableService} from './wearable/wearable.service';
 
@@ -68,6 +69,7 @@ import {WearableService} from './wearable/wearable.service';
     WearableService,
     WearableJob,
     WearableLinks,
+    WearableHoursLinks,
     WearableIntegrations,
     BandDaysService,
     BandService,

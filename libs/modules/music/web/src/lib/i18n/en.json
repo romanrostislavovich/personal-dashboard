@@ -129,7 +129,8 @@
   },
   "links": {
     "plays": "Music plays",
-    "genre": "Plays of a genre"
+    "genre": "Plays of a genre",
+    "listening": "Music started"
   },
   "usage": {
     "plays": "plays"
