@@ -1,5 +1,5 @@
 {
-  "id": "8196e25c-95ad-4329-ab41-03fe603d8838",
+  "id": "8f3ab1a8-3ba5-4c85-899f-9618d50c730b",
   "prevId": "16457a87-e96f-402e-a00b-4a555c231006",
   "version": "7",
   "dialect": "postgresql",
@@ -1816,7 +1816,23 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "links_experiment_days_user_id_index": {
+          "name": "links_experiment_days_user_id_index",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "links_experiment_days_user_id_users_id_fk": {
           "name": "links_experiment_days_user_id_users_id_fk",
@@ -1921,7 +1937,23 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "links_experiment_versions_user_id_index": {
+          "name": "links_experiment_versions_user_id_index",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "links_experiment_versions_user_id_users_id_fk": {
           "name": "links_experiment_versions_user_id_users_id_fk",

@@ -1,4 +1,10 @@
-import {ExperimentCondition, ExperimentResult, LocalDate} from '@pd/contracts';
+import {
+  EXPERIMENT_MIN_EACH,
+  ExperimentCondition,
+  ExperimentResult,
+  LocalDate,
+} from '@pd/contracts';
+import {createHash} from 'node:crypto';
 import {daysOf} from '../daily-series';
 
 /*
@@ -8,8 +14,8 @@ import {daysOf} from '../daily-series';
  * how sure it is. It describes; it does not prove.
  */
 
-/** Fewer days of either kind than this — "not enough yet". */
-export const MIN_EACH = 6;
+/** Fewer days of either kind than this — "not enough yet" (the page says how many more). */
+export const MIN_EACH = EXPERIMENT_MIN_EACH;
 const RESAMPLES = 2000;
 /** The middle 95 % of the resampled differences. */
 const LOW = 0.025;
@@ -98,8 +104,21 @@ export function experimentResult(
     interval,
     enough,
     notKept: days.filter(day => day.kept === false).length,
-    missing: days.filter(day => day.value === null).length,
+    // A day not kept is counted once, as not kept, whatever its value.
+    missing: kept.filter(day => day.value === null).length,
   };
+}
+
+/**
+ * The same uuid for the same name (a name-based one, version 5): a day or a version of an
+ * experiment written on both instances before a sync is one row, not two that clash.
+ */
+export function stableId(name: string): string {
+  const hash = createHash('sha1').update(`links-lab|${name}`).digest();
+  hash[6] = (hash[6] & 0x0f) | 0x50;
+  hash[8] = (hash[8] & 0x3f) | 0x80;
+  const hex = hash.subarray(0, 16).toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 function resample(values: number[], random: () => number): number[] {

@@ -1,5 +1,11 @@
 import {ExperimentCondition} from '@pd/contracts';
-import {experimentResult, makeSchedule, MIN_EACH, seeded} from './lab';
+import {
+  experimentResult,
+  makeSchedule,
+  MIN_EACH,
+  seeded,
+  stableId,
+} from './lab';
 
 describe('the personal lab', () => {
   it('makes as many changed days as ordinary ones, on weekdays and weekends alike', () => {
@@ -50,5 +56,18 @@ describe('the personal lab', () => {
     expect(result.enough).toBe(false);
     expect(result.interval).toBeNull();
     expect(MIN_EACH).toBeGreaterThan(1);
+    // A day not kept and without a value is counted once, as not kept.
+    expect(
+      experimentResult([{condition: 'changed', value: null, kept: false}])
+        .missing,
+    ).toBe(0);
+  });
+
+  it('gives the same id to the same day of an experiment', () => {
+    expect(stableId('a|2026-11-09')).toBe(stableId('a|2026-11-09'));
+    expect(stableId('a|2026-11-09')).not.toBe(stableId('a|2026-11-10'));
+    expect(stableId('a|2026-11-09')).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
   });
 });

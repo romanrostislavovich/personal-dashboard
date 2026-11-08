@@ -46,4 +46,6 @@ ALTER TABLE "links_experiment_days" ADD CONSTRAINT "links_experiment_days_experi
 ALTER TABLE "links_experiment_versions" ADD CONSTRAINT "links_experiment_versions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "links_experiment_versions" ADD CONSTRAINT "links_experiment_versions_experiment_id_links_experiments_id_fk" FOREIGN KEY ("experiment_id") REFERENCES "public"."links_experiments"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "links_experiments" ADD CONSTRAINT "links_experiments_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "links_experiment_days_user_id_index" ON "links_experiment_days" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "links_experiment_versions_user_id_index" ON "links_experiment_versions" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "links_experiments_user_id_index" ON "links_experiments" USING btree ("user_id");

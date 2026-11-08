@@ -722,8 +722,11 @@ export class CoreAiTools implements OnModuleInit {
           'morningAt',
         ],
       },
-      confirm: async (_userId, args) =>
-        experimentInputSchema.parse({...args, safe: true}),
+      // The page asks the user to tick it; here the confirmation says it for them to agree to.
+      confirm: async (_userId, args) => ({
+        ...experimentInputSchema.parse({...args, safe: true}),
+        safe: 'The user confirms it is an everyday change: no medications, no food or diet, no less sleep',
+      }),
       handler: async (userId, args) =>
         this.lab.create(
           userId,

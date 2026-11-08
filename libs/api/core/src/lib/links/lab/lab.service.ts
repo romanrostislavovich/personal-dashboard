@@ -8,6 +8,7 @@ import {
 import {
   Experiment,
   ExperimentDayInput,
+  experimentDaySchema,
   ExperimentInput,
   ExperimentUpdate,
   LinksLab,
@@ -29,7 +30,7 @@ import {
   linksExperimentVersions,
   linksSeen,
 } from '../links.schema';
-import {experimentResult, makeSchedule} from './lab';
+import {experimentResult, makeSchedule, stableId} from './lab';
 import {labMessages} from './lab.messages';
 
 /** The kinds of `links_seen` rows: a day's morning message and rating question sent. */
@@ -37,6 +38,9 @@ const MORNING_SENT = 'labMorning';
 const RATING_ASKED = 'labRating';
 /** The rating button: `xr:<experiment>:<day>:<1–5>` (within Telegram's 64 bytes). */
 const RATING_ACTION = 'xr';
+
+/** The kinds the job looks at: a paused one is still done past its end, but told nothing. */
+const LIVE = ['running', 'paused'] as const;
 
 type Row = typeof linksExperiments.$inferSelect;
 
@@ -70,14 +74,44 @@ export class LabService implements OnModuleInit {
       name: RATING_ACTION,
       handler: async (user, payload) => {
         const text = labMessages(user.locale);
-        const [id, day, value] = payload.split(':');
-        const rating = Number(value);
-        try {
-          await this.markDay(user.id, id, {day, rating});
-        } catch {
+        const press = this.pressOf(payload);
+        if (!press) {
           return text.unknown;
         }
-        return text.rated(rating);
+        try {
+          await this.markDay(user.id, press.id, {
+            day: press.day,
+            rating: press.rating,
+          });
+        } catch (error) {
+          // Gone or over: told so; anything else (the database) is a real failure.
+          if (
+            error instanceof NotFoundException ||
+            error instanceof BadRequestException
+          ) {
+            return text.unknown;
+          }
+          throw error;
+        }
+        return text.rated(press.rating);
+      },
+      // Rated on the page already: a question held for the quiet hours is not sent.
+      settled: async (user, payload) => {
+        const press = this.pressOf(payload);
+        if (!press) {
+          return true;
+        }
+        const [mark] = await this.db
+          .select({rating: linksExperimentDays.rating})
+          .from(linksExperimentDays)
+          .where(
+            and(
+              eq(linksExperimentDays.userId, user.id),
+              eq(linksExperimentDays.experimentId, press.id),
+              eq(linksExperimentDays.day, press.day),
+            ),
+          );
+        return typeof mark?.rating === 'number';
       },
     });
   }
@@ -96,12 +130,22 @@ export class LabService implements OnModuleInit {
           this.db
             .select()
             .from(linksExperimentVersions)
-            .where(inArray(linksExperimentVersions.experimentId, ids))
+            .where(
+              and(
+                eq(linksExperimentVersions.userId, userId),
+                inArray(linksExperimentVersions.experimentId, ids),
+              ),
+            )
             .orderBy(asc(linksExperimentVersions.version)),
           this.db
             .select()
             .from(linksExperimentDays)
-            .where(inArray(linksExperimentDays.experimentId, ids)),
+            .where(
+              and(
+                eq(linksExperimentDays.userId, userId),
+                inArray(linksExperimentDays.experimentId, ids),
+              ),
+            ),
         ])
       : [[], []];
     const experiments: Experiment[] = [];
@@ -120,7 +164,15 @@ export class LabService implements OnModuleInit {
   }
 
   /** Starts one: the random days made now, before the start, and the rules' first version. */
-  async create(userId: string, input: ExperimentInput): Promise<Experiment> {
+  async create(
+    userId: string,
+    input: ExperimentInput,
+    now = new Date(),
+  ): Promise<Experiment> {
+    // Drawn before the days come: a start in the past would let them be chosen knowing them.
+    if (input.startOn < (await this.todayOf(userId, now))) {
+      throw new BadRequestException('An experiment starts today or later');
+    }
     const metric =
       input.metric.kind === 'number'
         ? await this.links.dailyMetric(userId, input.metric.key, {
@@ -150,7 +202,7 @@ export class LabService implements OnModuleInit {
       })
       .returning();
     await this.keepVersion(row);
-    return (await this.list(userId)).experiments.find(
+    return (await this.list(userId, now)).experiments.find(
       one => one.id === row.id,
     ) as Experiment;
   }
@@ -210,6 +262,10 @@ export class LabService implements OnModuleInit {
     now = new Date(),
   ): Promise<void> {
     const row = await this.own(userId, id);
+    // A stopped one is over by the user's word; a done one may still get its last days filled.
+    if (row.status === 'stopped') {
+      throw new BadRequestException('The experiment is over');
+    }
     const today = await this.todayOf(userId, now);
     if (!row.schedule.some(one => one.day === input.day) || input.day > today) {
       throw new BadRequestException('Not a day of the experiment');
@@ -222,7 +278,13 @@ export class LabService implements OnModuleInit {
     };
     await this.db
       .insert(linksExperimentDays)
-      .values({userId, experimentId: id, day: input.day, ...values})
+      .values({
+        id: stableId(`${id}|${input.day}`),
+        userId,
+        experimentId: id,
+        day: input.day,
+        ...values,
+      })
       .onConflictDoUpdate({
         target: [linksExperimentDays.experimentId, linksExperimentDays.day],
         set: {...values, updatedAt: new Date()},
@@ -265,21 +327,34 @@ export class LabService implements OnModuleInit {
       .where(
         and(
           eq(linksExperiments.userId, userId),
-          eq(linksExperiments.status, 'running'),
+          inArray(linksExperiments.status, LIVE),
         ),
       );
     for (const row of rows) {
       if (row.endOn < local.date) {
-        await this.db
+        // Told once: by the run that turned it done (not again after a sync brought it back).
+        const done = await this.db
           .update(linksExperiments)
           .set({status: 'done', updatedAt: new Date()})
-          .where(eq(linksExperiments.id, row.id));
-        await this.notifications.send(userId, {
-          title: text.doneTitle,
-          body: text.doneBody(row.hypothesis),
-          source: 'life',
-          link: '/life/lab',
-        });
+          .where(
+            and(
+              eq(linksExperiments.userId, userId),
+              eq(linksExperiments.id, row.id),
+              inArray(linksExperiments.status, LIVE),
+            ),
+          )
+          .returning({id: linksExperiments.id});
+        if (done.length) {
+          await this.notifications.send(userId, {
+            title: text.doneTitle,
+            body: text.doneBody(row.hypothesis),
+            source: 'life',
+            link: '/life/lab',
+          });
+        }
+        continue;
+      }
+      if (row.status !== 'running') {
         continue;
       }
       const today = row.schedule.find(one => one.day === local.date);
@@ -359,21 +434,28 @@ export class LabService implements OnModuleInit {
             row.schedule.map(one => one.day),
           )
         : null;
-    // The days that are over (today's number is not done yet), each with its value and mark.
-    const days = row.schedule
-      .filter(one => one.day < today)
-      .map(one => {
-        const mark = marks.find(day => day.day === one.day);
-        return {
-          day: one.day,
-          condition: one.condition,
-          value:
-            row.metricKind === 'rating'
-              ? (mark?.rating ?? null)
-              : (values?.get(one.day) ?? null),
-          kept: mark?.kept ?? null,
-        };
-      });
+    // Every day of the plan: a number of Links once the day is over, a rating once given.
+    const days = row.schedule.map(one => {
+      const mark = marks.find(day => day.day === one.day);
+      const value =
+        row.metricKind === 'rating'
+          ? one.day <= today
+            ? (mark?.rating ?? null)
+            : null
+          : one.day < today
+            ? (values?.get(one.day) ?? null)
+            : null;
+      return {
+        day: one.day,
+        condition: one.condition,
+        value,
+        kept: mark?.kept ?? null,
+      };
+    });
+    // What came of it counts the days begun: the past ones, and today once it has its value.
+    const begun = days.filter(
+      one => one.day < today || (one.day === today && one.value !== null),
+    );
     return {
       id: row.id,
       hypothesis: row.hypothesis,
@@ -402,18 +484,21 @@ export class LabService implements OnModuleInit {
         at: one.at.toISOString(),
         hypothesis: one.hypothesis,
         change: one.change,
+        morningAt: one.morningAt,
+        askAt: one.askAt,
       })),
       days,
       today:
         row.status === 'running'
           ? (row.schedule.find(one => one.day === today)?.condition ?? null)
           : null,
-      result: experimentResult(days),
+      result: experimentResult(begun),
     };
   }
 
   private async keepVersion(row: Row): Promise<void> {
     await this.db.insert(linksExperimentVersions).values({
+      id: stableId(`${row.id}|v${row.version}`),
       userId: row.userId,
       experimentId: row.id,
       version: row.version,
@@ -437,13 +522,29 @@ export class LabService implements OnModuleInit {
     return row;
   }
 
-  /** The users with a running experiment: the job looks at no one else. */
+  /** The users with a running or paused experiment: the job looks at no one else. */
   private async runningUsers(): Promise<string[]> {
     const rows = await this.db
       .selectDistinct({userId: linksExperiments.userId})
       .from(linksExperiments)
-      .where(eq(linksExperiments.status, 'running'));
+      .where(inArray(linksExperiments.status, LIVE));
     return rows.map(row => row.userId);
+  }
+
+  /** A rating button's payload `<experiment>:<day>:<1–5>`, checked; `null` — not one. */
+  private pressOf(
+    payload: string,
+  ): {id: string; day: LocalDate; rating: number} | null {
+    const [id, day, value] = payload.split(':');
+    const parsed = experimentDaySchema.safeParse({day, rating: Number(value)});
+    if (
+      !/^[0-9a-f-]{36}$/i.test(id ?? '') ||
+      !parsed.success ||
+      typeof parsed.data.rating !== 'number'
+    ) {
+      return null;
+    }
+    return {id, day: parsed.data.day, rating: parsed.data.rating};
   }
 
   private async todayOf(userId: string, now: Date): Promise<LocalDate> {

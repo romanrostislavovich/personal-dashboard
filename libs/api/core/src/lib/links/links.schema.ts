@@ -231,7 +231,10 @@ export const linksExperimentVersions = pgTable(
     askAt: text(),
     at: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  table => [unique().on(table.experimentId, table.version)],
+  table => [
+    unique().on(table.experimentId, table.version),
+    index().on(table.userId),
+  ],
 );
 
 /** A day of an experiment marked: its rating (a rating one) and whether the plan was kept. */
@@ -250,5 +253,8 @@ export const linksExperimentDays = pgTable(
     kept: boolean(),
     updatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
-  table => [unique().on(table.experimentId, table.day)],
+  table => [
+    unique().on(table.experimentId, table.day),
+    index().on(table.userId),
+  ],
 );

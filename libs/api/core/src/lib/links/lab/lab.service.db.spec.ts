@@ -28,7 +28,10 @@ describe.skipIf(!ADMIN_URL)('LabService', () => {
   let metric: DailyMetric | null = null;
   const actions = new Map<
     string,
-    (user: unknown, payload: string) => unknown
+    {
+      handler: (user: unknown, payload: string) => unknown;
+      settled?: (user: unknown, payload: string) => Promise<boolean>;
+    }
   >();
 
   const lab = () => {
@@ -52,7 +55,8 @@ describe.skipIf(!ADMIN_URL)('LabService', () => {
         registerAction: (action: {
           name: string;
           handler: (user: unknown, payload: string) => unknown;
-        }) => actions.set(action.name, action.handler),
+          settled?: (user: unknown, payload: string) => Promise<boolean>;
+        }) => actions.set(action.name, action),
       } as never,
     );
     service.onModuleInit();
@@ -101,7 +105,7 @@ describe.skipIf(!ADMIN_URL)('LabService', () => {
   it('starts with random days made beforehand, keeps the rules by version, pauses and stops', async () => {
     const user = await addUser();
     const service = lab();
-    const started = await service.create(user, rating);
+    const started = await service.create(user, rating, at(START));
     expect(started.endOn).toBe(shift(START, 13));
     expect(started.version).toBe(1);
     await service.update(user, started.id, {
@@ -124,7 +128,7 @@ describe.skipIf(!ADMIN_URL)('LabService', () => {
   it('tells the day in the morning and asks the rating once, the buttons note it', async () => {
     const user = await addUser();
     const service = lab();
-    const started = await service.create(user, rating);
+    const started = await service.create(user, rating, at(START));
     await service.tell(user, at(START, '07:00'));
     expect(sent.filter(one => one.userId === user)).toHaveLength(0);
     await service.tell(user, at(START, '08:10'));
@@ -134,11 +138,18 @@ describe.skipIf(!ADMIN_URL)('LabService', () => {
     const asked = sent.filter(one => one.userId === user);
     expect(asked).toHaveLength(2);
     expect(asked[1].actions).toHaveLength(5);
-    const reply = await actions.get('xr')?.(
-      {id: user, locale: 'ru'},
-      `${started.id}:${START}:4`,
+    const button = actions.get('xr');
+    const who = {id: user, locale: 'ru'};
+    expect(await button?.settled?.(who, `${started.id}:${START}:4`)).toBe(
+      false,
     );
+    const reply = await button?.handler(who, `${started.id}:${START}:4`);
     expect(reply).toBe('Записал: 4 из 5.');
+    expect(await button?.settled?.(who, `${started.id}:${START}:4`)).toBe(true);
+    // A forged press: a rating out of 1–5 is refused, not written.
+    expect(await button?.handler(who, `${started.id}:${START}:9`)).toBe(
+      'Этот эксперимент уже закончен или удалён.',
+    );
     const [found] = (await service.list(user, at(shift(START, 1)))).experiments;
     expect(found.days[0]).toMatchObject({day: START, value: 4});
   });
@@ -146,7 +157,7 @@ describe.skipIf(!ADMIN_URL)('LabService', () => {
   it('keeps a missed day missing, a day not kept apart, and is done after its end', async () => {
     const user = await addUser();
     const service = lab();
-    const started = await service.create(user, rating);
+    const started = await service.create(user, rating, at(START));
     await service.markDay(
       user,
       started.id,
@@ -183,24 +194,67 @@ describe.skipIf(!ADMIN_URL)('LabService', () => {
         value: 2 + (i % 3),
       })),
     };
-    const started = await lab().create(user, {
-      ...rating,
-      metric: {kind: 'number', key: 'activity.index.deepWork'},
-    });
+    const started = await lab().create(
+      user,
+      {...rating, metric: {kind: 'number', key: 'activity.index.deepWork'}},
+      at(START),
+    );
     const [found] = (await lab().list(user, at(shift(START, 14)))).experiments;
     expect(found.days.every(day => day.value !== null)).toBe(true);
     expect(found.result.enough).toBe(true);
     expect(found.result.interval).not.toBeNull();
     metric = null;
     await expect(
-      lab().create(user, {
-        ...rating,
-        metric: {kind: 'number', key: 'made.up'},
-      }),
+      lab().create(
+        user,
+        {...rating, metric: {kind: 'number', key: 'made.up'}},
+        at(START),
+      ),
     ).rejects.toThrow();
     // Another user's experiment is not theirs to touch.
+    const stranger = await addUser();
     await expect(
-      lab().update(await addUser(), started.id, {status: 'paused'}),
+      lab().update(stranger, started.id, {status: 'paused'}),
+    ).rejects.toThrow();
+    await expect(
+      lab().markDay(stranger, started.id, {day: START, kept: true}),
+    ).rejects.toThrow();
+  });
+
+  it('refuses a start in the past, shows every day of the plan, ends a paused one once', async () => {
+    const user = await addUser();
+    const service = lab();
+    await expect(
+      service.create(user, rating, at(shift(START, 1))),
+    ).rejects.toThrow();
+    const started = await service.create(user, rating, at(START));
+    const [planned] = (await service.list(user, at(START))).experiments;
+    expect(planned.days).toHaveLength(14);
+    expect(planned.days.every(day => day.value === null)).toBe(true);
+    // Today's rating is shown (and counted) at once.
+    await service.markDay(user, started.id, {day: START, rating: 3}, at(START));
+    const [rated] = (await service.list(user, at(START))).experiments;
+    expect(rated.days[0].value).toBe(3);
+    expect(rated.result.ordinary.n + rated.result.changed.n).toBe(1);
+    await service.update(user, started.id, {status: 'paused'});
+    await service.tell(user, at(shift(START, 14)));
+    await service.tell(user, at(shift(START, 14), '12:10'));
+    const [done] = (await service.list(user, at(shift(START, 14)))).experiments;
+    expect(done.status).toBe('done');
+    expect(
+      sent.filter(
+        one => one.userId === user && one.title === '🧪 Эксперимент закончен',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('takes no day of a stopped one', async () => {
+    const user = await addUser();
+    const service = lab();
+    const started = await service.create(user, rating, at(START));
+    await service.update(user, started.id, {status: 'stopped'});
+    await expect(
+      service.markDay(user, started.id, {day: START, rating: 2}),
     ).rejects.toThrow();
   });
 });

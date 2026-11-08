@@ -22,6 +22,9 @@ export type ExperimentStatus = (typeof EXPERIMENT_STATUSES)[number];
 /** How long one may run, in days. */
 export const EXPERIMENT_DAYS = {min: 14, max: 60, usual: 28} as const;
 
+/** Fewer days of either kind than this, and the lab says nothing of the result yet. */
+export const EXPERIMENT_MIN_EACH = 6;
+
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 
 /** The main number: a daily number of Links, or a rating 1–5 the bot asks for with buttons. */
@@ -41,6 +44,7 @@ export const experimentInputSchema = z.object({
   change: z.string().trim().min(3).max(200),
   metric: experimentMetricSchema,
   days: z.number().int().min(EXPERIMENT_DAYS.min).max(EXPERIMENT_DAYS.max),
+  /** Today or later, in the user's time zone: the days are drawn before they come. */
   startOn: z.iso.date(),
   /** When the morning message tells what kind of day it is. */
   morningAt: time,
@@ -100,8 +104,19 @@ export interface Experiment {
   status: ExperimentStatus;
   /** The rules' version: a change of the words or the hours makes a new one. */
   version: number;
-  versions: {version: number; at: string; hypothesis: string; change: string}[];
-  /** Every day of it: its kind, the value (`null` — missing) and whether the plan was kept. */
+  versions: {
+    version: number;
+    at: string;
+    hypothesis: string;
+    change: string;
+    morningAt: string;
+    askAt: string | null;
+  }[];
+  /**
+   * Every day of the plan, to come ones too: its kind, the value (`null` — missing or not yet;
+   * a number of Links is known once the day is over, a rating once given) and whether the plan
+   * was kept.
+   */
   days: {
     day: LocalDate;
     condition: ExperimentCondition;
