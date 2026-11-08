@@ -33,6 +33,7 @@ import {DoseChartComponent, dosePoints} from './dose-chart.component';
 import {ForecastsCardComponent} from './forecasts-card.component';
 import {HourAfterCardComponent} from './hour-after-card.component';
 import {InsightsCardComponent} from './insights-card.component';
+import {OverloadCardComponent} from './overload-card.component';
 import {QuestionsCardComponent} from './questions-card.component';
 import {RhythmCardComponent} from './rhythm-card.component';
 import {WindowCardComponent} from './window-card.component';
@@ -88,6 +89,7 @@ const LEADS_FROM = 0.2;
     ForecastsCardComponent,
     HourAfterCardComponent,
     InsightsCardComponent,
+    OverloadCardComponent,
     QuestionsCardComponent,
     RhythmCardComponent,
     WindowCardComponent,

@@ -1,5 +1,10 @@
 import {NgTemplateOutlet} from '@angular/common';
-import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
 import {MatButtonModule} from '@angular/material/button';
 import {MatDialog} from '@angular/material/dialog';
 import {MatIconModule} from '@angular/material/icon';
@@ -61,7 +66,11 @@ import {BUILD_ICON, HABIT_ICONS, HabitsApi} from './habits.api';
     }
     <div class="grid">
       @for (habit of habits.value(); track habit.id) {
-        <pd-habit-card [habit]="habit" (action)="act(habit, $event)" />
+        <pd-habit-card
+          [habit]="habit"
+          [risk]="risks().get('habits.' + habit.id) ?? null"
+          (action)="act(habit, $event)"
+        />
       }
     </div>
     @if (!habits.isLoading() && !habits.error() && !habits.value().length) {
@@ -116,6 +125,18 @@ export class HabitsPage {
   protected readonly icons = HABIT_ICONS;
   protected readonly buildIcon = BUILD_ICON;
   protected readonly habits = this.api.list();
+  /** Tomorrow's chances, by the habit's number in Links (`habits.<id>`); trusted ones only. */
+  private readonly lapses = this.api.lapses(
+    () => this.habits.value().length > 0,
+  );
+  protected readonly risks = computed(
+    () =>
+      new Map(
+        (this.lapses.hasValue() ? this.lapses.value().habits : [])
+          .filter(one => one.trusted && one.chance !== null)
+          .map(one => [one.key, one]),
+      ),
+  );
 
   protected async start(kind: HabitKind, build = false): Promise<void> {
     const input = await this.open({kind, build});

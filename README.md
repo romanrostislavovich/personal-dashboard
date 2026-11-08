@@ -72,7 +72,11 @@ The interface is in English and Russian.
   question cards — built-in ones and your own, picked from the numbers or asked in words for the
   AI to turn into a card — each answered from your days, checked against weekends, rain, illness
   and travel, and "only when" another number is high or low; and the week's insights, found
-  every Monday and worded by the AI from the numbers only, with their proof, one a day on Home);
+  every Monday and worded by the AI from the numbers only, with their proof, one a day on Home;
+  the overload of the last days against your own usual — the phone at night, sleep, deep work,
+  commits, the mood — with one gentle message and a small step when it is high, at most once in
+  three days and switchable; and tomorrow's chance each habit slips, on its card and in the
+  evening summary when it is likely);
   the last commit before a site went down;
   subscriptions you pay for and do not use
 - ⚡ **Automations** — "if X, then Y" across sections: a site is down → a task, no diary entry by

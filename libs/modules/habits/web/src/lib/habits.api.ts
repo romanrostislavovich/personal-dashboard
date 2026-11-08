@@ -1,7 +1,13 @@
 import {httpResource} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {HABITS_READS, habitsApi} from '@pd/client-core';
-import {Habit, HabitDayInput, HabitInput, HabitKind} from '@pd/contracts';
+import {CORE_READS, HABITS_READS, habitsApi} from '@pd/client-core';
+import {
+  Habit,
+  HabitDayInput,
+  HabitInput,
+  HabitKind,
+  LinksLapses,
+} from '@pd/contracts';
 import {DASHBOARD_CLIENT, fromCore} from '@pd/web-core';
 
 /** The habit requests of the client core (`@pd/client-core`) for Angular. */
@@ -12,6 +18,13 @@ export class HabitsApi {
   /** Reactive list; call it in a component field. */
   list() {
     return httpResource<Habit[]>(() => HABITS_READS.list(), {defaultValue: []});
+  }
+
+  /** Tomorrow's chance each habit lapses (Links, through the core); asked only when `wanted`. */
+  lapses(wanted: () => boolean) {
+    return httpResource<LinksLapses>(() =>
+      wanted() ? CORE_READS.lapses() : undefined,
+    );
   }
 
   create(input: HabitInput) {

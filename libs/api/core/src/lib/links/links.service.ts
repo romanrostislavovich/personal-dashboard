@@ -235,8 +235,18 @@ export class LinksService {
     return found;
   }
 
-  async dailyMetrics(userId: string, period: Period): Promise<DailyMetric[]> {
-    return this.collect(this.metrics, source => source.metrics(userId, period));
+  /** Every section's daily numbers, or only those of `modules` (fewer to read). */
+  async dailyMetrics(
+    userId: string,
+    period: Period,
+    modules?: string[],
+  ): Promise<DailyMetric[]> {
+    return this.collect(
+      modules
+        ? this.metrics.filter(source => modules.includes(source.module))
+        : this.metrics,
+      source => source.metrics(userId, period),
+    );
   }
 
   /** Every section's numbers and events hour by hour, in the user's `timeZone`. */

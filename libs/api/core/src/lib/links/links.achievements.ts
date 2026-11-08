@@ -19,6 +19,8 @@ import {ChangePointsService, EVEN_DAY} from './change-points.service';
 import {ForecastsService} from './forecasts.service';
 import {IN_WINDOW_DAY} from './hours/hours.service';
 import {QuestionsService} from './questions/questions.service';
+import {LapseService} from './overload/lapse.service';
+import {OverloadService} from './overload/overload.service';
 
 /** Shown under "Home" on the achievements page, with the others about the dashboard itself. */
 const MODULE = 'dashboard';
@@ -74,6 +76,8 @@ export class LinksAchievements implements OnModuleInit {
     private readonly changes: ChangePointsService,
     private readonly forecasts: ForecastsService,
     private readonly questions: QuestionsService,
+    private readonly overload: OverloadService,
+    private readonly lapse: LapseService,
   ) {}
 
   onModuleInit(): void {
@@ -434,6 +438,62 @@ export class LinksAchievements implements OnModuleInit {
           '🔭',
           {en: 'Researcher', ru: 'Исследователь'},
           {en: 'Five questions of your own', ru: 'Пять своих вопросов'},
+        ],
+      ),
+    });
+
+    // Links v2, overload and lapses: for coming back, never for the load itself.
+    this.achievements.register({
+      id: 'dashboard.overload-recovered',
+      module: MODULE,
+      measure: userId => this.overload.recoveries(userId),
+      tiers: achievementTiers(
+        [
+          1,
+          '🌤️',
+          {en: 'After the rain', ru: 'После дождя'},
+          {
+            en: 'Back to your usual after an overload warning',
+            ru: 'Вернуться к своей норме после предупреждения о перегрузке',
+          },
+        ],
+        [
+          5,
+          '🌈',
+          {en: 'Bouncing back', ru: 'Снова в строю'},
+          {
+            en: 'Five times back to your usual after a warning',
+            ru: 'Пять раз вернуться к норме после предупреждения',
+          },
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'dashboard.lapse-kept',
+      module: MODULE,
+      measure: userId => this.lapse.kept(userId),
+      tiers: achievementTiers(
+        [
+          1,
+          '🛡️',
+          {en: 'Despite the odds', ru: 'Вопреки прогнозу'},
+          {
+            en: 'Keep a habit the day the evening said it was likely to lapse',
+            ru: 'Сохранить привычку в день, когда вечером сказали, что её легко пропустить',
+          },
+        ],
+        [
+          10,
+          '🏔️',
+          {en: 'Steady hand', ru: 'Твёрдая рука'},
+          {en: 'Ten such days', ru: 'Десять таких дней'},
+        ],
+        [
+          50,
+          '🗿',
+          {en: 'Unshakable', ru: 'Непоколебимый'},
+          {en: 'Fifty such days', ru: 'Пятьдесят таких дней'},
         ],
       ),
     });

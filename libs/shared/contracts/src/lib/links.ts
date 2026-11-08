@@ -143,6 +143,11 @@ export interface DailyMetric {
    * Links compares what is done with these, not everything with everything.
    */
   outcome?: true;
+  /**
+   * A habit's: which of its days is a lapse — `marked` (a drink, a cigarette: the goal is to
+   * quit or cut down) or `unmarked` (a missed workout of a daily one). Not set — no lapses.
+   */
+  lapse?: 'marked' | 'unmarked';
   days: {day: LocalDate; value: number}[];
 }
 

@@ -152,6 +152,10 @@ export const CORE_READS = {
   questions: () => apiRequest('/api/life/questions'),
   /** The latest week's findings, and which is today's. */
   insights: () => apiRequest('/api/life/insights'),
+  /** The overload score of the last days, the user's own high and its history. */
+  overload: () => apiRequest('/api/life/overload'),
+  /** Tomorrow's chance each habit lapses. */
+  lapses: () => apiRequest('/api/life/lapses'),
   /**
    * How the daily numbers go together (with the outcomes only, unless `pairs` is `all`); the
    * regression explains `target`; `extra` — the extra numbers switched on.
@@ -258,6 +262,9 @@ export function lifeApi(api: ApiClient) {
     /** A question in the user's words turned by the AI into a card to confirm. */
     draftQuestion: (text: string) =>
       api.post<QuestionInput>('/api/life/questions/draft', {text}),
+    /** Whether the overload warning is sent. */
+    setOverloadEnabled: (enabled: boolean) =>
+      api.put<void>('/api/life/overload-settings', {enabled}),
     /** Looks for this week's findings now (at most once an hour). */
     refreshInsights: () =>
       api.post<LinksInsights>('/api/life/insights/refresh', {}),

@@ -66,7 +66,8 @@
     "thisWeekDone": "this week: {{done}} of {{times}}",
     "dayDone": "done",
     "doneToday": "Done today",
-    "calendarHintBuild": "A click on a day marks it done, another click takes the mark off."
+    "calendarHintBuild": "A click on a day marks it done, another click takes the mark off.",
+    "risk": "Tomorrow it may slip: {{chance}} in 10 (usually {{usual}} in 10)"
   },
   "widget": {
     "days": "{{days}} d",

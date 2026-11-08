@@ -15,6 +15,8 @@ import {ProjectOverviewService} from '../links/project-overview.service';
 import {ChangePointsService} from '../links/change-points.service';
 import {ForecastsService} from '../links/forecasts.service';
 import {HoursService} from '../links/hours/hours.service';
+import {LapseService} from '../links/overload/lapse.service';
+import {OverloadService} from '../links/overload/overload.service';
 import {InsightsService} from '../links/questions/insights.service';
 import {QuestionsService} from '../links/questions/questions.service';
 import {ProjectsService} from '../projects/projects.service';
@@ -66,6 +68,8 @@ export class CoreAiTools implements OnModuleInit {
     private readonly changes: ChangePointsService,
     private readonly forecasts: ForecastsService,
     private readonly hours: HoursService,
+    private readonly overload: OverloadService,
+    private readonly lapse: LapseService,
     private readonly questions: QuestionsService,
     private readonly insights: InsightsService,
   ) {}
@@ -643,6 +647,25 @@ export class CoreAiTools implements OnModuleInit {
           ),
           // A card of a hidden (or missing) number is left out, its title too.
           questions: cards.filter(card => card.cause && card.effect),
+        };
+      },
+    });
+
+    this.ai.registerTool({
+      name: 'core_overload',
+      module: 'life',
+      description:
+        "Whether the user's last days look heavier than their own usual (Links → Overload; not " +
+        'a diagnosis): `overload.score` — the mean of its numbers against their usual spread, ' +
+        '`threshold` — their own high, `parts` — each number lately against usually (heaviest ' +
+        "first); and `lapses` — tomorrow's chance each habit lapses, trusted only when its model " +
+        'beat "as often as usual". Tell it gently, never as an alarm or a diagnosis.',
+      parameters: NO_PARAMETERS,
+      handler: async userId => {
+        const hidden = await this.ai.hiddenFromShared(userId);
+        return {
+          overload: await this.overload.status(userId, hidden),
+          lapses: await this.lapse.lapses(userId, hidden),
         };
       },
     });

@@ -89,4 +89,25 @@ describe('summaryOf', () => {
   it('skips a day with almost nothing', () => {
     expect(summaryOf(stats(300), {completed: 0, seconds: 0}, [])).toBeNull();
   });
+
+  it('tells a habit likely to slip tomorrow, gently, by its name or kind', () => {
+    const summary = summaryOf(
+      stats(5600),
+      {completed: 0, seconds: 0},
+      [],
+      undefined,
+      null,
+      null,
+      [
+        {name: null, kind: 'gym', chance: 0.72},
+        {name: 'Чтение', kind: 'custom', chance: 0.65},
+      ],
+    )!;
+    expect(activityMessages('ru').summaryBody(summary)).toContain(
+      'Завтра легко пропустить: спортзал (7/10), Чтение (7/10).',
+    );
+    expect(activityMessages('en').summaryBody(summary)).toContain(
+      'Tomorrow may slip: the gym (7/10)',
+    );
+  });
 });

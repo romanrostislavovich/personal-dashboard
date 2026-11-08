@@ -17,10 +17,12 @@ import {
   addDays,
   Habit,
   HABIT_CALENDAR_DAYS,
+  HabitLapse,
   isBuilding,
   parseLocalDate,
   toLocalDate,
 } from '@pd/contracts';
+import {HabitRiskComponent} from './habit-risk.component';
 import {habitIcon, localToday} from './habits.api';
 
 /** A day of the calendar: before the start (none), clean, with it, or still to come. */
@@ -47,6 +49,7 @@ export type HabitCardAction =
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
+    HabitRiskComponent,
     MatButtonModule,
     MatCardModule,
     MatIconModule,
@@ -174,6 +177,9 @@ export type HabitCardAction =
             ) | transloco
           }}
         </p>
+        @if (risk(); as lapse) {
+          <pd-habit-risk [lapse]="lapse" />
+        }
       </mat-card-content>
       <mat-card-actions align="end">
         @if (todayMarked()) {
@@ -273,6 +279,8 @@ export class HabitCardComponent {
   private readonly prompts = inject(PromptService);
 
   readonly habit = input.required<Habit>();
+  /** Tomorrow's chance it lapses (Links), when its model is trusted. */
+  readonly risk = input<HabitLapse | null>(null);
   readonly action = output<HabitCardAction>();
 
   protected readonly today = localToday();

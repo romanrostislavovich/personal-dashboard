@@ -1,0 +1,1 @@
+ALTER TABLE "links_settings" ADD COLUMN "overload_enabled" boolean DEFAULT true NOT NULL;

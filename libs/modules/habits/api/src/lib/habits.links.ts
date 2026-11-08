@@ -73,6 +73,13 @@ export class HabitsLinks implements OnModuleInit {
                   labelKey: `habits.kinds.${habit.kind}`,
                   ...(habit.name ? {label: habit.name} : {}),
                   unit: 'count',
+                  // A lapse: a marked day of a habit to quit or cut down, an unmarked one of a
+                  // daily one; a weekly one has no day that is a lapse by itself.
+                  ...(habit.goal === 'quit' || habit.goal === 'less'
+                    ? {lapse: 'marked' as const}
+                    : habit.goal === 'daily'
+                      ? {lapse: 'unmarked' as const}
+                      : {}),
                   days,
                 },
               ]

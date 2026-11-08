@@ -115,6 +115,12 @@ export const linksSettings = pgTable('links_settings', {
     .references(() => users.id, {onDelete: 'cascade'}),
   /** The forecast's targets chosen beyond the default ones (DEFAULT_FORECAST_TARGETS). */
   forecastTargets: text().array().notNull().default([]),
+  /**
+   * The overload warning is sent (it can be switched off on the Links card). When it was sent
+   * is a `links_seen` row, not a field here: this row is the user's, and the server writing it
+   * too would make a sync keep one side's and lose the other's.
+   */
+  overloadEnabled: boolean().notNull().default(true),
 });
 
 /** The owner's own questions of Links ("does A go with B?"): the engine answers them anew each time. */
