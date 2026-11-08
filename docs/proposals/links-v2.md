@@ -1,7 +1,7 @@
 # Proposal: Links v2 — from "what goes together" to "what it means for me"
 
 Status: proposal (2026-10-25; the base layer, the owner's catalogue and forecasts for any number
-added 2026-11-05), nothing built yet. The owner's ideas and the assistant's, in one
+added 2026-11-05); every stage built 2026-11-05…08. The owner's ideas and the assistant's, in one
 plan; the owner's decisions are at the end. Health diagnoses of the owner never go into this file.
 
 ## What there is now (v1)
@@ -527,5 +527,13 @@ many numbers are above usual (the server has no translations of the numbers' nam
   after); the last warning is a `links_seen` row, not a setting the user's switch shares (a sync
   would keep one and lose the other); the overload reads its four sections only and both are kept
   an hour; the warning opens Links; a chance reads 1–9 in 10, never 0 or 10.
+
+**Built (2026-11-08):** all of the above.
+
+## Decisions for the lab (2026-11-08, the owner's)
+
+The last stage, experiments: [personal-lab.md](personal-lab.md) has them — random ordinary and
+changed days drawn beforehand, any daily number or a rating 1–5 the bot asks, a morning message,
+the Lab tab in Life with "Check it" from a finding or a question, the assistant, achievements.
 
 **Built (2026-11-08):** all of the above.

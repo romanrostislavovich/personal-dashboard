@@ -1,7 +1,7 @@
 # Proposal: a personal lab
 
-Status: research — the method has to be checked before it is built. A proposal for later work —
-the models below are sketches, not an agreed contract or an existing API.
+Status: built 2026-11-08 (Links v2's last stage) — see "Decisions" at the end; the sketches
+below were the starting point, the contract is `libs/shared/contracts/src/lib/links-lab.ts`.
 
 ## The problem
 
@@ -71,3 +71,24 @@ Observation { id, experimentId, localDate, condition, value?, sourceRef?, adhere
 - Pause and stop work correctly; the history of protocol changes is kept.
 - "Not enough data" is shown instead of a verdict.
 - Missed days never turn into zeros.
+
+## Decisions (2026-11-08, the owner's)
+
+- **The schedule:** randomised at once, not stage 2 — half and half ordinary and changed days
+  within weekdays and within weekends, drawn when the experiment starts and never again.
+- **The main number:** any daily number of Links, or a rating 1–5 of the user's own that the bot
+  asks at a chosen hour with five buttons (the page can mark it too).
+- **Which day it is:** a separate message in the morning at a chosen hour (the quiet hours wait).
+- **The result:** each kind's mean and spread, the difference and its 95 % range from 2000
+  resamples; "not enough days yet" before six days of each; a day not kept as planned is left
+  out, a missed one is missing, never zero; told as a description, never a proof.
+- **The rules:** 14–60 days (28 by default); new words or hours make a new version, the old ones
+  listed; the schedule and the number stay. Pause, go on, stop, delete; past its end it is done.
+- **Safety:** a required "an everyday change: no medications, food or less sleep" box; the
+  assistant refuses those.
+- **Where:** the Lab tab in Life; "Check it" under a finding or a question opens the form with
+  the question and its effect as the number; the assistant's `core_experiments` and
+  `core_start_experiment` (confirmed first, undoable); achievements for an experiment seen to the
+  end and for days kept as planned — never for its result.
+
+**Built (2026-11-08):** all of the above.

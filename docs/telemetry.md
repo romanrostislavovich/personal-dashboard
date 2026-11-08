@@ -88,7 +88,12 @@ four weeks before; the warning (`links.overload`, in the user's day hours) is ke
 the switch (`links_settings.overload_enabled`). _Habit
 lapses_ — a habit's daily number tells which of its days is a lapse (`DailyMetric.lapse`:
 `marked` for a habit to quit or cut down, `unmarked` for a daily one); the risks told in the
-evening are `links_seen` rows (`risk`, then `kept`).
+evening are `links_seen` rows (`risk`, then `kept`). _Experiments_ (Life → Lab) read a daily
+number of Links or a rating 1–5 of their own (`links_experiment_days.rating`, from the bot's
+buttons or the page); their schedule is drawn at the start (`links_experiments.schedule`), the
+words' history is `links_experiment_versions`, and the morning message and the rating question
+sent are `links_seen` rows (`labMorning`, `labRating`, key `id|day`). The user's own: exported,
+in the trash.
 
 **Day boundaries.** Days are the user's time zone (`users.time_zone`). A few numbers move the
 night to the evening before: Dota matches and phone night use count 00:00–04:00 to the day

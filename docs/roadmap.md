@@ -738,9 +738,9 @@ assistant as a tutor that knows the materials of the courses.
 - ✅ **Before and after** — Life → Links: every daily number around the start or the end of a
   period of Health (a diagnosis, a medication), judged against the ordinary dates of the same
   history; the assistant's `core_before_after`
-- 🔬 **A personal lab** — a safe everyday question ("is the first block of work easier without
-  notifications?") tested by rules chosen beforehand, ordinary and changed days, one number;
-  a calm summary with its coverage, never a causal or medical conclusion —
+- 🔬 **A personal lab** — ✅ built 2026-11-08 as Life → Lab (Links v2's last stage): a safe
+  everyday question tested on random ordinary and changed days drawn beforehand, one number, a
+  calm summary with its range, never a causal or medical conclusion —
   [docs/proposals/personal-lab.md](proposals/personal-lab.md)
 - **Correlation engine: sleep** — the hours and the time of going to bed, once a source of sleep
   (a phone, a watch) is connected
@@ -777,7 +777,8 @@ assistant as a tutor that knows the materials of the courses.
   on real data yet; the owner's hypotheses as question cards (their own too, in words through
   the AI) and the week's insight cards worded by the AI, each checked against weekends, rain,
   illness and travel, built 2026-11-07; the overload warning and the habit lapse risk built
-  2026-11-08. Next: experiments (personal-lab). The plan: [proposals/links-v2.md](proposals/links-v2.md)
+  2026-11-08; the personal lab (experiments on random days, Life → Lab) built 2026-11-08 — every
+  stage of the plan built. The plan: [proposals/links-v2.md](proposals/links-v2.md)
 
 - **Mobile app & Smart Band Wearables Integration** — mobile application collecting data from
   the smartphone and wearable devices (smart watch / smart band via BLE, Google Health Connect, Apple Health).
