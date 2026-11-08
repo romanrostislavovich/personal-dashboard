@@ -141,6 +141,10 @@ describe.skipIf(!ADMIN_URL)('OverloadService and LapseService', () => {
     expect((await overload().status(user, [], at('2026-11-10'))).enabled).toBe(
       false,
     );
+    // The last warning is a row of its own, not a setting a sync could overwrite.
+    expect(
+      (await overload().status(user, [], at('2026-11-10'))).lastWarned,
+    ).toBeNull();
   });
 
   it('keeps "well again" after a warning once the days are calm', async () => {
@@ -168,9 +172,16 @@ describe.skipIf(!ADMIN_URL)('OverloadService and LapseService', () => {
       {module: 'habits', unit: 'count', lapse: 'unmarked'},
     );
     metrics = [games, gym];
-    const told = await lapse().tellTomorrow(user, at(today));
-    expect(told.map(one => one.key)).toEqual(['habits.gym']);
+    const likely = await lapse().likelyTomorrow(user, at(today));
+    expect(likely.habits.map(one => one.key)).toEqual(['habits.gym']);
+    // Counted, not told: no summary went out, nothing to keep.
+    await lapse().markKept(user, at(shift(today, 3)));
+    expect(await lapse().kept(user)).toBe(0);
+    // Told with the summary: two days after it, the gym kept counts.
+    await lapse().markTold(user, likely.day, likely.habits);
     await lapse().markKept(user, at(shift(today, 2)));
+    expect(await lapse().kept(user)).toBe(0);
+    await lapse().markKept(user, at(shift(today, 3)));
     expect(await lapse().kept(user)).toBe(1);
   });
 });

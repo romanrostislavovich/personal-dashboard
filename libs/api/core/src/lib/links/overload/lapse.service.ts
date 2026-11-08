@@ -18,6 +18,10 @@ import {lapseChance} from './lapse';
 
 /** The model learns from a year. */
 const HISTORY_DAYS = 365;
+/** The chances of a day are reused this long: the Habits page asks on every visit. */
+const FRESH_MS = 3_600_000;
+/** A day's habit is looked at two days after it: a lapse is often marked the day after. */
+const KEPT_AFTER_DAYS = 2;
 /** The kinds of `links_seen` rows: a risk told in the evening (`habit|day`), and kept after it. */
 export const LAPSE_TOLD = 'risk';
 export const LAPSE_KEPT = 'kept';
@@ -29,6 +33,11 @@ export const LAPSE_KEPT = 'kept';
  */
 @Injectable()
 export class LapseService implements OnModuleInit {
+  private readonly fresh = new Map<
+    string,
+    {at: number; value: Promise<LinksLapses>}
+  >();
+
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly links: LinksService,
@@ -48,13 +57,45 @@ export class LapseService implements OnModuleInit {
     });
   }
 
-  /** Tomorrow's chance of every habit with lapses; `hidden` sections left out. */
+  /** Tomorrow's chance of every habit with lapses; `hidden` sections left out; kept an hour. */
   async lapses(
     userId: string,
     hidden: string[] = [],
     now = new Date(),
   ): Promise<LinksLapses> {
     const today = await this.todayOf(userId, now);
+    const key = [userId, today, ...[...hidden].sort()].join('|');
+    for (const [old, one] of this.fresh) {
+      if (now.getTime() - one.at >= FRESH_MS) {
+        this.fresh.delete(old);
+      }
+    }
+    const kept = this.fresh.get(key);
+    if (kept) {
+      return kept.value;
+    }
+    const value = this.count(userId, today, hidden);
+    this.fresh.set(key, {at: now.getTime(), value});
+    value.catch(() => this.fresh.delete(key));
+    return value;
+  }
+
+  private async count(
+    userId: string,
+    today: LocalDate,
+    hidden: string[],
+  ): Promise<LinksLapses> {
+    // Only a user with habits pays for reading a year of every number.
+    const habits = (
+      await this.links.dailyMetrics(
+        userId,
+        {from: shift(today, -1), to: today},
+        ['habits'],
+      )
+    ).filter(metric => metric.lapse && !hidden.includes(metric.module));
+    if (!habits.length) {
+      return {day: shift(today, 1), habits: []};
+    }
     const metrics = (
       await this.links.dailyMetrics(userId, {
         from: shift(today, -HISTORY_DAYS),
@@ -90,23 +131,34 @@ export class LapseService implements OnModuleInit {
     };
   }
 
-  /**
-   * The likely lapses of tomorrow for the evening summary, each kept as told (for "kept after
-   * all" the day after); the sections the user hid are left out.
-   */
-  async tellTomorrow(userId: string, now = new Date()): Promise<HabitLapse[]> {
+  /** The likely lapses of tomorrow for the evening summary; the sections the user hid out. */
+  async likelyTomorrow(
+    userId: string,
+    now = new Date(),
+  ): Promise<{day: LocalDate; habits: HabitLapse[]}> {
     const user = await this.users.findById(userId);
     const {day, habits} = await this.lapses(
       userId,
       this.users.hiddenSections(user),
       now,
     );
-    const high = habits.filter(habit => habit.high);
-    if (high.length) {
+    return {day, habits: habits.filter(habit => habit.high)};
+  }
+
+  /**
+   * The likely lapses as told — called once the summary that tells them is sent, so "kept after
+   * all" counts only what the user heard.
+   */
+  async markTold(
+    userId: string,
+    day: LocalDate,
+    habits: HabitLapse[],
+  ): Promise<void> {
+    if (habits.length) {
       await this.db
         .insert(linksSeen)
         .values(
-          high.map(habit => ({
+          habits.map(habit => ({
             userId,
             kind: LAPSE_TOLD,
             key: `${habit.key}|${day}`,
@@ -114,7 +166,6 @@ export class LapseService implements OnModuleInit {
         )
         .onConflictDoNothing();
     }
-    return high;
   }
 
   /** How many likely lapses the user kept from (for the achievement). */
@@ -144,7 +195,7 @@ export class LapseService implements OnModuleInit {
       row =>
         row.kind === LAPSE_TOLD &&
         !done.has(row.key) &&
-        row.key.slice(-10) < today &&
+        row.key.slice(-10) <= shift(today, -KEPT_AFTER_DAYS) &&
         row.key.slice(-10) >= shift(today, -7),
     );
     if (!open.length) {
@@ -175,7 +226,7 @@ export class LapseService implements OnModuleInit {
   }
 }
 
-/** Whether a habit lapsed on a day (unknown — not a lapse to count). */
+/** Whether a habit lapsed on a day; a day not known counts as a lapse (never a "kept"). */
 function lapsedOn(habit: DailyMetric, day: LocalDate): boolean {
   const value = seriesOf(habit, [day]).get(day);
   if (value === undefined) {

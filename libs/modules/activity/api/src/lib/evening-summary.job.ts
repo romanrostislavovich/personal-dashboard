@@ -116,27 +116,23 @@ export class EveningSummaryJob implements OnModuleInit {
         return null;
       });
     const tomorrow = await this.tomorrow(userId);
-    const lapses = await this.lapse
-      .tellTomorrow(userId)
-      .then(found =>
-        found.flatMap(habit =>
-          habit.chance === null
-            ? []
-            : [
-                {
-                  name: habit.label ?? null,
-                  kind: habit.labelKey.startsWith('habits.kinds.')
-                    ? habit.labelKey.slice('habits.kinds.'.length)
-                    : null,
-                  chance: habit.chance,
-                },
-              ],
-        ),
-      )
-      .catch(error => {
-        this.logger.warn(`Likely lapses not known for ${userId}: ${error}`);
-        return [];
-      });
+    const likely = await this.lapse.likelyTomorrow(userId).catch(error => {
+      this.logger.warn(`Likely lapses not known for ${userId}: ${error}`);
+      return null;
+    });
+    const lapses = (likely?.habits ?? []).flatMap(habit =>
+      habit.chance === null
+        ? []
+        : [
+            {
+              name: habit.label ?? null,
+              kind: habit.labelKey.startsWith('habits.kinds.')
+                ? habit.labelKey.slice('habits.kinds.'.length)
+                : null,
+              chance: habit.chance,
+            },
+          ],
+    );
     const summary = summaryOf(
       stats,
       {completed: focus.completed, seconds: focus.focusSeconds},
@@ -159,6 +155,14 @@ export class EveningSummaryJob implements OnModuleInit {
       body: text.summaryBody(summary),
       source: 'activity',
     });
+    // Told now: "kept after all" counts only a lapse the user heard of.
+    if (likely) {
+      await this.lapse
+        .markTold(userId, likely.day, likely.habits)
+        .catch(error =>
+          this.logger.warn(`Likely lapses not kept for ${userId}: ${error}`),
+        );
+    }
   }
 
   /**

@@ -1,5 +1,5 @@
 {
-  "id": "afb8b0c9-83a9-436c-84da-0d15f49fa985",
+  "id": "16457a87-e96f-402e-a00b-4a555c231006",
   "prevId": "2e5f55ab-bd57-432a-a9ff-be8e439e5e7f",
   "version": "7",
   "dialect": "postgresql",
@@ -2197,12 +2197,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": true
-        },
-        "overload_warned_on": {
-          "name": "overload_warned_on",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},

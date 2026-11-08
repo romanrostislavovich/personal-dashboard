@@ -68,9 +68,10 @@ export function lapseChance(
         ? 1
         : 0;
   };
-  // The days learnt from: the habit known on the day after; tomorrow itself out.
+  // The days learnt from: the habit known on the day after, and that day over — today is not
+  // (a daily habit not marked yet this evening is no lapse).
   const rows = days.filter(
-    day => day < today && lapsed(shift(day, 1)) !== undefined,
+    day => shift(day, 1) < today && lapsed(shift(day, 1)) !== undefined,
   );
   const outcomes = rows.map(day => lapsed(shift(day, 1)) as number);
   const lapses = outcomes.reduce((sum, one) => sum + one, 0);

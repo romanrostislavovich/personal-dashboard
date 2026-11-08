@@ -6,7 +6,7 @@ import {
   OverloadPart,
   zonedDateTime,
 } from '@pd/contracts';
-import {and, eq, gte, inArray} from 'drizzle-orm';
+import {and, desc, eq, gte, inArray} from 'drizzle-orm';
 import {DB, Database} from '../../database/database.module';
 import {NotificationsService} from '../../notifications/notifications.service';
 import {forEachUser} from '../../scheduler/for-each-user';
@@ -19,6 +19,7 @@ import {overloadBody, overloadMessages} from './overload.messages';
 import {
   overloadHistory,
   overloadOn,
+  OVERLOAD_SIGNALS,
   overloadThreshold,
   RECENT_DAYS,
 } from './overload';
@@ -38,6 +39,12 @@ const RECOVERED_SHARE = 0.5;
 const RECOVERY_DAYS = 14;
 /** The numbers of the score read this far back (the usual of the first scored day too). */
 const READ_DAYS = HISTORY_DAYS + RECENT_DAYS + 28;
+/** The sections its numbers come from: only these are read. */
+const SECTIONS = [
+  ...new Set(OVERLOAD_SIGNALS.map(signal => signal.key.split('.')[0])),
+];
+/** The scores of a day are reused this long: the page and Home ask often. */
+const FRESH_MS = 3_600_000;
 /** The kinds of `links_seen` rows: a warning sent (by its day), and well again after it. */
 export const OVERLOAD_WARNED = 'overload';
 export const OVERLOAD_RECOVERED = 'recovered';
@@ -52,6 +59,11 @@ export const OVERLOAD_RECOVERED = 'recovered';
 export class OverloadService implements OnModuleInit {
   /** The day each user was looked at by the job: once a day is enough. */
   private readonly looked = new Map<string, LocalDate>();
+  /** The scored days of a user (`user|day|hidden`), kept an hour. */
+  private readonly fresh = new Map<
+    string,
+    {at: number; value: Promise<Omit<LinksOverload, 'enabled' | 'lastWarned'>>}
+  >();
 
   constructor(
     @Inject(DB) private readonly db: Database,
@@ -79,32 +91,73 @@ export class OverloadService implements OnModuleInit {
     now = new Date(),
   ): Promise<LinksOverload> {
     const today = zonedDateTime(now, await this.timeZone(userId)).date;
-    const day = shift(today, -1);
-    const metrics = (
-      await this.links.dailyMetrics(userId, {
-        from: shift(day, -READ_DAYS),
-        to: day,
-      })
-    ).filter(metric => !hidden.includes(metric.module));
-    const history = overloadHistory(metrics, shift(day, -HISTORY_DAYS), day);
-    const threshold = overloadThreshold(
-      history.slice(0, -RECENT_LEFT_OUT).map(one => one.score),
-    );
-    const found = overloadOn(metrics, day);
     const [settings] = await this.db
-      .select()
+      .select({enabled: linksSettings.overloadEnabled})
       .from(linksSettings)
       .where(eq(linksSettings.userId, userId));
     return {
-      day,
-      score: found?.score ?? null,
-      threshold,
-      high: found !== null && threshold !== null && found.score > threshold,
-      parts: (found?.parts ?? []).map(part => namedPart(part, metrics)),
-      history: history.slice(-SHOWN_DAYS),
-      enabled: settings?.overloadEnabled ?? true,
-      lastWarned: settings?.overloadWarnedOn ?? null,
+      ...(await this.scored(userId, shift(today, -1), hidden, now)),
+      enabled: settings?.enabled ?? true,
+      lastWarned: await this.lastWarned(userId),
     };
+  }
+
+  /** The score of the day and its history, of the score's own sections only; kept an hour. */
+  private scored(
+    userId: string,
+    day: LocalDate,
+    hidden: string[],
+    now: Date,
+  ): Promise<Omit<LinksOverload, 'enabled' | 'lastWarned'>> {
+    const key = [userId, day, ...[...hidden].sort()].join('|');
+    for (const [old, one] of this.fresh) {
+      if (now.getTime() - one.at >= FRESH_MS) {
+        this.fresh.delete(old);
+      }
+    }
+    const kept = this.fresh.get(key);
+    if (kept) {
+      return kept.value;
+    }
+    const value = (async () => {
+      const metrics = (
+        await this.links.dailyMetrics(
+          userId,
+          {from: shift(day, -READ_DAYS), to: day},
+          SECTIONS,
+        )
+      ).filter(metric => !hidden.includes(metric.module));
+      const history = overloadHistory(metrics, shift(day, -HISTORY_DAYS), day);
+      const threshold = overloadThreshold(
+        history.slice(0, -RECENT_LEFT_OUT).map(one => one.score),
+      );
+      const found = overloadOn(metrics, day);
+      return {
+        day,
+        score: found?.score ?? null,
+        threshold,
+        high: found !== null && threshold !== null && found.score > threshold,
+        parts: (found?.parts ?? []).map(part => namedPart(part, metrics)),
+        history: history.slice(-SHOWN_DAYS),
+      };
+    })();
+    this.fresh.set(key, {at: now.getTime(), value});
+    // A failed reading is not kept: the next one asks again.
+    value.catch(() => this.fresh.delete(key));
+    return value;
+  }
+
+  /** The day of the last warning sent (its `links_seen` row). */
+  private async lastWarned(userId: string): Promise<LocalDate | null> {
+    const [row] = await this.db
+      .select({key: linksSeen.key})
+      .from(linksSeen)
+      .where(
+        and(eq(linksSeen.userId, userId), eq(linksSeen.kind, OVERLOAD_WARNED)),
+      )
+      .orderBy(desc(linksSeen.key))
+      .limit(1);
+    return row?.key ?? null;
   }
 
   async setEnabled(userId: string, enabled: boolean): Promise<void> {
@@ -156,13 +209,6 @@ export class OverloadService implements OnModuleInit {
     }
     // Marked first: whatever happens next, one attempt a day.
     await this.db
-      .insert(linksSettings)
-      .values({userId, overloadWarnedOn: local.date})
-      .onConflictDoUpdate({
-        target: linksSettings.userId,
-        set: {overloadWarnedOn: local.date},
-      });
-    await this.db
       .insert(linksSeen)
       .values({userId, kind: OVERLOAD_WARNED, key: local.date})
       .onConflictDoNothing();
@@ -173,6 +219,7 @@ export class OverloadService implements OnModuleInit {
         status.parts.filter(part => part.weight > 0).map(part => part.key),
       ),
       source: 'life',
+      link: '/life/links',
     });
   }
 

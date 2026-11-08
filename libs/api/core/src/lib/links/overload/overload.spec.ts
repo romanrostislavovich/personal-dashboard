@@ -98,4 +98,22 @@ describe('the chance a habit lapses', () => {
       lapseChance([games, always], always, 'unmarked', TODAY).chance,
     ).toBeNull();
   });
+
+  it('does not learn from today: a daily habit not marked yet this evening is no lapse', () => {
+    // Every day kept, but today not marked yet (0): learnt from, it would be a lapse.
+    const kept = metric(
+      'habits.read',
+      (_, i) => (i === DAYS.length - 1 ? 0 : i % 4 === 0 ? 0 : 1),
+      'count',
+    );
+    const before = lapseChance([games, kept], kept, 'unmarked', TODAY);
+    const allKept = metric(
+      'habits.read',
+      (_, i) => (i % 4 === 0 ? 0 : 1),
+      'count',
+    );
+    const after = lapseChance([games, allKept], allKept, 'unmarked', TODAY);
+    expect(before.days).toBe(after.days);
+    expect(before.usual).toBe(after.usual);
+  });
 });
