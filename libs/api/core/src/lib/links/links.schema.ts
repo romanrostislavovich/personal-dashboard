@@ -1,4 +1,10 @@
-import {ForecastDriver, InsightFact, QuestionWhen} from '@pd/contracts';
+import {
+  ExperimentCondition,
+  ExperimentStatus,
+  ForecastDriver,
+  InsightFact,
+  QuestionWhen,
+} from '@pd/contracts';
 import {
   boolean,
   date,
@@ -8,6 +14,7 @@ import {
   pgTable,
   primaryKey,
   real,
+  smallint,
   text,
   timestamp,
   unique,
@@ -170,4 +177,84 @@ export const linksInsights = pgTable(
     createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
   table => [index().on(table.userId, table.week)],
+);
+
+/**
+ * The personal lab's experiments (docs/proposals/personal-lab.md): a change tried on random days
+ * chosen before the start (`schedule`), the main number, and the rules' current version.
+ */
+export const linksExperiments = pgTable(
+  'links_experiments',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, {onDelete: 'cascade'}),
+    hypothesis: text().notNull(),
+    /** What is done on a changed day. */
+    change: text().notNull(),
+    /** `number` — a daily number of Links (`metricKey`); `rating` — 1–5 asked by the bot. */
+    metricKind: text().$type<'number' | 'rating'>().notNull(),
+    metricKey: text(),
+    question: text(),
+    /** When the rating is asked, and when the morning message tells the day's kind (HH:MM). */
+    askAt: text(),
+    morningAt: text().notNull(),
+    startOn: date({mode: 'string'}).notNull(),
+    endOn: date({mode: 'string'}).notNull(),
+    schedule: jsonb()
+      .$type<{day: string; condition: ExperimentCondition}[]>()
+      .notNull(),
+    status: text().$type<ExperimentStatus>().notNull(),
+    version: integer().notNull().default(1),
+    createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+    updatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+  },
+  table => [index().on(table.userId)],
+);
+
+/** Every version of an experiment's rules: a change after the start is kept, not overwritten. */
+export const linksExperimentVersions = pgTable(
+  'links_experiment_versions',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, {onDelete: 'cascade'}),
+    experimentId: uuid()
+      .notNull()
+      .references(() => linksExperiments.id, {onDelete: 'cascade'}),
+    version: integer().notNull(),
+    hypothesis: text().notNull(),
+    change: text().notNull(),
+    morningAt: text().notNull(),
+    askAt: text(),
+    at: timestamp({withTimezone: true}).notNull().defaultNow(),
+  },
+  table => [
+    unique().on(table.experimentId, table.version),
+    index().on(table.userId),
+  ],
+);
+
+/** A day of an experiment marked: its rating (a rating one) and whether the plan was kept. */
+export const linksExperimentDays = pgTable(
+  'links_experiment_days',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, {onDelete: 'cascade'}),
+    experimentId: uuid()
+      .notNull()
+      .references(() => linksExperiments.id, {onDelete: 'cascade'}),
+    day: date({mode: 'string'}).notNull(),
+    rating: smallint(),
+    kept: boolean(),
+    updatedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+  },
+  table => [
+    unique().on(table.experimentId, table.day),
+    index().on(table.userId),
+  ],
 );

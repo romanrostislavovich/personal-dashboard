@@ -82,6 +82,16 @@ import {
                       </ul>
                     }
                   }
+                  @if (!compact() && item.check) {
+                    <a
+                      matButton
+                      routerLink="/life/lab"
+                      [queryParams]="item.check"
+                    >
+                      <mat-icon>science</mat-icon>
+                      {{ 'life.lab.check' | transloco }}
+                    </a>
+                  }
                 </li>
               }
             </ul>
@@ -205,8 +215,23 @@ export class InsightsCardComponent {
       insight,
       sentence: this.sentence(insight),
       proof: this.compact() ? [] : this.proof(insight),
+      check: this.checkOf(insight),
     }));
   });
+
+  /** A link of two daily numbers can be tried in the lab: its effect is the main number. */
+  private checkOf(
+    insight: LinksInsight,
+  ): {hypothesis: string; metric: string} | null {
+    const {fact} = insight;
+    if (
+      (fact.kind !== 'pair' && fact.kind !== 'question') ||
+      fact.when === 'hourAfter'
+    ) {
+      return null;
+    }
+    return {hypothesis: this.sentence(insight), metric: fact.effect.key};
+  }
 
   private sentence(insight: LinksInsight): string {
     return insight.text ?? insightSentence(insight.fact, this.wording());

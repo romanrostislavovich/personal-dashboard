@@ -4,7 +4,8 @@
     "day": "Day",
     "chronicle": "Chronicle",
     "summary": "Summary",
-    "links": "Links"
+    "links": "Links",
+    "lab": "Lab"
   },
   "day": "Day",
   "previous": "The day before",
@@ -363,5 +364,84 @@
     "self": {
       "lapsedToday": "Lapsed today"
     }
+  },
+  "lab": {
+    "title": "Personal lab",
+    "hint": "Try a small everyday change on random days chosen before the start, and see what your own number did. A description, not a proof.",
+    "add": "New experiment",
+    "check": "Check it",
+    "loadFailed": "Could not load the experiments.",
+    "empty": "No experiments yet. Start one here, or press «Check it» under a finding or a question.",
+    "actions": "Experiment actions",
+    "pause": "Pause",
+    "resume": "Go on",
+    "edit": "Change the words or hours",
+    "stop": "Stop",
+    "change": "On a changed day",
+    "metric": "Main number",
+    "ratingOf": "your rating 1–5: «{{question}}» at {{time}}",
+    "days": "The days of the experiment",
+    "missing": "no value",
+    "today": {
+      "ordinary": "Today is an ordinary day — live it as usual",
+      "changed": "Today is a changed day"
+    },
+    "condition": {
+      "ordinary": "ordinary",
+      "changed": "changed"
+    },
+    "status": {
+      "running": "Running",
+      "paused": "Paused",
+      "stopped": "Stopped",
+      "done": "Over"
+    },
+    "groups": "Ordinary days: {{ordinary}} ({{ordinaryDays}} d) · changed days: {{changed}} ({{changedDays}} d)",
+    "difference": "Changed minus ordinary: {{value}} (95 % between {{from}} and {{to}})",
+    "differenceOnly": "Changed minus ordinary: {{value}}",
+    "caution": "If the range crosses zero, the change may have done nothing. One person, one period: a description of your days, not a proof.",
+    "notEnough": "Not enough days yet: {{ordinary}} more ordinary and {{changed}} more changed days needed.",
+    "leftOut": "Left out: days not as planned — {{notKept}} · days with no value — {{missing}} (never counted as zero).",
+    "versions": "Versions of the rules: {{count}}",
+    "editHint": "The schedule and the main number stay; the old words are kept as an earlier version.",
+    "failed": "Could not save. Try again.",
+    "form": {
+      "hypothesis": "Question (does the change help?)",
+      "change": "What you do on a changed day",
+      "metric": "Main number",
+      "number": "A daily number",
+      "rating": "My rating 1–5",
+      "question": "The question the bot asks",
+      "askAt": "Asked at",
+      "days": "Days ({{min}}–{{max}})",
+      "startOn": "Starts on",
+      "morningAt": "Morning message at",
+      "safe": "This is an everyday change: no medications, no food or diet, no less sleep",
+      "how": "Every day is ordinary or changed by lot, half and half within weekdays and weekends. A message in the morning tells which.",
+      "start": "Start",
+      "failed": "Could not start the experiment.",
+      "numbersLoading": "Loading the daily numbers…",
+      "numbersFailed": "Could not load the daily numbers.",
+      "numbersNone": "No daily numbers yet: choose «My rating 1–5».",
+      "unknownNumber": "This number cannot be measured in the lab — choose another."
+    },
+    "mark": {
+      "title": "Mark a day",
+      "day": "Day",
+      "rating": "Rating",
+      "kept": "Was the plan kept",
+      "asPlanned": "As planned",
+      "notPlanned": "Not as planned",
+      "failed": "Could not save the day."
+    },
+    "notKept": "not as planned",
+    "toCome": "to come",
+    "loading": "Loading the experiments…",
+    "notEnoughOrdinary": "Not enough days yet: {{ordinary}} more ordinary days needed.",
+    "notEnoughChanged": "Not enough days yet: {{changed}} more changed days needed.",
+    "version": "{{hypothesis}} — {{change}}; the morning message at {{morningAt}}",
+    "versionRating": "{{hypothesis}} — {{change}}; the morning message at {{morningAt}}, the rating at {{askAt}}",
+    "confirmStop": "Stop «{{hypothesis}}»? A stopped experiment cannot go on.",
+    "confirmRemove": "Delete «{{hypothesis}}» with its days and ratings? It goes to the trash."
   }
 }

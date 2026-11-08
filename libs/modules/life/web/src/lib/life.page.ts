@@ -8,6 +8,7 @@ const TABS = [
   {path: 'chronicle', labelKey: 'life.tabs.chronicle'},
   {path: 'summary', labelKey: 'life.tabs.summary'},
   {path: 'links', labelKey: 'life.tabs.links'},
+  {path: 'lab', labelKey: 'life.tabs.lab'},
 ] as const;
 
 /** The Life section: a title, the tabs and the subsection under them. */

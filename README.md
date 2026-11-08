@@ -75,8 +75,12 @@ The interface is in English and Russian.
   every Monday and worded by the AI from the numbers only, with their proof, one a day on Home;
   the overload of the last days against your own usual — the phone at night, sleep, deep work,
   commits, the mood — with one gentle message and a small step when it is high, at most once in
-  three days and switchable; and tomorrow's chance each habit slips, on its card and in the
-  evening summary when it is likely);
+  three days and switchable; tomorrow's chance each habit slips, on its card and in the
+  evening summary when it is likely; and a personal lab (Life → Lab) — a small everyday change
+  tried on random ordinary and changed days drawn before the start, a morning message telling
+  which today is, one main number (a daily number or your rating 1–5 asked with buttons), and a
+  calm result: both kinds of days, the difference and its 95 % range, "not enough days yet"
+  before six of each; started from a finding or a question with "Check it" or by the assistant);
   the last commit before a site went down;
   subscriptions you pay for and do not use
 - ⚡ **Automations** — "if X, then Y" across sections: a site is down → a task, no diary entry by

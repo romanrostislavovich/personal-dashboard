@@ -11,6 +11,10 @@ import {
   AuthClient as AuthClientKind,
   AuthConfig,
   CorrelationPairs,
+  Experiment,
+  ExperimentDayInput,
+  ExperimentInput,
+  ExperimentUpdate,
   ForecastTargets,
   LinksInsights,
   LinksQuestion,
@@ -154,6 +158,8 @@ export const CORE_READS = {
   insights: () => apiRequest('/api/life/insights'),
   /** The overload score of the last days, the user's own high and its history. */
   overload: () => apiRequest('/api/life/overload'),
+  /** The personal lab: every experiment with its days and what came of it. */
+  experiments: () => apiRequest('/api/life/experiments'),
   /** Tomorrow's chance each habit lapses. */
   lapses: () => apiRequest('/api/life/lapses'),
   /**
@@ -265,6 +271,17 @@ export function lifeApi(api: ApiClient) {
     /** Whether the overload warning is sent. */
     setOverloadEnabled: (enabled: boolean) =>
       api.put<void>('/api/life/overload-settings', {enabled}),
+    /** Starts an experiment; its random days are made now, before the start. */
+    startExperiment: (input: ExperimentInput) =>
+      api.post<Experiment>('/api/life/experiments', input),
+    /** Pause, go on, stop, or new words and hours (a new version of the rules). */
+    updateExperiment: (id: string, input: ExperimentUpdate) =>
+      api.put<void>(`/api/life/experiments/${id}`, input),
+    removeExperiment: (id: string) =>
+      api.delete<void>(`/api/life/experiments/${id}`),
+    /** A day's rating, and whether its plan was kept. */
+    markExperimentDay: (id: string, input: ExperimentDayInput) =>
+      api.put<void>(`/api/life/experiments/${id}/day`, input),
     /** Looks for this week's findings now (at most once an hour). */
     refreshInsights: () =>
       api.post<LinksInsights>('/api/life/insights/refresh', {}),

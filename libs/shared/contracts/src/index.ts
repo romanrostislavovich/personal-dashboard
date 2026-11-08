@@ -25,6 +25,7 @@ export * from './lib/links-dose';
 export * from './lib/links-hours';
 export * from './lib/links-questions';
 export * from './lib/links-overload';
+export * from './lib/links-lab';
 export * from './lib/integrations';
 export * from './lib/notifications';
 export * from './lib/birthdays';

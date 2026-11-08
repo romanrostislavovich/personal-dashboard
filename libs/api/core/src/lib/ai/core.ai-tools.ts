@@ -1,6 +1,7 @@
 import {Injectable, OnModuleInit} from '@nestjs/common';
 import {
   aiMemoryInputSchema,
+  experimentInputSchema,
   lifeDayQuerySchema,
   beforeAfterQuerySchema,
   correlationsQuerySchema,
@@ -15,6 +16,8 @@ import {ProjectOverviewService} from '../links/project-overview.service';
 import {ChangePointsService} from '../links/change-points.service';
 import {ForecastsService} from '../links/forecasts.service';
 import {HoursService} from '../links/hours/hours.service';
+import {LabService} from '../links/lab/lab.service';
+import {linksExperiments} from '../links/links.schema';
 import {LapseService} from '../links/overload/lapse.service';
 import {OverloadService} from '../links/overload/overload.service';
 import {InsightsService} from '../links/questions/insights.service';
@@ -70,6 +73,7 @@ export class CoreAiTools implements OnModuleInit {
     private readonly hours: HoursService,
     private readonly overload: OverloadService,
     private readonly lapse: LapseService,
+    private readonly lab: LabService,
     private readonly questions: QuestionsService,
     private readonly insights: InsightsService,
   ) {}
@@ -668,6 +672,66 @@ export class CoreAiTools implements OnModuleInit {
           lapses: await this.lapse.lapses(userId, hidden),
         };
       },
+    });
+
+    this.ai.registerTool({
+      name: 'core_experiments',
+      module: 'life',
+      description:
+        "The user's personal experiments (Life → Lab): a small everyday change tried on random " +
+        'ordinary and changed days chosen before the start, with the main number, the days and ' +
+        "`result` — each kind of day's mean, the difference (changed minus ordinary) and its " +
+        '95 % `interval`, `enough` when both kinds have six days or more. Tell it as a ' +
+        'description, never a proof; a missed day is missing, not zero.',
+      parameters: NO_PARAMETERS,
+      handler: async userId => this.lab.list(userId),
+    });
+
+    this.ai.registerTool({
+      name: 'core_start_experiment',
+      module: 'life',
+      writes: true,
+      undoTables: [linksExperiments],
+      description:
+        'Starts a personal experiment for an everyday change only — never medications, food, ' +
+        'sleep deprivation or anything health-related; refuse those. `metric` is a daily number ' +
+        'of Links by key (`{kind: "number", key}`) or a rating 1–5 the bot asks (`{kind: ' +
+        '"rating", question, askAt: "HH:MM"}`); 14–60 days. The user confirms it first.',
+      parameters: {
+        type: 'object',
+        properties: {
+          hypothesis: {type: 'string'},
+          change: {
+            type: 'string',
+            description: 'What is done on a changed day',
+          },
+          metric: {type: 'object'},
+          days: {type: 'number', description: '14–60, usually 28'},
+          startOn: {type: 'string', description: 'YYYY-MM-DD'},
+          morningAt: {
+            type: 'string',
+            description: 'HH:MM of the morning message',
+          },
+        },
+        required: [
+          'hypothesis',
+          'change',
+          'metric',
+          'days',
+          'startOn',
+          'morningAt',
+        ],
+      },
+      // The page asks the user to tick it; here the confirmation says it for them to agree to.
+      confirm: async (_userId, args) => ({
+        ...experimentInputSchema.parse({...args, safe: true}),
+        safe: 'The user confirms it is an everyday change: no medications, no food or diet, no less sleep',
+      }),
+      handler: async (userId, args) =>
+        this.lab.create(
+          userId,
+          experimentInputSchema.parse({...args, safe: true}),
+        ),
     });
 
     // "When did I last…": search by meaning over the user's own history.
