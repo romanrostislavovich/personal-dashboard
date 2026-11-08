@@ -38,6 +38,7 @@ import {ChangePointsService} from './links/change-points.service';
 import {ForecastsService} from './links/forecasts.service';
 import {HoursService} from './links/hours/hours.service';
 import {InsightsService} from './links/questions/insights.service';
+import {LabService} from './links/lab/lab.service';
 import {LapseService} from './links/overload/lapse.service';
 import {OverloadService} from './links/overload/overload.service';
 import {QuestionsService} from './links/questions/questions.service';
@@ -209,6 +210,7 @@ import {UserActivityService} from './realtime/user-activity.service';
     InsightsService,
     OverloadService,
     LapseService,
+    LabService,
     SignInLog,
     SecurityService,
     SecurityAgent,

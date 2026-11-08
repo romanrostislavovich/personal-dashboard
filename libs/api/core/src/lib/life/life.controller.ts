@@ -31,7 +31,15 @@ import {
   LinksChanges,
   LinksForecasts,
   LinksHourAfter,
+  Experiment,
+  ExperimentDayInput,
+  experimentDaySchema,
+  ExperimentInput,
+  experimentInputSchema,
+  ExperimentUpdate,
+  experimentUpdateSchema,
   LinksInsights,
+  LinksLab,
   LinksLapses,
   LinksOverload,
   LinksQuestion,
@@ -68,6 +76,7 @@ import {
   QUESTION_DRAFT,
   QuestionsService,
 } from '../links/questions/questions.service';
+import {LabService} from '../links/lab/lab.service';
 import {LapseService} from '../links/overload/lapse.service';
 import {OverloadService} from '../links/overload/overload.service';
 import {ServerActions} from '../sync/server-actions';
@@ -91,6 +100,7 @@ export class LifeController {
     private readonly actions: ServerActions,
     private readonly overload: OverloadService,
     private readonly lapse: LapseService,
+    private readonly lab: LabService,
   ) {}
 
   /** What goes with the days of a good mood and of a bad one, across the sections. */
@@ -196,6 +206,52 @@ export class LifeController {
   @Get('lapses')
   lapses(@CurrentUser() user: AuthUser): Promise<LinksLapses> {
     return this.lapse.lapses(user.id);
+  }
+
+  /** The personal lab: every experiment with its days and what came of it. */
+  @Get('experiments')
+  experiments(@CurrentUser() user: AuthUser): Promise<LinksLab> {
+    return this.lab.list(user.id);
+  }
+
+  /** Starts an experiment: its random days are made now, before the start. */
+  @Post('experiments')
+  startExperiment(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(experimentInputSchema)) body: ExperimentInput,
+  ): Promise<Experiment> {
+    return this.lab.create(user.id, body);
+  }
+
+  /** Pause, go on, stop, or change the words and the hours (a new version of the rules). */
+  @Put('experiments/:id')
+  @HttpCode(204)
+  updateExperiment(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(experimentUpdateSchema)) body: ExperimentUpdate,
+  ): Promise<void> {
+    return this.lab.update(user.id, id, body);
+  }
+
+  @Delete('experiments/:id')
+  @HttpCode(204)
+  removeExperiment(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.lab.remove(user.id, id);
+  }
+
+  /** A day of an experiment: its rating, and whether the plan was kept. */
+  @Put('experiments/:id/day')
+  @HttpCode(204)
+  markExperimentDay(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(experimentDaySchema)) body: ExperimentDayInput,
+  ): Promise<void> {
+    return this.lab.markDay(user.id, id, body);
   }
 
   /** The productive window of every weekday, over the last 90 days. */

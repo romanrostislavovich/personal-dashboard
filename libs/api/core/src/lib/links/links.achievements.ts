@@ -19,6 +19,7 @@ import {ChangePointsService, EVEN_DAY} from './change-points.service';
 import {ForecastsService} from './forecasts.service';
 import {IN_WINDOW_DAY} from './hours/hours.service';
 import {QuestionsService} from './questions/questions.service';
+import {LabService} from './lab/lab.service';
 import {LapseService} from './overload/lapse.service';
 import {OverloadService} from './overload/overload.service';
 
@@ -78,6 +79,7 @@ export class LinksAchievements implements OnModuleInit {
     private readonly questions: QuestionsService,
     private readonly overload: OverloadService,
     private readonly lapse: LapseService,
+    private readonly lab: LabService,
   ) {}
 
   onModuleInit(): void {
@@ -494,6 +496,56 @@ export class LinksAchievements implements OnModuleInit {
           '🗿',
           {en: 'Unshakable', ru: 'Непоколебимый'},
           {en: 'Fifty such days', ru: 'Пятьдесят таких дней'},
+        ],
+      ),
+    });
+
+    // Links v2, the lab: for seeing a trial through and keeping its plan, never for its result.
+    this.achievements.register({
+      id: 'dashboard.experiments-done',
+      module: MODULE,
+      measure: async userId => (await this.lab.counts(userId)).done,
+      tiers: achievementTiers(
+        [
+          1,
+          '🧪',
+          {en: 'Tried, not guessed', ru: 'Проверил, а не угадал'},
+          {
+            en: 'See a personal experiment through to its end (Life → Lab)',
+            ru: 'Довести личный эксперимент до конца (Жизнь → Лаборатория)',
+          },
+        ],
+        [
+          3,
+          '🔬',
+          {en: 'Own scientist', ru: 'Сам себе учёный'},
+          {en: 'Three experiments to the end', ru: 'Три эксперимента до конца'},
+        ],
+      ),
+    });
+
+    this.achievements.register({
+      id: 'dashboard.experiment-days',
+      module: MODULE,
+      measure: async userId => (await this.lab.counts(userId)).kept,
+      tiers: achievementTiers(
+        [
+          10,
+          '📋',
+          {en: 'By the plan', ru: 'По плану'},
+          {
+            en: 'Ten days of an experiment kept as planned',
+            ru: 'Десять дней эксперимента по плану',
+          },
+        ],
+        [
+          50,
+          '📐',
+          {en: 'Clean trial', ru: 'Чистый опыт'},
+          {
+            en: 'Fifty days kept as planned',
+            ru: 'Пятьдесят дней по плану',
+          },
         ],
       ),
     });
