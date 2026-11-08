@@ -91,4 +91,13 @@ Observation { id, experimentId, localDate, condition, value?, sourceRef?, adhere
   `core_start_experiment` (confirmed first, undoable); achievements for an experiment seen to the
   end and for days kept as planned — never for its result.
 
+- **After the team review:** a start in the past is refused (the days must be drawn before
+  they come); the page shows every day of the plan, the ones to come faint, and today can be
+  marked; a paused experiment is still done past its end, told once; a stopped one takes no more
+  days; a forged rating button is refused, and a question held for the quiet hours is not sent
+  once the day is rated on the page; a day and a version keep the same id on both instances, so
+  a sync never makes two; stop and delete are asked first; the assistant's confirmation says the
+  change is an everyday one. Five buttons stay: the phone's shade shows no buttons for more than
+  three, so a tap opens the card with all five.
+
 **Built (2026-11-08):** all of the above.
