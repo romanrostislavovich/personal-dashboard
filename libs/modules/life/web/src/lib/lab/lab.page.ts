@@ -44,7 +44,9 @@ import {ExperimentFormComponent} from './experiment-form.component';
         <mat-card-content>
           @if (adding()) {
             <pd-experiment-form
+              [today]="lab.value()?.today ?? today"
               [numbers]="numbers()"
+              [numbersState]="numbersState()"
               [preset]="preset()"
               (started)="started()"
               (cancelled)="closeForm()"
@@ -58,7 +60,9 @@ import {ExperimentFormComponent} from './experiment-form.component';
         </mat-card-content>
       </mat-card>
 
-      @if (lab.error()) {
+      @if (lab.isLoading() && !lab.hasValue()) {
+        <p class="muted">{{ 'life.lab.loading' | transloco }}</p>
+      } @else if (lab.error()) {
         <p class="muted" role="alert">
           {{ 'life.lab.loadFailed' | transloco }}
         </p>
@@ -114,6 +118,15 @@ export class LabPage {
   protected readonly numbers = computed(() =>
     this.catalog.hasValue() ? this.catalog.value().numbers : [],
   );
+  protected readonly numbersState = computed(() =>
+    this.catalog.error()
+      ? 'error'
+      : this.catalog.hasValue()
+        ? 'ready'
+        : 'loading',
+  );
+  /** Until the lab is read: today by the device (the server's replaces it). */
+  protected readonly today = new Date().toLocaleDateString('sv');
 
   protected started(): void {
     this.closeForm();

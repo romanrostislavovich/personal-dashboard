@@ -20,12 +20,13 @@ import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {EXPERIMENT_DAYS, ExperimentInput, QuestionNumber} from '@pd/contracts';
 import {LifeApi} from '../life.api';
 
-/** Tomorrow by the device's clock: an experiment starts on a day not begun yet. */
-function tomorrow(): string {
-  const date = new Date();
-  date.setDate(date.getDate() + 1);
-  const pad = (value: number) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** The day after `day` (YYYY-MM-DD). */
+function dayAfter(day: string): string {
+  const date = new Date(`${day}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString().slice(0, 10);
 }
 
 /**
@@ -73,11 +74,29 @@ function tomorrow(): string {
       @if (kind() === 'number') {
         <mat-form-field class="wide" subscriptSizing="dynamic">
           <mat-label>{{ 'life.lab.form.metric' | transloco }}</mat-label>
-          <mat-select [(ngModel)]="metricKey">
+          <mat-select
+            [(ngModel)]="metricKey"
+            [disabled]="numbersState() !== 'ready'"
+          >
             @for (option of options(); track option.key) {
               <mat-option [value]="option.key">{{ option.name }}</mat-option>
             }
           </mat-select>
+          @if (numbersState() === 'loading') {
+            <mat-hint>{{
+              'life.lab.form.numbersLoading' | transloco
+            }}</mat-hint>
+          } @else if (numbersState() === 'error') {
+            <mat-hint class="error">{{
+              'life.lab.form.numbersFailed' | transloco
+            }}</mat-hint>
+          } @else if (!options().length) {
+            <mat-hint>{{ 'life.lab.form.numbersNone' | transloco }}</mat-hint>
+          } @else if (unknownPreset()) {
+            <mat-hint class="error">{{
+              'life.lab.form.unknownNumber' | transloco
+            }}</mat-hint>
+          }
         </mat-form-field>
       } @else {
         <mat-form-field class="wide" subscriptSizing="dynamic">
@@ -90,7 +109,9 @@ function tomorrow(): string {
         </mat-form-field>
       }
       <mat-form-field subscriptSizing="dynamic">
-        <mat-label>{{ 'life.lab.form.days' | transloco }}</mat-label>
+        <mat-label>{{
+          'life.lab.form.days' | transloco: {min: limits.min, max: limits.max}
+        }}</mat-label>
         <input
           matInput
           type="number"
@@ -101,7 +122,7 @@ function tomorrow(): string {
       </mat-form-field>
       <mat-form-field subscriptSizing="dynamic">
         <mat-label>{{ 'life.lab.form.startOn' | transloco }}</mat-label>
-        <input matInput type="date" [(ngModel)]="startOn" />
+        <input matInput type="date" [min]="today()" [(ngModel)]="startOn" />
       </mat-form-field>
       <mat-form-field subscriptSizing="dynamic">
         <mat-label>{{ 'life.lab.form.morningAt' | transloco }}</mat-label>
@@ -158,6 +179,9 @@ function tomorrow(): string {
       font: var(--mat-sys-body-small);
       color: var(--mat-sys-error);
     }
+    mat-hint.error {
+      color: var(--mat-sys-error);
+    }
   `,
 })
 export class ExperimentFormComponent implements OnInit {
@@ -167,8 +191,11 @@ export class ExperimentFormComponent implements OnInit {
     initialValue: this.transloco.getActiveLang(),
   });
 
-  /** The daily numbers to choose from. */
+  /** The daily numbers to choose from, and whether they are read yet. */
   readonly numbers = input<QuestionNumber[]>([]);
+  readonly numbersState = input<'loading' | 'error' | 'ready'>('ready');
+  /** Today by the server, in the user's time zone: the earliest start. */
+  readonly today = input.required<string>();
   /** What a "check it" of a finding brings: the question and the number. */
   readonly preset = input<{hypothesis?: string; metric?: string}>({});
   readonly started = output<void>();
@@ -182,7 +209,7 @@ export class ExperimentFormComponent implements OnInit {
   protected readonly question = signal('');
   protected readonly askAt = signal('18:00');
   protected readonly days = signal<number>(EXPERIMENT_DAYS.usual);
-  protected readonly startOn = signal(tomorrow());
+  protected readonly startOn = signal('');
   protected readonly morningAt = signal('08:00');
   protected readonly safe = signal(false);
   protected readonly busy = signal(false);
@@ -190,9 +217,11 @@ export class ExperimentFormComponent implements OnInit {
 
   ngOnInit(): void {
     // Read once: what is typed afterwards is the user's own.
+    this.startOn.set(dayAfter(this.today()));
     const preset = this.preset();
     if (preset.hypothesis) {
-      this.hypothesis.set(preset.hypothesis);
+      // A finding's sentence may be longer than a question may be.
+      this.hypothesis.set(preset.hypothesis.slice(0, 300));
     }
     if (preset.metric) {
       this.metricKey.set(preset.metric);
@@ -209,6 +238,16 @@ export class ExperimentFormComponent implements OnInit {
       .sort((a, b) => a.name.localeCompare(b.name, language));
   });
 
+  /** "Check it" brought a number the lab cannot measure (an hourly one, one gone). */
+  protected readonly unknownPreset = computed(() => {
+    const wanted = this.preset().metric;
+    return (
+      Boolean(wanted) &&
+      this.metricKey() === wanted &&
+      !this.options().some(one => one.key === wanted)
+    );
+  });
+
   protected readonly ready = computed(
     () =>
       this.safe() &&
@@ -216,10 +255,11 @@ export class ExperimentFormComponent implements OnInit {
       this.change().trim().length >= 3 &&
       Number(this.days()) >= EXPERIMENT_DAYS.min &&
       Number(this.days()) <= EXPERIMENT_DAYS.max &&
-      Boolean(this.startOn()) &&
+      this.startOn() >= this.today() &&
+      TIME.test(this.morningAt()) &&
       (this.kind() === 'number'
         ? this.options().some(one => one.key === this.metricKey())
-        : this.question().trim().length >= 3),
+        : this.question().trim().length >= 3 && TIME.test(this.askAt())),
   );
 
   protected start(): void {

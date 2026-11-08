@@ -39,7 +39,7 @@ type Day = Experiment['days'][number];
   template: `
     <fieldset>
       <legend>{{ 'life.lab.mark.title' | transloco }}</legend>
-      <mat-form-field subscriptSizing="dynamic">
+      <mat-form-field class="day" subscriptSizing="dynamic">
         <mat-label>{{ 'life.lab.mark.day' | transloco }}</mat-label>
         <mat-select [ngModel]="chosen()" (ngModelChange)="choose($event)">
           @for (option of options(); track option.day) {
@@ -97,6 +97,10 @@ type Day = Experiment['days'][number];
       padding: 8px 12px 12px;
       border: 1px solid var(--mat-sys-outline-variant);
       border-radius: 12px;
+    }
+    .day {
+      flex: 1 1 260px;
+      min-width: 0;
     }
     legend {
       padding: 0 4px;

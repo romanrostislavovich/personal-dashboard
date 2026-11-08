@@ -18,15 +18,13 @@ import {LifeApi} from '../life.api';
 import {dayOf, valueOf, Wording} from '../links/question-wording';
 import {ExperimentDayComponent} from './experiment-day.component';
 import {ExperimentEditComponent} from './experiment-edit.component';
-
-/** Fewer days of a kind than this and the lab says nothing yet (the server's `MIN_EACH`). */
-const MIN_EACH = 6;
+import {ExperimentResultComponent} from './experiment-result.component';
+import {ExperimentStripComponent} from './experiment-strip.component';
 
 /**
- * One experiment: its question and change, today's kind, the strip of its days (ordinary or
- * changed, with a value or missing), what came of it — each kind's mean, the difference and its
- * 95 % interval, told as a description — and its controls: pause, go on, stop, delete, new
- * words or hours (a new version, the old ones listed), and a day marked by hand.
+ * One experiment: its question and change, today's kind, the strip of its days, what came of
+ * it, and its controls — pause, go on, stop, delete (the last two asked first: they cannot be
+ * taken back here), new words or hours (a new version, the old ones listed), a day marked.
  */
 @Component({
   selector: 'pd-experiment-card',
@@ -34,6 +32,8 @@ const MIN_EACH = 6;
   imports: [
     ExperimentDayComponent,
     ExperimentEditComponent,
+    ExperimentResultComponent,
+    ExperimentStripComponent,
     MatButtonModule,
     MatCardModule,
     MatIconModule,
@@ -78,7 +78,7 @@ const MIN_EACH = 6;
               <mat-icon>edit</mat-icon>
               {{ 'life.lab.edit' | transloco }}
             </button>
-            <button mat-menu-item type="button" (click)="setStatus('stopped')">
+            <button mat-menu-item type="button" (click)="stop()">
               <mat-icon>stop</mat-icon>
               {{ 'life.lab.stop' | transloco }}
             </button>
@@ -104,49 +104,12 @@ const MIN_EACH = 6;
           </p>
         }
 
-        <ul class="strip" [attr.aria-label]="'life.lab.days' | transloco">
-          @for (day of strip(); track day.day) {
-            <li
-              [class]="day.condition"
-              [class.filled]="day.filled"
-              [class.skipped]="day.kept === false"
-              [class.future]="day.future"
-              [attr.title]="day.title"
-            ></li>
-          }
-        </ul>
-        <p class="legend muted">
-          <span class="swatch ordinary filled"></span>
-          {{ 'life.lab.condition.ordinary' | transloco }}
-          <span class="swatch changed filled"></span>
-          {{ 'life.lab.condition.changed' | transloco }}
-          <span class="swatch ordinary"></span>
-          {{ 'life.lab.missing' | transloco }}
-        </p>
-
-        <div class="result">
-          @if (result(); as told) {
-            <p>{{ told.groups }}</p>
-            <p class="difference">{{ told.difference }}</p>
-            <p class="muted">{{ 'life.lab.caution' | transloco }}</p>
-          } @else {
-            <p class="muted">
-              {{ 'life.lab.notEnough' | transloco: needed() }}
-            </p>
-          }
-          @if (item.result.notKept || item.result.missing) {
-            <p class="muted">
-              {{
-                'life.lab.leftOut'
-                  | transloco
-                    : {
-                        notKept: item.result.notKept,
-                        missing: item.result.missing,
-                      }
-              }}
-            </p>
-          }
-        </div>
+        <pd-experiment-strip
+          [experiment]="item"
+          [today]="today()"
+          [format]="format"
+        />
+        <pd-experiment-result [result]="item.result" [format]="format" />
 
         @if (editing()) {
           <pd-experiment-edit
@@ -155,10 +118,10 @@ const MIN_EACH = 6;
             (cancelled)="editing.set(false)"
           />
         }
-        @if (active() && pastDays().length) {
+        @if (item.status !== 'stopped' && begunDays().length) {
           <pd-experiment-day
             [experiment]="item"
-            [days]="pastDays()"
+            [days]="begunDays()"
             (marked)="changed.emit()"
           />
         }
@@ -171,10 +134,10 @@ const MIN_EACH = 6;
               }}
             </summary>
             <ol>
-              @for (version of item.versions; track version.version) {
+              @for (version of versions(); track version.version) {
                 <li>
-                  <span class="muted">{{ dayOfIso(version.at) }}:</span>
-                  {{ version.hypothesis }} — {{ version.change }}
+                  <span class="muted">{{ version.on }}:</span>
+                  {{ version.text }}
                 </li>
               }
             </ol>
@@ -220,59 +183,6 @@ const MIN_EACH = 6;
       background: var(--mat-sys-tertiary-container);
       color: var(--mat-sys-on-tertiary-container);
     }
-    .strip {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 3px;
-      margin: 12px 0 4px;
-      padding: 0;
-      list-style: none;
-    }
-    .strip li,
-    .swatch {
-      width: 14px;
-      height: 14px;
-      border-radius: 3px;
-      box-sizing: border-box;
-      border: 2px solid var(--mat-sys-outline);
-    }
-    .swatch {
-      display: inline-block;
-      vertical-align: middle;
-      margin-inline: 8px 4px;
-    }
-    .swatch:first-child {
-      margin-inline-start: 0;
-    }
-    .changed {
-      border-color: var(--mat-sys-tertiary);
-    }
-    .ordinary.filled {
-      background: var(--mat-sys-outline);
-    }
-    .changed.filled {
-      background: var(--mat-sys-tertiary);
-    }
-    .strip .future {
-      opacity: 0.35;
-    }
-    .strip .skipped {
-      border-style: dashed;
-      background: none;
-    }
-    .legend {
-      margin: 0;
-    }
-    .result {
-      margin-top: 12px;
-    }
-    .result p {
-      margin: 4px 0 0;
-      overflow-wrap: anywhere;
-    }
-    .difference {
-      font: var(--mat-sys-title-medium);
-    }
     .versions {
       margin-top: 12px;
       font: var(--mat-sys-body-small);
@@ -280,6 +190,7 @@ const MIN_EACH = 6;
     .versions ol {
       margin: 4px 0 0;
       padding-inline-start: 20px;
+      overflow-wrap: anywhere;
     }
     .muted {
       font: var(--mat-sys-body-small);
@@ -335,96 +246,30 @@ export class ExperimentCardComponent {
     return metric.label ?? this.transloco.translate(metric.labelKey);
   });
 
-  /** Each day of the plan: its kind, whether it has a value, and a title to hover. */
-  protected readonly strip = computed(() => {
-    this.language();
-    const today = this.today();
-    return this.experiment().days.map(day => {
-      const future = day.day >= today;
-      const condition = this.transloco.translate(
-        `life.lab.condition.${day.condition}`,
-      );
-      const value =
-        day.value === null
-          ? this.transloco.translate('life.lab.missing')
-          : this.format(day.value);
-      return {
-        ...day,
-        future,
-        filled: day.value !== null && day.kept !== false,
-        title: `${dayOf(day.day, this.wording())} · ${condition}${future ? '' : ` · ${value}`}`,
-      };
-    });
-  });
-
-  /** The days that may be marked by hand: begun ones, the newest first. */
-  protected readonly pastDays = computed(() =>
+  /** The days that may be marked by hand: begun ones (today too), the newest first. */
+  protected readonly begunDays = computed(() =>
     this.experiment()
       .days.filter(day => day.day <= this.today())
       .reverse(),
   );
 
-  /** "Ordinary days: 3.1 (8 days) · changed: 3.8 (7 days)" and the difference with its range. */
-  protected readonly result = computed(() => {
-    this.language();
-    const {result} = this.experiment();
-    const {ordinary, changed} = result;
-    if (
-      !result.enough ||
-      ordinary.mean === null ||
-      changed.mean === null ||
-      result.difference === null
-    ) {
-      return null;
-    }
-    const signed = (value: number) =>
-      `${value > 0 ? '+' : value < 0 ? '−' : ''}${this.format(Math.abs(value))}`;
-    const groups = this.transloco.translate('life.lab.groups', {
-      ordinary: this.format(ordinary.mean),
-      ordinaryDays: ordinary.n,
-      changed: this.format(changed.mean),
-      changedDays: changed.n,
-    });
-    const interval = result.interval;
-    const difference = interval
-      ? this.transloco.translate('life.lab.difference', {
-          value: signed(result.difference),
-          from: signed(interval[0]),
-          to: signed(interval[1]),
-        })
-      : this.transloco.translate('life.lab.differenceOnly', {
-          value: signed(result.difference),
-        });
-    return {groups, difference};
+  /** Each version's rules in words, its hours too (a change of them alone is a version). */
+  protected readonly versions = computed(() => {
+    const {metric, versions} = this.experiment();
+    return versions.map(version => ({
+      version: version.version,
+      on: dayOf(version.at.slice(0, 10), this.wording()),
+      text: this.transloco.translate(
+        metric.kind === 'rating' && version.askAt
+          ? 'life.lab.versionRating'
+          : 'life.lab.version',
+        version,
+      ),
+    }));
   });
 
-  /** How many more days of each kind are needed before anything is told. */
-  protected readonly needed = computed(() => {
-    const {ordinary, changed} = this.experiment().result;
-    return {
-      ordinary: Math.max(0, MIN_EACH - ordinary.n),
-      changed: Math.max(0, MIN_EACH - changed.n),
-    };
-  });
-
-  protected dayOfIso(at: string): string {
-    return dayOf(at.slice(0, 10), this.wording());
-  }
-
-  protected setStatus(status: NonNullable<ExperimentUpdate['status']>): void {
-    this.run(this.api.updateExperiment(this.experiment().id, {status}));
-  }
-
-  protected remove(): void {
-    this.run(this.api.removeExperiment(this.experiment().id));
-  }
-
-  protected edited(): void {
-    this.editing.set(false);
-    this.changed.emit();
-  }
-
-  private format(value: number): string {
+  /** A value in the experiment's unit: a rating with a decimal, a number as Links shows it. */
+  protected readonly format = (value: number): string => {
     const {metric} = this.experiment();
     if (metric.kind === 'rating') {
       return new Intl.NumberFormat(this.language(), {
@@ -432,6 +277,35 @@ export class ExperimentCardComponent {
       }).format(value);
     }
     return valueOf(metric, value, this.wording());
+  };
+
+  protected setStatus(status: NonNullable<ExperimentUpdate['status']>): void {
+    this.run(this.api.updateExperiment(this.experiment().id, {status}));
+  }
+
+  protected stop(): void {
+    if (this.asked('life.lab.confirmStop')) {
+      this.setStatus('stopped');
+    }
+  }
+
+  protected remove(): void {
+    if (this.asked('life.lab.confirmRemove')) {
+      this.run(this.api.removeExperiment(this.experiment().id));
+    }
+  }
+
+  protected edited(): void {
+    this.editing.set(false);
+    this.changed.emit();
+  }
+
+  private asked(key: string): boolean {
+    return confirm(
+      this.transloco.translate(key, {
+        hypothesis: this.experiment().hypothesis,
+      }),
+    );
   }
 
   private run(request: ReturnType<LifeApi['removeExperiment']>): void {

@@ -16,6 +16,8 @@ import {TranslocoPipe} from '@jsverse/transloco';
 import {Experiment, ExperimentUpdate} from '@pd/contracts';
 import {LifeApi} from '../life.api';
 
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+
 /**
  * New words or hours of a running experiment. The schedule and the main number stay: a change
  * of them would be another experiment. The server keeps the old rules as an earlier version.
@@ -127,7 +129,8 @@ export class ExperimentEditComponent implements OnInit {
     () =>
       this.hypothesis().trim().length >= 3 &&
       this.change().trim().length >= 3 &&
-      Boolean(this.morningAt()),
+      TIME.test(this.morningAt()) &&
+      (this.experiment().metric.kind !== 'rating' || TIME.test(this.askAt())),
   );
 
   /** Only what changed is sent, so an unchanged form makes no new version. */
