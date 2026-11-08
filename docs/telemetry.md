@@ -83,8 +83,9 @@ button (a server action), kept in `links_insights` (derived: not exported, not i
 _questions_ of the user's own in `links_questions` (theirs: exported, in the trash). _Overload_
 — the last five days of `activity.phone.night`, `activity.index.phone.restlessness`,
 `health.band.sleep`, `activity.index.deepWork`, `development.commits` and `diary.mood` against the
-four weeks before; the warning (`links.overload`, in the user's day hours) is kept as
-`links_settings.overload_warned_on` and a `links_seen` row (`overload`, then `recovered`). _Habit
+four weeks before; the warning (`links.overload`, in the user's day hours) is kept as a
+`links_seen` row (`overload`, then `recovered`) — not a setting, so a sync never clashes with
+the switch (`links_settings.overload_enabled`). _Habit
 lapses_ — a habit's daily number tells which of its days is a lapse (`DailyMetric.lapse`:
 `marked` for a habit to quit or cut down, `unmarked` for a daily one); the risks told in the
 evening are `links_seen` rows (`risk`, then `kept`).

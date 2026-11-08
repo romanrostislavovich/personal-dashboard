@@ -521,5 +521,11 @@ many numbers are above usual (the server has no translations of the numbers' nam
   chance on each habit's card.
 - **Achievements:** back to the usual after a warning, and a habit kept the day it was said to be
   likely to slip — never for the load itself.
+- **After the team review:** the lapse model learns only from days whose next day is over (an
+  unmarked habit this evening is no lapse); a lapse counts as told only once the evening summary
+  that tells it is sent, and its day is looked at two days later (a lapse is often marked the day
+  after); the last warning is a `links_seen` row, not a setting the user's switch shares (a sync
+  would keep one and lose the other); the overload reads its four sections only and both are kept
+  an hour; the warning opens Links; a chance reads 1–9 in 10, never 0 or 10.
 
 **Built (2026-11-08):** all of the above.
