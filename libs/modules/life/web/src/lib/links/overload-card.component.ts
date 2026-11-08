@@ -10,7 +10,10 @@ import {
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
-import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {
+  MatSlideToggleChange,
+  MatSlideToggleModule,
+} from '@angular/material/slide-toggle';
 import {RouterLink} from '@angular/router';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {needsSetup, SparklineComponent} from '@pd/web-core';
@@ -68,15 +71,17 @@ import {nameOf, valueOf, Wording} from './question-wording';
             <ul class="parts">
               @for (part of parts(); track part.key) {
                 <li>
-                  <span>{{ part.name }}</span>
+                  <span class="name">{{ part.name }}</span>
                   <span class="value">{{ part.line }}</span>
                 </li>
               }
             </ul>
             @if (!compact() && status.history.length > 1) {
+              <p class="caption">{{ 'life.overload.history' | transloco }}</p>
               <pd-sparkline
                 [points]="points()"
                 [label]="'life.overload.history' | transloco"
+                [showAxis]="true"
               />
             }
           }
@@ -84,7 +89,7 @@ import {nameOf, valueOf, Wording} from './question-wording';
             <mat-slide-toggle
               [checked]="status.enabled"
               [disabled]="saving()"
-              (change)="setEnabled($event.checked)"
+              (change)="setEnabled($event)"
             >
               {{ 'life.overload.warn' | transloco }}
             </mat-slide-toggle>
@@ -122,16 +127,26 @@ import {nameOf, valueOf, Wording} from './question-wording';
       padding: 0;
       list-style: none;
     }
+    /* The name, then the numbers under it: on a phone a line of both does not fit. */
     .parts li {
       display: flex;
-      justify-content: space-between;
-      gap: 12px;
+      flex-direction: column;
+      gap: 2px;
       padding: 4px 0;
       border-bottom: 1px solid var(--pd-border);
     }
+    .name {
+      overflow-wrap: anywhere;
+    }
     .value {
+      font: var(--mat-sys-body-small);
+      color: var(--mat-sys-on-surface-variant);
       font-variant-numeric: tabular-nums;
-      white-space: nowrap;
+    }
+    .caption {
+      margin: 0 0 4px;
+      font: var(--mat-sys-label-medium);
+      color: var(--mat-sys-on-surface-variant);
     }
     mat-slide-toggle {
       margin-top: 12px;
@@ -198,7 +213,8 @@ export class OverloadCardComponent {
       : [],
   );
 
-  protected setEnabled(enabled: boolean): void {
+  protected setEnabled(change: MatSlideToggleChange): void {
+    const enabled = change.checked;
     this.saving.set(true);
     this.failed.set(false);
     this.api.setOverloadEnabled(enabled).subscribe({
@@ -209,7 +225,8 @@ export class OverloadCardComponent {
       error: () => {
         this.saving.set(false);
         this.failed.set(true);
-        this.data.reload();
+        // Back to what is kept: the same value from the server would not move it.
+        change.source.checked = !enabled;
       },
     });
   }

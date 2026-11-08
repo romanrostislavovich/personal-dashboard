@@ -22,6 +22,7 @@ import {
   parseLocalDate,
   toLocalDate,
 } from '@pd/contracts';
+import {HabitRiskComponent} from './habit-risk.component';
 import {habitIcon, localToday} from './habits.api';
 
 /** A day of the calendar: before the start (none), clean, with it, or still to come. */
@@ -48,6 +49,7 @@ export type HabitCardAction =
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
+    HabitRiskComponent,
     MatButtonModule,
     MatCardModule,
     MatIconModule,
@@ -176,16 +178,7 @@ export type HabitCardAction =
           }}
         </p>
         @if (risk(); as lapse) {
-          <p class="risk" [class.high]="lapse.high">
-            {{
-              'habits.card.risk'
-                | transloco
-                  : {
-                      chance: tenths(lapse.chance),
-                      usual: tenths(lapse.usual),
-                    }
-            }}
-          </p>
+          <pd-habit-risk [lapse]="lapse" />
         }
       </mat-card-content>
       <mat-card-actions align="end">
@@ -205,14 +198,6 @@ export type HabitCardAction =
     </mat-card>
   `,
   styles: `
-    .risk {
-      margin: 4px 0 0;
-      font: var(--mat-sys-body-small);
-      color: var(--mat-sys-on-surface-variant);
-    }
-    .risk.high {
-      color: var(--mat-sys-error);
-    }
     .icon {
       display: grid;
       place-items: center;
@@ -297,11 +282,6 @@ export class HabitCardComponent {
   /** Tomorrow's chance it lapses (Links), when its model is trusted. */
   readonly risk = input<HabitLapse | null>(null);
   readonly action = output<HabitCardAction>();
-
-  /** A chance as tenths: 0.72 → 7 ("7 in 10"). */
-  protected tenths(value: number | null): number {
-    return Math.round((value ?? 0) * 10);
-  }
 
   protected readonly today = localToday();
   protected readonly building = computed(() => isBuilding(this.habit().goal));

@@ -20,9 +20,11 @@ export class HabitsApi {
     return httpResource<Habit[]>(() => HABITS_READS.list(), {defaultValue: []});
   }
 
-  /** Tomorrow's chance each habit lapses (Links, through the core). */
-  lapses() {
-    return httpResource<LinksLapses>(() => CORE_READS.lapses());
+  /** Tomorrow's chance each habit lapses (Links, through the core); asked only when `wanted`. */
+  lapses(wanted: () => boolean) {
+    return httpResource<LinksLapses>(() =>
+      wanted() ? CORE_READS.lapses() : undefined,
+    );
   }
 
   create(input: HabitInput) {

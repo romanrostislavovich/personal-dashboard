@@ -351,7 +351,7 @@
     "few": "Not enough days yet: it needs three of its numbers over the last days and the weeks before.",
     "high": "The last days look heavier than usual",
     "usual": "Within your usual",
-    "learning": "Still learning your usual (a month of days)",
+    "learning": "Still learning your usual (about 50 days of your numbers)",
     "part": "{{recent}} lately, usually {{usual}}",
     "history": "The overload of the last two months",
     "warn": "Tell me gently when it is high (once in three days at most)",
