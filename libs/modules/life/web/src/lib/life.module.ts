@@ -35,6 +35,10 @@ export const lifeModule: WebDashboardModule = {
           loadComponent: () =>
             import('./links/links.page').then(m => m.LinksPage),
         },
+        {
+          path: 'lab',
+          loadComponent: () => import('./lab/lab.page').then(m => m.LabPage),
+        },
         // The goals of a year are gone: an old link opens the summary.
         {path: 'goals', redirectTo: 'summary'},
         // "Ask" was a question to the AI about one's own life: the assistant answers it now.
@@ -106,6 +110,12 @@ export const lifeModule: WebDashboardModule = {
       labelKey: 'life.tabs.links',
       icon: 'hub',
       url: '/life/links',
+    },
+    {
+      id: 'life.lab',
+      labelKey: 'life.tabs.lab',
+      icon: 'science',
+      url: '/life/lab',
     },
   ],
 };

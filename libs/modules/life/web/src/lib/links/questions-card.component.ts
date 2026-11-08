@@ -9,6 +9,7 @@ import {
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {MatIconModule} from '@angular/material/icon';
+import {RouterLink} from '@angular/router';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {LinksQuestionCard} from '@pd/contracts';
 import {LifeApi} from '../life.api';
@@ -34,6 +35,7 @@ import {
     MatCardModule,
     MatIconModule,
     QuestionFormComponent,
+    RouterLink,
     TranslocoPipe,
   ],
   template: `
@@ -81,6 +83,16 @@ import {
                       · {{ line }}
                     }
                   </p>
+                }
+                @if (item.check) {
+                  <a
+                    matButton
+                    routerLink="/life/lab"
+                    [queryParams]="item.check"
+                  >
+                    <mat-icon>science</mat-icon>
+                    {{ 'life.lab.check' | transloco }}
+                  </a>
                 }
               </li>
             }
@@ -186,6 +198,14 @@ export class QuestionsCardComponent {
         ...confounderLines(card.answer, wording),
         ...this.conditionLines(card, wording),
       ],
+      // A question of two daily numbers can be tried in the lab, its effect the main number.
+      check:
+        card.effect && card.question.when !== 'hourAfter'
+          ? {
+              hypothesis: this.titleOf(card, wording),
+              metric: card.effect.key,
+            }
+          : null,
     }));
   });
 

@@ -2,10 +2,14 @@ import {httpResource} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {CORE_READS, lifeApi} from '@pd/client-core';
 import {
+  ExperimentDayInput,
+  ExperimentInput,
+  ExperimentUpdate,
   LifeStory,
   LinksForecasts,
   LinksHourAfter,
   LinksInsights,
+  LinksLab,
   LinksOverload,
   LinksQuestions,
   LinksRhythm,
@@ -84,6 +88,27 @@ export class LifeApi {
 
   setOverloadEnabled(enabled: boolean) {
     return fromCore(() => this.life.setOverloadEnabled(enabled));
+  }
+
+  /** The personal lab: the experiments with their days and results. */
+  experiments() {
+    return httpResource<LinksLab>(() => CORE_READS.experiments());
+  }
+
+  startExperiment(input: ExperimentInput) {
+    return fromCore(() => this.life.startExperiment(input));
+  }
+
+  updateExperiment(id: string, input: ExperimentUpdate) {
+    return fromCore(() => this.life.updateExperiment(id, input));
+  }
+
+  removeExperiment(id: string) {
+    return fromCore(() => this.life.removeExperiment(id));
+  }
+
+  markExperimentDay(id: string, input: ExperimentDayInput) {
+    return fromCore(() => this.life.markExperimentDay(id, input));
   }
 
   refreshInsights() {
