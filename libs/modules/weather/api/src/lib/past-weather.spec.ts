@@ -1,4 +1,26 @@
-import {pastWeatherMetrics} from './past-weather';
+import {archivePeriod, pastWeatherMetrics} from './past-weather';
+
+describe('archivePeriod', () => {
+  const now = new Date('2026-11-09T14:00:00Z');
+
+  it('cuts a period that reaches into the future at yesterday', () => {
+    expect(archivePeriod('2026-10-01', '2026-11-30', now)).toEqual({
+      from: '2026-10-01',
+      to: '2026-11-08',
+    });
+  });
+
+  it('starts no earlier than the archive does', () => {
+    expect(archivePeriod('1930-01-01', '2026-01-01', now)).toEqual({
+      from: '1940-01-01',
+      to: '2026-01-01',
+    });
+  });
+
+  it('gives nothing for a period wholly in the future', () => {
+    expect(archivePeriod('2026-11-09', '2026-11-20', now)).toBeNull();
+  });
+});
 
 describe('pastWeatherMetrics', () => {
   it('turns the archive into daily numbers and leaves out the days not measured yet', () => {

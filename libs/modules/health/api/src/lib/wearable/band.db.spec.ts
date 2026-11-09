@@ -103,6 +103,7 @@ describe.skipIf(!ADMIN_URL)(
     let db: NodePgDatabase;
     let band: BandService;
     let wearable: WearableService;
+    let days: BandDaysService;
     const send = vi.fn();
     const userId = randomUUID();
     const device = {id: randomUUID(), userId};
@@ -139,7 +140,7 @@ describe.skipIf(!ADMIN_URL)(
         }),
         timeZoneOf: (user: {timeZone: string}) => user.timeZone,
       };
-      const days = new BandDaysService(db as never, users as never, wearable);
+      days = new BandDaysService(db as never, users as never, wearable);
       band = new BandService(
         db as never,
         days,
@@ -218,6 +219,20 @@ describe.skipIf(!ADMIN_URL)(
       const [after] = (await band.day(userId, '2026-10-29')).reactions;
       expect(after.id).toBe(before.id);
       expect(send).not.toHaveBeenCalled();
+    });
+
+    it('takes two uploads of the same day at once', async () => {
+      const hours = await count('health_band_stress_hours');
+      await expect(
+        Promise.all([
+          band.ingest(device, upload()),
+          band.ingest(device, upload()),
+          ...Array.from({length: 6}, () =>
+            days.recompute(userId, ['2026-10-29']),
+          ),
+        ]),
+      ).resolves.toBeDefined();
+      expect(await count('health_band_stress_hours')).toBe(hours);
     });
 
     it('keeps a reaction the owner answered, even when it is no longer found', async () => {

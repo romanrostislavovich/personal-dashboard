@@ -56,17 +56,42 @@ export function pastWeatherMetrics(raw: RawPastWeather): DailyMetric[] {
   return metrics.filter(metric => metric.days.length > 0);
 }
 
+/** The first day the archive has. */
+const ARCHIVE_START: LocalDate = '1940-01-01';
+
+/**
+ * The part of a period the archive can answer: it answers 400 to a day before 1940 or after
+ * today (in UTC). Yesterday in UTC is the last day asked for, so a place ahead of UTC never
+ * asks for "tomorrow"; the newest days have no values yet anyway. `null` — nothing to ask.
+ */
+export function archivePeriod(
+  from: LocalDate,
+  to: LocalDate,
+  now = new Date(),
+): {from: LocalDate; to: LocalDate} | null {
+  const yesterday = new Date(now.getTime() - 24 * HOUR * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const start = from < ARCHIVE_START ? ARCHIVE_START : from;
+  const end = to > yesterday ? yesterday : to;
+  return start <= end ? {from: start, to: end} : null;
+}
+
 /** The archive of a place for a period: free, without a key. */
 export async function fetchPastWeather(
   place: {latitude: number; longitude: number},
   from: LocalDate,
   to: LocalDate,
 ): Promise<RawPastWeather> {
+  const period = archivePeriod(from, to);
+  if (!period) {
+    return {};
+  }
   const params = new URLSearchParams({
     latitude: String(place.latitude),
     longitude: String(place.longitude),
-    start_date: from,
-    end_date: to,
+    start_date: period.from,
+    end_date: period.to,
     daily: 'temperature_2m_mean,precipitation_sum,sunshine_duration',
     timezone: 'auto',
   });
