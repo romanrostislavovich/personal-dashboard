@@ -72,6 +72,9 @@ const clock = (at: Date, timeZone: string) => zonedDateTime(at, timeZone).time;
  */
 @Injectable()
 export class BandDaysService {
+  /** The last recount of each user still running: the next one waits for it. */
+  private readonly recounts = new Map<string, Promise<void>>();
+
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly users: UsersService,
@@ -104,7 +107,27 @@ export class BandDaysService {
     return days;
   }
 
-  async recompute(userId: string, days: LocalDate[]): Promise<void> {
+  /**
+   * Counts the days again, one recount of a user at a time: a day's stress hours and reactions
+   * are deleted and written anew, and two uploads from the phone at once used to write the same
+   * hours twice (a unique-key error that lost the second upload's recount).
+   */
+  recompute(userId: string, days: LocalDate[]): Promise<void> {
+    const before = this.recounts.get(userId) ?? Promise.resolve();
+    const run = before
+      .catch(() => undefined)
+      .then(() => this.recomputeNow(userId, days));
+    const tail = run.catch(() => undefined);
+    this.recounts.set(userId, tail);
+    void tail.then(() => {
+      if (this.recounts.get(userId) === tail) {
+        this.recounts.delete(userId);
+      }
+    });
+    return run;
+  }
+
+  private async recomputeNow(userId: string, days: LocalDate[]): Promise<void> {
     const zone = await this.timeZone(userId);
     for (const day of [...new Set(days)].sort()) {
       await this.recomputeDay(userId, dayBounds(day, zone), zone);
