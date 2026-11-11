@@ -144,6 +144,9 @@ parameters (JSON Schema), handler })`. Write the description for the model: what
      deletes or overwrites data also sets `confirm` (returns what will be affected): the first call
      changes nothing and the model asks the user; the call runs when repeated after the user's reply.
      Edits take the record id and only the fields to change (`changedFields`, `findById`).
+     OpenAI takes at most 128 tools a request: past that the largest sections are folded into one
+     `open_section` tool and their tools come once the model opens them (`ai/tool-sections.ts`),
+     so a module may add tools freely — but a clear `module` id matters, the model opens by it.
      Never expose secrets (API keys, tokens) through tools — they are set up in the dashboard.
    - search: `strava.search.ts` — `SearchService.register({ module, search(userId, query) })`
      returns what of the module's data matches (`SearchHit`: a title, a line under it, the page it

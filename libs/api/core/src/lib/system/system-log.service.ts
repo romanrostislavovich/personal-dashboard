@@ -37,6 +37,11 @@ const NOT_NOTIFIED = new Set([
 @Injectable()
 export class SystemLogService implements OnModuleInit, OnModuleDestroy {
   private readonly throttle = new NotifyThrottle();
+  /**
+   * Entries are saved one at a time: a burst of the same warning (200 in a few milliseconds when
+   * LanguageTool rests) would otherwise find no row each, insert 200 and push out the rest.
+   */
+  private queue: Promise<void> = Promise.resolve();
 
   constructor(
     @Inject(DB) private readonly db: Database,
@@ -48,9 +53,11 @@ export class SystemLogService implements OnModuleInit, OnModuleDestroy {
   onModuleInit(): void {
     SystemLogger.setSink(problem => {
       // Fire and forget: logging must not wait for the database, nor fail because of it.
-      void this.record(problem).catch(error =>
-        console.error('[system log] an entry was not saved:', error),
-      );
+      this.queue = this.queue
+        .then(() => this.record(problem))
+        .catch(error =>
+          console.error('[system log] an entry was not saved:', error),
+        );
     });
     this.scheduler.register({
       name: 'system.log-cleanup',
@@ -80,6 +87,11 @@ export class SystemLogService implements OnModuleInit, OnModuleDestroy {
       firstAt: row.firstAt.toISOString(),
       lastAt: row.lastAt.toISOString(),
     }));
+  }
+
+  /** Resolves when every entry handed over so far is saved (tests). */
+  settled(): Promise<void> {
+    return this.queue;
   }
 
   async clear(): Promise<void> {
