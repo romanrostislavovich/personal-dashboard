@@ -40,10 +40,17 @@ newer version, checks it against the hashes of its manifest and restarts into it
 is in the tray. No installer is run, so nothing asks for administrator rights. A new installer is
 needed only when the app moves to a newer Electron — the tray menu says so.
 
+System notifications need Windows' own switch (Settings → System → Notifications): with it off
+the card of the desktop notifications in Settings → Notifications says so and opens that page.
+The check of writing in every program leaves terminals alone (Windows Terminal, the console and
+the like): their text is commands and output, not prose.
+
 One copy runs, never as administrator (`single-instance.ts`): Electron's lock does not see across
 the administrator boundary on Windows, so a copy started elevated (the installer starts the app at
 its end) starts itself again as the signed-in user and quits, and a copy that finds another live
-one in `instance.pid` of its profile quits too.
+one in `instance.pid` of its profile quits too. A copy that quits so does not count its downloaded version as broken; one
+started by a restart into an update (`--update-restart=N`) tries again a few times a second apart,
+as Windows frees the old copy's lock a moment after it quits.
 
 The app also keeps the browser extension (the password vault in Chrome) up to date: it holds
 the extension in its own folder (`%APPDATA%/Personal Dashboard/browser-extension`), brings it to

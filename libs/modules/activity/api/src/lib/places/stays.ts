@@ -68,8 +68,13 @@ const MIN_STAY_MS = 10 * 60_000;
  * accuracy, and each such fix starting a group of its own left no group ten minutes long.
  */
 const LEFT_MS = 5 * 60_000;
-/** Fixes far from a place between two stays at it that make a trip of what was between. */
+/** Fixes away from a place between two stays at it that make a trip of what was between. */
 const AWAY_FIXES = 3;
+/**
+ * A fix between two stays at one place is away from it when it is farther than this, or than
+ * its own accuracy if that is worse: a walk around the house never goes 200 m away.
+ */
+const AWAY_MIN_M = 10;
 
 const EARTH_M = 6_371_000;
 
@@ -203,14 +208,17 @@ export function entriesOf(input: Fix[]): Entry[] {
 }
 
 /**
- * Whether the fixes between two stays near one place were a way out and back (a walk after a
- * café that ends on a bench nearby), not noise: several of them far from the place. One fix gone
- * astray is noise; joining such a walk to the stay swallowed it whole.
+ * Whether the fixes between two stays near one place were a way out and back (a walk around the
+ * house, or after a café that ends on a bench nearby), not noise: several of them away from the
+ * place by more than they are unsure. One fix gone astray is noise; joining such a walk to the
+ * stay swallowed it whole. GPS wandering indoors never gets here: it keeps coming back near the
+ * middle, so its fixes stay in the place's own group (see LEFT_MS).
  */
 function wentAway(place: Point, between: Fix[]): boolean {
   return (
-    between.filter(fix => distanceM(place, fix) > PLACE_RADIUS_M).length >=
-    AWAY_FIXES
+    between.filter(
+      fix => distanceM(place, fix) > Math.max(AWAY_MIN_M, fix.accuracy),
+    ).length >= AWAY_FIXES
   );
 }
 
