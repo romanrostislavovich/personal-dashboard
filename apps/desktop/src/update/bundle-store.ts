@@ -129,6 +129,15 @@ export class BundleStore {
     }
   }
 
+  /**
+   * This copy quits before it got going, and not because the bundle is broken: another copy
+   * already runs (a restart into an update that came up before the old copy was gone). The
+   * bundle is not marked bad for it — it starts next time.
+   */
+  standDown(): void {
+    this.confirmStarted();
+  }
+
   isBad(version: string): boolean {
     return this.state().bad.includes(version);
   }

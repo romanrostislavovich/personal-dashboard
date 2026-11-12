@@ -17,8 +17,18 @@ contextBridge.exposeInMainWorld('desktop', {
     ipcRenderer.invoke('settings:get-server-url'),
   saveServerUrl: (url: string): Promise<void> =>
     ipcRenderer.invoke('settings:save-server-url', url),
-  notify: (notification: {title: string; body: string; route?: string}): void =>
-    ipcRenderer.send('desktop:notify', notification),
+  notify: (notification: {
+    title: string;
+    body: string;
+    route?: string;
+    now?: boolean;
+  }): void => ipcRenderer.send('desktop:notify', notification),
+  /** Windows' own switch for notifications, see notification-settings.ts. */
+  systemNotifications: {
+    off: (): Promise<boolean> => ipcRenderer.invoke('notifications:system-off'),
+    openSettings: (): Promise<void> =>
+      ipcRenderer.invoke('notifications:open-system-settings'),
+  },
   onNavigate: (callback: (route: string) => void): void => {
     ipcRenderer.on('desktop:navigate', (_event, route: string) =>
       callback(route),

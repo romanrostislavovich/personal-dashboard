@@ -330,6 +330,8 @@
       "test": "Show a test one",
       "testTitle": "Personal Dashboard",
       "testBody": "Notifications on this computer work.",
+      "systemOff": "Windows has notifications switched off, so none of the app's show. Turn on \"Notifications\" in Windows Settings → System → Notifications.",
+      "openSystem": "Open Windows settings",
       "elsewhere": "The desktop app shows the dashboard's notifications as system ones when its window is not in front; it is set in the app. Which sections come there is in \"What comes where\"."
     },
     "kinds": {

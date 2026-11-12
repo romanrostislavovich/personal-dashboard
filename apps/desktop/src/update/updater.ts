@@ -100,6 +100,11 @@ export class AppUpdater {
     setInterval(() => void this.check(), CHECK_EVERY_MS);
   }
 
+  /** This copy quits at once because another one runs: see BundleStore.standDown. */
+  standDown(): void {
+    this.store.standDown();
+  }
+
   async check(): Promise<void> {
     const base = this.feed();
     if (!base || !this.running || this.busy || this.current.kind === 'off') {

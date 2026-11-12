@@ -72,6 +72,27 @@ describe('the places of a day', () => {
     expect((entries[1] as {meters: number}).meters).toBeGreaterThan(1000);
   });
 
+  it('a walk around the house, never 200 m away, is a trip, not part of the stay', () => {
+    // Out of the door, a loop of 20 minutes about 120 m around the house, a GPS fix a minute.
+    const loop: Fix[] = [];
+    for (let minute = 61; minute <= 80; minute++) {
+      const angle = ((minute - 61) / 19) * 2 * Math.PI;
+      loop.push({
+        at: minute * MIN,
+        latitude: HOME.latitude + (Math.sin(angle) * 120) / 111_000,
+        longitude: HOME.longitude + (Math.cos(angle) * 120) / 68_000,
+        accuracy: 8,
+      });
+    }
+    const entries = entriesOf([
+      ...every15(0, 60, HOME),
+      ...loop,
+      ...every15(85, 145, HOME),
+    ]);
+    expect(entries.map(entry => entry.kind)).toEqual(['stay', 'trip', 'stay']);
+    expect(entries[1]).toMatchObject({kind: 'trip', mode: 'walk'});
+  });
+
   it('passing by is no stay, and a fix gone astray is no trip', () => {
     const astray = {latitude: 52.236, longitude: 21.0122};
     const entries = entriesOf([

@@ -48,6 +48,14 @@ import {DeviceOnlyComponent} from './device-only.component';
           <mat-slide-toggle [checked]="on()" (change)="toggle($event.checked)">
             {{ 'core.settings.desktopNotifications.on' | transloco }}
           </mat-slide-toggle>
+          @if (systemOff()) {
+            <p class="warning" role="alert">
+              {{ 'core.settings.desktopNotifications.systemOff' | transloco }}
+            </p>
+            <button matButton="filled" (click)="openSystemSettings()">
+              {{ 'core.settings.desktopNotifications.openSystem' | transloco }}
+            </button>
+          }
           <button matButton="tonal" [disabled]="!on()" (click)="test()">
             {{ 'core.settings.desktopNotifications.test' | transloco }}
           </button>
@@ -69,6 +77,10 @@ import {DeviceOnlyComponent} from './device-only.component';
     .hint {
       color: var(--mat-sys-on-surface-variant);
     }
+    .warning {
+      margin: 0;
+      color: var(--mat-sys-error);
+    }
   `,
 })
 export class DesktopNotificationsComponent {
@@ -77,6 +89,27 @@ export class DesktopNotificationsComponent {
 
   protected readonly canNotify = !!this.desktop?.notify;
   protected readonly on = signal(desktopNotificationsOn());
+  /** Windows itself has notifications off: nothing of the app's would show. */
+  protected readonly systemOff = signal(false);
+
+  constructor() {
+    void this.checkSystem();
+  }
+
+  private async checkSystem(): Promise<void> {
+    const off = await this.desktop?.systemNotifications
+      ?.off()
+      .catch(() => false);
+    this.systemOff.set(off ?? false);
+  }
+
+  /** Opens Windows' settings; back in the window the card looks again. */
+  protected async openSystemSettings(): Promise<void> {
+    await this.desktop?.systemNotifications?.openSettings();
+    window.addEventListener('focus', () => void this.checkSystem(), {
+      once: true,
+    });
+  }
 
   protected toggle(on: boolean): void {
     setDesktopNotifications(on);
@@ -93,6 +126,8 @@ export class DesktopNotificationsComponent {
         'core.settings.desktopNotifications.testBody',
       ),
       route: '/settings?tab=notifications',
+      now: true,
     });
+    void this.checkSystem();
   }
 }

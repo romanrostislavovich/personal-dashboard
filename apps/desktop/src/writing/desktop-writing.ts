@@ -45,6 +45,33 @@ const LEFT_TO_OTHERS = new Set([
   'personal dashboard',
   'electron',
 ]);
+/**
+ * Terminals: their "text" is the whole screen — commands, paths, output — and checked as prose it
+ * came back marked all over (2026-11). Windows Terminal, the old console, and the usual others.
+ */
+const TERMINALS = new Set([
+  'windowsterminal',
+  'openconsole',
+  'conhost',
+  'cmd',
+  'powershell',
+  'pwsh',
+  'mintty',
+  'wezterm-gui',
+  'alacritty',
+  'hyper',
+  'tabby',
+  'putty',
+  'kitty',
+]);
+
+/** Whether the field of the program `app` (a process name, lower case) is not checked here. */
+export function leftAlone(app: string, ignoredApps: string[]): boolean {
+  return (
+    LEFT_TO_OTHERS.has(app) || TERMINALS.has(app) || ignoredApps.includes(app)
+  );
+}
+
 const COLOURS: Record<Issue['kind'], string> = {
   spelling: '#e53935',
   grammar: '#f9a825',
@@ -119,10 +146,7 @@ export class DesktopWriting {
       void this.openAtCaret(event.at);
       return;
     }
-    if (
-      LEFT_TO_OTHERS.has(event.app) ||
-      this.config.ignoredApps.includes(event.app)
-    ) {
+    if (leftAlone(event.app, this.config.ignoredApps)) {
       this.field = null;
       this.clear();
       return;

@@ -13,7 +13,18 @@ import {
  */
 export interface DesktopBridge {
   /** A native system notification; clicking it opens the app on `route`. */
-  notify?(notification: {title: string; body: string; route?: string}): void;
+  notify?(notification: {
+    title: string;
+    body: string;
+    route?: string;
+    /** Shown at once, past a focus part or a call (a test the user pressed). */
+    now?: boolean;
+  }): void;
+  /** Windows' own switch for every notification (absent in an older shell). */
+  systemNotifications?: {
+    off(): Promise<boolean>;
+    openSettings(): Promise<void>;
+  };
   /** Called when a system notification was clicked. */
   onNavigate?(callback: (route: string) => void): void;
   /** Called when "Check for updates" is pressed in the tray (absent in an older shell). */

@@ -31,6 +31,10 @@ import {Capture} from './capture/capture';
 import {DiskCleaner} from './disk/disk-cleaner';
 import {DiskFix} from './disk/disk-fixes';
 import {StatementWatch} from './downloads/statement-watch';
+import {
+  NOTIFICATION_SETTINGS_URL,
+  systemNotificationsOff,
+} from './notification-settings';
 import {claimInstanceFile, isElevated, relaunchAsUser} from './single-instance';
 import {createTray} from './tray';
 import {ExtensionKeeper} from './update/extension-keeper';
@@ -155,6 +159,12 @@ const updater = new AppUpdater(
 /** The browser extension's folder, updated from the server as the shell is. */
 const extension = new ExtensionKeeper(serverUrl);
 
+/** `--update-restart=N`: this copy was started by a restart into an update, try N. */
+const UPDATE_RESTART_FLAG = '--update-restart=';
+/** How many times a restart into an update waits for the old copy to be gone. */
+const UPDATE_RESTART_TRIES = 5;
+const UPDATE_RESTART_PAUSE_MS = 1000;
+
 let startHidden = process.argv.includes('--hidden');
 
 if (app.isPackaged && isElevated()) {
@@ -163,7 +173,19 @@ if (app.isPackaged && isElevated()) {
   app.quit();
 } else if (!app.requestSingleInstanceLock() || !claimInstanceFile()) {
   // Already running — the second instance just exits and the first one restores its window.
-  app.quit();
+  // The bundle it was started from is fine: it must not be dropped as one that failed.
+  updater.standDown();
+  const tries = updateRestartTries();
+  if (tries !== null && tries < UPDATE_RESTART_TRIES) {
+    // Restarted into an update while the old copy was still on its way out (Windows frees its
+    // lock a moment after it quits): try again shortly instead of leaving no app at all.
+    setTimeout(() => {
+      app.relaunch({args: relaunchArgs(tries + 1)});
+      app.quit();
+    }, UPDATE_RESTART_PAUSE_MS);
+  } else {
+    app.quit();
+  }
 } else {
   app.on('second-instance', showWindow);
   void app.whenReady().then(bootstrap);
@@ -341,9 +363,25 @@ function installUpdate(): void {
     tracker.stop(),
     new Promise(resolve => setTimeout(resolve, 3000)),
   ]).then(() => {
-    app.relaunch();
+    app.relaunch({args: relaunchArgs(0)});
     app.quit();
   });
+}
+
+/** The try of a restart into an update this copy is; `null` — started some other way. */
+function updateRestartTries(): number | null {
+  const flag = process.argv.find(arg => arg.startsWith(UPDATE_RESTART_FLAG));
+  return flag ? Number(flag.slice(UPDATE_RESTART_FLAG.length)) || 0 : null;
+}
+
+/** The arguments of this copy for the next one, with the try of the restart. */
+function relaunchArgs(tries: number): string[] {
+  return [
+    ...process.argv
+      .slice(1)
+      .filter(arg => !arg.startsWith(UPDATE_RESTART_FLAG)),
+    `${UPDATE_RESTART_FLAG}${tries}`,
+  ];
 }
 
 function openDashboard(): void {
@@ -567,6 +605,11 @@ function registerIpc(): void {
   });
   // The copies of one's data: the page fetches the archive, the shell keeps it in a folder.
   // Settings → Apps: this computer in the list of devices, and the extension's folder.
+  // Windows may have every notification switched off: the settings page says so.
+  ipcMain.handle('notifications:system-off', () => systemNotificationsOff());
+  ipcMain.handle('notifications:open-system-settings', () =>
+    shell.openExternal(NOTIFICATION_SETTINGS_URL),
+  );
   ipcMain.handle('apps:info', () => ({
     installId: installId(),
     version: updater.fullVersion,
@@ -626,15 +669,21 @@ function registerIpc(): void {
     'desktop:notify',
     (
       _event,
-      {title, body, route}: {title: string; body: string; route?: string},
+      {
+        title,
+        body,
+        route,
+        now,
+      }: {title: string; body: string; route?: string; now?: boolean},
     ) => {
       // A focus part is quiet: the notification waits, and its end says how many there were.
-      if (tracker.focus.working) {
+      // The test the user pressed (`now`) shows at once.
+      if (!now && tracker.focus.working) {
         tracker.focus.hold();
         return;
       }
       // A call is going on: the notification waits too.
-      if (tracker.inMeeting) {
+      if (!now && tracker.inMeeting) {
         tracker.holdDuringMeeting();
         return;
       }
