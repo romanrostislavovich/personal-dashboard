@@ -286,13 +286,6 @@ h3 {
   &:hover {
     color: var(--mat-sys-on-surface);
   }
-
-  // A finger swipes the row. An arrow that shows and hides as it rolls changes the row's width
-  // during the swipe's glide, the row keeps rolling, and the first tap after it only stopped it:
-  // a tab took a second tap.
-  @media (hover: none) and (pointer: coarse) {
-    display: none !important;
-  }
 }
 
 // "Edited …" (pd-edited-at) between a dialog's fields and its buttons, or first in a card's

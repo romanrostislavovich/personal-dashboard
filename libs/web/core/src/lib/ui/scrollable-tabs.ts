@@ -84,6 +84,7 @@ function withArrows(row: HTMLElement): void {
     right.hidden = row.scrollLeft + row.clientWidth >= row.scrollWidth - 1;
   };
   row.addEventListener('scroll', update, {passive: true});
+  keepPlaceOnFocus(row);
   new ResizeObserver(update).observe(row);
   update();
   // Material's paging brought the chosen tab into view; the native scroll has to do it itself,
@@ -106,16 +107,47 @@ function withArrows(row: HTMLElement): void {
   reveal();
 }
 
+/**
+ * Material resets the row's scroll to the start whenever a tab gets the focus (its own paging
+ * assumes the row never scrolls natively). A tap on a row swiped away from the start focused the
+ * tab, the row jumped back, and the click landed on whatever came under the finger — a tab took a
+ * second tap (2026-11, seen on the phone). The row keeps its place; a tab reached by the keyboard
+ * is rolled into view instead.
+ */
+function keepPlaceOnFocus(row: HTMLElement): void {
+  let kept = row.scrollLeft;
+  // A scroll event comes a frame later: Material's reset is not in `kept` yet at the focus.
+  row.addEventListener('scroll', () => (kept = row.scrollLeft), {
+    passive: true,
+  });
+  row.addEventListener('focusin', event => {
+    if (row.scrollLeft !== kept) {
+      row.scrollLeft = kept;
+    }
+    const tab = event.target;
+    if (tab instanceof HTMLElement && !wholly(row, tab)) {
+      row.scrollTo({
+        left: tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2,
+      });
+    }
+  });
+}
+
+/** Whether the tab is wholly seen in the row. */
+function wholly(row: HTMLElement, tab: HTMLElement): boolean {
+  return (
+    tab.offsetLeft >= row.scrollLeft &&
+    tab.offsetLeft + tab.offsetWidth <= row.scrollLeft + row.clientWidth
+  );
+}
+
 /** The active tab is rolled to the middle of the row when it is not wholly seen. */
 function revealActive(row: HTMLElement): void {
   const tab = row.querySelector<HTMLElement>('.mdc-tab--active');
   if (!tab) {
     return;
   }
-  const seen =
-    tab.offsetLeft >= row.scrollLeft &&
-    tab.offsetLeft + tab.offsetWidth <= row.scrollLeft + row.clientWidth;
-  if (!seen) {
+  if (!wholly(row, tab)) {
     row.scrollTo({
       left: tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2,
     });
