@@ -98,14 +98,14 @@
     "recentAchievements": "Recent achievements",
     "lastLogin": "Last login",
     "credentialsTitle": "Battle.net keys (for WoW)",
-    "credentialsHint": "Create a client at develop.battle.net → API Access (any redirect URL, it is not used). Keys are stored encrypted on the server.",
+    "credentialsHint": "Create a client at develop.battle.net → API Access; put the address this card shows once the keys are saved as its Redirect URL. Keys are stored encrypted on the server.",
     "credentialsSaved": "Keys saved",
     "characters": "Characters",
     "bestItemLevel": "Best item level",
     "empty": "No characters yet. Save the Battle.net keys (Settings → Integrations) and add a character.",
     "guide": {
       "1": "Open develop.battle.net, sign in with the Battle.net account and go to API Access → Create Client.",
-      "2": "Any name; a Redirect URL is required — https://localhost will do; tick nothing else and create.",
+      "2": "Any name; put the address shown below in this card as the Redirect URL; tick nothing else and create.",
       "3": "Copy the Client ID and the Client Secret and paste them here, then add characters on the Games page."
     },
     "addTitle": "Add a character",
@@ -116,7 +116,8 @@
       "retail": "World of Warcraft (current)",
       "anniversary": "Classic Anniversary",
       "era": "Classic Era, Hardcore, Season of Discovery",
-      "progression": "Classic: Cataclysm, Mists of Pandaria"
+      "progression": "Classic: Cataclysm, Mists of Pandaria",
+      "forever": "WoW Forever"
     },
     "classic": "Classic",
     "level": "Level",
@@ -173,6 +174,21 @@
       "played": "Played",
       "won": "Won",
       "noBrackets": "No rated games this season."
+    },
+    "account": {
+      "title": "Battle.net account",
+      "hint": "Sign in with Battle.net and the dashboard finds your characters in every region and version of the game, WoW Forever included. The sign-in lasts about a day; the characters are then refreshed with the keys by themselves.",
+      "redirect": "Redirect URL for the app at develop.battle.net:",
+      "signIn": "Sign in with Battle.net",
+      "find": "Find characters",
+      "signOut": "Sign out",
+      "until": "Signed in until {{time}}",
+      "expired": "The sign-in has expired — sign in again to find new characters",
+      "found": "Characters found: {{count}}",
+      "none": "No characters on the account.",
+      "connected": "Signed in with Battle.net, characters found",
+      "error": "Could not sign in with Battle.net. Check the Redirect URL of the app at develop.battle.net.",
+      "level": "lvl {{level}}"
     }
   },
   "errors": {

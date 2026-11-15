@@ -79,7 +79,7 @@ export interface WowCompletedAchievement {
 }
 
 /** Response language: Russian for the European region. */
-const LOCALES: Record<WowRegion, string> = {
+export const LOCALES: Record<WowRegion, string> = {
   eu: 'ru_RU',
   us: 'en_US',
   kr: 'ko_KR',
@@ -258,6 +258,27 @@ export class BattlenetClient {
       slug: found.slug,
       name: known.find(r => r.slug === found.slug)?.shown ?? found.slug,
     };
+  }
+
+  /**
+   * Only the status of a character's summary in any namespace, with the app's keys: whether a
+   * character found through the account (WoW Forever) can be read without the sign-in.
+   */
+  async characterStatus(
+    region: WowRegion,
+    profileNamespace: string,
+    realmSlug: string,
+    name: string,
+  ): Promise<number> {
+    const query = new URLSearchParams({
+      namespace: profileNamespace,
+      locale: LOCALES[region],
+    });
+    const response = await fetchWithTimeout(
+      `https://${region}.api.blizzard.com/profile/wow/character/${encodeURIComponent(realmSlug)}/${encodeURIComponent(name.toLowerCase())}?${query}`,
+      {headers: {Authorization: `Bearer ${await this.accessToken()}`}},
+    );
+    return response.status;
   }
 
   /** An address from one of Blizzard's own answers; the language of the region is added. */

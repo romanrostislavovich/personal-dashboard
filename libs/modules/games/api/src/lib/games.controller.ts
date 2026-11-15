@@ -10,10 +10,12 @@ import {
   Post,
   Put,
   Query,
+  Redirect,
 } from '@nestjs/common';
 import {
   AuthUser,
   CurrentUser,
+  Public,
   ServerActions,
   ZodValidationPipe,
 } from '@pd/api-core';
@@ -42,6 +44,7 @@ import {
 import {DotaOverviewService} from './dota/dota-overview.service';
 import {OpenDotaKeyService} from './dota/opendota-key.service';
 import {GameAccountsService} from './game-accounts.service';
+import {BattlenetAccountService} from './wow/battlenet-account.service';
 import {WowService} from './wow/wow.service';
 import {GAMES_ACTIONS} from './games.server-actions';
 import {SteamKeyService} from './steam/steam-key.service';
@@ -57,6 +60,7 @@ export class GamesController {
     private readonly openDotaKeys: OpenDotaKeyService,
     private readonly steamKeys: SteamKeyService,
     private readonly xbox: XboxService,
+    private readonly battlenet: BattlenetAccountService,
   ) {}
 
   @Get('accounts')
@@ -125,7 +129,45 @@ export class GamesController {
         user.id,
         await this.accounts.idsOf(user.id, 'dota2'),
       ),
+      battlenetAccount: await this.battlenet.state(user.id),
     };
+  }
+
+  /** Blizzard's sign-in page: made on the server, where Blizzard sends the browser back. */
+  @Post('battlenet/connect')
+  async connectBattlenet(
+    @CurrentUser() user: AuthUser,
+  ): Promise<{url: string}> {
+    return {
+      url: await this.actions.run<string>(
+        user.id,
+        GAMES_ACTIONS.battlenetConnect,
+      ),
+    };
+  }
+
+  /** Blizzard returns the browser here after the sign-in; the user is known by `state`. */
+  @Public()
+  @Get('battlenet/callback')
+  @Redirect()
+  async battlenetCallback(
+    @Query('code') code?: string,
+    @Query('state') state?: string,
+  ) {
+    return {url: await this.battlenet.handleCallback(code, state)};
+  }
+
+  /** Looks for the account's characters again while the sign-in lasts. */
+  @Post('battlenet/discover')
+  @HttpCode(204)
+  discoverBattlenet(@CurrentUser() user: AuthUser) {
+    return this.actions.run(user.id, GAMES_ACTIONS.battlenetDiscover);
+  }
+
+  @Delete('battlenet')
+  @HttpCode(204)
+  disconnectBattlenet(@CurrentUser() user: AuthUser) {
+    return this.battlenet.disconnect(user.id);
   }
 
   @Put('wow/credentials')

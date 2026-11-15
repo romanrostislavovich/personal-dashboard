@@ -98,14 +98,14 @@
     "recentAchievements": "Последние достижения",
     "lastLogin": "Последний вход",
     "credentialsTitle": "Ключи Battle.net (для WoW)",
-    "credentialsHint": "Создай клиента на develop.battle.net → API Access (Redirect URL можно любой, он не используется). Ключи хранятся на сервере зашифрованными.",
+    "credentialsHint": "Создай клиента на develop.battle.net → API Access; в Redirect URL впиши адрес, который карточка покажет после сохранения ключей. Ключи хранятся на сервере зашифрованными.",
     "credentialsSaved": "Ключи сохранены",
     "characters": "Персонажи",
     "bestItemLevel": "Лучший уровень предметов",
     "empty": "Персонажей пока нет. Сохрани ключи Battle.net (Настройки → Интеграции) и добавь персонажа.",
     "guide": {
       "1": "Открой develop.battle.net, войди под аккаунтом Battle.net и перейди в API Access → Create Client.",
-      "2": "Название любое; Redirect URL обязателен — подойдёт https://localhost; больше ничего не отмечай и создай.",
+      "2": "Название любое; в Redirect URL впиши адрес, который показан ниже в этой карточке; больше ничего не отмечай и создай.",
       "3": "Скопируй Client ID и Client Secret и вставь сюда, затем добавь персонажей на странице «Игры»."
     },
     "addTitle": "Добавь персонажа",
@@ -116,7 +116,8 @@
       "retail": "World of Warcraft (актуальная)",
       "anniversary": "Classic Anniversary",
       "era": "Classic Era, Hardcore, Season of Discovery",
-      "progression": "Classic: Cataclysm, Mists of Pandaria"
+      "progression": "Classic: Cataclysm, Mists of Pandaria",
+      "forever": "WoW Forever"
     },
     "classic": "Classic",
     "level": "Уровень",
@@ -173,6 +174,21 @@
       "played": "Сыграно",
       "won": "Побед",
       "noBrackets": "В этом сезоне рейтинговых игр нет."
+    },
+    "account": {
+      "title": "Аккаунт Battle.net",
+      "hint": "Войди через Battle.net — дашборд сам найдёт персонажей во всех регионах и версиях игры, включая WoW Forever. Вход действует около суток; персонажи потом обновляются сами по ключам.",
+      "redirect": "Redirect URL для приложения на develop.battle.net:",
+      "signIn": "Войти через Battle.net",
+      "find": "Найти персонажей",
+      "signOut": "Выйти",
+      "until": "Вход действует до {{time}}",
+      "expired": "Вход истёк — войди снова, чтобы найти новых персонажей",
+      "found": "Найдено персонажей: {{count}}",
+      "none": "На аккаунте не нашлось персонажей.",
+      "connected": "Вход через Battle.net выполнен, персонажи найдены",
+      "error": "Не удалось войти через Battle.net. Проверь Redirect URL приложения на develop.battle.net.",
+      "level": "ур. {{level}}"
     }
   },
   "errors": {
