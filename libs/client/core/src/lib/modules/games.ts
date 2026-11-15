@@ -51,6 +51,12 @@ export function gamesApi(api: ApiClient) {
     saveWowCredentials: (input: WowCredentialsInput) =>
       api.put<void>(`${BASE}/wow/credentials`, input),
     wowTokens: () => api.read<WowToken[]>(GAMES_READS.wowTokens()),
+    /** Blizzard's sign-in page the user has to open. */
+    battlenetConnectUrl: () =>
+      api.post<{url: string}>(`${BASE}/battlenet/connect`, {}),
+    /** The account's characters again, while the sign-in lasts. */
+    battlenetDiscover: () => api.post<void>(`${BASE}/battlenet/discover`, {}),
+    disconnectBattlenet: () => api.delete(`${BASE}/battlenet`),
     /** The notifications of one WoW character. */
     updateWowCharacter: (accountId: string, update: WowCharacterUpdate) =>
       api.patch<void>(`${BASE}/wow/${accountId}`, update),

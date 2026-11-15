@@ -79,6 +79,41 @@ export interface GamesSettings {
   wowCredentials: boolean;
   /** Dota accounts (ids) with an OpenDota API key of their own: not bound by the free limit. */
   openDotaKeyAccounts: string[];
+  /** The Battle.net account signed in with; `null` — no app keys yet, nothing to sign in with. */
+  battlenetAccount: BattlenetAccountState | null;
+}
+
+/**
+ * Every version the Battle.net account may have characters in: the ones of `WOW_VERSIONS` and
+ * WoW Forever (characters with a surname and no realm, found only through the account).
+ */
+export const WOW_ACCOUNT_VERSIONS = [...WOW_VERSIONS, 'forever'] as const;
+export type WowAccountVersion = (typeof WOW_ACCOUNT_VERSIONS)[number];
+
+/** A character the signed-in Battle.net account has, as Blizzard lists it. */
+export interface WowAccountCharacter {
+  /** Blizzard's id of the character: it stays when the character is renamed. */
+  id: number;
+  region: WowRegion;
+  version: WowAccountVersion;
+  name: string;
+  /** WoW Forever only. */
+  surname: string | null;
+  /** The realm's name and slug; for Forever the hidden realm, if Blizzard tells it. */
+  realm: string | null;
+  realmSlug: string | null;
+  level: number;
+  className: string | null;
+}
+
+export interface BattlenetAccountState {
+  /** Where Blizzard sends the browser back: the Redirect URL of the app at develop.battle.net. */
+  redirectUri: string;
+  /** The sign-in lasts about a day and cannot be renewed; `null` — never signed in. */
+  expiresAt: string | null;
+  /** The characters found at the last sign-in; `null` — never looked. */
+  discoveredAt: string | null;
+  characters: WowAccountCharacter[];
 }
 
 // --- Dota 2 ---

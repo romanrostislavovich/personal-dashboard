@@ -15,14 +15,17 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import {ActivatedRoute, Router} from '@angular/router';
 import {TranslocoPipe, TranslocoService} from '@jsverse/transloco';
 import {IntegrationGuideComponent, errorStatus} from '@pd/web-core';
 import {firstValueFrom} from 'rxjs';
+import {BattlenetAccountComponent} from './battlenet-account.component';
 import {GamesApi} from './games.api';
 
 /**
- * Battle.net keys (needed only for World of Warcraft), in Settings → Integrations (see
- * `integrations` in games.module.ts).
+ * Battle.net keys (needed only for World of Warcraft) and the account's sign-in, in Settings →
+ * Integrations (see `integrations` in games.module.ts). The sign-in comes back here with
+ * `?battlenet=connected|error`.
  */
 @Component({
   selector: 'pd-battle-net-integration',
@@ -31,6 +34,7 @@ import {GamesApi} from './games.api';
     ReactiveFormsModule,
     MatCardModule,
     IntegrationGuideComponent,
+    BattlenetAccountComponent,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
@@ -77,6 +81,12 @@ import {GamesApi} from './games.api';
             </button>
           </form>
         }
+        @if (settings.value()?.battlenetAccount; as account) {
+          <pd-battlenet-account
+            [state]="account"
+            (changed)="settings.reload()"
+          />
+        }
         <pd-integration-guide
           guide="games.wow.guide"
           [steps]="3"
@@ -118,6 +128,10 @@ export class BattleNetIntegration {
     clientSecret: ['', [Validators.required, Validators.minLength(10)]],
   });
 
+  constructor() {
+    this.showSignInResult();
+  }
+
   async save(): Promise<void> {
     this.busy.set(true);
     try {
@@ -139,5 +153,24 @@ export class BattleNetIntegration {
     } finally {
       this.busy.set(false);
     }
+  }
+
+  private showSignInResult(): void {
+    const route = inject(ActivatedRoute);
+    const result = route.snapshot.queryParamMap.get('battlenet');
+    if (result !== 'connected' && result !== 'error') {
+      return;
+    }
+    this.snackBar.open(
+      this.transloco.translate(`games.wow.account.${result}`),
+      this.transloco.translate('core.actions.ok'),
+      {duration: 6000},
+    );
+    // Remove the parameter so the message does not repeat on reload; the tab stays.
+    void inject(Router).navigate([], {
+      queryParams: {battlenet: null},
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 }

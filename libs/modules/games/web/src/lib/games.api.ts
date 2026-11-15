@@ -78,6 +78,18 @@ export class GamesApi {
     return fromCore(() => this.games.saveWowCredentials(input));
   }
 
+  battlenetConnectUrl() {
+    return fromCore(() => this.games.battlenetConnectUrl());
+  }
+
+  battlenetDiscover() {
+    return fromCore(() => this.games.battlenetDiscover());
+  }
+
+  disconnectBattlenet() {
+    return fromCore(() => this.games.disconnectBattlenet());
+  }
+
   /** The price of the WoW Token with its history, per region. */
   wowTokens() {
     return httpResource<WowToken[]>(() => GAMES_READS.wowTokens(), {

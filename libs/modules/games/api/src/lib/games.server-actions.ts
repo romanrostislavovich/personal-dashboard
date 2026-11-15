@@ -9,6 +9,7 @@ import {z} from 'zod';
 import {OpenDotaKeyService} from './dota/opendota-key.service';
 import {GameAccountsService} from './game-accounts.service';
 import {SteamKeyService} from './steam/steam-key.service';
+import {BattlenetAccountService} from './wow/battlenet-account.service';
 
 /** OpenDota and Battle.net requests run on the server (see ServerActions). */
 export const GAMES_ACTIONS = {
@@ -17,6 +18,8 @@ export const GAMES_ACTIONS = {
   syncAll: 'games.sync-all',
   saveOpenDotaKey: 'games.save-opendota-key',
   saveSteamKey: 'games.save-steam-key',
+  battlenetConnect: 'games.battlenet-connect',
+  battlenetDiscover: 'games.battlenet-discover',
 } as const;
 
 const idArgs = z.object({id: z.uuid()});
@@ -29,6 +32,7 @@ export class GamesServerActions implements OnModuleInit {
     private readonly accounts: GameAccountsService,
     private readonly openDotaKeys: OpenDotaKeyService,
     private readonly steamKeys: SteamKeyService,
+    private readonly battlenet: BattlenetAccountService,
   ) {}
 
   onModuleInit(): void {
@@ -40,6 +44,13 @@ export class GamesServerActions implements OnModuleInit {
     );
     this.actions.register(GAMES_ACTIONS.syncAll, userId =>
       this.accounts.syncAllOf(userId),
+    );
+    // The sign-in's state lives on the server, where Blizzard sends the browser back.
+    this.actions.register(GAMES_ACTIONS.battlenetConnect, userId =>
+      this.battlenet.connectUrl(userId),
+    );
+    this.actions.register(GAMES_ACTIONS.battlenetDiscover, userId =>
+      this.battlenet.discover(userId),
     );
     // The key is checked against Steam, and every account is re-read with it right away.
     this.actions.register(GAMES_ACTIONS.saveSteamKey, async (userId, args) => {

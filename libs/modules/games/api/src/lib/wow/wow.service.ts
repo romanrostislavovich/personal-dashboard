@@ -70,12 +70,17 @@ export class WowService {
   }
 
   async clientFor(userId: string): Promise<BattlenetClient> {
-    const stored = await this.secrets.get(userId, CREDENTIALS_SECRET);
-    if (!stored) {
+    const keys = await this.credentials(userId);
+    if (!keys) {
       throw new BadRequestException('Battle.net credentials are not set');
     }
-    const {clientId, clientSecret} = JSON.parse(stored) as WowCredentialsInput;
-    return new BattlenetClient(clientId, clientSecret);
+    return new BattlenetClient(keys.clientId, keys.clientSecret);
+  }
+
+  /** The app's keys themselves: the account's sign-in is made with them too. */
+  async credentials(userId: string): Promise<WowCredentialsInput | null> {
+    const stored = await this.secrets.get(userId, CREDENTIALS_SECRET);
+    return stored ? (JSON.parse(stored) as WowCredentialsInput) : null;
   }
 
   /**
