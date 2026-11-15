@@ -8,12 +8,16 @@ import {
 } from '@nestjs/common';
 import {DB, Database, NotificationsService, UsersService} from '@pd/api-core';
 import {GameAccount, GameAccountInput} from '@pd/contracts';
-import {and, asc, eq} from 'drizzle-orm';
+import {and, asc, eq, isNull} from 'drizzle-orm';
 import {DotaProfileNotFoundError} from './dota/opendota.client';
 import {DotaService} from './dota/dota.service';
 import {OpenDotaKeyService} from './dota/opendota-key.service';
 import {parseDotaAccountId} from './dota/steam-id';
-import {gameAccounts, GameAccountRow} from './games.schema';
+import {
+  gameAccounts,
+  GameAccountRow,
+  wowDismissedCharacters,
+} from './games.schema';
 import {gamesMessages} from './games.messages';
 import {
   WowCharacterNotFoundError,
@@ -52,6 +56,7 @@ export class GameAccountsService {
         displayName: row.displayName,
         lastSyncedAt: row.lastSyncedAt?.toISOString() ?? null,
         lastError: row.lastError,
+        notOnAccountSince: row.notOnAccountSince?.toISOString() ?? null,
         summary: await this.summary(row),
       })),
     );
@@ -86,9 +91,24 @@ export class GameAccountsService {
   async remove(userId: string, id: string): Promise<void> {
     // The key was this account's: without the account it would only lie around.
     await this.openDotaKeys.remove(userId, id);
-    await this.db
+    const [removed] = await this.db
       .delete(gameAccounts)
-      .where(and(eq(gameAccounts.id, id), eq(gameAccounts.userId, userId)));
+      .where(and(eq(gameAccounts.id, id), eq(gameAccounts.userId, userId)))
+      .returning({blizzardKey: gameAccounts.blizzardKey});
+    if (removed?.blizzardKey) {
+      // A character of the Battle.net account: the next look for characters must not bring it back.
+      await this.db
+        .insert(wowDismissedCharacters)
+        .values({userId, blizzardKey: removed.blizzardKey})
+        .onConflictDoNothing();
+    }
+  }
+
+  /** Characters the Battle.net account put on the page, one by one; a failure stays on its row. */
+  async syncFound(rows: GameAccountRow[]): Promise<void> {
+    for (const row of rows) {
+      await this.syncAccount(row);
+    }
   }
 
   /** Ids of the user's accounts of a game. */
@@ -112,12 +132,20 @@ export class GameAccountsService {
     await this.syncAccount(row, {fullHistory: true});
   }
 
-  /** "Refresh all": every account of the user, Dota with its whole history. */
+  /**
+   * "Refresh all": every account of the user, Dota with its whole history. A character that is
+   * no longer on the Battle.net account is not refreshed (here and in the background).
+   */
   async syncAllOf(userId: string): Promise<void> {
     const rows = await this.db
       .select()
       .from(gameAccounts)
-      .where(eq(gameAccounts.userId, userId));
+      .where(
+        and(
+          eq(gameAccounts.userId, userId),
+          isNull(gameAccounts.notOnAccountSince),
+        ),
+      );
     for (const row of rows) {
       await this.syncAccount(row, {fullHistory: true});
     }
@@ -125,7 +153,11 @@ export class GameAccountsService {
 
   /** Background sync of all accounts; news goes to notifications. */
   async syncAll(): Promise<void> {
-    for (const row of await this.db.select().from(gameAccounts)) {
+    const rows = await this.db
+      .select()
+      .from(gameAccounts)
+      .where(isNull(gameAccounts.notOnAccountSince));
+    for (const row of rows) {
       await this.syncAccount(row, {awaitDetails: true});
     }
   }
@@ -213,9 +245,11 @@ export class GameAccountsService {
 
   private async syncWow(row: GameAccountRow): Promise<string[]> {
     const {profile, newAchievements, news} = await this.wow.sync(row);
-    await this.saveProfile(row, `${profile.name} — ${profile.realm}`, {
-      ...profile,
-    });
+    // Forever has a surname instead of a realm: "Око Масонское".
+    const displayName = profile.realm
+      ? `${profile.name} — ${profile.realm}`
+      : [profile.name, profile.surname].filter(Boolean).join(' ');
+    await this.saveProfile(row, displayName, {...profile});
     const text = gamesMessages(await this.localeOf(row.userId));
     return [
       ...newAchievements.map(a => text.wowAchievement(profile.name, a.name)),

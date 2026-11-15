@@ -8,17 +8,27 @@ export const WOW_REGIONS = ['eu', 'us', 'kr', 'tw'] as const;
 export type WowRegion = (typeof WOW_REGIONS)[number];
 
 /**
- * The versions of the game, each with realms and characters of its own: the current game
- * (`retail`), Classic Anniversary, Classic Era (with Hardcore and Season of Discovery) and
- * Classic of the later expansions (Cataclysm, Mists of Pandaria).
+ * The versions of the game, each with characters of its own: the current game (`retail`),
+ * Classic Anniversary, Classic Era (with Hardcore and Season of Discovery), Classic of the later
+ * expansions (Cataclysm, Mists of Pandaria) and WoW Forever — characters with a surname and no
+ * realm, found only through the Battle.net account.
  */
 export const WOW_VERSIONS = [
   'retail',
   'anniversary',
   'era',
   'progression',
+  'forever',
 ] as const;
 export type WowVersion = (typeof WOW_VERSIONS)[number];
+
+/** The versions with realms: a character of these can be added by its realm and name. */
+export const WOW_REALM_VERSIONS = [
+  'retail',
+  'anniversary',
+  'era',
+  'progression',
+] as const;
 
 export const gameAccountInputSchema = z.discriminatedUnion('game', [
   z.object({
@@ -38,7 +48,7 @@ export const gameAccountInputSchema = z.discriminatedUnion('game', [
   z.object({
     game: z.literal('wow'),
     region: z.enum(WOW_REGIONS),
-    version: z.enum(WOW_VERSIONS).default('retail'),
+    version: z.enum(WOW_REALM_VERSIONS).default('retail'),
     /** The realm as the game shows it ("Гордунни", "Howling Fjord") or its slug (`gordunni`). */
     realm: z.string().trim().min(2).max(60),
     name: z.string().trim().min(2).max(12),
@@ -83,27 +93,33 @@ export interface GamesSettings {
   battlenetAccount: BattlenetAccountState | null;
 }
 
-/**
- * Every version the Battle.net account may have characters in: the ones of `WOW_VERSIONS` and
- * WoW Forever (characters with a surname and no realm, found only through the account).
- */
-export const WOW_ACCOUNT_VERSIONS = [...WOW_VERSIONS, 'forever'] as const;
-export type WowAccountVersion = (typeof WOW_ACCOUNT_VERSIONS)[number];
-
 /** A character the signed-in Battle.net account has, as Blizzard lists it. */
 export interface WowAccountCharacter {
   /** Blizzard's id of the character: it stays when the character is renamed. */
   id: number;
   region: WowRegion;
-  version: WowAccountVersion;
+  version: WowVersion;
   name: string;
   /** WoW Forever only. */
   surname: string | null;
-  /** The realm's name and slug; for Forever the hidden realm, if Blizzard tells it. */
+  /** The realm's name and slug; Forever has no realms. */
   realm: string | null;
   realmSlug: string | null;
+  /** The character's part of Blizzard's address: `массоночка`, `око-масонское` (Forever). */
+  slug: string;
   level: number;
   className: string | null;
+}
+
+/**
+ * A found character and what became of it: `added` — on the Games page, `hidden` — not added by
+ * itself (below level 10), `removed` — the owner removed it from the page, and it is not brought
+ * back. Both of the last two can be added with a button.
+ */
+export interface WowFoundCharacter extends WowAccountCharacter {
+  /** `region/version/id`. */
+  key: string;
+  status: 'added' | 'hidden' | 'removed';
 }
 
 export interface BattlenetAccountState {
@@ -113,8 +129,14 @@ export interface BattlenetAccountState {
   expiresAt: string | null;
   /** The characters found at the last sign-in; `null` — never looked. */
   discoveredAt: string | null;
-  characters: WowAccountCharacter[];
+  characters: WowFoundCharacter[];
 }
+
+export const battlenetAddCharacterSchema = z.object({
+  /** `WowFoundCharacter.key`. */
+  key: z.string().min(3).max(200),
+});
+export type BattlenetAddCharacter = z.infer<typeof battlenetAddCharacterSchema>;
 
 // --- Dota 2 ---
 
@@ -417,6 +439,9 @@ export interface WowSummary {
   /** `retail` for characters saved before Classic was supported. */
   version: WowVersion;
   name: string;
+  /** Forever: the surname shown after the name. */
+  surname: string | null;
+  /** Empty for Forever, which has no realms. */
   realm: string;
   level: number;
   /** Blizzard class id (1 Warrior … 13 Evoker); `null` until the next sync of an old profile. */
@@ -447,6 +472,11 @@ export interface GameAccount {
   displayName: string;
   lastSyncedAt: string | null;
   lastError: string | null;
+  /**
+   * A WoW character found through the Battle.net account that is no longer on it (deleted or
+   * moved away): it is kept with its history and no longer refreshed.
+   */
+  notOnAccountSince: string | null;
   /** `null` until the first sync has run. */
   summary: DotaSummary | WowSummary | SteamSummary | XboxSummary | null;
 }

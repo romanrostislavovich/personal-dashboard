@@ -86,6 +86,10 @@ export class GamesApi {
     return fromCore(() => this.games.battlenetDiscover());
   }
 
+  addBattlenetCharacter(key: string) {
+    return fromCore(() => this.games.addBattlenetCharacter(key));
+  }
+
   disconnectBattlenet() {
     return fromCore(() => this.games.disconnectBattlenet());
   }

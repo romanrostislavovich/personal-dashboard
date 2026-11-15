@@ -1,6 +1,6 @@
 import {fetchWithTimeout} from '@pd/api-core';
-import {WowAccountCharacter, WowAccountVersion, WowRegion} from '@pd/contracts';
-import {LOCALES} from './battlenet.client';
+import {WowAccountCharacter, WowRegion, WowVersion} from '@pd/contracts';
+import {LOCALES, namespace} from './battlenet.client';
 
 /**
  * Signing in with a Battle.net account (OAuth authorization code, scope `wow.profile`) and the
@@ -9,15 +9,6 @@ import {LOCALES} from './battlenet.client';
  * their data is read with the app's own keys as before.
  */
 const OAUTH = 'https://oauth.battle.net';
-
-/** The namespace part of each version, as in `battlenet.client.ts`, plus Forever. */
-const ACCOUNT_NAMESPACES: Record<WowAccountVersion, string> = {
-  retail: '',
-  anniversary: 'classicann-',
-  era: 'classic1x-',
-  progression: 'classic-',
-  forever: 'forever-',
-};
 
 export interface BattlenetUserToken {
   accessToken: string;
@@ -76,7 +67,7 @@ export async function exchangeCode(
 /** One answer of `/profile/user/wow`: its status and, when there is one, the body. */
 export interface AccountProfileAnswer {
   region: WowRegion;
-  version: WowAccountVersion;
+  version: WowVersion;
   status: number;
   body: RawAccountProfile | null;
 }
@@ -85,10 +76,10 @@ export interface AccountProfileAnswer {
 export async function fetchAccountProfile(
   accessToken: string,
   region: WowRegion,
-  version: WowAccountVersion,
+  version: WowVersion,
 ): Promise<AccountProfileAnswer> {
   const query = new URLSearchParams({
-    namespace: `profile-${ACCOUNT_NAMESPACES[version]}${region}`,
+    namespace: namespace('profile', {region, version}),
     locale: LOCALES[region],
   });
   const response = await fetchWithTimeout(
@@ -118,10 +109,23 @@ export function parseAccountProfile(
         surname: raw.surname?.trim() || null,
         realm: localized(raw.realm?.name),
         realmSlug: raw.realm?.slug ?? null,
+        slug: slugOf(raw),
         level: raw.level ?? 0,
         className: localized(raw.playable_class?.name),
       })),
   );
+}
+
+/**
+ * The character's part of Blizzard's address — the end of the `character` link (`око-масонское`
+ * for Forever, the name with the surname); the name in lower case when there is no link.
+ */
+function slugOf(raw: RawAccountCharacter): string {
+  const href = raw.character?.href;
+  const last = href ? new URL(href).pathname.split('/').pop() : undefined;
+  return last
+    ? decodeURIComponent(last)
+    : [raw.name, raw.surname?.trim()].filter(Boolean).join('-').toLowerCase();
 }
 
 /** A name as one string: with a locale Blizzard gives a string, without — every language. */
@@ -152,5 +156,5 @@ export interface RawAccountCharacter {
   level?: number;
   realm?: {slug?: string; name?: string | Record<string, string>};
   playable_class?: {name?: string | Record<string, string>};
-  protected_character?: {href?: string};
+  character?: {href?: string};
 }

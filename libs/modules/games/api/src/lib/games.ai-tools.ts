@@ -14,15 +14,16 @@ import {
   dotaMatchesQuerySchema,
   GAMES,
   gameAccountInputSchema,
+  WOW_REALM_VERSIONS,
   WOW_REGIONS,
-  WOW_VERSIONS,
 } from '@pd/contracts';
 import {DotaHeroesService} from './dota/dota-heroes.service';
 import {DotaOverviewService} from './dota/dota-overview.service';
 import {GameAccountsService} from './game-accounts.service';
 import {GAMES_ACTIONS} from './games.server-actions';
 import {SteamPlayService} from './steam/steam-play.service';
-import {gameAccounts} from './games.schema';
+import {gameAccounts, wowDismissedCharacters} from './games.schema';
+import {BattlenetAccountService} from './wow/battlenet-account.service';
 
 /** Steam games an account shows in the list of accounts. */
 const STEAM_TOP = 15;
@@ -37,6 +38,7 @@ export class GamesAiTools implements OnModuleInit {
     private readonly dota: DotaOverviewService,
     private readonly heroes: DotaHeroesService,
     private readonly steamPlay: SteamPlayService,
+    private readonly battlenet: BattlenetAccountService,
   ) {}
 
   onModuleInit(): void {
@@ -64,7 +66,9 @@ export class GamesAiTools implements OnModuleInit {
         'wins/losses over 30 days, recent matches with heroes and KDA, favourite heroes. ' +
         'WoW: character, ilvl, achievement points, recent achievements and `details` — gear ' +
         'by slot, stats, talents, Mythic+ rating and best runs, raid progress, PvP ratings, ' +
-        'collections (mounts, pets, toys, titles, quests), reputations, professions, guild. ' +
+        'collections (mounts, pets, toys, titles, quests), reputations, professions, guild; ' +
+        'version forever — WoW Forever (a surname, no realm); notOnAccountSince — gone from ' +
+        'the Battle.net account, no longer refreshed. ' +
         'Steam: level, hours ' +
         'in games in total and over two weeks, achievements unlocked, the most played games ' +
         '(the whole library — games_steam_library).',
@@ -213,7 +217,9 @@ export class GamesAiTools implements OnModuleInit {
       description:
         'Adds a game account and loads its data. Dota 2 and Steam need steamId; WoW needs ' +
         'region, realm and character name. Steam works only after the Steam Web API key is ' +
-        'set in the dashboard, WoW — after the Battle.net keys.',
+        'set in the dashboard, WoW — after the Battle.net keys. The owner’s own WoW ' +
+        'characters (WoW Forever ones too) come from the Battle.net account by themselves — ' +
+        'see games_battlenet_characters.',
       parameters: {
         type: 'object',
         properties: {
@@ -227,7 +233,7 @@ export class GamesAiTools implements OnModuleInit {
           region: {type: 'string', enum: [...WOW_REGIONS], description: 'WoW'},
           version: {
             type: 'string',
-            enum: [...WOW_VERSIONS],
+            enum: [...WOW_REALM_VERSIONS],
             description:
               'WoW: the version of the game the character is in — retail (the current game, ' +
               'the default), anniversary (Classic Anniversary), era (Classic Era, Hardcore, ' +
@@ -250,6 +256,59 @@ export class GamesAiTools implements OnModuleInit {
           gameAccountInputSchema.parse(args),
         );
         return {added: true};
+      },
+    });
+
+    this.ai.registerTool({
+      name: 'games_battlenet_characters',
+      module: 'games',
+      description:
+        'The WoW characters of the signed-in Battle.net account, every region and version ' +
+        '(WoW Forever too), and what became of each: added (on the Games page), hidden (below ' +
+        'level 10, not added by itself) or removed (the owner removed it; never brought back ' +
+        'by itself). expiresAt — until when the sign-in lasts; null state — no Battle.net keys.',
+      parameters: NO_PARAMETERS,
+      handler: userId => this.battlenet.state(userId),
+    });
+
+    this.ai.registerTool({
+      name: 'games_battlenet_find',
+      module: 'games',
+      writes: true,
+      undoTables: [gameAccounts],
+      description:
+        'Looks for the characters of the Battle.net account again and puts the new ones from ' +
+        'level 10 on the Games page. Works only while the sign-in lasts (about a day) — ' +
+        'otherwise ask the owner to sign in again in Settings → Integrations → Battle.net.',
+      parameters: NO_PARAMETERS,
+      handler: async userId => {
+        await this.actions.run(userId, GAMES_ACTIONS.battlenetDiscover);
+        return this.battlenet.state(userId);
+      },
+    });
+
+    this.ai.registerTool({
+      name: 'games_battlenet_add_character',
+      module: 'games',
+      writes: true,
+      undoTables: [gameAccounts, wowDismissedCharacters],
+      description:
+        'Puts a character of games_battlenet_characters on the Games page: a hidden one ' +
+        '(below level 10) or one removed before.',
+      parameters: {
+        type: 'object',
+        properties: {
+          key: {
+            type: 'string',
+            description:
+              'The key of the character from games_battlenet_characters',
+          },
+        },
+        required: ['key'],
+      },
+      handler: async (userId, args) => {
+        await this.actions.run(userId, GAMES_ACTIONS.battlenetAdd, args);
+        return this.battlenet.state(userId);
       },
     });
 
@@ -276,12 +335,14 @@ export class GamesAiTools implements OnModuleInit {
       name: 'games_remove_account',
       module: 'games',
       writes: true,
-      undoTables: [gameAccounts],
+      undoTables: [gameAccounts, wowDismissedCharacters],
       confirm: async (userId, args) => {
         const {game, displayName} = await find(userId, args);
         return {game, displayName};
       },
-      description: 'Removes a game account and its loaded history.',
+      description:
+        'Removes a game account and its loaded history. A WoW character of the Battle.net ' +
+        'account is not brought back by the next look for characters.',
       parameters: idParameters('Game account id from games_accounts'),
       handler: async (userId, args) => {
         await this.accounts.remove(userId, (await find(userId, args)).id);

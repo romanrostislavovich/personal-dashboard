@@ -1,8 +1,23 @@
 import {Inject, Injectable, OnModuleInit} from '@nestjs/common';
 import {achievementTier, AchievementsService, DB, Database} from '@pd/api-core';
+import {WowVersion} from '@pd/contracts';
 import {and, eq, sql} from 'drizzle-orm';
 import {gameAccounts} from './games.schema';
+import {parseRef} from './wow/wow.service';
 import {wowDetails} from './wow/wow.schema';
+
+/**
+ * The top level of each version of the game, November 2026: Midnight 90, The Burning Crusade
+ * Anniversary 70, Classic Era 60, Mists of Pandaria Classic 90, WoW Forever 60. Raise it with
+ * an expansion.
+ */
+const WOW_MAX_LEVELS: Record<WowVersion, number> = {
+  retail: 90,
+  anniversary: 70,
+  era: 60,
+  progression: 90,
+  forever: 60,
+};
 
 /** Account-based game achievements: Dota 2 medal and the numbers of WoW characters (match-based Dota ones are in DotaAchievements). */
 @Injectable()
@@ -13,6 +28,7 @@ export class GamesAchievements implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
+    this.registerWowCharacters();
     this.achievements.register({
       id: 'games.dota-medal',
       module: 'games',
@@ -275,6 +291,142 @@ export class GamesAchievements implements OnModuleInit {
         ),
       ],
     });
+  }
+
+  /** The other WoW achievements count characters: how many, at the top level, in how many versions. */
+  private registerWowCharacters(): void {
+    this.achievements.register({
+      id: 'games.wow-alts',
+      module: 'games',
+      measure: async userId => (await this.wowCharacters(userId)).length,
+      tiers: [
+        achievementTier(
+          5,
+          '👥',
+          {en: 'A few alts', ru: 'Пара альтов'},
+          {en: '5 WoW characters', ru: '5 персонажей в WoW'},
+        ),
+        achievementTier(
+          10,
+          '🛡️',
+          {en: 'Army of alts', ru: 'Армия альтов'},
+          {en: '10 WoW characters', ru: '10 персонажей в WoW'},
+        ),
+        achievementTier(
+          20,
+          '🏰',
+          {en: 'A whole guild of alts', ru: 'Целая гильдия альтов'},
+          {en: '20 WoW characters', ru: '20 персонажей в WoW'},
+        ),
+      ],
+    });
+
+    this.achievements.register({
+      id: 'games.wow-capped',
+      module: 'games',
+      measure: async userId =>
+        (await this.wowCharacters(userId)).filter(
+          c => c.level >= WOW_MAX_LEVELS[c.version],
+        ).length,
+      tiers: [
+        achievementTier(
+          1,
+          '⭐',
+          {en: 'Capped', ru: 'Капнутый'},
+          {
+            en: 'A WoW character at the top level of its version',
+            ru: 'Персонаж WoW на максимальном уровне своей версии',
+          },
+        ),
+        achievementTier(
+          5,
+          '🌟',
+          {en: 'Five at the cap', ru: 'Пятеро на капе'},
+          {
+            en: '5 WoW characters at the top level',
+            ru: '5 персонажей WoW на максимальном уровне',
+          },
+        ),
+        achievementTier(
+          10,
+          '✨',
+          {en: 'Cap factory', ru: 'Фабрика капа'},
+          {
+            en: '10 WoW characters at the top level',
+            ru: '10 персонажей WoW на максимальном уровне',
+          },
+        ),
+      ],
+    });
+
+    this.achievements.register({
+      id: 'games.wow-versions',
+      module: 'games',
+      measure: async userId =>
+        new Set((await this.wowCharacters(userId)).map(c => c.version)).size,
+      tiers: [
+        achievementTier(
+          2,
+          '⏳',
+          {en: 'Two eras', ru: 'Две эпохи'},
+          {
+            en: 'WoW characters in 2 versions of the game',
+            ru: 'Персонажи в 2 версиях WoW',
+          },
+        ),
+        achievementTier(
+          3,
+          '🕰️',
+          {en: 'Through the ages', ru: 'Сквозь эпохи'},
+          {
+            en: 'WoW characters in 3 versions of the game',
+            ru: 'Персонажи в 3 версиях WoW',
+          },
+        ),
+      ],
+    });
+
+    this.achievements.register({
+      id: 'games.wow-forever',
+      module: 'games',
+      measure: async userId =>
+        Math.max(
+          0,
+          ...(await this.wowCharacters(userId))
+            .filter(c => c.version === 'forever')
+            .map(c => c.level),
+        ),
+      tiers: [
+        achievementTier(
+          WOW_MAX_LEVELS.forever,
+          '♾️',
+          {en: 'Forever', ru: 'Forever'},
+          {
+            en: `A WoW Forever character at level ${WOW_MAX_LEVELS.forever}`,
+            ru: `Персонаж WoW Forever на ${WOW_MAX_LEVELS.forever} уровне`,
+          },
+        ),
+      ],
+    });
+  }
+
+  /** The version and level of each WoW character of the user (level 0 until the first sync). */
+  private async wowCharacters(
+    userId: string,
+  ): Promise<{version: WowVersion; level: number}[]> {
+    const rows = await this.db
+      .select({
+        externalId: gameAccounts.externalId,
+        level: sql<number | null>`(${gameAccounts.profile} ->> 'level')::int`,
+      })
+      .from(gameAccounts)
+      .where(
+        and(eq(gameAccounts.userId, userId), eq(gameAccounts.game, 'wow')),
+      );
+    return rows.map(row => ({
+      version: parseRef(row.externalId).version,
+      level: row.level ?? 0,
+    }));
   }
 
   /** The best value of a number kept in the details of the user's WoW characters. */

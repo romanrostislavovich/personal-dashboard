@@ -10,8 +10,9 @@ export class WowRealmNotFoundError extends Error {}
 export interface WowCharacterRef {
   region: WowRegion;
   version: WowVersion;
-  /** The slug of the realm (`gordunni`). */
+  /** The slug of the realm (`gordunni`); empty for WoW Forever, which has no realms. */
   realm: string;
+  /** The name; for Forever the name with the surname, as Blizzard's address has it (`око-масонское`). */
   name: string;
 }
 
@@ -24,6 +25,7 @@ const NAMESPACES: Record<WowVersion, string> = {
   anniversary: 'classicann-',
   era: 'classic1x-',
   progression: 'classic-',
+  forever: 'forever-',
 };
 
 export function namespace(
@@ -56,6 +58,9 @@ export function findRealm(realms: WowRealm[], text: string): WowRealm | null {
 
 export interface WowProfile {
   name: string;
+  /** WoW Forever: the surname; `undefined` in profiles saved before Forever. */
+  surname?: string | null;
+  /** Empty for Forever. */
   realm: string;
   level: number;
   /** Blizzard class id (1 Warrior … 13 Evoker): the class colour on the page. */
@@ -167,7 +172,8 @@ export class BattlenetClient {
   ): WowProfile {
     return {
       name: summary.name,
-      realm: summary.realm.name,
+      surname: summary.surname?.trim() || null,
+      realm: summary.realm?.name ?? '',
       level: summary.level,
       classId: summary.character_class.id,
       className: summary.character_class.name,
@@ -260,27 +266,6 @@ export class BattlenetClient {
     };
   }
 
-  /**
-   * Only the status of a character's summary in any namespace, with the app's keys: whether a
-   * character found through the account (WoW Forever) can be read without the sign-in.
-   */
-  async characterStatus(
-    region: WowRegion,
-    profileNamespace: string,
-    realmSlug: string,
-    name: string,
-  ): Promise<number> {
-    const query = new URLSearchParams({
-      namespace: profileNamespace,
-      locale: LOCALES[region],
-    });
-    const response = await fetchWithTimeout(
-      `https://${region}.api.blizzard.com/profile/wow/character/${encodeURIComponent(realmSlug)}/${encodeURIComponent(name.toLowerCase())}?${query}`,
-      {headers: {Authorization: `Bearer ${await this.accessToken()}`}},
-    );
-    return response.status;
-  }
-
   /** An address from one of Blizzard's own answers; the language of the region is added. */
   private async getHref<T>(region: WowRegion, href: string): Promise<T> {
     const url = new URL(href);
@@ -300,7 +285,9 @@ export class BattlenetClient {
       namespace: namespace('profile', ref),
       locale: LOCALES[ref.region],
     });
-    const url = `https://${ref.region}.api.blizzard.com/profile/wow/character/${ref.realm}/${name}${path}?${query}`;
+    // A Forever character has no realm: its address is the name with the surname alone.
+    const who = ref.realm ? `${ref.realm}/${name}` : name;
+    const url = `https://${ref.region}.api.blizzard.com/profile/wow/character/${who}${path}?${query}`;
     const response = await fetchWithTimeout(url, {
       headers: {Authorization: `Bearer ${await this.accessToken()}`},
     });
@@ -352,8 +339,11 @@ export class BattlenetClient {
 
 interface RawCharacter {
   name: string;
+  /** WoW Forever. */
+  surname?: string;
   level: number;
-  realm: {name: string};
+  /** Not in WoW Forever. */
+  realm?: {name: string};
   character_class: {id: number; name: string};
   race: {name: string};
   active_spec?: {name: string};

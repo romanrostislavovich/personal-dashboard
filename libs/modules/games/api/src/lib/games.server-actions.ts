@@ -1,6 +1,7 @@
 import {Injectable, NotFoundException, OnModuleInit} from '@nestjs/common';
 import {ServerActions} from '@pd/api-core';
 import {
+  battlenetAddCharacterSchema,
   gameAccountInputSchema,
   openDotaKeyInputSchema,
   steamKeyInputSchema,
@@ -20,6 +21,7 @@ export const GAMES_ACTIONS = {
   saveSteamKey: 'games.save-steam-key',
   battlenetConnect: 'games.battlenet-connect',
   battlenetDiscover: 'games.battlenet-discover',
+  battlenetAdd: 'games.battlenet-add',
 } as const;
 
 const idArgs = z.object({id: z.uuid()});
@@ -51,6 +53,12 @@ export class GamesServerActions implements OnModuleInit {
     );
     this.actions.register(GAMES_ACTIONS.battlenetDiscover, userId =>
       this.battlenet.discover(userId),
+    );
+    this.actions.register(GAMES_ACTIONS.battlenetAdd, (userId, args) =>
+      this.battlenet.addCharacter(
+        userId,
+        battlenetAddCharacterSchema.parse(args).key,
+      ),
     );
     // The key is checked against Steam, and every account is re-read with it right away.
     this.actions.register(GAMES_ACTIONS.saveSteamKey, async (userId, args) => {

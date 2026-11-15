@@ -1,10 +1,16 @@
-import {BadRequestException, Inject, Injectable, Logger} from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import {ConfigService} from '@nestjs/config';
-import {AppConfig, fetchWithTimeout, SecretsService} from '@pd/api-core';
+import {AppConfig, SecretsService} from '@pd/api-core';
 import {
   BattlenetAccountState,
-  WOW_ACCOUNT_VERSIONS,
   WOW_REGIONS,
+  WOW_VERSIONS,
   WowAccountCharacter,
 } from '@pd/contracts';
 import {randomBytes} from 'node:crypto';
@@ -16,6 +22,8 @@ import {
   fetchAccountProfile,
   parseAccountProfile,
 } from './battlenet-account.client';
+import {wowCharacterKey} from './wow-import';
+import {WowImportService} from './wow-import.service';
 import {WowService} from './wow.service';
 
 const TOKEN_SECRET = 'games.wow.account-token';
@@ -33,7 +41,8 @@ interface StoredCharacters {
  *
  * 1. `connectUrl()` — Blizzard's sign-in page (with a one-time `state`, kept in memory).
  * 2. Blizzard sends the browser back to `/api/games/battlenet/callback?code&state`.
- * 3. `handleCallback()` takes the token (about a day, no refresh) and looks for the characters.
+ * 3. `handleCallback()` takes the token (about a day, no refresh) and looks for the characters;
+ *    they are put on the Games page by WowImportService and read with the app's keys after that.
  *
  * Both the token and the list are secrets of the user: encrypted, and synced like the others.
  */
@@ -50,6 +59,7 @@ export class BattlenetAccountService {
     @Inject(ConfigService) config: AppConfig,
     private readonly secrets: SecretsService,
     private readonly wow: WowService,
+    private readonly importer: WowImportService,
   ) {
     this.publicUrl = config
       .get('PUBLIC_URL', {infer: true})
@@ -73,7 +83,7 @@ export class BattlenetAccountService {
       redirectUri: this.redirectUri,
       expiresAt: token?.expiresAt.toISOString() ?? null,
       discoveredAt: found?.discoveredAt ?? null,
-      characters: found?.characters ?? [],
+      characters: await this.importer.statuses(userId, found?.characters ?? []),
     };
   }
 
@@ -136,6 +146,18 @@ export class BattlenetAccountService {
     await this.discoverWith(userId, token);
   }
 
+  /** "Add" of a found character the page does not have (below level 10, or removed before). */
+  async addCharacter(userId: string, key: string): Promise<void> {
+    const character = (await this.readCharacters(userId))?.characters.find(
+      c => wowCharacterKey(c) === key,
+    );
+    if (!character) {
+      throw new NotFoundException('Character not found');
+    }
+    await this.importer.addOne(userId, character);
+  }
+
+  /** Signs out; the characters already on the Games page stay there. */
   async disconnect(userId: string): Promise<void> {
     await this.secrets.delete(userId, TOKEN_SECRET);
     await this.secrets.delete(userId, CHARACTERS_SECRET);
@@ -148,7 +170,7 @@ export class BattlenetAccountService {
   ): Promise<void> {
     const answers = await Promise.all(
       WOW_REGIONS.flatMap(region =>
-        WOW_ACCOUNT_VERSIONS.map(version =>
+        WOW_VERSIONS.map(version =>
           fetchAccountProfile(token.accessToken, region, version).catch(
             (): AccountProfileAnswer => ({
               region,
@@ -168,57 +190,18 @@ export class BattlenetAccountService {
           .map(a => `${a.region}/${a.version} ${a.status}`)
           .join(', '),
     );
-    await this.probeForever(userId, token, answers);
     const stored: StoredCharacters = {
       discoveredAt: new Date().toISOString(),
       characters,
     };
     await this.secrets.set(userId, CHARACTERS_SECRET, JSON.stringify(stored));
-  }
-
-  /**
-   * TEMPORARY, until the first real sign-in tells it: what a WoW Forever character looks like
-   * and whether its data can be read with the app's keys (no sign-in) or only with the user's
-   * token. The answer decides how Forever characters are kept and refreshed.
-   */
-  private async probeForever(
-    userId: string,
-    token: BattlenetUserToken,
-    answers: AccountProfileAnswer[],
-  ): Promise<void> {
-    const answer = answers.find(
-      a => a.version === 'forever' && a.body?.wow_accounts?.length,
+    // 404 is an answer too: no account there, so no characters.
+    const answered = new Set(
+      answers
+        .filter(a => a.status === 200 || a.status === 404)
+        .map(a => `${a.region}/${a.version}`),
     );
-    const raw = answer?.body?.wow_accounts?.[0]?.characters?.[0];
-    if (!answer || !raw) {
-      return;
-    }
-    this.logger.log(
-      `Forever probe: character fields ${JSON.stringify(raw).slice(0, 1500)}`,
-    );
-    try {
-      const client = await this.wow.clientFor(userId);
-      const appStatus = raw.realm?.slug
-        ? await client.characterStatus(
-            answer.region,
-            `profile-forever-${answer.region}`,
-            raw.realm.slug,
-            raw.name ?? '',
-          )
-        : null;
-      const protectedStatus = raw.protected_character?.href
-        ? (
-            await fetchWithTimeout(raw.protected_character.href, {
-              headers: {Authorization: `Bearer ${token.accessToken}`},
-            })
-          ).status
-        : null;
-      this.logger.log(
-        `Forever probe: app keys ${appStatus}, user token (protected character) ${protectedStatus}`,
-      );
-    } catch (error) {
-      this.logger.warn(`Forever probe failed: ${String(error)}`);
-    }
+    await this.importer.import(userId, characters, answered);
   }
 
   private async readToken(userId: string): Promise<BattlenetUserToken | null> {

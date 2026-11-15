@@ -20,6 +20,8 @@ import {
   ZodValidationPipe,
 } from '@pd/api-core';
 import {
+  BattlenetAddCharacter,
+  battlenetAddCharacterSchema,
   DotaMatchesQuery,
   dotaMatchesQuerySchema,
   DotaOverview,
@@ -162,6 +164,17 @@ export class GamesController {
   @HttpCode(204)
   discoverBattlenet(@CurrentUser() user: AuthUser) {
     return this.actions.run(user.id, GAMES_ACTIONS.battlenetDiscover);
+  }
+
+  /** Puts a found character on the Games page: one below level 10, or one removed before. */
+  @Post('battlenet/characters')
+  @HttpCode(204)
+  addBattlenetCharacter(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(battlenetAddCharacterSchema))
+    body: BattlenetAddCharacter,
+  ) {
+    return this.actions.run(user.id, GAMES_ACTIONS.battlenetAdd, body);
   }
 
   @Delete('battlenet')
