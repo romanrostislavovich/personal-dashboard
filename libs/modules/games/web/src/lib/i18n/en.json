@@ -177,7 +177,7 @@
     },
     "account": {
       "title": "Battle.net account",
-      "hint": "Sign in with Battle.net and the dashboard finds your characters in every region and version of the game, WoW Forever included. The sign-in lasts about a day; the characters are then refreshed with the keys by themselves.",
+      "hint": "Sign in with Battle.net and the dashboard finds the characters of every region and version, WoW Forever included, and puts them on the Games page (from level 10). The sign-in lasts about a day; the characters are refreshed with the keys after that.",
       "redirect": "Redirect URL for the app at develop.battle.net:",
       "signIn": "Sign in with Battle.net",
       "find": "Find characters",
@@ -186,10 +186,16 @@
       "expired": "The sign-in has expired — sign in again to find new characters",
       "found": "Characters found: {{count}}",
       "none": "No characters on the account.",
-      "connected": "Signed in with Battle.net, characters found",
+      "connected": "Signed in with Battle.net, the characters are on the Games page",
       "error": "Could not sign in with Battle.net. Check the Redirect URL of the app at develop.battle.net.",
-      "level": "lvl {{level}}"
-    }
+      "level": "lvl {{level}}",
+      "statusAdded": "on the page",
+      "statusHidden": "not added",
+      "statusRemoved": "removed from the page",
+      "add": "Add",
+      "added": "The character is on the Games page"
+    },
+    "notOnAccount": "Not on the Battle.net account since {{date}}, no longer refreshed"
   },
   "errors": {
     "notFound": "Account not found. For Dota, check that match data is public; for WoW, check region, realm and name.",

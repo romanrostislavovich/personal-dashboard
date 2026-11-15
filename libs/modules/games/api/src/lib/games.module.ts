@@ -23,6 +23,7 @@ import {SteamAchievements} from './steam/steam.achievements';
 import {SteamKeyService} from './steam/steam-key.service';
 import {SteamService} from './steam/steam.service';
 import {BattlenetAccountService} from './wow/battlenet-account.service';
+import {WowImportService} from './wow/wow-import.service';
 import {WowService} from './wow/wow.service';
 import {XboxService} from './xbox/xbox.service';
 
@@ -51,6 +52,7 @@ import {XboxService} from './xbox/xbox.service';
     DotaAchievements,
     WowService,
     BattlenetAccountService,
+    WowImportService,
     SteamKeyService,
     SteamService,
     SteamAchievements,

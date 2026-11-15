@@ -20,9 +20,8 @@ import {
   Game,
   GameAccountInput,
   WOW_REGIONS,
-  WOW_VERSIONS,
+  WOW_REALM_VERSIONS,
   WowRegion,
-  WowVersion,
 } from '@pd/contracts';
 
 /** Adding a game account: a Steam profile, a Steam ID for Dota or region/realm/name for WoW. */
@@ -136,13 +135,13 @@ export class AddGameAccountDialog {
   });
 
   protected readonly regions = WOW_REGIONS;
-  protected readonly versions = WOW_VERSIONS;
+  protected readonly versions = WOW_REALM_VERSIONS;
   protected readonly form = inject(NonNullableFormBuilder).group({
     game: [this.initialGame ?? ('dota2' as Game)],
     steamProfile: ['', Validators.required],
     steamId: ['', Validators.required],
     region: ['eu' as WowRegion],
-    version: ['retail' as WowVersion],
+    version: ['retail' as (typeof WOW_REALM_VERSIONS)[number]],
     realm: ['', Validators.required],
     name: ['', Validators.required],
   });

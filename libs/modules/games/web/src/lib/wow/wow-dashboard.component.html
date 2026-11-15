@@ -66,8 +66,8 @@
                 s.name
               }}</a>
             } @else {
-              <!-- Classic: Blizzard's site has no page for the character. -->
-              <span class="name">{{ s.name }}</span>
+              <!-- Classic and Forever: Blizzard's site has no page for the character. -->
+              <span class="name">{{ s.name }} {{ s.surname ?? '' }}</span>
             }
             <span class="muted"
               >{{ s.level }} {{ s.raceName }} {{ s.specName ?? '' }}
@@ -76,7 +76,10 @@
             <span class="muted">
               {{ s.realm }}
               @if (s.version !== 'retail') {
-                · {{ 'games.wow.versions.' + s.version | transloco }}
+                @if (s.realm) {
+                  ·
+                }
+                {{ 'games.wow.versions.' + s.version | transloco }}
               }
               @if (s.guild) {
                 · &lt;{{ s.guild }}&gt;
@@ -102,6 +105,11 @@
         </div>
       } @else {
         <p class="who">{{ c.account.displayName }}</p>
+      }
+      @if (c.account.notOnAccountSince; as since) {
+        <p class="muted">
+          {{ 'games.wow.notOnAccount' | transloco: {date: since | date} }}
+        </p>
       }
       @if (c.account.lastError) {
         <p class="error">{{ c.account.lastError }}</p>

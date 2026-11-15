@@ -6,15 +6,16 @@ achievements.
 
 ## What we know
 
-- WoW Forever characters have a **surname and no realm**. With the app's keys (client
-  credentials) `static-forever-eu` answers, `profile-forever-eu` exists (404, a made-up namespace
-  gives 403), but `dynamic-forever-eu` has no realm index and `/profile/wow/character/...`
-  finds nothing — a Forever character cannot be looked up by name.
+- WoW Forever characters have a **surname and no realm**. `dynamic-forever-eu` has no realm index
+  and no WoW Token.
 - `/profile/user/wow?namespace=profile-forever-{region}` with a **user token** (authorization
-  code, scope `wow.profile`) lists the account's Forever characters (Blizzard API forum,
-  "World of Warcraft: Forever API Namespace?"). The token lasts about a day; there is no refresh
-  token.
-
+  code, scope `wow.profile`) lists the account's characters. The token lasts about a day; there is
+  no refresh token.
+- The owner's first sign-in (2026-11-15): 12 characters, all in EU, in all five versions. The
+  `character.href` of a Forever one is `/profile/wow/character/око-масонское?namespace=profile-forever-eu`
+  — the name and the surname, no realm — and **the app's keys read it** with every part
+  (profile, equipment, achievements, statistics, media, PvP, professions, reputations). So Forever
+  characters are refreshed like the others; the sign-in only finds them.
 ## The owner's answers
 
 1. Sign in only to **find** characters; their data keeps coming with the app's keys.
@@ -41,6 +42,9 @@ achievements.
 1. **Sign-in and discovery** (done): `wow/battlenet-account.service.ts` — the sign-in, the token
    and the list of the account's characters kept as the user's secrets, a temporary probe in
    the log telling what a Forever character looks like and whether the app's keys can read it.
-2. After the owner's first sign-in, by what the probe showed: `forever` in `WOW_VERSIONS`,
-   import into `games_accounts` (merge, hidden, missing, Blizzard id), reading Forever
-   characters, achievements, AI tools, README.
+2. **Import** (done): `forever` in `WOW_VERSIONS` (`WOW_REALM_VERSIONS` for adding by hand);
+   `wow/wow-import.ts` — the rules (link by Blizzard key or address, add from level 10, never
+   re-add a removed one: `games_wow_dismissed_characters`, mark `notOnAccountSince` only for a
+   region and version that answered); Forever's address `region//name-surname/forever`;
+   achievements `games.wow-alts`, `-capped` (top levels in `games.achievements.ts`), `-versions`,
+   `-forever`; AI tools `games_battlenet_characters`, `_find`, `_add_character`. The probe is gone.

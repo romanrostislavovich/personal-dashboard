@@ -283,6 +283,7 @@ export class WowService {
       history: history.map(({accountId: _accountId, ...point}) => point),
       notify: extra?.notify ?? true,
       ...profile,
+      surname: profile.surname ?? null,
       // Profiles saved before the class id was stored get it with the next sync.
       classId: profile.classId ?? null,
       totalAchievements: total,
@@ -297,7 +298,8 @@ export class WowService {
 
 /**
  * A WoW account's `externalId` is `region/realm/name` for the current game (as it always was)
- * and `region/realm/name/version` for a Classic one.
+ * and `region/realm/name/version` for the others; WoW Forever has no realm, so it is
+ * `region//name-surname/forever`.
  */
 export function toWowExternalId(ref: WowCharacterRef): string {
   const id = `${ref.region}/${ref.realm}/${ref.name.toLowerCase()}`;

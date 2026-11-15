@@ -33,6 +33,9 @@ describe('parseAccountProfile', () => {
               {
                 id: 7,
                 name: 'Массоночка',
+                character: {
+                  href: 'https://eu.api.blizzard.com/profile/wow/character/eversong/%D0%BC%D0%B0%D1%81%D1%81%D0%BE%D0%BD%D0%BE%D1%87%D0%BA%D0%B0?namespace=profile-eu',
+                },
                 level: 80,
                 realm: {slug: 'eversong', name: 'Вечная Песня'},
                 playable_class: {name: 'Жрец'},
@@ -52,6 +55,7 @@ describe('parseAccountProfile', () => {
         surname: null,
         realm: 'Вечная Песня',
         realmSlug: 'eversong',
+        slug: 'массоночка',
         level: 80,
         className: 'Жрец',
       },
@@ -63,6 +67,7 @@ describe('parseAccountProfile', () => {
         surname: null,
         realm: null,
         realmSlug: null,
+        slug: 'twink',
         level: 1,
         className: null,
       },
@@ -94,6 +99,7 @@ describe('parseAccountProfile', () => {
       version: 'forever',
       name: 'Око',
       surname: 'Масонское',
+      slug: 'око-масонское',
       className: 'Маг',
     });
   });

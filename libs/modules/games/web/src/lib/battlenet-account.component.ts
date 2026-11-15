@@ -80,8 +80,8 @@ import {GamesApi} from './games.api';
             }}
           </p>
           <ul class="characters">
-            @for (c of state().characters; track c.region + c.version + c.id) {
-              <li>
+            @for (c of state().characters; track c.key) {
+              <li [class.dim]="c.status !== 'added'">
                 <strong
                   >{{ c.name }}
                   @if (c.surname) {
@@ -96,6 +96,23 @@ import {GamesApi} from './games.api';
                 · {{ 'games.wow.account.level' | transloco: {level: c.level} }}
                 @if (c.className) {
                   · {{ c.className }}
+                }
+                ·
+                @switch (c.status) {
+                  @case ('added') {
+                    {{ 'games.wow.account.statusAdded' | transloco }}
+                  }
+                  @case ('hidden') {
+                    {{ 'games.wow.account.statusHidden' | transloco }}
+                  }
+                  @case ('removed') {
+                    {{ 'games.wow.account.statusRemoved' | transloco }}
+                  }
+                }
+                @if (c.status !== 'added') {
+                  <button matButton [disabled]="busy()" (click)="add(c.key)">
+                    {{ 'games.wow.account.add' | transloco }}
+                  </button>
                 }
               </li>
             }
@@ -137,6 +154,9 @@ import {GamesApi} from './games.api';
       margin: 8px 0 0;
       padding-left: 20px;
     }
+    .characters li.dim {
+      color: var(--mat-sys-on-surface-variant);
+    }
   `,
 })
 export class BattlenetAccountComponent {
@@ -163,6 +183,18 @@ export class BattlenetAccountComponent {
   async find(): Promise<void> {
     await this.run(async () => {
       await firstValueFrom(this.api.battlenetDiscover());
+      this.changed.emit();
+    });
+  }
+
+  async add(key: string): Promise<void> {
+    await this.run(async () => {
+      await firstValueFrom(this.api.addBattlenetCharacter(key));
+      this.snackBar.open(
+        this.transloco.translate('games.wow.account.added'),
+        this.transloco.translate('core.actions.ok'),
+        {duration: 4000},
+      );
       this.changed.emit();
     });
   }

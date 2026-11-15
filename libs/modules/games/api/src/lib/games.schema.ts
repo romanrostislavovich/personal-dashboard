@@ -41,9 +41,33 @@ export const gameAccounts = pgTable(
     /** When the whole match history was walked on Steam (Dota); after that the newest page is enough. */
     steamHistorySyncedAt: timestamp({withTimezone: true}),
     lastError: text(),
+    /**
+     * WoW: the character's key at Blizzard, `region/version/id` (see wowCharacterKey), once it is
+     * found through the Battle.net account — the id stays when the character is renamed.
+     */
+    blizzardKey: text(),
+    /** WoW: a found character that is no longer on the account; it is not refreshed after that. */
+    notOnAccountSince: timestamp({withTimezone: true}),
     createdAt: timestamp({withTimezone: true}).notNull().defaultNow(),
   },
   table => [unique().on(table.userId, table.game, table.externalId)],
+);
+
+/**
+ * WoW characters of the Battle.net account the owner removed from the Games page: the next
+ * look for characters does not bring them back (adding one by hand does).
+ */
+export const wowDismissedCharacters = pgTable(
+  'games_wow_dismissed_characters',
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, {onDelete: 'cascade'}),
+    /** `region/version/id`, as `gameAccounts.blizzardKey`. */
+    blizzardKey: text().notNull(),
+    dismissedAt: timestamp({withTimezone: true}).notNull().defaultNow(),
+  },
+  table => [primaryKey({columns: [table.userId, table.blizzardKey]})],
 );
 
 /**

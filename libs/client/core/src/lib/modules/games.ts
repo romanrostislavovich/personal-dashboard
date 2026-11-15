@@ -56,6 +56,9 @@ export function gamesApi(api: ApiClient) {
       api.post<{url: string}>(`${BASE}/battlenet/connect`, {}),
     /** The account's characters again, while the sign-in lasts. */
     battlenetDiscover: () => api.post<void>(`${BASE}/battlenet/discover`, {}),
+    /** Puts a found character on the Games page (below level 10, or removed before). */
+    addBattlenetCharacter: (key: string) =>
+      api.post<void>(`${BASE}/battlenet/characters`, {key}),
     disconnectBattlenet: () => api.delete(`${BASE}/battlenet`),
     /** The notifications of one WoW character. */
     updateWowCharacter: (accountId: string, update: WowCharacterUpdate) =>
