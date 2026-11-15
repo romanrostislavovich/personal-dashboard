@@ -21,6 +21,7 @@ import {
   ChatMessage,
   ToolDefinition,
 } from '../ai/openai-compatible.client';
+import {isTimeout, retryOnceOnTimeout} from '../ai/timeout-retry';
 import {runToolLoop} from '../ai/tool-loop';
 import {coreMessages} from '../i18n/core.messages';
 import {UsersService} from '../users/users.service';
@@ -258,27 +259,35 @@ export class SecurityAgent {
     await this.security.saveGuide(finding.id, reply.content.trim());
   }
 
-  /** One request to the model; what the provider says about a failure stays in the log. */
+  /**
+   * One request to the model, tried again once when it timed out (a provider hanging on one
+   * request ended a whole morning run); what the provider says about a failure stays in the log.
+   */
   private ask(
     userId: string,
     connection: ChatConnection,
     messages: ChatMessage[],
     tools: ToolDefinition[] = [],
   ): Promise<Extract<ChatMessage, {role: 'assistant'}>> {
-    return this.usage
-      .complete(userId, connection, messages, tools)
-      .catch((error: unknown) => {
-        this.logger.warn(
-          `The agent's model did not answer: ${String(error).slice(0, 300)}`,
-        );
-        throw error instanceof AiRequestError
-          ? new BadGatewayException(
-              `The AI provider refused the request (${error.status})`,
-            )
-          : error instanceof AiLimitError
-            ? new BadGatewayException(error.message)
+    return retryOnceOnTimeout(
+      () => this.usage.complete(userId, connection, messages, tools),
+      () => this.logger.warn("The agent's model timed out, trying once more"),
+    ).catch((error: unknown) => {
+      this.logger.warn(
+        `The agent's model did not answer: ${String(error).slice(0, 300)}`,
+      );
+      throw error instanceof AiRequestError
+        ? new BadGatewayException(
+            `The AI provider refused the request (${error.status})`,
+          )
+        : error instanceof AiLimitError
+          ? new BadGatewayException(error.message)
+          : isTimeout(error)
+            ? new BadGatewayException(
+                'The AI provider did not answer within 2 minutes, twice',
+              )
             : new BadGatewayException('The AI provider is unreachable');
-      });
+    });
   }
 
   /** One tool a source, the findings so far, and the only way to say something: a finding. */
