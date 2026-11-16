@@ -16,6 +16,7 @@ achievements.
   — the name and the surname, no realm — and **the app's keys read it** with every part
   (profile, equipment, achievements, statistics, media, PvP, professions, reputations). So Forever
   characters are refreshed like the others; the sign-in only finds them.
+
 ## The owner's answers
 
 1. Sign in only to **find** characters; their data keeps coming with the app's keys.
