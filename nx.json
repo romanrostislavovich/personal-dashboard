@@ -1,7 +1,10 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
     "production": [
       "default",
       "!{projectRoot}/.eslintrc.json",
@@ -17,8 +20,13 @@
   "targetDefaults": {
     "@angular/build:application": {
       "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
     },
     "@nx/eslint:lint": {
       "cache": true,
@@ -33,36 +41,12 @@
     },
     "@nx/esbuild:esbuild": {
       "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
-    },
-    "test": {
-      "// inputs": "the inferred ones plus database tests (*.db.spec.ts): the database and the migrations they apply",
+      "dependsOn": [
+        "^build"
+      ],
       "inputs": [
-        "default",
-        "^production",
-        {
-          "fileset": "{projectRoot}/tsconfig.spec.json",
-          "dependencies": true
-        },
-        {
-          "json": "{workspaceRoot}/tsconfig.json",
-          "fields": ["compilerOptions"]
-        },
-        {
-          "externalDependencies": ["vitest"]
-        },
-        {
-          "env": "CI"
-        },
-        {
-          "env": "TEST_DATABASE_URL"
-        },
-        "{workspaceRoot}/apps/api/migrations/**/*",
-        {
-          "dependentTasksOutputFiles": "**/*.js",
-          "transitive": true
-        }
+        "production",
+        "^production"
       ]
     }
   },
@@ -87,12 +71,6 @@
       }
     },
     {
-      "plugin": "@nx/vitest",
-      "options": {
-        "testTargetName": "test"
-      }
-    },
-    {
       "plugin": "@nx/webpack/plugin",
       "options": {
         "buildTargetName": "build",
@@ -109,11 +87,11 @@
       "e2eTestRunner": "none",
       "linter": "eslint",
       "style": "scss",
-      "unitTestRunner": "vitest-analog"
+      "unitTestRunner": "none"
     },
     "@nx/angular:library": {
       "linter": "eslint",
-      "unitTestRunner": "vitest-analog"
+      "unitTestRunner": "none"
     },
     "@nx/angular:component": {
       "style": "scss",

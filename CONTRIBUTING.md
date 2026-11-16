@@ -17,8 +17,8 @@ npm run dev              # API on :3300, web on http://localhost:4200
 | `npm run dev:desktop`       | Desktop shell on top of the dev server               |
 | `npm run db:up`             | Start PostgreSQL in Docker                           |
 | `npm run db:generate`       | Create an SQL migration after changing `*.schema.ts` |
-| `npm test` / `npm run lint` | Tests / linter for all projects                      |
-| `npm run affected`          | Lint, tests and build of what changed since `main`   |
+| `npm run lint`              | Linter for all projects                              |
+| `npm run affected`          | Lint and build of what changed since `main`          |
 | `npm run typecheck`         | Types of every library (`-- libs/x/y` for some)      |
 | `npm run format:check`      | Formatting of the whole repository, as CI checks it  |
 | `npx nx g @pd/tools:module` | A new module: libraries, contracts, requests, i18n   |
@@ -44,10 +44,8 @@ Node 24 (`.nvmrc`).
 - If you changed a `*.schema.ts`, run `npm run db:generate` and commit the migration.
 - UI texts go to `i18n/en.json` **and** `i18n/ru.json` of the module (keys must match);
   server texts go to `*.messages.ts` with both `en` and `ru`.
-- Keep pure logic (dates, calculations) in small functions with unit tests next to them.
-- Tests that need PostgreSQL (`*.db.spec.ts`) run only when `TEST_DATABASE_URL` is set, e.g.
-  `TEST_DATABASE_URL=postgres://dashboard:dashboard@localhost:5432/dashboard npm test` with
-  `npm run db:up` running (use your `DB_PORT` if it differs). CI always runs them.
+- Keep pure logic (dates, calculations) in small functions.
+- The project has no automated tests: check your change by running it.
 - Modules must not import other modules — use the core (`@pd/api-core`, `@pd/web-core`,
   `@pd/client-core`) and `@pd/contracts`. ESLint will tell you if a boundary is crossed. What
   one module knows and another needs goes through the core: see "Links between the sections"

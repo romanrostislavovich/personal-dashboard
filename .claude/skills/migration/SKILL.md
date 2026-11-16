@@ -15,8 +15,7 @@ description: Create a database migration for the dashboard safely — drizzle-ki
    server-only job or a one-off server action.
 5. Not yet pushed and needs another change? Delete the `.sql`, the snapshot and the journal entry
    (`git checkout` the journal), then generate again — never edit a migration already deployed.
-6. Run the module's `*.db.spec.ts` on a scratch DB (`pd_test`); boot the image on a scratch DB if
-   a new table is read at start-up (the `verify-ui` skill).
+6. Boot the image on a scratch DB if a new table is read at start-up (the `verify-ui` skill).
 7. After the deploy the owner runs `! docker compose up -d --build app` so the local instance has it.
 
 `apps/api/migrations/meta` is excluded from prettier — leave its formatting to drizzle-kit.

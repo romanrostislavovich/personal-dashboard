@@ -24,9 +24,8 @@ included) applies:
   covers ≤150 staged code files).
 - Types: `npx tsc -p <lib>/tsconfig.lib.json --noEmit --declaration false --declarationMap false`;
   web libraries: `npx ngc -p <lib>/tsconfig.lib.json --noEmit` (templates).
-- Tests with the database, on a **scratch DB** (never 5433/dashboard — the owner's live sync-client
-  DB): `docker exec personal-dashboard-db-1 sh -c "dropdb -U dashboard --if-exists pd_test; createdb -U dashboard pd_test"`,
-  then `cd <project> && TEST_DATABASE_URL=postgres://dashboard:dashboard@localhost:5433/pd_test npx vitest run --fileParallelism=false`.
+- No tests: the project has none (removed 2026-11-16), CI runs format, lint, build and the
+  migration check.
 - A new table read in `onModuleInit`, or a migration: boot the image on a scratch DB first
   (see the `verify-ui` skill) — a crash there once took production down.
 

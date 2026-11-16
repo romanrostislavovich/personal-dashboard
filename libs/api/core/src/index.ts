@@ -41,7 +41,6 @@ export {
   MORNING_DIGEST_INSTRUCTION,
   digestRequest,
 } from './lib/ai/morning-digest.job';
-export * from './lib/ai/eval-model';
 export {
   RecallService,
   type RecallItem,

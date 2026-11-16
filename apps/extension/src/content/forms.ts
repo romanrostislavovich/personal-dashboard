@@ -2,7 +2,7 @@ import type {FieldKind} from '../shared/messages';
 
 /*
  * Login forms on a page: finding the fields, filling them, reading what was typed. Plain DOM,
- * no knowledge of the extension, so it is tested on forms built in jsdom.
+ * no knowledge of the extension.
  */
 
 const TEXT_TYPES = new Set(['', 'text', 'email', 'tel']);

@@ -29,8 +29,8 @@ Architecture and rules: `docs/architecture.md`. Quick start: `README.md`. Contri
   `/verify-ui`, `/phone`, `/bug`, `/team-review` — the project's checklists; use them instead of
   doing these from memory.
 - Agents — the development team (`.claude/agents/`): `analyst` before the code of a feature (the
-  questions to the owner and a proposal); `frontend-reviewer`, `backend-reviewer`,
-  `architecture-reviewer` and `qa` before a merge, together through `/team-review`; `web-designer`
+  questions to the owner and a proposal); `frontend-reviewer`, `backend-reviewer` and
+  `architecture-reviewer` before a merge, together through `/team-review`; `web-designer`
   for how pages look and work (mockups under `docs/design/`, a redesign in steps).
 - Hooks (`.claude/settings.json`): a new session starts with the branch, what is not committed,
   main's commits made elsewhere, CI of main and the commit the server runs; every edited file is formatted by prettier and fixed by eslint
@@ -39,7 +39,13 @@ Architecture and rules: `docs/architecture.md`. Quick start: `README.md`. Contri
 - Style: Google's TypeScript style (gts) — its prettier settings (80 columns, no bracket spacing,
   trailing commas, arrows without parentheses) and rules (`===` only, no floating promises).
 
+## Tests
+
+- The project has no tests (removed 2026-11-16 to save time and tokens): do not write or run
+  unit, database, e2e tests or AI evals. Check a change with lint, types, the build and, for UI,
+  the `verify-ui` skill.
+
 ## Nx
 
-- Run tasks through Nx: `npx nx run-many -t lint test build`, `npx nx serve web`.
+- Run tasks through Nx: `npx nx run-many -t lint build`, `npx nx serve web`.
 - Do not guess generator flags — check `--help`.
