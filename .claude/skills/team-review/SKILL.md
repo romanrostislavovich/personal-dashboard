@@ -13,12 +13,15 @@ Answer in Russian. The range is `main...HEAD` unless the owner names one.
    - `frontend-reviewer` — when web files, `*.html`, `*.scss` or i18n changed;
    - `backend-reviewer` — when `libs/**/api`, contracts or migrations changed;
    - `architecture-reviewer` — always;
-   - `qa` — always (checks the feature by hand on a scratch DB, the UI when it changed; no tests);
+   - `qa` — always, as the manual tester: give it the owner's request in their words and the
+     proposal; it checks the feature does what was asked, on a scratch DB, through the API and the
+     UI (no tests);
    - `web-designer` — only when a page's look changed noticeably and the owner asked for it.
 3. When all have answered, **merge their reports into one**, without repeats:
    - **Блокеры** — what must be fixed before the merge (data, another user's data, a crashed
      start, a broken page), each with `file:line` and who found it;
    - **Стоит поправить** — the rest, the most visible first;
+   - **Фича работает как задумано?** — `qa`'s verdict on each acceptance criterion;
    - **Проверено** — what passed, one line per agent;
    - **Не проверено** — what needs the owner's device or real data.
 4. Ask the owner whether to fix the blockers now; never fix, merge or deploy on your own.
