@@ -45,7 +45,6 @@ notified, what goes to Links, mobile layout. Write the decisions into the matchi
 - [ ] Notifications: through `NotificationsService` (buttons → `registerAction`, ≤3 for the shade).
 - [ ] Home widget if it has a "today" number; command palette commands.
 - [ ] Demo data (`*.demo.ts`) for the demo instance.
-- [ ] Tests: pure logic in `*.spec.ts`; the service on a scratch DB in `*.db.spec.ts`.
 - [ ] Mobile width (≈390px): tabs, grids, dialogs — open it in the `verify-ui` skill.
 - [ ] **README.md**: the section in the table, integrations, features.
 - [ ] `docs/roadmap.md`: mark it built (✅), with what was not verified live.

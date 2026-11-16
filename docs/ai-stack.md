@@ -11,7 +11,7 @@ still missing in it.
 ```
  Application     web · desktop · PWA · browser extension · Telegram — where a person meets the AI
  Agents          the assistant with tools · Security Agent · automations · device tools
- Platform        AiService · connections · usage and limits · tools registry · MCP · evals
+ Platform        AiService · connections · usage and limits · tools registry · MCP
  Model           DeepSeek · OpenAI (text, vision, speech) · Ollama (local) · any OpenAI-compatible
  Infrastructure  your server (Docker) · your computer (desktop app, Ollama) · providers' clouds
 ```
@@ -55,8 +55,6 @@ still missing in it.
 - **MCP server** — `mcp/`: the same tools for Claude, Cursor and other MCP clients, with access
   tokens.
 - **Files for the model** — `ai/attachment-text.ts`: PDF, Excel, CSV, text, pictures.
-- **Evals** — `apps/api/evals`: cases a model must pass before it is trusted with a job
-  (`npm run ai:eval`), see below.
 
 ## Model — which model does what
 
@@ -82,7 +80,7 @@ still missing in it.
 
 | Layer          | Gap                                                                               | State                                                                                        |
 | -------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Platform       | No checks of answer quality: a wrong digest was found by the user, not by a test  | ✅ evals (`npm run ai:eval`): the digest, sorting bank operations, search by meaning         |
+| Platform       | No checks of answer quality: a wrong digest was found by the user, not by a test  | the evals were removed with all tests (2026-11-16)                                           |
 | Model          | One model for every job: a cloud model sorts merchants a local one sorts for free | ✅ a light-task connection (Settings → AI)                                                   |
 | Platform       | No memory between conversations, no search by meaning over your history           | ✅ memory (`ai/ai-memory.service.ts`) and search by meaning (`recall/`)                      |
 | Agents         | A change made by the assistant cannot be undone                                   | ✅ undo from the log or by asking (`ai/ai-undo.ts`)                                          |
@@ -102,7 +100,7 @@ The default model is `paraphrase-multilingual`: the evals showed `nomic-embed-te
 understand Russian. Sections switched off for the AI or kept to their own connection are left
 out.
 
-**What the evals said about models** (on a laptop CPU): `qwen2.5:7b` passes the digest and the
+**What the evals said about models** (before they were removed) (on a laptop CPU): `qwen2.5:7b` passes the digest and the
 sorting; `qwen2.5:3b` and `1.5b` do not. The assistant itself (the chat with all its tools) is
 too much for a local model on a CPU — it is for the cloud connection.
 
@@ -146,4 +144,4 @@ How it is done here:
    Ollama like any local model. Only after 1–3, and only if you want it.
 
 What stays the same in all of them: the data never leaves your server unless you choose a cloud
-model, every model is a file you can delete, and every job has evals before it is trusted.
+model, every model is a file you can delete, and a model is chosen by trying it on the job.

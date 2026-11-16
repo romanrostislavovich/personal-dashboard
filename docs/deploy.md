@@ -153,8 +153,8 @@ connection of the kind "Ollama" with the address `http://ollama:11434/v1`.
 
 What fits: `paraphrase-multilingual` (562 MB) — the model of search by meaning, Russian and
 English alike — runs on the smallest server (`nomic-embed-text` is smaller but knows only
-English). A chat model good enough for light background work is bigger: `qwen2.5:7b` passes the
-evals (`npm run ai:eval`), `qwen2.5:3b` and `1.5b` do not; the 7B model needs about 6 GB of free
+English). A chat model good enough for light background work is bigger: `qwen2.5:7b` passed the
+evals (since removed), `qwen2.5:3b` and `1.5b` do not; the 7B model needs about 6 GB of free
 memory (`OLLAMA_MEMORY=6g`), so a server with 8 GB.
 
 ## Updating

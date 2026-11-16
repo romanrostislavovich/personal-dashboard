@@ -46,9 +46,9 @@ export default [
     },
   },
   {
-    // Files no tsconfig includes (the desktop's specs, Playwright's tests, Capacitor's config): no
+    // Files no tsconfig includes (Capacitor's config): no
     // types to read, so the rules that need them are off.
-    files: ['apps/desktop/src/**/*.spec.ts', 'apps/mobile/*.ts', 'e2e/**/*.ts'],
+    files: ['apps/mobile/*.ts'],
     ...tseslint.configs.disableTypeChecked,
     languageOptions: {
       parserOptions: {project: null, projectService: false},
@@ -59,7 +59,6 @@ export default [
     ignores: [
       '**/dist',
       '**/vite.config.*.timestamp*',
-      '**/vitest.config.*.timestamp*',
       'apps/mobile/android',
     ],
   },

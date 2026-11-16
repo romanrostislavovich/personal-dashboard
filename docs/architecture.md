@@ -77,7 +77,7 @@ libs/modules/birthdays/
     *.server-actions.ts          actions that call outside services (see below; birthdays has none)
     *.export.ts                  copies of its data to read with other programs (CSV, Markdown)
     *.security.ts                what the security agent can see through the module
-    next-birthday.ts (+ .spec)   pure logic — easy to test
+    next-birthday.ts             pure logic, apart from the service
     birthdays.module.ts          Nest module
   web/src/lib/
     birthdays.api.ts             the module's requests of the client core, for Angular

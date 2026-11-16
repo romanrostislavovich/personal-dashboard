@@ -44,4 +44,3 @@ checklist and the diff range; otherwise inline.
 
 - Achievements updated for what the change counts; none left unreachable.
 - README.md, docs/telemetry.md, docs/roadmap.md, the module's proposal updated.
-- Tests: logic in `*.spec.ts`, services in `*.db.spec.ts` on a scratch DB.

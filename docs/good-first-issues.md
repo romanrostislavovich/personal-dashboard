@@ -32,7 +32,7 @@ plus its id in `COST_PROVIDERS` and a guide for the integration card. See "Addin
 provider" in the architecture docs.
 
 **Done when:** the provider can be connected in Settings → Integrations, a month's amount
-arrives as an expense, and the parsing of the API's answer has a unit test on a saved example.
+arrives as an expense.
 
 ## 3. A notification channel
 
@@ -80,4 +80,4 @@ microdata). Some shops mark their pages differently and give no price. Take a sh
 read, save a trimmed copy of its page as a test fixture and teach `readProductPage` its markup
 without breaking the existing cases.
 
-**Done when:** the new fixture and all the old ones pass in `product-page.spec.ts`.
+**Done when:** a product page of the new shop is read right.

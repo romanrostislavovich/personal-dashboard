@@ -86,9 +86,9 @@ sign-in clears consent and the queue, even for the same account. A new sign-in n
   discards unfinished intervals. Focus changes, navigation and long timer gaps deliberately
   undercount rather than infer activity.
 
-Validation: `npx nx test extension`, `npx nx lint extension`, `npx nx build extension` (includes
-TypeScript checking). A real-browser smoke test should also exercise consent, tab/window focus,
-incognito, offline retry and service-worker termination; unit tests use simulated Chrome APIs.
+Validation: `npx nx lint extension`, `npx nx build extension` (includes TypeScript checking) and a
+real-browser check of consent, tab/window focus, incognito, offline retry and service-worker
+termination.
 
 ## Manual work context
 
@@ -113,8 +113,8 @@ saved contexts navigates to `/activity/workstates`; history and restore remain i
 Manual integration checks: with engagement off, preview a public URL containing query/hash,
 verify the exact outgoing JSON, cancel (no request), then preview/confirm (one request). Repeat
 with private/excluded/local pages, a background window, changed tab, sign-out/new sign-in,
-expired preview and suspended worker: saving the old preview must be refused. This flow has no
-new spec files; use the existing extension tests/build and a real Chrome smoke test.
+expired preview and suspended worker: saving the old preview must be refused. Use the build and a
+real Chrome check.
 
 ## How it keeps the vault
 

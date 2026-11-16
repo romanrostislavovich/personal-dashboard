@@ -27,7 +27,6 @@ Check:
 - **Texts:** server texts in `*.messages.ts` with `en` and `ru`.
 - **AI tools:** a write tool asks to confirm what deletes or overwrites; outside text given to the
   model is marked as data.
-- **Tests:** logic in `*.spec.ts`, services with the DB in `*.db.spec.ts`.
 
 Verify each finding in the file before reporting it. Report in Russian:
 

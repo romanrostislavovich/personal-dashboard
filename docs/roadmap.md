@@ -610,7 +610,7 @@ assistant as a tutor that knows the materials of the courses.
     pairs, and the closest past corrections go into the model's prompt right away (learning
     without training, from the first day);
   - once a week or on a button: a LoRA fine-tuning on the pairs collected; the new version
-    replaces the old one only when `npm run ai:eval` says it is better, the old one comes back
+    replaces the old one only when it does the job better, the old one comes back
     with one click;
   - facts are not taught this way (they go stale and get made up) — that is search by meaning
   - **Needs:** a bigger server (8 GB of memory to serve a 7B model, see docs/deploy.md) and a GPU
