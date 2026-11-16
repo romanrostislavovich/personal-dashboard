@@ -1,6 +1,6 @@
 ---
 name: team-review
-description: Review a feature branch of the dashboard by the whole team before merging — the frontend, backend and architecture reviewers in parallel subagents, then one report. Use when the owner says "ревью", "team review", "проверь командой", or before merging a big branch.
+description: Review a feature branch of the dashboard by the whole team before merging — the frontend, backend and architecture reviewers and QA in parallel subagents, then one report. Use when the owner says "ревью", "team review", "проверь командой", or before merging a big branch.
 ---
 
 # Team review
@@ -13,6 +13,7 @@ Answer in Russian. The range is `main...HEAD` unless the owner names one.
    - `frontend-reviewer` — when web files, `*.html`, `*.scss` or i18n changed;
    - `backend-reviewer` — when `libs/**/api`, contracts or migrations changed;
    - `architecture-reviewer` — always;
+   - `qa` — always (checks the feature by hand on a scratch DB, the UI when it changed; no tests);
    - `web-designer` — only when a page's look changed noticeably and the owner asked for it.
 3. When all have answered, **merge their reports into one**, without repeats:
    - **Блокеры** — what must be fixed before the merge (data, another user's data, a crashed
