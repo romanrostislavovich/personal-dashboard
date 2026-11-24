@@ -3,16 +3,11 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/desktop/src",
   "projectType": "application",
-  "tags": [
-    "scope:desktop",
-    "type:app"
-  ],
+  "tags": ["scope:desktop", "type:app"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": [
-        "{workspaceRoot}/dist/apps/desktop"
-      ],
+      "outputs": ["{workspaceRoot}/dist/apps/desktop"],
       "options": {
         "commands": [
           "tsc -p apps/desktop/tsconfig.json --noEmit",
@@ -23,9 +18,7 @@
     },
     "serve": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "continuous": true,
       "options": {
         "command": "electron dist/apps/desktop"
@@ -33,9 +26,7 @@
     },
     "package": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "options": {
         "command": "electron-builder --config apps/desktop/electron-builder.yml"
       }

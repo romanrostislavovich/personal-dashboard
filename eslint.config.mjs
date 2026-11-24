@@ -56,11 +56,7 @@ export default [
   },
   {
     // apps/mobile/android: the Android project and the copy of the built web app inside it.
-    ignores: [
-      '**/dist',
-      '**/vite.config.*.timestamp*',
-      'apps/mobile/android',
-    ],
+    ignores: ['**/dist', '**/vite.config.*.timestamp*', 'apps/mobile/android'],
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
