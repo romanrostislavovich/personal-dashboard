@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import {BaseExceptionFilter, HttpAdapterHost} from '@nestjs/core';
+import {OutsideServiceError} from '../net/outbound';
 
 /**
  * Errors nobody caught, with the request they happened in. Nest's own handler logs only
@@ -56,6 +57,9 @@ export function describeFetchFailure(error: unknown): string | null {
   }
   if (error.name === 'TimeoutError' || error.name === 'AbortError') {
     return 'An outside service did not answer in time';
+  }
+  if (error instanceof OutsideServiceError) {
+    return `An outside service could not be reached (${error.reason} ${error.host})`;
   }
   if (!(error instanceof TypeError) || error.message !== 'fetch failed') {
     return null;

@@ -119,15 +119,58 @@ const OUTSIDE_TIMEOUT_MS = 30_000;
  * `OUTSIDE_TIMEOUT_MS` unless the call brings a signal of its own: a service that never
  * answers would otherwise hold a job for minutes, and the next run would start beside it.
  */
-export function fetchWithTimeout(
+export async function fetchWithTimeout(
   url: string | URL,
   init: RequestInit = {},
   timeoutMs = OUTSIDE_TIMEOUT_MS,
 ): Promise<Response> {
-  return fetch(url, {
-    ...init,
-    signal: init.signal ?? AbortSignal.timeout(timeoutMs),
-  });
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: init.signal ?? AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error) {
+    throw withHost(error, new URL(url).host, timeoutMs);
+  }
+}
+
+/**
+ * A failed request to an outside service, saying why: Node's `fetch` says only "fetch failed"
+ * and keeps the reason (ECONNRESET, ENOTFOUND…) in `cause`, so the log said nothing usable.
+ */
+export class OutsideServiceError extends Error {
+  constructor(
+    readonly host: string,
+    readonly reason: string,
+    options?: ErrorOptions,
+  ) {
+    super(`${host} could not be reached: ${reason}`, options);
+    this.name = 'OutsideServiceError';
+  }
+}
+
+/** The same failure with the host in its message; a timeout stays a `TimeoutError`. */
+function withHost(error: unknown, host: string, timeoutMs: number): unknown {
+  if (!(error instanceof Error)) {
+    return error;
+  }
+  if (error.name === 'TimeoutError') {
+    const timeout = new Error(
+      `${host} did not answer in ${timeoutMs / 1000} s`,
+      {cause: error},
+    );
+    timeout.name = 'TimeoutError';
+    return timeout;
+  }
+  if (error instanceof TypeError && error.message === 'fetch failed') {
+    const cause = error.cause as {code?: string; message?: string} | undefined;
+    return new OutsideServiceError(
+      host,
+      cause?.code ?? cause?.message ?? 'fetch failed',
+      {cause: error.cause},
+    );
+  }
+  return error;
 }
 
 export async function safeFetch(

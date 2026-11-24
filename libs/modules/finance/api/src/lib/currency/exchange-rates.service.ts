@@ -1,4 +1,5 @@
 import {Injectable, Logger} from '@nestjs/common';
+import {fetchWithTimeout} from '@pd/api-core';
 import {LocalDate} from '@pd/contracts';
 import {
   Amount,
@@ -12,7 +13,8 @@ import {
 const FRANKFURTER = 'https://api.frankfurter.dev/v1';
 /** ExchangeRate-API's open access: today's rates of ~160 currencies, no API key. */
 const OPEN_ER_API = 'https://open.er-api.com/v6/latest/EUR';
-const TIMEOUT_MS = 10_000;
+/** Frankfurter answers in a fraction of a second, but missed 10 s a few times around midnight. */
+const TIMEOUT_MS = 20_000;
 /** Past rates never change; today's are refreshed a few times a day. */
 const LATEST_TTL_MS = 6 * 60 * 60 * 1000;
 const CACHE_LIMIT = 100;
@@ -103,9 +105,7 @@ export class ExchangeRatesService {
   }
 
   private async get<T>(url: string): Promise<T> {
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
+    const response = await fetchWithTimeout(url, {}, TIMEOUT_MS);
     if (!response.ok) {
       throw new Error(`${response.status} from ${url}`);
     }
