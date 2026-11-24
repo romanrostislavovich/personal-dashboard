@@ -20,7 +20,18 @@ import {
   zonedDateTime,
   zonedToUtc,
 } from '@pd/contracts';
-import {and, asc, eq, gt, inArray, lte, or} from 'drizzle-orm';
+import {
+  and,
+  asc,
+  eq,
+  gt,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  or,
+} from 'drizzle-orm';
 import {alias} from 'drizzle-orm/pg-core';
 import {z} from 'zod';
 import {ReminderRow, reminders, tasks} from './tasks.schema';
@@ -125,12 +136,47 @@ export class RemindersService {
       .where(and(eq(reminders.id, id), eq(reminders.userId, userId)));
   }
 
+  /**
+   * "Done" ends the reminder for good: for an occurrence of a repeating reminder the series
+   * stops too (the owner's choice — otherwise "done" brings it back the next day). A series
+   * that should go on is not answered "done" but left alone or snoozed.
+   */
   async done(userId: string, id: string): Promise<void> {
-    await this.find(userId, id);
+    const reminder = await this.find(userId, id);
     await this.db
       .update(reminders)
       .set({status: 'done'})
       .where(and(eq(reminders.id, id), eq(reminders.userId, userId)));
+    if (!reminder.repeat && reminder.firedAt) {
+      await this.stopSeriesOf(reminder, reminder.firedAt);
+    }
+  }
+
+  /**
+   * An occurrence keeps no link to its series, so the series is found by what advanceSeries
+   * copied: the same text and task, created before the occurrence and fired at or after it
+   * (it may have fired again since, if an old message is answered).
+   */
+  private async stopSeriesOf(
+    occurrence: ReminderRow,
+    firedAt: Date,
+  ): Promise<void> {
+    await this.db
+      .update(reminders)
+      .set({status: 'done'})
+      .where(
+        and(
+          eq(reminders.userId, occurrence.userId),
+          eq(reminders.status, 'scheduled'),
+          isNotNull(reminders.repeat),
+          eq(reminders.text, occurrence.text),
+          occurrence.taskId
+            ? eq(reminders.taskId, occurrence.taskId)
+            : isNull(reminders.taskId),
+          lte(reminders.createdAt, occurrence.createdAt),
+          gte(reminders.firedAt, firedAt),
+        ),
+      );
   }
 
   /** Remind again at another moment. */
