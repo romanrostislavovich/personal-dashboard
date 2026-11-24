@@ -28,6 +28,20 @@ import {SteamService} from './steam/steam.service';
 import {XboxService} from './xbox/xbox.service';
 import {toWowExternalId, WowService} from './wow/wow.service';
 
+/**
+ * The last sync failed because the service does not know the account (`Character … not found`,
+ * `Dota account … not found`, `Steam profile … not found`): it may come back (a character logged
+ * in again), so it is not dropped, only asked less often.
+ */
+function isNotFound(row: GameAccountRow): boolean {
+  return / not found$/.test(row.lastError ?? '');
+}
+
+/** The one run a day (the job runs at :05 and :35) that asks the accounts not found again. */
+function isDailyRetrySlot(now: Date): boolean {
+  return now.getUTCHours() === 3 && now.getUTCMinutes() < 30;
+}
+
 @Injectable()
 export class GameAccountsService {
   private readonly logger = new Logger(GameAccountsService.name);
@@ -151,13 +165,20 @@ export class GameAccountsService {
     }
   }
 
-  /** Background sync of all accounts; news goes to notifications. */
-  async syncAll(): Promise<void> {
+  /**
+   * Background sync of all accounts; news goes to notifications. An account the game's service
+   * says it does not know is asked once a day, not every half hour: three WoW characters Blizzard
+   * does not show were asked 400 times in a week and spent the limit the others needed (429).
+   */
+  async syncAll(now = new Date()): Promise<void> {
     const rows = await this.db
       .select()
       .from(gameAccounts)
       .where(isNull(gameAccounts.notOnAccountSince));
     for (const row of rows) {
+      if (isNotFound(row) && !isDailyRetrySlot(now)) {
+        continue;
+      }
       await this.syncAccount(row, {awaitDetails: true});
     }
   }

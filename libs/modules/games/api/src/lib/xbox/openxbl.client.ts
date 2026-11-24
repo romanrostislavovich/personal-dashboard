@@ -59,6 +59,18 @@ export function shapeOf(raw: unknown, depth = 0): string {
  * refusal comes as a string in `content`, still with 200 — it is an error, not "no games".
  */
 function unwrap(raw: unknown): unknown {
+  // The hourly limit sometimes comes with 200 too: `{content: {currentRequests, maxRequests,
+  // limitType…}}` — seen 2026-11-13..23, logged as "gave no profile".
+  if (
+    isObject(raw) &&
+    isObject(raw['content']) &&
+    'limitType' in raw['content'] &&
+    'maxRequests' in raw['content']
+  ) {
+    throw new OpenXblRateLimitError(
+      'OpenXBL: the hourly limit of requests is spent',
+    );
+  }
   if (
     isObject(raw) &&
     (typeof raw['content'] === 'string' || Array.isArray(raw['content']))
