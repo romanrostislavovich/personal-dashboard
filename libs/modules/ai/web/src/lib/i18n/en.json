@@ -107,9 +107,9 @@
       "3": "Press “Add a connection”, choose OpenAI and paste the key. An OpenAI connection also understands Telegram voice messages."
     },
     "ollama": {
-      "1": "Install Ollama on the machine the dashboard runs on (ollama.com/download).",
+      "1": "Install Ollama on the machine running the dashboard (ollama.com/download). If the dashboard runs in Docker, Ollama still runs on the host machine.",
       "2": "Download a model that can call tools, for example: ollama pull qwen3.",
-      "3": "Press “Add a connection”, choose Ollama and type the name of the model; no key is needed, and nothing leaves your machine."
+      "3": "For a dashboard running in Docker, set the API URL to http://host.docker.internal:11434/v1 and configure Ollama to listen on the host interface (OLLAMA_HOST=0.0.0.0:11434). Otherwise use http://localhost:11434/v1. Then add the connection and type the model name; no key is needed."
     }
   },
   "importStatement": "Import the operations of this bank statement ({{name}}) into Finance. First list what you found — date, amount, description, category — and wait for my confirmation; record only after I say yes.",
