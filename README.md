@@ -38,7 +38,6 @@ The interface is in English and Russian.
 > **Status:** a personal project, used every day by its author. It works and is tested, but
 > before 1.0 an update may need attention — read the [changelog](CHANGELOG.md) first.
 
-
 ## Sections
 
 |                     |                                                                                                                                                                                                                                                                           |
