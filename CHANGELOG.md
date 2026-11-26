@@ -305,6 +305,10 @@ under **Updating**.
 
 ### Fixed
 
+- **The macOS app opens** — the downloaded app was "damaged" on Apple Silicon: the installer
+  carried only the linker's signature of the Electron binary, which covers neither Info.plist
+  nor the app's files. It is now signed ad-hoc (`apps/desktop/electron-builder.yml`); the first
+  start still goes through Privacy & Security → Open Anyway, see `docs/desktop.md`.
 - **The artist of the week in the morning digest** — the digest named an artist the person had
   not listened to: the model told last digest's facts (`previous`) as news, and a few songs an
   autoplay scrobbled made an "artist of the week". The model is told that names and numbers come

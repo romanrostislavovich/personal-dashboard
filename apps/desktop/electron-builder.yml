@@ -20,6 +20,13 @@ win:
 mac:
   target: dmg
   icon: apps/desktop/icon.png
+  # No Apple Developer ID, so the app is signed ad-hoc. Without any signature electron-builder
+  # leaves only the linker's signature of the Electron binary, which does not cover Info.plist
+  # and resources: macOS on Apple Silicon then calls the downloaded app "damaged" and will not
+  # open it. The hardened runtime only matters for notarization, and with an ad-hoc signature it
+  # makes library validation refuse Electron's own frameworks.
+  identity: '-'
+  hardenedRuntime: false
 linux:
   target: AppImage
   category: Utility
