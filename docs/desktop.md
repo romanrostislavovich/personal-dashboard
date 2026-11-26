@@ -5,6 +5,12 @@ first start the app asks for the server URL — your server or a local Docker (`
 The tray menu has “Start with the system” and “Change server”. The app starts with the system
 (switch it off in the tray) and stays in the tray when its window is closed.
 
+The macOS app is signed ad-hoc, not with an Apple Developer ID, so macOS refuses its first start
+("Apple could not verify…"). Drag it to Applications, try to open it once, then System Settings →
+Privacy & Security → "Open Anyway". Or, in the terminal:
+`xattr -dr com.apple.quarantine "/Applications/Personal Dashboard.app"`. Installers of 0.3.0 and
+earlier carry a broken signature and are "damaged" on Apple Silicon: the same command opens them.
+
 On Windows it can also record the time at the computer for the Activity section: switch it on in
 Settings → Devices. The tracker notes which program and window is in front, sends it to your server
 every minute and keeps it on the computer while there is no connection; the tray menu pauses it.
